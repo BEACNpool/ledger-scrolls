@@ -1,377 +1,318 @@
 #!/usr/bin/env python3
 """
-Ledger Scrolls Viewer - Open Source Standard
+Ledger Scrolls Viewer (local JSON) — supports:
+  1) gzip-pages-v1 (manifest + page_*.json chunks)
+  2) single-file-v1 (one asset containing payload chunks, e.g. image/png)
 
-Reconstruct immutable "Ledger Scrolls" stored as Cardano NFT metadata (CIP-25 / 721),
-queried via Blockfrost.
+This viewer is intentionally "vanilla":
+- No Blockfrost required
+- Reads the metadata JSON you already generated for minting (cardano-cli / CNTools style)
 
-Works with payload styles:
-  - payload: ["0xABCD...", "0x....", ...]
-  - payload: ["ABCD...", "....", ...]
-  - payload: [{"bytes":"0xABCD..."}, {"bytes":"ABCD..."} , ...]
-
-Usage:
-  export BLOCKFROST_PROJECT_ID="mainnet...."
-  ./viewer.py --policy <56-hex-policy> --debug
-
-MIT License
+Author: BEACN / Ledger Scrolls ethos — simple, inspectable, reproducible.
 """
 
+from __future__ import annotations
+
 import argparse
+import base64
 import gzip
 import hashlib
 import json
 import os
 import re
 import sys
-import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from urllib.request import Request, urlopen
-from urllib.error import HTTPError, URLError
-
-
-DEFAULT_POLICIES = {
-    "BTC Whitepaper (BTCWP)": "8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1",
-    "On-chain Bible (legacy)": "2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0",
-}
-
-MAGIC_LINES = [
-    "Collecting scroll fragments from the chain…",
-    "Unsealing policy sigils…",
-    "Indexing minted pages…",
-    "Stitching fragments together…",
-    "Verifying checksum seals…",
-    "Inflating the eternal scroll…",
-    "The Ledger Scroll is revealed.",
-]
-
-
-def safe_print(msg: str) -> None:
-    print(msg, flush=True)
+HEX_RE = re.compile(r"^[0-9a-fA-F]+$")
 
 
 def sha256_hex(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def hex_to_bytes(hex_str: str) -> bytes:
-    hs = (hex_str or "").strip()
+def _clean_hex(s: str) -> str:
+    hs = (s or "").strip()
     if hs.startswith(("0x", "0X")):
         hs = hs[2:]
     hs = re.sub(r"\s+", "", hs)
-    if not hs:
-        return b""
-    # fromhex requires even length
-    if len(hs) % 2 == 1:
-        hs = "0" + hs
-    return bytes.fromhex(hs)
+    if hs and (len(hs) % 2 != 0):
+        raise ValueError(f"Hex string has odd length: {len(hs)}")
+    if hs and not HEX_RE.match(hs):
+        raise ValueError("Hex string contains non-hex characters")
+    return hs
 
 
-def hex_to_utf8(hex_str: str) -> str:
-    try:
-        return hex_to_bytes(hex_str).decode("utf-8")
-    except Exception:
-        return ""
-
-
-def extract_metadata(asset_json: dict) -> dict:
+def decode_segment(seg: Any) -> bytes:
     """
-    Blockfrost assets/{asset} typically returns:
-      - onchain_metadata: dict
-      - onchain_metadata_standard: sometimes present
-    Prefer onchain_metadata.
+    Segment formats supported:
+      - {"bytes": "<hex>"}           (recommended / matches cardano-cli JSON bytestring pattern)
+      - {"b64": "<base64>"}          (optional convenience)
+      - "<hex>"                      (bare string)
     """
-    meta = asset_json.get("onchain_metadata")
-    if isinstance(meta, dict) and meta:
-        return meta
+    if isinstance(seg, dict):
+        if "bytes" in seg:
+            hs = _clean_hex(str(seg["bytes"]))
+            return bytes.fromhex(hs) if hs else b""
+        if "b64" in seg:
+            return base64.b64decode(seg["b64"])
+        raise ValueError(f"Unknown segment dict keys: {list(seg.keys())}")
 
-    std = asset_json.get("onchain_metadata_standard")
-    if isinstance(std, dict) and std:
-        if isinstance(std.get("metadata"), dict) and std["metadata"]:
-            return std["metadata"]
-        return std
+    if isinstance(seg, str):
+        hs = _clean_hex(seg)
+        return bytes.fromhex(hs) if hs else b""
 
-    raise ValueError("No valid on-chain metadata found in asset response")
+    raise ValueError(f"Unsupported segment type: {type(seg)}")
 
 
-def payload_to_bytes(payload: Any) -> bytes:
-    """
-    Supports payload styles:
-      - [{"bytes":"0x...."}, {"bytes":"...."}]
-      - ["0x....", "...."]
-    """
-    out = bytearray()
+def join_payload(payload: Any) -> bytes:
     if payload is None:
         return b""
     if not isinstance(payload, list):
-        raise ValueError(f"payload is not a list (got {type(payload).__name__})")
-
-    for item in payload:
-        if isinstance(item, dict) and isinstance(item.get("bytes"), str):
-            out.extend(hex_to_bytes(item["bytes"]))
-        elif isinstance(item, str):
-            out.extend(hex_to_bytes(item))
-        else:
-            raise ValueError(f"Unsupported payload element: {repr(item)[:160]}")
+        raise ValueError("payload must be a list")
+    out = bytearray()
+    for seg in payload:
+        out.extend(decode_segment(seg))
     return bytes(out)
 
 
-def http_get_json(url: str, headers: Dict[str, str], params: Optional[Dict[str, Any]] = None, debug: bool = False) -> Any:
-    if params:
-        # manual querystring to avoid extra deps
-        qs = "&".join([f"{k}={params[k]}" for k in params])
-        url = f"{url}?{qs}"
+def load_json(path: Path) -> Any:
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
 
-    backoff = 2
-    while True:
-        req = Request(url, headers=headers, method="GET")
+
+def find_asset_obj(doc: Dict[str, Any], policy_id: str, asset_name: str) -> Dict[str, Any]:
+    # CIP-25 structure: {"721": { "<policy>": { "<asset>": { ... }}}}
+    if "721" not in doc:
+        raise KeyError("Missing top-level '721' key (not CIP-25 metadata?)")
+
+    p = doc["721"].get(policy_id)
+    if p is None:
+        raise KeyError(f"Policy not found in metadata JSON: {policy_id}")
+
+    a = p.get(asset_name)
+    if a is None:
+        raise KeyError(f"Asset not found in policy {policy_id}: {asset_name}")
+
+    if not isinstance(a, dict):
+        raise TypeError("Asset object is not a dict")
+
+    return a
+
+
+def maybe_decode_codec(data: bytes, codec: str) -> bytes:
+    c = (codec or "raw").lower()
+    if c in ("raw", "none"):
+        return data
+    if c in ("gzip", "gz"):
+        return gzip.decompress(data)
+    raise ValueError(f"Unsupported codec: {codec}")
+
+
+def reconstruct_single_file(asset_obj: Dict[str, Any]) -> Tuple[bytes, Dict[str, Any]]:
+    payload = asset_obj.get("payload")
+    raw = join_payload(payload)
+
+    codec = asset_obj.get("codec", asset_obj.get("encoding", "raw"))
+    data = maybe_decode_codec(raw, codec)
+
+    # optional SHA validation
+    expected_sha = (asset_obj.get("sha") or "").strip().lower()
+    if expected_sha:
+        got = sha256_hex(data)
+        if got != expected_sha:
+            raise ValueError(f"SHA mismatch: expected {expected_sha} got {got}")
+
+    return data, asset_obj
+
+
+def manifest_page_list(manifest_obj: Dict[str, Any]) -> List[Tuple[str, str]]:
+    """
+    Supports two manifest styles:
+
+    A) Explicit list:
+       pages: [ {"policy":"<pid>", "asset":"PAGE_0001"}, ... ]
+
+    B) Pattern:
+       pagePolicy: "<pid>" (or "policy")
+       pagePrefix: "BIBLE_P"
+       count: 119
+       start: 1 (default)
+       pad: 4 (default)
+       pattern: "{prefix}{i:04d}" (optional)
+    """
+    if isinstance(manifest_obj.get("pages"), list):
+        out: List[Tuple[str, str]] = []
+        for it in manifest_obj["pages"]:
+            if not isinstance(it, dict):
+                raise ValueError("manifest pages[] entries must be objects")
+            pid = it.get("policy") or it.get("policyId") or it.get("pid")
+            an = it.get("asset") or it.get("assetName") or it.get("name")
+            if not pid or not an:
+                raise ValueError("manifest pages[] must contain policy + asset")
+            out.append((str(pid), str(an)))
+        return out
+
+    pid = manifest_obj.get("pagePolicy") or manifest_obj.get("policy") or manifest_obj.get("policyId")
+    prefix = manifest_obj.get("pagePrefix") or manifest_obj.get("assetPrefix") or manifest_obj.get("prefix")
+    count = manifest_obj.get("count") or manifest_obj.get("n")
+    start = int(manifest_obj.get("start", 1))
+    pad = int(manifest_obj.get("pad", 4))
+    pattern = manifest_obj.get("pattern")  # optional python format
+
+    if not pid or not prefix or not count:
+        raise ValueError("manifest missing pages[] or (policy/prefix/count)")
+
+    out = []
+    for i in range(start, start + int(count)):
+        if pattern:
+            an = pattern.format(prefix=prefix, i=i, pad=pad)
+        else:
+            an = f"{prefix}{i:0{pad}d}"
+        out.append((str(pid), str(an)))
+    return out
+
+
+def load_folder_index(folder: Path) -> List[Dict[str, Any]]:
+    """
+    Loads all *.json in a folder (non-recursive) as separate CIP-25 docs.
+    """
+    docs = []
+    for p in sorted(folder.glob("*.json")):
         try:
-            with urlopen(req, timeout=60) as resp:
-                raw = resp.read()
-                return json.loads(raw.decode("utf-8"))
-        except HTTPError as e:
-            if e.code == 429:
-                if debug:
-                    safe_print(f"[debug] 429 rate limit; sleeping {backoff}s")
-                time.sleep(backoff)
-                backoff = min(backoff * 2, 30)
-                continue
-            raise
-        except URLError:
-            # transient network hiccup
-            if debug:
-                safe_print(f"[debug] network error; sleeping {backoff}s")
-            time.sleep(backoff)
-            backoff = min(backoff * 2, 30)
-            continue
-
-
-def list_policy_assets(base_url: str, headers: dict, policy: str, debug: bool = False) -> List[str]:
-    units: List[str] = []
-    page = 1
-    while True:
-        batch = http_get_json(
-            f"{base_url}/assets/policy/{policy}",
-            headers=headers,
-            params={"count": 100, "page": page},
-            debug=debug,
-        )
-        if not batch:
-            break
-        units.extend([item["asset"] for item in batch if "asset" in item])
-        page += 1
-    return units
-
-
-def is_manifest(meta: dict, asset_name: str) -> bool:
-    if isinstance(meta, dict):
-        if meta.get("role") == "manifest":
-            return True
-        if isinstance(meta.get("pages"), list) and meta["pages"]:
-            return True
-    return "MANIFEST" in (asset_name or "")
-
-
-def is_page(meta: dict, asset_name: str) -> bool:
-    if isinstance(meta, dict) and meta.get("role") == "page":
-        return True
-    if re.match(r".*_P\d{4}$", asset_name or ""):
-        return True
-    if isinstance(meta, dict) and isinstance(meta.get("payload"), list) and meta["payload"]:
-        return True
-    return False
-
-
-def choose_page_order(manifest_meta: dict, pages_by_name: Dict[str, dict]) -> List[str]:
-    if isinstance(manifest_meta.get("pages"), list) and manifest_meta["pages"]:
-        return [p for p in manifest_meta["pages"] if p in pages_by_name]
-
-    sortable: List[Tuple[int, str]] = []
-    for name, meta in pages_by_name.items():
-        try:
-            idx = int(meta.get("i", 0))
+            d = load_json(p)
+            if isinstance(d, dict) and "721" in d:
+                docs.append(d)
         except Exception:
-            idx = 0
-        sortable.append((idx, name))
-    sortable.sort(key=lambda x: x[0])
-    return [name for _, name in sortable]
+            # ignore files that aren't valid JSON/CIP-25
+            continue
+    if not docs:
+        raise FileNotFoundError(f"No CIP-25 JSON files found in folder: {folder}")
+    return docs
 
 
-def pick_hash(meta: dict, keys: List[str]) -> Optional[str]:
-    for k in keys:
-        v = meta.get(k)
-        if isinstance(v, str) and v.strip():
-            return v.strip().lower()
-    return None
+def find_asset_in_docs(docs: List[Dict[str, Any]], policy_id: str, asset_name: str) -> Dict[str, Any]:
+    last_err: Optional[Exception] = None
+    for d in docs:
+        try:
+            return find_asset_obj(d, policy_id, asset_name)
+        except Exception as e:
+            last_err = e
+    raise KeyError(f"Asset not found across docs: {policy_id} / {asset_name} ({last_err})")
 
 
-def verify_optional(label: str, data: bytes, expected_hex: Optional[str]) -> None:
-    if not expected_hex:
-        return
-    got = sha256_hex(data)
-    if got != expected_hex.lower():
-        safe_print(f"⚠️  Warning: {label} checksum mismatch")
-        safe_print(f"    expected: {expected_hex}")
-        safe_print(f"    got     : {got}")
+def reconstruct_from_manifest(docs: List[Dict[str, Any]], policy_id: str, manifest_asset: str) -> Tuple[bytes, Dict[str, Any]]:
+    manifest = find_asset_in_docs(docs, policy_id, manifest_asset)
+
+    # manifest itself may be stored as payload bytes (recommended),
+    # OR may be "plain JSON fields". We support both.
+    if "payload" in manifest:
+        raw_manifest_bytes = join_payload(manifest["payload"])
+        codec = manifest.get("codec", manifest.get("encoding", "raw"))
+        manifest_bytes = maybe_decode_codec(raw_manifest_bytes, codec)
+        try:
+            manifest_data = json.loads(manifest_bytes.decode("utf-8"))
+        except Exception as e:
+            raise ValueError(f"Manifest payload did not decode as JSON: {e}")
     else:
-        safe_print(f"✅ {label} checksum OK")
+        manifest_data = manifest
+
+    pages = manifest_page_list(manifest_data)
+
+    assembled = bytearray()
+    for (pid, an) in pages:
+        page_obj = find_asset_in_docs(docs, pid, an)
+        raw_page = join_payload(page_obj.get("payload"))
+        page_codec = page_obj.get("codec", page_obj.get("encoding", "raw"))
+        page_bytes = maybe_decode_codec(raw_page, page_codec)
+        assembled.extend(page_bytes)
+
+    # If the manifest declares a codec for the full assembled blob, respect it
+    full_codec = manifest_data.get("contentCodec") or manifest_data.get("codec") or manifest_data.get("assembledCodec")
+    if full_codec:
+        final = maybe_decode_codec(bytes(assembled), str(full_codec))
+    else:
+        final = bytes(assembled)
+
+    expected_sha = (manifest_data.get("sha") or "").strip().lower()
+    if expected_sha:
+        got = sha256_hex(final)
+        if got != expected_sha:
+            raise ValueError(f"SHA mismatch: expected {expected_sha} got {got}")
+
+    return final, manifest_data
+
+
+def guess_extension(media_type: str) -> str:
+    mt = (media_type or "").lower().strip()
+    if mt == "image/png":
+        return ".png"
+    if mt in ("image/jpeg", "image/jpg"):
+        return ".jpg"
+    if mt in ("text/html", "application/xhtml+xml"):
+        return ".html"
+    if mt == "text/plain":
+        return ".txt"
+    if mt == "application/pdf":
+        return ".pdf"
+    return ""
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Ledger Scrolls Viewer (Blockfrost, CIP-25/721)")
-    ap.add_argument("--policy", default="", help="Policy ID (56 hex). If omitted, you’ll be prompted.")
-    ap.add_argument("--blockfrost", default="", help="Blockfrost project_id (or env BLOCKFROST_PROJECT_ID).")
-    ap.add_argument("--out", default="", help="Output filename (default: ledger_scroll_<policy>.html)")
-    ap.add_argument("--no-gunzip", action="store_true", help="Do not gunzip even if bytes look like gzip")
-    ap.add_argument("--debug", action="store_true", help="Verbose debug output")
+    ap = argparse.ArgumentParser(description="Ledger Scrolls viewer (local CIP-25 JSON).")
+    ap.add_argument("--input", required=True, help="Path to a metadata JSON file OR a folder containing *.json")
+    ap.add_argument("--policy", required=True, help="Policy ID (hex)")
+    ap.add_argument("--asset", required=True, help="Asset name for single-file mode (e.g., HOSKY_SCROLL_001) OR manifest asset name")
+    ap.add_argument("--mode", choices=["auto", "single", "manifest"], default="auto",
+                    help="auto=detect role/spec, single=reconstruct one asset, manifest=reconstruct via manifest+pages")
+    ap.add_argument("--out", default="", help="Output file path. If omitted, uses asset name + extension in current dir.")
+    ap.add_argument("--stdout", action="store_true", help="Write bytes to stdout (useful for piping).")
     args = ap.parse_args()
 
-    safe_print("\n" + "=" * 58)
-    safe_print("                 Ledger Scrolls Viewer")
-    safe_print("=" * 58 + "\n")
-
-    policy = (args.policy or "").strip()
-    if not policy:
-        safe_print("Choose a default policy or paste your own:\n")
-        names = list(DEFAULT_POLICIES.keys())
-        for i, name in enumerate(names, 1):
-            safe_print(f"  {i}) {name}: {DEFAULT_POLICIES[name]}")
-        safe_print("  0) Enter a custom policy\n")
-        choice = input("Select [1]: ").strip() or "1"
-        if choice == "0":
-            policy = input("Policy ID: ").strip()
-        else:
-            try:
-                idx = int(choice) - 1
-                policy = DEFAULT_POLICIES[names[idx]]
-            except Exception:
-                policy = DEFAULT_POLICIES[names[0]]
-
-    if not re.fullmatch(r"[0-9a-fA-F]{56}", policy):
-        safe_print("\nError: policy id should be 56 hex chars.")
-        return 2
-
-    api_key = (args.blockfrost or os.getenv("BLOCKFROST_PROJECT_ID", "")).strip()
-    if not api_key:
-        safe_print("\nEnter your Blockfrost API key (mainnet).")
-        api_key = input("Blockfrost project_id: ").strip()
-    if not api_key:
-        safe_print("\nError: Blockfrost key required.")
-        return 2
-
-    script_dir = Path(__file__).resolve().parent
-    out_path = Path(args.out) if args.out else (script_dir / f"ledger_scroll_{policy[:10]}.html")
-
-    base_url = "https://cardano-mainnet.blockfrost.io/api/v0"
-    headers = {"project_id": api_key, "user-agent": "ledger-scrolls-viewer/1.1"}
-
-    safe_print(f"\nPolicy: {policy}")
-    safe_print("Scanning assets…")
-    units = list_policy_assets(base_url, headers, policy, debug=args.debug)
-    safe_print(f"Found {len(units)} assets under policy.")
-
-    manifest_meta: Optional[dict] = None
-    manifest_asset_name: Optional[str] = None
-    pages_by_name: Dict[str, dict] = {}
-
-    for i, unit in enumerate(units, 1):
-        if args.debug:
-            safe_print(f"[debug] asset {i}/{len(units)}: {unit}")
-        asset_data = http_get_json(f"{base_url}/assets/{unit}", headers=headers, debug=args.debug)
-        asset_name = hex_to_utf8(asset_data.get("asset_name", ""))  # usually plain hex, no 0x
-        if not asset_name:
-            continue
-
-        try:
-            meta = extract_metadata(asset_data)
-        except Exception:
-            continue
-
-        if manifest_meta is None and is_manifest(meta, asset_name):
-            manifest_meta = meta
-            manifest_asset_name = asset_name
-            if args.debug:
-                safe_print(f"[debug] manifest candidate: {asset_name}")
-            continue
-
-        if is_page(meta, asset_name):
-            pages_by_name[asset_name] = meta
-
-        time.sleep(0.02)
-
-    if not manifest_meta:
-        safe_print("\nError: no manifest found (expected role=manifest or pages[]).")
-        return 1
-    if not pages_by_name:
-        safe_print("\nError: no pages found.")
-        return 1
-
-    page_names = choose_page_order(manifest_meta, pages_by_name)
-    if not page_names:
-        safe_print("\nError: could not determine page order.")
-        return 1
-
-    safe_print(f"\nManifest: {manifest_asset_name or '(unknown)'}")
-    safe_print(f"Pages discovered: {len(pages_by_name)}")
-    safe_print(f"Pages to assemble: {len(page_names)}\n")
-
-    assembled = bytearray()
-    per_page_sizes: List[Tuple[str, int]] = []
-
-    for pn in page_names:
-        meta = pages_by_name[pn]
-        page_bytes = payload_to_bytes(meta.get("payload", []))
-        per_page_sizes.append((pn, len(page_bytes)))
-
-        page_sha = pick_hash(meta, ["sha", "sha256", "sha_gz", "sha_page"])
-        if page_sha:
-            verify_optional(f"page {pn}", page_bytes, page_sha)
-
-        assembled.extend(page_bytes)
-
-    blob = bytes(assembled)
-
-    if args.debug:
-        safe_print("Per-page byte sizes:")
-        for pn, sz in per_page_sizes:
-            safe_print(f"  {pn}: {sz} bytes")
-        safe_print(f"\nTOTAL assembled bytes: {len(blob)}")
-        safe_print(f"[debug] first 8 bytes: {blob[:8].hex() if blob else '(empty)'}")
-
-    if len(blob) == 0:
-        safe_print("\nERROR: assembled 0 bytes. Payload decoding failed or payload was empty.")
-        return 1
-
-    expected_gz = pick_hash(manifest_meta, ["sha_gz", "sha_gzip", "sha_compressed", "sha"])
-    if expected_gz:
-        safe_print(MAGIC_LINES[4])
-        verify_optional("assembled (compressed)", blob, expected_gz)
-
-    looks_gzip = len(blob) >= 2 and blob[0] == 0x1F and blob[1] == 0x8B
-    if looks_gzip and not args.no_gunzip:
-        safe_print("GZIP detected — decompressing…" if args.debug else MAGIC_LINES[5])
-        out_bytes = gzip.decompress(blob)
+    inp = Path(args.input).expanduser().resolve()
+    if inp.is_dir():
+        docs = load_folder_index(inp)
     else:
-        out_bytes = blob
+        d = load_json(inp)
+        if not (isinstance(d, dict) and "721" in d):
+            raise ValueError("Input JSON is not CIP-25 (missing top-level '721')")
+        docs = [d]
 
-    expected_raw = pick_hash(manifest_meta, ["sha_raw", "sha_html", "sha_uncompressed"])
-    if expected_raw:
-        verify_optional("assembled (uncompressed)", out_bytes, expected_raw)
+    policy = args.policy
+    asset = args.asset
 
-    # If user didn’t specify --out, try to keep it .html when it looks like html
-    if not args.out:
-        head = out_bytes[:512].lower()
-        if b"<!doctype html" in head or b"<html" in head or b"<body" in head:
-            out_path = out_path.with_suffix(".html")
+    if args.mode == "manifest":
+        data, meta = reconstruct_from_manifest(docs, policy, asset)
+        media_type = meta.get("mediaType") or meta.get("contentType") or "application/octet-stream"
+        role = meta.get("role", "manifest")
+    else:
+        aobj = find_asset_in_docs(docs, policy, asset)
+        role = (aobj.get("role") or "").lower().strip()
+        spec = (aobj.get("spec") or "").lower().strip()
+
+        if args.mode == "single" or (args.mode == "auto" and (role in ("file", "cover") or "single" in spec)):
+            data, meta = reconstruct_single_file(aobj)
+            media_type = meta.get("mediaType") or meta.get("contentType") or "application/octet-stream"
         else:
-            out_path = out_path.with_suffix(".bin")
+            # fall back to manifest reconstruction (asset is the manifest name)
+            data, meta = reconstruct_from_manifest(docs, policy, asset)
+            media_type = meta.get("mediaType") or meta.get("contentType") or "application/octet-stream"
+            role = meta.get("role", "manifest")
 
-    out_path.write_bytes(out_bytes)
+    if args.stdout:
+        sys.stdout.buffer.write(data)
+        return 0
 
-    safe_print(f"\n{MAGIC_LINES[6]}")
-    safe_print(f"WROTE: {out_path} ({out_path.stat().st_size} bytes)")
+    out = args.out.strip()
+    if not out:
+        ext = guess_extension(str(media_type))
+        out = f"{asset}{ext or '.bin'}"
+
+    out_path = Path(out).expanduser().resolve()
+    out_path.write_bytes(data)
+
+    print(f"[ok] role={role} bytes={len(data)} mediaType={media_type}")
+    print(f"[ok] wrote: {out_path}")
     return 0
 
 
