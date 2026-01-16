@@ -1,6 +1,3 @@
-Here is the updated README.md content by itself, in plain markdown format for easy copy-paste into your GitHub repo:
-
-```
 # Ledger Scrolls 📜
 
 > "A library that cannot burn."
@@ -57,9 +54,4 @@ registry_address: "UPDATE_once_built_addr1_YOUR_TOWN_SQUARE_ADDRESS_HERE"
 PRs welcome! See ARCHITECTURE.md for extensions.
 
 License: MIT  
-Maintained by @davidmjensen17
-```
-
-You can now copy the entire block above and paste it directly into your README.md file on GitHub (or locally via `nano README.md`).  
-
-Let me know if you want any tweaks (e.g., add badges, more examples, or change the tone)! 🚀
+Maintained by @BEACNpool.org
