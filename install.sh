@@ -1,74 +1,54 @@
 #!/bin/bash
 
-# --- Styling ---
-BOLD="\033[1m"
-GREEN="\033[0;32m"
-RED="\033[0;31m"
-YELLOW="\033[1;33m"
-RESET="\033[0m"
-
-echo -e "${BOLD}📜 Ledger Scrolls Installer${RESET}"
+echo "📜 Ledger Scrolls Installer"
 echo "======================================"
 
-# --- Step 1: Check Dependencies ---
-
-# 1. Check for Python 3
-if ! command -v python3 &> /dev/null; then
-    echo -e "${RED}[X] Python 3 is missing.${RESET}"
-    echo "    Please install Python 3 to continue."
-    exit 1
-fi
-echo -e "${GREEN}[✔] Python 3 detected.${RESET}"
-
-# 2. Check for Oura (The Blockchain Connector)
-if ! command -v oura &> /dev/null; then
-    echo -e "${YELLOW}[!] 'oura' binary not found in PATH.${RESET}"
-    echo "    Ledger Scrolls requires 'oura' to connect to Cardano."
-    echo ""
-    echo -e "    ${BOLD}Install option:${RESET}"
-    echo "    If you have Rust/Cargo installed, run: ${YELLOW}cargo install oura${RESET}"
-    echo "    Or download a release from: https://github.com/txpipe/oura/releases"
-    echo ""
-    read -p "    Continue anyway? (The script will fail without it later) [y/N] " -n 1 -r
-    echo ""
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
-    fi
+# Check Python
+if command -v python3 > /dev/null; then
+  echo "[✔] Python 3 detected."
 else
-    echo -e "${GREEN}[✔] Oura blockchain driver detected.${RESET}"
+  echo "[!] Python 3 not found. Install it first."
+  exit 1
 fi
 
-# --- Step 2: Setup Directories ---
-
-# Get the directory where this install script is running
-INSTALL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-CONFIG_DIR="$INSTALL_DIR/config"
-MANIFEST="$CONFIG_DIR/manifest.json"
-
-# Create config directory if missing
-if [ ! -d "$CONFIG_DIR" ]; then
-    echo "    Creating config directory..."
-    mkdir -p "$CONFIG_DIR"
+# Check Oura
+if command -v oura > /dev/null; then
+  echo "[✔] Oura blockchain driver detected."
+else
+  echo "[!] 'oura' binary not found in PATH."
+  echo "Install option:"
+  echo "If you have Rust/Cargo installed, run: cargo install oura"
+  echo "Or download a release from: https://github.com/txpipe/oura/releases"
+  read -p "Continue anyway? (The script will fail without it later) [y/N] " -n 1 -r
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    exit 1
+  fi
 fi
 
-# --- Step 3: Create the 'scroll' Launcher ---
+# Install deps
+pip3 install -r requirements.txt
 
-LAUNCHER_PATH="$INSTALL_DIR/scroll"
+# Create launcher
+cat > scroll << EOF
+#!/usr/bin/env bash
+cd "\$(dirname "\$0")"
+python3 src/main.py "\$@"
+EOF
+chmod +x scroll
+echo "[✔] Created launcher at: \$(pwd)/scroll"
 
-echo -e "#!/bin/bash\npython3 \"$INSTALL_DIR/main.py\" \"\$@\"" > "$LAUNCHER_PATH"
-chmod +x "$LAUNCHER_PATH"
+# Create config if not exists
+if [ ! -f config.yaml ]; then
+  cat > config.yaml << EOF
+driver: oura
+relays:
+  - Tcp:relays-new.cardano-mainnet.iohk.io:3001
+blockfrost_key: ""  # Optional for hash lookup
+registry_address: "UPDATE_once_built_addr1_YOUR_TOWN_SQUARE_ADDRESS_HERE"
+EOF
+fi
 
-echo -e "${GREEN}[✔] Created launcher at: $LAUNCHER_PATH${RESET}"
-
-# --- Step 4: Final Instructions ---
-
-echo ""
 echo "======================================"
-echo -e "${GREEN}${BOLD}Installation Complete!${RESET}"
-echo ""
-echo "To use Ledger Scrolls, you can now run:"
-echo -e "   ${YELLOW}./scroll help${RESET}"
-echo ""
-echo "PRO TIP: Add this directory to your PATH to run 'scroll' from anywhere."
-echo -e "   ${BOLD}export PATH=\$PATH:$INSTALL_DIR${RESET}"
-echo ""
+echo "Installation Complete!"
+echo "To use, run: ./scroll help"
+echo "PRO TIP: Add to PATH: export PATH=\$PATH:\$(pwd)"
