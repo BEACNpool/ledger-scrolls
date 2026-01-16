@@ -11,7 +11,7 @@ class BeaconParser:
     # --- Allowlisted Protocols ---
     LABEL_MSG = "674"      # CIP-20 Standard (Messages/Blogs)
     LABEL_NFT = "721"      # CIP-25 Standard (NFTs/Media)
-    LABEL_SCROLL = "777"   # Ledger Scrolls Custom Protocol
+    LABEL_SCROLL = "888"   # Ledger Scrolls Custom Protocol
 
     @staticmethod
     def parse_registration(tx_json):
@@ -89,7 +89,7 @@ class BeaconParser:
         if not md:
             return None
 
-        # --- Priority 1: Custom Scroll Protocol (777) ---
+        # --- Priority 1: Custom Scroll Protocol (888) ---
         if BeaconParser.LABEL_SCROLL in md:
             payload = md[BeaconParser.LABEL_SCROLL]
             # If it's the "msg" wrapper style, unwrap it for the processor
