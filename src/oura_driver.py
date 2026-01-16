@@ -8,85 +8,76 @@ logger = logging.getLogger(__name__)
 class OuraDriver:
     def __init__(self, network="mainnet"):
         self.network = network
-        # Ensure 'oura' is installed and in your PATH
         self.binary = "oura"
 
     def stream_address(self, address, start_slot=None):
-        """
-        Streams unfiltered chain events (Oura v2 watch has no CLI filter).
-        Address filtering would need to be done in Python post-processing.
-        """
-        cmd = [
-            self.binary, "watch",
-            "Tcp:relays-new.cardano-mainnet.iohk.io:3001",  # Public relay (can change to others if flaky)
-            "--magic", self.network.upper(),               # e.g., MAINNET
-        ]
-        
-        # Optional: Jump to start_slot (needs real block hash!)
-        if start_slot is not None:
-            # REPLACE THIS WITH A REAL BLOCK HASH from the slot (from cexplorer.io or cardanoscan.io)
-            # Example: get hash for slot 115000450 or closest
-            block_hash = "0000000000000000000000000000000000000000000000000000000000000000"  # DUMMY - MUST CHANGE!
-            cmd.extend(["--since", f"{start_slot},{block_hash}"])
-        
-        return self._run_process(cmd)
-
-    def stream_policy(self, policy_id, start_slot=None):
-        """
-        Streams unfiltered chain events (no CLI filter in v2).
-        Policy filtering would need to be done in Python post-processing.
-        """
         cmd = [
             self.binary, "watch",
             "Tcp:relays-new.cardano-mainnet.iohk.io:3001",
             "--magic", self.network.upper(),
         ]
-        
         if start_slot is not None:
-            # REPLACE THIS WITH A REAL BLOCK HASH!
-            block_hash = "0000000000000000000000000000000000000000000000000000000000000000"  # DUMMY - MUST CHANGE!
+            # For production: Use Blockfrost or explorer to get hash (see lookup_hash function below)
+            block_hash = self.lookup_block_hash(start_slot)  # Add this function
             cmd.extend(["--since", f"{start_slot},{block_hash}"])
-        
-        return self._run_process(cmd)
+        return self._run_process(cmd, filter_func=lambda event: address in event.get("address", ""))
 
-    def _run_process(self, cmd):
-        """
-        Executes the Oura subprocess and yields JSON events.
-        Handles cleanup automatically when the loop ends.
-        """
+    def stream_policy(self, policy_id, start_slot=None):
+        cmd = [
+            self.binary, "watch",
+            "Tcp:relays-new.cardano-mainnet.iohk.io:3001",
+            "--magic", self.network.upper(),
+        ]
+        if start_slot is not None:
+            block_hash = self.lookup_block_hash(start_slot)
+            cmd.extend(["--since", f"{start_slot},{block_hash}"])
+        return self._run_process(cmd, filter_func=lambda event: policy_id in event.get("policy", "") or "777" in event.get("metadata", {}))
+
+    def _run_process(self, cmd, filter_func=None):
         logger.info(f"Exec Oura: {' '.join(cmd)}")
         process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,  # Capture stderr for debugging
+            stderr=subprocess.PIPE,
             text=True,
-            bufsize=1  # Line buffered to get data immediately
+            bufsize=1
         )
         try:
-            # Yields JSON objects one by one as they come in from P2P
             for line in process.stdout:
                 if not line.strip():
                     continue
                 try:
-                    yield json.loads(line)
+                    event = json.loads(line)
+                    if filter_func is None or filter_func(event):
+                        yield event
                 except json.JSONDecodeError:
-                    # Sometimes Oura prints status messages that aren't JSON
                     continue
-                
         except GeneratorExit:
-            # This block runs if the consumer (main.py) stops the loop
             logger.debug("Closing Oura stream...")
             raise
-            
         finally:
-            # Rigorous cleanup to prevent zombie processes
             process.terminate()
             try:
                 process.wait(timeout=1)
             except subprocess.TimeoutExpired:
                 process.kill()
-            
-            # Log any errors from the subprocess if it crashed
             stderr_out = process.stderr.read()
             if stderr_out and "error" in stderr_out.lower():
                 logger.error(f"Oura process error: {stderr_out.strip()}")
+
+    def lookup_block_hash(self, slot):
+        # Simple curl to Blockfrost or explorer (use config key)
+        from config import blockfrost_key
+        if not blockfrost_key:
+            logger.error("Blockfrost key missing for hash lookup.")
+            return "0000000000000000000000000000000000000000000000000000000000000000"  # Dummy fallback
+        import requests
+        url = f"https://cardano-mainnet.blockfrost.io/api/v0/blocks/slot/{slot - 1}"  # Closest before
+        headers = {"project_id": blockfrost_key}
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            return data["hash"]
+        else:
+            logger.error("Hash lookup failed.")
+            return "0000000000000000000000000000000000000000000000000000000000000000"
