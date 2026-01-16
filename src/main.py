@@ -1,103 +1,146 @@
 import sys
 import json
 import logging
-from .oura_driver import OuraDriver
-from .beacon_protocol import BeaconParser
-from .hailo_ai import HailoProcessor
+import argparse
+import shutil
+from pathlib import Path
 
-# Configure Logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+from oura_driver import OuraDriver
+from beacon_protocol import BeaconParser
+from hailo_ai import HailoProcessor
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler()]
+)
 logger = logging.getLogger(__name__)
 
-MANIFEST_PATH = "config/manifest.json"
+CONFIG_PATH = Path(__file__).parent.parent / "config" / "manifest.json"
 
-def load_manifest():
-    with open(MANIFEST_PATH, 'r') as f:
-        return json.load(f)
 
-def save_manifest(data):
-    with open(MANIFEST_PATH, 'w') as f:
-        json.dump(data, f, indent=4)
-
-def list_scrolls(manifest):
-    print("\n=== Available Ledger Scrolls ===")
-    for name, data in manifest['known_scrolls'].items():
-        print(f"[*] {name} (Start Slot: {data['start_slot']})")
-    print("================================\n")
-
-def registry_mode(manifest):
-    """
-    Listens to the 'Town Square' address for new registrations (Beacon Protocol).
-    """
-    registry_addr = manifest['registry_settings']['registry_address']
-    logger.info(f"Listening to Registry Beacon at: {registry_addr}")
+def load_manifest() -> dict:
+    if not CONFIG_PATH.exists():
+        logger.warning("Manifest not found, creating empty one")
+        return {"registry_settings": {}, "known_scrolls": {}}
     
-    driver = OuraDriver(network="mainnet")
-    # In a real scenario, this listens to the tip. 
-    # For now, we simulate listening to the address filter.
-    
-    for tx in driver.stream_address(registry_addr):
-        # Pass raw TX to Protocol Parser
-        new_scroll = BeaconParser.parse_registration(tx)
+    try:
+        with CONFIG_PATH.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f"Failed to load manifest: {e}")
+        sys.exit(1)
+
+
+def save_manifest(data: dict):
+    try:
+        CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with CONFIG_PATH.open("w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        logger.info("Manifest saved successfully")
+    except Exception as e:
+        logger.error(f"Failed to save manifest: {e}")
+
+
+def check_oura_binary():
+    if not shutil.which("oura"):
+        logger.error(
+            "oura binary not found! Please install oura[](https://github.com/txpipe/oura)"
+        )
+        sys.exit(1)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Ledger Scrolls - Cardano immutable data viewer",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # List command
+    subparsers.add_parser("list", help="List all known scrolls")
+
+    # Registry listen mode
+    subparsers.add_parser("registry", help="Listen for new scroll registrations")
+
+    # Read specific scroll
+    read_parser = subparsers.add_parser("read", help="Read/reconstruct a scroll")
+    read_parser.add_argument("scroll_name", type=str, help="Name of the scroll to read")
+
+    # Global options
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
+
+    args = parser.parse_args()
+
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    manifest = load_manifest()
+
+    check_oura_binary()
+
+    if args.command == "list":
+        if not manifest.get("known_scrolls"):
+            print("No scrolls registered yet.")
+            return
         
-        if new_scroll:
-            logger.info(f"New Scroll Discovered: {new_scroll['name']}")
-            manifest['known_scrolls'][new_scroll['name']] = {
-                "policy_id": new_scroll['policy_id'],
-                "start_slot": new_scroll['start_slot'],
-                "structure": new_scroll['structure'],
-                "description": "Discovered via Beacon"
-            }
-            save_manifest(manifest)
+        print("\nKnown Scrolls:")
+        for name, info in manifest["known_scrolls"].items():
+            print(f"  • {name}")
+            print(f"    PolicyID:  {info['policy_id']}")
+            print(f"    Start slot: {info['start_slot']}")
+            print(f"    Structure:  {info.get('structure', 'Unknown')}")
+            print()
 
-def reader_mode(scroll_name, manifest):
-    """
-    Spins up Oura starting at the specific slot for the specific Policy ID.
-    No API. Pure P2P.
-    """
-    if scroll_name not in manifest['known_scrolls']:
-        logger.error("Scroll not found in manifest.")
-        return
-
-    data = manifest['known_scrolls'][scroll_name]
-    logger.info(f"Booting up AI Indexer for: {scroll_name}")
-    logger.info(f"Jumping direct to Slot: {data['start_slot']}")
-    
-    # Initialize Hardware
-    ai_chip = HailoProcessor()
-    driver = OuraDriver(network="mainnet")
-    
-    # Start streaming from the specific history point
-    # We filter specifically for this Policy ID
-    stream = driver.stream_policy(data['policy_id'], start_slot=data['start_slot'])
-    
-    for tx in stream:
-        # 1. Extract Metadata
-        raw_metadata = BeaconParser.extract_metadata(tx)
+    elif args.command == "registry":
+        print("Starting registry listener mode...")
+        driver = OuraDriver(network=manifest["registry_settings"].get("listen_network", "mainnet"))
+        registry_addr = manifest["registry_settings"].get("registry_address")
         
-        if raw_metadata:
-            # 2. Pass to AI HAT for cleanup/understanding
-            clean_text = ai_chip.process(raw_metadata, structure=data['structure'])
-            
-            # 3. Output/Store
-            print(f"\n[AI READ]: {clean_text}")
+        if not registry_addr or "YOUR_TOWN_SQUARE_ADDRESS_HERE" in registry_addr:
+            print("ERROR: Please update registry_address in manifest.json first!")
+            sys.exit(1)
+
+        for tx in driver.stream_address(registry_addr):
+            registration = BeaconParser.parse_registration(tx)
+            if registration:
+                name = registration.get("project", "Unnamed")
+                manifest["known_scrolls"][name] = {
+                    "policy_id": registration["policy_id"],
+                    "start_slot": registration["start_slot"],
+                    "structure": registration.get("structure", "Unknown"),
+                    "description": registration.get("description", "")
+                }
+                save_manifest(manifest)
+                print(f"New scroll registered: {name}")
+
+    elif args.command == "read":
+        scroll_name = args.scroll_name
+        if scroll_name not in manifest["known_scrolls"]:
+            print(f"Scroll '{scroll_name}' not found in known scrolls.")
+            print("Run 'ledger-scrolls list' to see available scrolls.")
+            sys.exit(1)
+
+        info = manifest["known_scrolls"][scroll_name]
+        print(f"Reconstructing scroll: {scroll_name}")
+        print(f"PolicyID: {info['policy_id']}")
+        print(f"Starting from slot: {info['start_slot']}\n")
+
+        driver = OuraDriver(network=manifest["registry_settings"].get("listen_network", "mainnet"))
+        processor = HailoProcessor()
+
+        try:
+            for tx in driver.stream_policy(info["policy_id"], info["start_slot"]):
+                metadata = BeaconParser.extract_metadata(tx)
+                if metadata:
+                    cleaned = processor.process(metadata, info.get("structure", "Unknown"))
+                    print(cleaned)
+                    print("-" * 80)
+        except KeyboardInterrupt:
+            print("\nStopped by user.")
+        except Exception as e:
+            logger.error(f"Error during scroll reconstruction: {e}", exc_info=True)
+
 
 if __name__ == "__main__":
-    manifest = load_manifest()
-    
-    if len(sys.argv) < 2:
-        print("Usage: python -m src.main [list | registry | read <Project Name>]")
-        sys.exit(1)
-        
-    command = sys.argv[1]
-    
-    if command == "list":
-        list_scrolls(manifest)
-    elif command == "registry":
-        registry_mode(manifest)
-    elif command == "read":
-        if len(sys.argv) < 3:
-            print("Error: Please specify a project name.")
-        else:
-            project_name = " ".join(sys.argv[2:])
-            reader_mode(project_name, manifest)
+    main()
