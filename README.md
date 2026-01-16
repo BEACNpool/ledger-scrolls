@@ -9,8 +9,8 @@ We are building the **Smart Edge Node**: a device that allows anyone to preserve
 ---
 
 ## 📜 The Ethos
-The internet was supposed to be permanent, but links rot, servers crash, and history can be rewritten or censored. Blockchains solve this, but accessing that data usually requires:
-1.  **Massive Hardware:** Storing terabytes of history (a Full Node).
+The intent is supposed to be permanent; but links rot, servers crash, and history can be rewritten or censored. Blockchains solve this, but accessing that data usually requires:
+1.  **Massive Hardware:** Storing hundreds of GB of history (a Full Node).  Lots of RAM to index.  multiple dockers and containers need to talk to eachother.
 2.  **Centralized Gatekeepers:** Relying on APIs (like Blockfrost or Google) that can cut you off.
 
 **Ledger Scrolls changes this.**
