@@ -1,41 +1,58 @@
-# Ledger Scrolls
+Ledger Scrolls 📜
+"A library that cannot burn."
 
-> **"A library that cannot burn."**
+Ledger Scrolls is an open-source protocol and reference implementation for publishing and reading permissionless, immutable data on the Cardano blockchain.
 
-**Ledger Scrolls** is an open-source protocol and hardware reference design for storing, indexing, and reading permissionless, immutable data on the Cardano blockchain.
+We are building the Smart Edge Node: a tool that allows anyone to preserve human knowledge without relying on centralized APIs, cloud servers, or massive hardware requirements.
 
-We are building the **Smart Edge Node**: a device that allows anyone to preserve human knowledge without relying on centralized APIs, cloud servers, or massive hardware requirements.
+📜 The Ethos
+The intent is supposed to be permanent; but links rot, servers crash, and history is rewritten or censored. Blockchains solve this, but accessing that data usually requires:
 
----
+Massive Hardware: Storing hundreds of GB of history (Full Node).
 
-## 📜 The Ethos
-The intent is supposed to be permanent; but links rot, servers crash, and history can be rewritten or censored. Blockchains solve this, but accessing that data usually requires:
-1.  **Massive Hardware:** Storing hundreds of GB of history (a Full Node).  Lots of RAM to index.  multiple dockers and containers need to talk to eachother.
-2.  **Centralized Gatekeepers:** Relying on APIs (like Blockfrost or Google) that can cut you off.
+Centralized Gatekeepers: Relying on APIs (like Blockfrost or Google) that can cut you off.
 
-**Ledger Scrolls changes this.**
+Ledger Scrolls changes this.
 
-By combining **Cardano's deterministic eUTxO architecture** with a lightweight **Beacon Protocol**, we allow low-power devices to act as independent librarians. They don't need to index the whole world—they only need to know *where* to look.
+By combining Cardano's deterministic eUTxO architecture with the lightweight Beacon Protocol, we allow low-power devices to act as independent librarians. They don't need to index the whole world—they only need to know where to look.
 
-### The Mission
-* **Permissionless:** No one can stop you from publishing a Scroll.
-* **Immutable:** Once on-chain, the data is permanent.
-* **Decentralized:** The reader connects directly to the P2P network. No middleman.
-* **Efficient:** "Start Slot" indexing allows instant syncing on consumer hardware.
+The Mission
+Permissionless: No one can stop you from publishing a Scroll.
 
----
+Immutable: Once on-chain, the data is permanent.
 
-## 📡 The Beacon Protocol (How it Works)
+Decentralized: The reader connects directly to the P2P network. No middleman.
 
+Efficient: "Start Slot" indexing allows instant syncing on consumer hardware.
+
+🚀 Quick Start
+Read the BTC Whitepaper or The Bible directly from the blockchain in seconds.
+
+Mac/Linux:
+
+Bash
+
+# 1. Download & Install (Requires Python 3 & Docker/Oura)
+git clone https://github.com/BEACNpool/ledger-scrolls.git
+cd ledger-scrolls
+chmod +x install.sh && ./install.sh
+
+# 2. Run
+./scroll read --policy <POLICY_ID> --slot <SLOT>
+📡 The Beacon Protocol (How it Works)
 Ledger Scrolls is not a platform; it is a standard. It relies on a "Town Square" model to connect Creators and Viewers.
 
-### 1. For Creators (The Writers)
-You want to publish a book, a manifesto, or a document (e.g., *The Bitcoin Whitepaper* or *The Bible*).
-1.  **Mint:** You mint your data as NFTs/Tokens on Cardano.
-2.  **Beacon:** Instead of building a complex website, you send a single transaction (~1.5 ADA) to the **Ledger Scrolls Registry Address**.
-3.  **Metadata (Label 777):** You attach a simple JSON tag to this transaction:
+1. For Creators (The Writers)
+You want to publish a book, a manifesto, or a document.
 
-```json
+Mint: You mint your data as NFTs or transactions on Cardano.
+
+Beacon: You send a single transaction (~0.17 ADA) to the Ledger Scrolls Registry Address (or simply share your address publicly).
+
+Metadata (Label 777): You attach a simple JSON tag to this transaction:
+
+JSON
+
 {
   "777": {
     "msg": [
@@ -49,71 +66,58 @@ You want to publish a book, a manifesto, or a document (e.g., *The Bitcoin White
 }
 PolicyID: The unique ID of your content.
 
-StartSlot: The exact moment in time your content was created. This is the key to efficiency. It tells nodes exactly when to start listening, skipping years of irrelevant blockchain history.
+StartSlot: The exact moment in time your content was created. This tells nodes exactly when to start listening, skipping years of irrelevant blockchain history.
 
 2. For Viewers (The Readers)
 You don't need to trust a website. You run a Ledger Scroll Node.
 
-Your node watches the Registry Address.
+Public Mode: Your node watches the "Town Square" for new registrations.
 
-When a new "Beacon" signal arrives, your node records the PolicyID and StartSlot.
-
-It spins up a listener that jumps directly to that slot in history and reconstructs the document locally.
+Private Mode: You point your node at a specific address or Policy ID to read private/unlisted scrolls.
 
 🛠 piLedgerScrolls: The Smart Edge Node
-This repository contains the reference implementation for piLedgerScrolls, a dedicated hardware node designed to run the Ledger Scrolls protocol.
+This repository contains the software for piLedgerScrolls, designed to run on low-power hardware.
 
-The "Cheapest AI Indexer"
-We target specific hardware to prove that decentralization is affordable.
+Hardware Requirements
+Minimum: Any PC/Mac with Python 3 and Internet.
 
-Compute: Raspberry Pi 5 (8GB RAM)
+Recommended (The "Edge Node"): Raspberry Pi 5 (8GB RAM).
 
-Intelligence: Raspberry Pi AI HAT+ (Hailo-10H 13 TOPS)
+Optional AI: Raspberry Pi AI HAT+ (Hailo-10H).
 
-Storage: 256GB NVMe SSD (USB 3.0 Adapter)
+Note: If no AI chip is detected, the software automatically falls back to CPU-based text reconstruction.
 
 How it runs
-Oura (The Eyes): Connects to the Cardano P2P network via Oura (Rust) to stream live blocks.
+Oura (The Eyes): Connects to the Cardano P2P network to stream live blocks.
 
-The Filter: Ignores 99.9% of chain traffic, capturing only transactions matching known Ledger Scroll Policy IDs.
+The Filter: Ignores 99.9% of chain traffic, capturing only transactions matching known Ledger Scroll Policy IDs or Protocols (Label 674/777).
 
-Hailo AI (The Brain): The raw blockchain data (often messy JSON/Hex) is passed to the local AI HAT. The LLM parses the structure and outputs clean, human-readable text.
+Hailo AI / CPU (The Brain): The raw blockchain data is stitched together and formatted into human-readable text.
 
-Local Database: The result is stored locally for instant querying.
+📖 Usage Guide
+Once installed, use the scroll command to interact with the blockchain.
 
-🚀 Getting Started
-Prerequisites
-A Raspberry Pi 5 setup with the AI HAT installed.
-
-oura installed and in your system PATH (for P2P connection).
-
-Python 3.10+
-
-Installation
-Bash
-
-git clone [https://github.com/BEACNpool/ledger-scrolls.git](https://github.com/BEACNpool/ledger-scrolls.git)
-cd ledger-scrolls
-pip install -r requirements.txt
-Configuration
-Open config/manifest.json. You can manually add scrolls, or set your registry_address to listen for new ones automatically.
-
-Usage
-1. List Available Scrolls View what your node currently knows about.
+1. Read a Private Scroll (Direct Mode)
+Read data from any Policy ID or Address without registering it first. Perfect for testing or private storage.
 
 Bash
 
-python -m src.main list
-2. Watch the Beacon (Discovery Mode) Listen to the "Town Square" for new project registrations.
+./scroll read --policy <POLICY_ID> --slot <START_SLOT>
+# OR
+./scroll read --address <WALLET_ADDR> --slot <START_SLOT>
+2. Watch the Town Square (Discovery Mode)
+Listen to the registry for new public projects.
 
 Bash
 
-python -m src.main registry
-3. Read a Scroll Sync and display a specific project. This will jump to the StartSlot and begin indexing immediately.
+./scroll registry
+3. List & Read Saved Scrolls
+View projects you have discovered or saved locally.
 
 Bash
 
-python -m src.main read "The Cardano Bible"
+./scroll list
+./scroll read "The Cardano Bible"
 🤝 Contributing
 Ledger Scrolls is an open protocol.
 
@@ -121,4 +125,4 @@ Developers: Submit PRs to improve the oura driver or AI parsing logic.
 
 Creators: Mint your own Ledger Scrolls and register them on-chain.
 
-Maintained by [BEACN] Stake Pool Because the truth shouldn't require an API key.
+Maintained by [BEACN] Stake Pool. Because the truth shouldn't require an API key.
