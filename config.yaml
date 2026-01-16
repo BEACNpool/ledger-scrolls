@@ -1,0 +1,5 @@
+driver: oura  # or ogmios, mithril
+relays:
+  - tcp://relays-new.cardano-mainnet.iohk.io:3001
+registry_address: "UPDATE_once_built_addr1_YOUR_TOWN_SQUARE_ADDRESS_HERE"
+cache_dir: "cache"
