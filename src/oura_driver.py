@@ -9,38 +9,44 @@ class OuraDriver:
     def __init__(self, network="mainnet"):
         self.network = network
         # Ensure 'oura' is installed and in your PATH
-        self.binary = "oura" 
+        self.binary = "oura"
 
     def stream_address(self, address, start_slot=None):
         """
-        Filters the chain for a specific address.
-        Supports optional start_slot to allow 'Time Travel' or efficiency.
+        Streams unfiltered chain events (Oura v2 watch has no CLI filter).
+        Address filtering would need to be done in Python post-processing.
         """
         cmd = [
             self.binary, "watch",
-            self.network,
-            "--filter", f"address={address}"
+            "Tcp:relays-new.cardano-mainnet.iohk.io:3001",  # Public relay (can change to others if flaky)
+            "--magic", self.network.upper(),               # e.g., MAINNET
         ]
         
-        # If a start slot is provided, we tell Oura to go back in time
+        # Optional: Jump to start_slot (needs real block hash!)
         if start_slot is not None:
-            cmd.extend(["--since", str(start_slot)])
+            # REPLACE THIS WITH A REAL BLOCK HASH from the slot (from cexplorer.io or cardanoscan.io)
+            # Example: get hash for slot 115000450 or closest
+            block_hash = "0000000000000000000000000000000000000000000000000000000000000000"  # DUMMY - MUST CHANGE!
+            cmd.extend(["--since", f"{start_slot},{block_hash}"])
         
         return self._run_process(cmd)
 
     def stream_policy(self, policy_id, start_slot=None):
         """
-        Filters the chain for a specific Policy ID (Mint/Burn events).
+        Streams unfiltered chain events (no CLI filter in v2).
+        Policy filtering would need to be done in Python post-processing.
         """
         cmd = [
             self.binary, "watch",
-            self.network,
-            "--filter", f"policy={policy_id}"
+            "Tcp:relays-new.cardano-mainnet.iohk.io:3001",
+            "--magic", self.network.upper(),
         ]
         
         if start_slot is not None:
-            cmd.extend(["--since", str(start_slot)])
-
+            # REPLACE THIS WITH A REAL BLOCK HASH!
+            block_hash = "0000000000000000000000000000000000000000000000000000000000000000"  # DUMMY - MUST CHANGE!
+            cmd.extend(["--since", f"{start_slot},{block_hash}"])
+        
         return self._run_process(cmd)
 
     def _run_process(self, cmd):
@@ -49,33 +55,31 @@ class OuraDriver:
         Handles cleanup automatically when the loop ends.
         """
         logger.info(f"Exec Oura: {' '.join(cmd)}")
-
         process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE, # Capture stderr for debugging
+            stderr=subprocess.PIPE,  # Capture stderr for debugging
             text=True,
-            bufsize=1 # Line buffered to get data immediately
+            bufsize=1  # Line buffered to get data immediately
         )
-
         try:
             # Yields JSON objects one by one as they come in from P2P
             for line in process.stdout:
-                if not line.strip(): 
+                if not line.strip():
                     continue
                 try:
                     yield json.loads(line)
                 except json.JSONDecodeError:
                     # Sometimes Oura prints status messages that aren't JSON
                     continue
-                    
+                
         except GeneratorExit:
             # This block runs if the consumer (main.py) stops the loop
             logger.debug("Closing Oura stream...")
             raise
             
         finally:
-            # rigorous cleanup to prevent zombie processes
+            # Rigorous cleanup to prevent zombie processes
             process.terminate()
             try:
                 process.wait(timeout=1)
