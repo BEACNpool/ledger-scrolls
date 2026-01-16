@@ -11,7 +11,7 @@ class BeaconParser:
     # --- Allowlisted Protocols ---
     LABEL_MSG = "674"      # CIP-20 Standard (Messages/Blogs)
     LABEL_NFT = "721"      # CIP-25 Standard (NFTs/Media)
-    LABEL_SCROLL = "888"   # Ledger Scrolls Custom Protocol
+    LABEL_SCROLL = "777"   # Ledger Scrolls Custom Protocol
 
     @staticmethod
     def parse_registration(tx_json):
@@ -51,8 +51,8 @@ class BeaconParser:
                     val = parts[1].strip()
                     
                     # Map known keys to our internal schema
-                    if key == "project":
-                        data["project"] = val  # Fixed: Matches main.py expectation
+                    if key == "name":
+                        data["name"] = val
                     elif key == "policyid":
                         data["policy_id"] = val
                     elif key == "startslot":
@@ -66,7 +66,8 @@ class BeaconParser:
                         data["description"] = val
 
                 # 3. Validation (Must have Name and ID)
-                if "project" in data and "policy_id" in data:
+                if "name" in data and "policy_id" in data:
+                    logger.info(f"Parsed registration for {data['name']}")
                     return data
 
         except Exception as e:
@@ -89,7 +90,7 @@ class BeaconParser:
         if not md:
             return None
 
-        # --- Priority 1: Custom Scroll Protocol (888) ---
+        # --- Priority 1: Custom Scroll Protocol (777) ---
         if BeaconParser.LABEL_SCROLL in md:
             payload = md[BeaconParser.LABEL_SCROLL]
             # If it's the "msg" wrapper style, unwrap it for the processor
