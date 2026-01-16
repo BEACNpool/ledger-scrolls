@@ -36,7 +36,7 @@ See ARCHITECTURE.md for diagram.
 
 ## Drivers
 
-- **Oura**: P2P streaming (unfiltered + Python filter for 777).
+- **Oura**: P2P streaming (unfiltered + Python filter for 888).
 - **Ogmios**: WebSocket queries (easy slot/policy filtering).
 - **Mithril**: Snapshot-based historical access (subprocess to client binary).
 
@@ -51,7 +51,7 @@ registry_address: "UPDATE_once_built_addr1_YOUR_TOWN_SQUARE_ADDRESS_HERE"
 
 ## Contributing
 
-PRs welcome! See ARCHITECTURE.md for extensions.
+PRs welcome!
 
 License: MIT  
 Maintained by @BEACNpool.org
