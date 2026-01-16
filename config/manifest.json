@@ -1,0 +1,20 @@
+{
+    "registry_settings": {
+        "registry_address": "UPDATE_once_built_addr1_YOUR_TOWN_SQUARE_ADDRESS_HERE",
+        "listen_network": "mainnet"
+    },
+    "known_scrolls": {
+        "The Cardano Bible": {
+            "policy_id": "2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0",
+            "start_slot": 115000450,
+            "structure": "Book/Text",
+            "description": "The Holy Bible on Cardano"
+        },
+        "BTC Whitepaper": {
+            "policy_id": "8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1",
+            "start_slot": 100000000,
+            "structure": "Document/PDF",
+            "description": "Satoshi's Vision"
+        }
+    }
+}
