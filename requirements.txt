@@ -1,8 +1,3 @@
-# Currently no external PyPI dependencies required
-# But good to have for future:
-# oura              # (not on pypi – installed via cargo/rust)
-# hailo-platform    # when you integrate real Hailo SDK
-ogmios-python==1.4.2
-requests  # For lookups
-pytest  # For tests
-pyyaml  # For config
+ogmios-python
+requests
+pyyaml
