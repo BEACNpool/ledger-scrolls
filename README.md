@@ -74,12 +74,15 @@ cache_dir: "cache"    # Where streamed metadata is saved locally
 
 ## Currently Minted & Reconstructible Scrolls
 
+
 - **The Cardano Bible**  
   Policy ID: `2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0`
-
+  Start Slot: 12858169  # Required for streaming; adjust if needed
+  
 - **Bitcoin Whitepaper**  
   Policy ID: `8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1`
-
+  Start Slot: 12858169  # Required for streaming; adjust if needed (similar mint time)
+  
 ## Contributing
 
 PRs are very welcome!  
