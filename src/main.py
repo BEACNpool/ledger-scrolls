@@ -69,7 +69,7 @@ def registry_mode(manifest, config):
     Listens to the registry beacon address for new registrations (Beacon Protocol).
     """
     registry_addr = config.get('registry_address')
-    if not registry_addr or registry_addr == "UPDATE_once_built_addr1_YOUR_TOWN_SQUARE_ADDRESS_HERE":
+    if not registry_addr or registry_addr == "addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy":
         logger.error("Registry address not set or still placeholder in config.yaml!")
         return
 
