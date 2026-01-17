@@ -1,3 +1,5 @@
+
+```bash
 #!/bin/bash
 
 # --- Styling ---
@@ -20,12 +22,18 @@ if ! command -v python3 &> /dev/null; then
 fi
 echo -e "${GREEN}[✔] Python 3 detected.${RESET}"
 
-# 2. Install Python dependencies
+# 2. Create and activate venv (handles PEP 668 on Ubuntu)
+echo "Creating virtual environment..."
+python3 -m venv venv
+source venv/bin/activate
+echo -e "${GREEN}[✔] Virtual environment created and activated.${RESET}"
+
+# 3. Install Python requirements (inside venv)
 echo "Installing Python requirements..."
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 echo -e "${GREEN}[✔] Python dependencies installed.${RESET}"
 
-# 3. Check/Install Rust/Cargo for Oura
+# 4. Check/Install Rust/Cargo for Oura
 if ! command -v cargo &> /dev/null; then
     echo -e "${YELLOW}[!] Rust/Cargo not found. Installing...${RESET}"
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -34,7 +42,7 @@ else
     echo -e "${GREEN}[✔] Rust/Cargo detected.${RESET}"
 fi
 
-# 4. Check/Install Oura
+# 5. Check/Install Oura
 if ! command -v oura &> /dev/null; then
     echo -e "${YELLOW}[!] Installing Oura via Cargo...${RESET}"
     cargo install oura
@@ -50,7 +58,6 @@ CACHE_DIR="$INSTALL_DIR/cache"
 MANIFEST="$CONFIG_DIR/scrolls_manifest.json"
 CONFIG_YAML="$INSTALL_DIR/config.yaml"
 
-# Create config dir
 mkdir -p "$CONFIG_DIR"
 mkdir -p "$CACHE_DIR"
 
@@ -67,7 +74,7 @@ EOF
     echo -e "${GREEN}[✔] config.yaml created. Edit it with your settings.${RESET}"
 fi
 
-# Create manifest if missing (moved to scrolls_manifest.json)
+# Create manifest if missing
 if [ ! -f "$MANIFEST" ]; then
     echo "Creating sample scrolls_manifest.json..."
     cat << EOF > "$MANIFEST"
@@ -79,13 +86,13 @@ if [ ! -f "$MANIFEST" ]; then
     "known_scrolls": {
         "The Cardano Bible": {
             "policy_id": "2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0",
-            "start_slot": 115000450,
+            "start_slot": 12858169,
             "structure": "Book/Text",
             "description": "The Holy Bible on Cardano"
         },
         "BTC Whitepaper": {
             "policy_id": "8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1",
-            "start_slot": 100000000,
+            "start_slot": 12858169,
             "structure": "Document/PDF",
             "description": "Satoshi's Vision"
         }
@@ -99,7 +106,7 @@ fi
 
 LAUNCHER_PATH="$INSTALL_DIR/scroll"
 
-echo -e "#!/bin/bash\npython3 \"$INSTALL_DIR/src/main.py\" \"\$@\"" > "$LAUNCHER_PATH"
+echo -e "#!/bin/bash\nDIR=\"\$(cd \"\$(dirname \"\${BASH_SOURCE[0]}\")\" && pwd)\"\n[ -d \"\$DIR/venv\" ] && source \"\$DIR/venv/bin/activate\"\ncd \"\$DIR\" && python3 -m src.main \"\$@\"" > "$LAUNCHER_PATH"
 chmod +x "$LAUNCHER_PATH"
 
 echo -e "${GREEN}[✔] Created launcher at: $LAUNCHER_PATH${RESET}"
@@ -110,9 +117,13 @@ echo ""
 echo "======================================"
 echo -e "${GREEN}${BOLD}Installation Complete!${RESET}"
 echo ""
-echo "To use Ledger Scrolls, edit config.yaml, then run:"
-echo -e "   ${YELLOW}./scroll help${RESET}"
+echo "The virtual environment is activated in this session. Activate it in new terminals with:"
+echo "source venv/bin/activate"
 echo ""
-echo "PRO TIP: Add this directory to your PATH to run 'scroll' from anywhere."
-echo -e "   ${BOLD}export PATH=\$PATH:$INSTALL_DIR${RESET}"
+echo "To use Ledger Scrolls, edit config.yaml, then run:"
+echo -e "   ${YELLOW}./scroll interactive${RESET}  # CNTools-like menu
+echo -e "   or ./scroll help"
+echo ""
+echo "PRO TIP: Add to your PATH to run 'scroll' anywhere:"
+echo -e "   export PATH=\$PATH:$INSTALL_DIR"
 echo ""
