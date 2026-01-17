@@ -1,4 +1,3 @@
-
 # Ledger Scrolls Protocol
 
 ## Overview
@@ -7,7 +6,9 @@ Ledger Scrolls uses Cardano metadata labels to publish immutable data chunks. Re
 ## Registration (Beacon)
 - Label: 777
 - Format: ["LS:Register", "Name:<scroll_name>", "PolicyID:<policy_id>", "StartSlot:<slot>", "Structure:<type>", "Description:<desc>"]
-- Example: ["LS:Register", "Name:The Cardano Bible", "PolicyID:2f0c8b54...", "StartSlot:115000450", "Structure:Book/Text", "Description:The Holy Bible on Cardano"]
+- Example: ["LS:Register", "Name:The Cardano Bible", "PolicyID:2f0c8b54...", "StartSlot:12858169", "Structure:Book/Text", "Description:The Holy Bible on Cardano"]
+
+Note: StartSlot is required for efficient streaming — use the earliest mint slot from explorer for the policy.
 
 ## Content Chunks
 - Labels: 777 (custom), 674 (messages), 721 (NFTs)
