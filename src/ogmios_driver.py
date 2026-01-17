@@ -1,5 +1,5 @@
 import logging
-from ogmios_python import Client  # Assumes ogmios-python installed
+from ogmios import Client  
 
 logger = logging.getLogger(__name__)
 
