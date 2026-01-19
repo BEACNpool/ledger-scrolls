@@ -1,5 +1,0 @@
-driver: oura  # or ogmios if you have a local node
-relays:
-  - tcp://relays-new.cardano-mainnet.iohk.io:3001  # add more if you want
-registry_address: "addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy"
-cache_dir: "cache"
