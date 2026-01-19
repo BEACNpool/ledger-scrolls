@@ -1,22 +1,3 @@
-# Updated Ledger-Scrolls Repo Based on New README
-
-Based on my analysis of the GitHub repo at https://github.com/BEACNpool/ledger-scrolls, the current implementation relies on drivers (Oura for P2P streaming from IOHK relays, Ogmios for WebSocket queries to a local node, and planned Mithril) to fetch and reconstruct data without centralized APIs like Blockfrost (though Blockfrost can be added as an option per your request). The current code in src/ includes driver-specific files (oura_driver.py, ogmios_driver.py), a beacon_protocol.py for protocol logic, viewer.py for reconstruction, main.py as entrypoint, and hailo_ai.py (possibly for AI-related features, but not core).
-
-To update to the new README's registry/manifest system:
-- Shift from streaming/scanning to pointer-based lookups: query registry UTxO via cardano-cli or Ogmios for datum, then resolve manifest (using tx hash to get metadata), then fetch page NFTs' metadata.
-- Since cardano-cli can't fetch historical tx metadata directly, I'll use Ogmios for local node queries (as in current repo) for main path, and add Blockfrost as an option for fallback or no-local-node mode. This allows connecting to IOHK topology via relays (for Oura/Ogmios) without full indexing.
-- Prompt for local node vs Blockfrost in UI/CLI.
-- Keep options for custom registries, local nodes, and Blockfrost.
-- Use subprocess for cardano-cli where possible (e.g., UTxO queries), but use pyogmios or requests for Ogmios/Blockfrost for tx metadata.
-- Update to use inline datum for registry, metadata for manifest/pages.
-- Add UI (Streamlit) and CLI as per new README philosophy.
-
-I'll provide the updated files below. This is a full overhaul of src/, with new structure. You can replace the current src/ with this, update README.md, and add requirements.
-
-### README.md
-(Direct copy of your updated README, as provided.)
-
-```
 # Ledger Scrolls 📜
 **“A library that cannot burn.”**
 Publish + read *permissionless, immutable data* on Cardano—without Blockfrost, without chain indexing, and without asking users to download the entire chain history.
