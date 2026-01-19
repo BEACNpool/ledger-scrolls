@@ -5,7 +5,6 @@ import hashlib
 import subprocess
 import requests
 from typing import Dict, List, Any, Tuple, Optional
-from hexbytes import HexBytes
 
 # ── Defaults from README ─────────────────────────────────────────────────────
 DEFAULT_REGISTRY = {
@@ -20,7 +19,7 @@ DEFAULT_SCROLLS = [
         "title": "Bible (HTML, gzip compressed)",
         "policy_id": "2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0",
         "manifest_tx_hash": "cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4",
-        "manifest_asset_name_hex": "4d414e4946455354",  # example hex for "MANIFEST" - adjust if known
+        "manifest_asset_name_hex": "4d414e4946455354",  # "MANIFEST" hex – adjust if actual is different
         "codec": "gzip",
         "content_type": "text/html",
     },
@@ -29,7 +28,7 @@ DEFAULT_SCROLLS = [
         "title": "Bitcoin Whitepaper",
         "policy_id": "8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1",
         "manifest_tx_hash": "2575347068f77b21cfe8d9c23d9082a68bfe4ef7ba7a96608af90515acbe228f",
-        "manifest_asset_name_hex": "4d414e4946455354",  # adjust if known
+        "manifest_asset_name_hex": "4d414e4946455354",  # adjust if needed
         "codec": "none",
         "content_type": "text/plain",
     },
@@ -41,7 +40,7 @@ def get_cardano_socket() -> str:
     path = os.environ.get("CARDANO_NODE_SOCKET_PATH")
     if not path or not os.path.exists(path):
         raise RuntimeError(
-            "CARDANO_NODE_SOCKET_PATH not set or socket file not found.\n"
+            "CARDANO_NODE_SOCKET_PATH not set or invalid.\n"
             "Example: export CARDANO_NODE_SOCKET_PATH=/opt/cardano/cnode/sockets/node.socket"
         )
     return path
@@ -53,7 +52,7 @@ def cardano_cli(*args: str, json_output: bool = False) -> Any:
         cmd += ["--output-json"]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        raise RuntimeError(f"cardano-cli failed:\n{result.stderr.strip()}")
+        raise RuntimeError(f"cardano-cli error: {result.stderr.strip()}")
     return json.loads(result.stdout) if json_output else result.stdout
 
 def fetch_registry_datum(custom_registry: Optional[Dict] = None) -> Dict:
@@ -66,12 +65,9 @@ def fetch_registry_datum(custom_registry: Optional[Dict] = None) -> Dict:
             datum = info.get("inline-datum") or info.get("inlineDatum")
             if datum and "bytes" in datum:
                 compressed = bytes.fromhex(datum["bytes"])
-                try:
-                    decompressed = zlib.decompress(compressed)
-                    return json.loads(decompressed)
-                except Exception as e:
-                    raise ValueError(f"Failed to decompress registry datum: {e}")
-    raise LookupError("Could not find registry NFT UTxO with inline datum")
+                decompressed = zlib.decompress(compressed)
+                return json.loads(decompressed)
+    raise LookupError("Registry NFT UTxO with inline datum not found")
 
 def get_scrolls(use_registry: bool = True, custom_registry: Optional[Dict] = None) -> List[Dict]:
     if not use_registry:
@@ -79,12 +75,9 @@ def get_scrolls(use_registry: bool = True, custom_registry: Optional[Dict] = Non
     try:
         data = fetch_registry_datum(custom_registry)
         scrolls = data.get("scrolls", [])
-        if not scrolls:
-            print("Warning: registry empty → falling back to demo scrolls")
-            return DEFAULT_SCROLLS.copy()
-        return scrolls
+        return scrolls if scrolls else DEFAULT_SCROLLS.copy()
     except Exception as e:
-        print(f"Registry fetch failed: {e}\nUsing demo scrolls instead.")
+        print(f"Registry fetch failed: {e}\n→ Using demo scrolls")
         return DEFAULT_SCROLLS.copy()
 
 def fetch_tx_metadata_blockfrost(tx_hash: str, bf_key: str) -> Dict:
@@ -92,71 +85,62 @@ def fetch_tx_metadata_blockfrost(tx_hash: str, bf_key: str) -> Dict:
     headers = {"project_id": bf_key}
     r = requests.get(url, headers=headers)
     r.raise_for_status()
-    return r.json()
+    metadata_list = r.json()
+    return {item["label"]: item.get("json_metadata", {}) for item in metadata_list}
 
 def fetch_manifest(scroll: Dict, use_blockfrost: bool = True, bf_key: Optional[str] = None) -> Dict:
     tx_hash = scroll.get("manifest_tx_hash")
     if not tx_hash:
-        raise ValueError(f"No manifest_tx_hash for scroll: {scroll.get('title')}")
+        raise ValueError(f"No manifest_tx_hash for {scroll.get('title', 'unknown')}")
 
     if not use_blockfrost or not bf_key:
-        raise NotImplementedError("Local-only manifest fetch not yet implemented → enable Blockfrost")
+        raise NotImplementedError("Pure local manifest fetch not implemented yet – use --use-blockfrost")
 
-    metadata_list = fetch_tx_metadata_blockfrost(tx_hash, bf_key)
-
-    # Blockfrost returns array of {"label": "...", "json_metadata": {...}}
-    metadata_dict = {item["label"]: item.get("json_metadata", {}) for item in metadata_list}
-
+    metadata_dict = fetch_tx_metadata_blockfrost(tx_hash, bf_key)
     nft_data = metadata_dict.get("721", {})
     policy_data = nft_data.get(scroll["policy_id"], {})
-    manifest_name = scroll.get("manifest_asset_name_hex", "manifest")
+    manifest_name = scroll.get("manifest_asset_name_hex") or "manifest"
     manifest_data = policy_data.get(manifest_name, {})
 
     if not manifest_data:
-        raise ValueError(f"Manifest data not found under 721/{scroll['policy_id']}/{manifest_name}")
+        raise ValueError(f"Manifest not found in 721 metadata under {scroll['policy_id']}/{manifest_name}")
 
     return manifest_data
 
-def fetch_page_metadata(page_tx_hash: str, bf_key: str) -> Dict:
-    # Same as manifest - assumes page metadata is in mint tx's 721 label
-    metadata_list = fetch_tx_metadata_blockfrost(page_tx_hash, bf_key)
-    metadata_dict = {item["label"]: item.get("json_metadata", {}) for item in metadata_list}
-    return metadata_dict.get("721", {})
-
 def reconstruct(scroll: Dict, manifest: Dict, bf_key: Optional[str] = None) -> Tuple[bytes, str]:
     if not bf_key:
-        raise ValueError("Blockfrost key required for page reconstruction")
+        raise ValueError("Blockfrost key required for reconstruction")
 
-    pages_order = manifest.get("pages", [])  # list of {"asset_name_hex": "...", "mint_tx_hash": "..."} or just hex strings
+    pages = manifest.get("pages", [])
+    if not pages:
+        raise ValueError("No pages defined in manifest")
+
     codec = scroll.get("codec", manifest.get("codec", "none"))
     content_type = scroll.get("content_type", manifest.get("content_type", "application/octet-stream"))
 
     full_data = bytearray()
 
-    for page in pages_order:
-        # Flexible: page can be str (asset hex) or dict with mint_tx_hash
+    for page in pages:
         if isinstance(page, str):
             asset_hex = page
-            mint_tx = None  # would need lookup → fallback to Blockfrost asset endpoint later
+            mint_tx = None  # TODO: future asset lookup if needed
         else:
             asset_hex = page.get("asset_name_hex")
             mint_tx = page.get("mint_tx_hash")
 
         if not asset_hex:
-            raise ValueError("Invalid page format in manifest")
-
+            raise ValueError("Invalid page entry in manifest")
         if not mint_tx:
-            raise NotImplementedError("Page mint tx hash missing - add to manifest or implement asset lookup")
+            raise NotImplementedError("Page mint tx hash missing – add to manifest")
 
         policy_id = scroll["policy_id"]
-        page_metadata = fetch_page_metadata(mint_tx, bf_key)
-        page_data = page_metadata.get(policy_id, {}).get(asset_hex, {})
+        metadata_dict = fetch_tx_metadata_blockfrost(mint_tx, bf_key)
+        page_data = metadata_dict.get("721", {}).get(policy_id, {}).get(asset_hex, {})
 
-        # Extract payload segments (assume list of hex strings)
         segments = page_data.get("payload", [])
         page_bytes = b"".join(bytes.fromhex(seg) for seg in segments if isinstance(seg, str))
 
-        # Per-page hash verification
+        # Per-page verification
         if page_sha := page_data.get("sha"):
             if hashlib.sha256(page_bytes).hexdigest() != page_sha:
                 raise ValueError(f"Page hash mismatch for {asset_hex}")
@@ -166,19 +150,15 @@ def reconstruct(scroll: Dict, manifest: Dict, bf_key: Optional[str] = None) -> T
     data = bytes(full_data)
 
     if codec == "gzip":
-        try:
-            data = zlib.decompress(data)
-        except zlib.error as e:
-            raise ValueError(f"Gzip decompression failed: {e}")
+        data = zlib.decompress(data)
 
-    # Full document verification
+    # Full verification
     if full_sha := manifest.get("sha") or manifest.get("sha256"):
         if hashlib.sha256(data).hexdigest() != full_sha:
             raise ValueError("Final document hash mismatch")
 
     return data, content_type
 
-# Quick test helper
 if __name__ == "__main__":
     print("Available demo scrolls:")
     for s in get_scrolls(use_registry=False):
