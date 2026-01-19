@@ -139,18 +139,28 @@ Run example:
   "spec": "ledger-scrolls-registry-v1",
   "version": 1,
   "updated": "2026-01-19T00:00:00Z",
+  "registry_address": "addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy",
+  "registry_asset": "895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062.4c535f5245474953545259",
   "scrolls": [
     {
       "id": "bible",
       "title": "Bible (HTML, gzip compressed)",
       "policy_id": "2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0",
-      "manifest_asset_name_hex": "...",
+      "manifest_asset_name_hex": "your_manifest_asset_name_hex_here",
       "manifest_tx_hash": "cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4",
       "manifest_slot": "175750638",
       "codec": "gzip",
       "content_type": "text/html"
+    },
+    {
+      "id": "bitcoin-whitepaper",
+      "title": "Bitcoin Whitepaper",
+      "policy_id": "8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1",
+      "manifest_tx_hash": "2575347068f77b21cfe8d9c23d9082a68bfe4ef7ba7a96608af90515acbe228f",
+      "manifest_slot": "176360887",
+      "codec": "none",
+      "content_type": "text/plain"
     }
-    // ...
   ]
 }
 ```
