@@ -1,160 +1,272 @@
 # Ledger Scrolls 📜
 **“A library that cannot burn.”**
 
-Publish + read *permissionless, immutable data* on Cardano—without Blockfrost (optional), without chain indexing, and without asking users to download the entire chain history.
+Ledger Scrolls is an open-source **standard + viewer** for publishing and reading *permissionless, immutable data* on Cardano.
 
-Ledger Scrolls is an open-source **format + viewer** for storing documents on-chain as a set of NFTs (pages) plus a single “manifest” NFT that describes how to reconstruct the original file. A **Registry** UTxO (with an inline datum) acts like a “DNS pointer” that tells the viewer what Scrolls exist and how to find their manifests.
+The design goal is simple:
 
-This README explains:
-- How on-chain data is structured (pages + manifest)
-- How the Registry works (zero indexing / single UTxO lookup)
-- How a dev creates their own Scroll library and points Ledger Scrolls to it
-- How the viewer uses a local node socket (no centralized APIs by default)
-- How dev choices affect the viewer (naming, segmentation, hashes, etc.)
-- How to build an option-based interface (not “CLI-only”)
+> **If you can run a Cardano node, you can read the library forever.**  
+> No chain indexing. No centralized gatekeepers. No “trust me bro” servers.
+
+---
+
+## What Ledger Scrolls is
+
+Ledger Scrolls defines **how to put files on-chain** and how to **reconstruct them deterministically**.
+
+There are two supported “families” of Scrolls:
+
+### ✅ Ledger-Scrolls Standard (Lean): **Locked UTxO + Inline Datum Bytes**
+**Best for:** small/medium binary files (images, icons, proofs, keys, compact documents)
+
+- The file is stored as **raw bytes** in `inlineDatum.bytes` at a **script address**
+- The UTxO is intended to be **permanently locked / never spendable**
+- Reading it requires only:
+  - **one address query**
+  - extracting datum bytes
+  - writing them back into a file
+
+> This is the leanest possible proof: the exact bytes exist in the ledger, and anyone can recreate the file from a node.
+
+### 🧾 Legacy Scrolls (Large docs): **NFT Pages + Manifest (CIP-25)**
+**Best for:** large documents (Bible HTML, long PDFs, multi-megabyte payloads)
+
+- A document is stored as:
+  - **many page NFTs** (each holding chunked payload bytes)
+  - **one manifest NFT** describing reconstruction
+- Reading it is deterministic and pointer-based (no scanning), but the current MVP viewer uses **Blockfrost** to fetch CIP-25 metadata faster.
+
+---
 
 ## What exists today (default demo Scrolls)
 
-Ledger Scrolls ships with two default Scrolls as proof-of-concept:
+### 0) Hosky PNG — **Ledger-Scrolls Standard (Lean)**
+This is the flagship “Lean Standard” example.
 
-### 1) Bible (HTML, gzip compressed)
-- Policy: `2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0`
-- Manifest tx hash: `cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4`
-- Manifest slot: `175750638`
-- Reconstruction: `concat_pages + gunzip`
-- Segments per page payload: `32`
+- **Storage:** `inlineDatum.bytes` contains the raw PNG bytes
+- **Locked at:** script address (UTxO intended to be permanently unspendable)
+- **Proof:** reconstruct `onchain.png` from datum → SHA-256 matches the original PNG
 
-### 2) Bitcoin Whitepaper (small set of pages)
-- Policy: `8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1`
-- Manifest tx hash: `2575347068f77b21cfe8d9c23d9082a68bfe4ef7ba7a96608af90515acbe228f`
-- Manifest slot: `176360887`
+**On-chain pointer (current live):**
+- Locked script address:  
+  `addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn`
+- Locked UTxO (txin):  
+  `728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0`
+- File type: `image/png`
+- SHA-256 (original == reconstructed):  
+  `798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f`
 
-## The key idea: “No indexing” via deterministic pointers
+✅ **How to verify independently (no Blockfrost required)**
 
-Most “on-chain data” projects fail because reading requires one of:
-- A centralized API (Blockfrost, Koios, etc.)
-- A custom indexer scanning the chain
-- A full-history node or local chain DB queries
+```bash
+LOCK_ADDR="addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn"
+LOCKED_TXIN="728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0"
 
-Ledger Scrolls avoids that by using **pointers**:
-1. **Registry pointer**: a single UTxO at a known address containing an NFT + inline datum
-2. **Manifest pointer**: metadata that tells you exactly which policy/asset(s) are the manifest (and optionally where it lives)
-3. **Page pointers**: manifest tells you the exact asset names of every page NFT needed
+cardano-cli query utxo --mainnet --address "$LOCK_ADDR" --out-file locked_utxo_live.json
 
-This transforms “find my document somewhere in the blockchain” into:
-- **1 address query** (registry UTxO)
-- **1 tx query** (manifest via tx hash or utxo)
-- **N page fetches** (direct asset metadata lookups)
+jq -r --arg k "$LOCKED_TXIN" '.[$k].inlineDatum' locked_utxo_live.json > datum.json
 
-## On-chain structure (how the data is stored)
+# write datum hex bytes into a real PNG file
+jq -r '.bytes' datum.json | tr -d '\n' | xxd -r -p > onchain.png
 
-A “Scroll” is stored as:
+file onchain.png
+sha256sum onchain.png
+````
 
-### A) Page NFTs (many)
-Each page NFT contains a chunk of data (or references to chunk segments) inside its metadata.
+If you also have the original file:
 
-Typical page metadata includes:
-- `spec`: identifies the format (e.g., `gzip-pages-v1`)
-- `role`: `page`
-- `i`: page index (1-based)
-- `n`: total pages
-- `seg`: segment count (how many chunks in `payload`)
-- `sha`: sha256 of the page’s reconstructed bytes
-- `payload`: array of segment objects holding bytes (usually hex)
+```bash
+sha256sum hosky.png onchain.png
+```
 
-> Why segment at all?  
-> Cardano metadata has limits. Splitting payload into segments keeps each piece valid and makes minting more reliable.
+Matching hashes = cryptographic proof the exact PNG bytes are stored on-chain.
 
-### B) Manifest NFT (1)
-The manifest NFT describes how to reconstruct the full document:
-- What pages exist (asset names / order)
-- What codec is used (gzip, raw text, etc.)
-- Hashes of the whole file (`sha_gz`, `sha_html`, etc.)
-- Content type (`text/html`, `text/plain`, etc.)
-- Page count, segment sizes, etc.
+---
 
-The viewer reads the **manifest first**, then fetches every page in order, verifies, and reconstructs.
+### 1) Bible — Original Proof-of-Concept (HTML, gzip compressed)
+
+This is the original “big-document” Scroll, stored across many NFTs.
+
+* Policy: `2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0`
+* Manifest tx hash: `cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4`
+* Manifest slot: `175750638`
+* Reconstruction: `concat_pages + gunzip`
+* Pages: `237` (+ 1 manifest = 238 total assets)
+* Segments per page payload: `32`
+
+> Each page NFT holds hex payload segments; the manifest defines ordering + hashes.
+
+---
+
+### 2) Bitcoin Whitepaper — Proof-of-Concept (small multi-page Scroll)
+
+* Policy: `8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1`
+* Manifest tx hash: `2575347068f77b21cfe8d9c23d9082a68bfe4ef7ba7a96608af90515acbe228f`
+* Manifest slot: `176360887`
+
+---
+
+## The key idea: **No indexing** via deterministic pointers
+
+Most on-chain data projects fail because reading requires one of:
+
+* A centralized API (Blockfrost/Koios/etc.)
+* A custom indexer scanning the chain
+* A full-history node + database queries
+
+Ledger Scrolls avoids that with **pointers**:
+
+1. **Registry pointer**: one UTxO at a known registry address
+2. **Manifest pointer** (for NFT-page Scrolls): tells you exactly where reconstruction rules live
+3. **Page pointers**: manifest tells you the exact NFT page asset names to fetch
+
+So “find my document somewhere in the blockchain” becomes:
+
+* **1 address query** (registry UTxO)
+* **1 pointer lookup** (manifest tx hash or locked txin)
+* **N direct fetches** (pages) OR **1 direct datum extraction** (Lean Standard)
+
+---
 
 ## The Registry (the “DNS” for Scrolls)
 
 The Registry is a single on-chain “directory” that tells Ledger Scrolls what Scrolls exist.
 
-It is implemented as:
-- A **registry NFT** (e.g., `LS_REGISTRY`) minted under a short-lived policy
-- Locked at a known **Registry address**
-- The UTxO holding that NFT has an **inline datum** with a gzipped JSON object:
-  - This JSON lists Scrolls and their manifest pointers
+Implementation (current MVP):
 
-### Registry example (current live registry)
-- Registry policy id: `895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062`
-- Registry asset name hex: `4c535f5245474953545259` (ASCII `LS_REGISTRY`)
-- Registry address:  
-  `addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy`
-- The UTxO with the NFT holds `inlineDatum.bytes` which is gzipped JSON.
+* A **registry NFT** locked at a known **registry address**
+* That UTxO contains an **inline datum** where `inlineDatum.bytes` is **compressed JSON**
+* The viewer reads it in one query (no scanning) 
 
-## How the viewer works (high-level)
+Default registry constants in `viewer.py`: 
 
-### Step 1 — Connect to a local node via socket
-Uses `cardano-cli` or Ogmios against your **local cardano-node** (connects to IOHK relays via your node's topology).
+* Registry address
+* Registry policy id
+* Registry asset name hex (`LS_REGISTRY`)
 
-Set:
+---
+
+## On-chain storage formats
+
+### A) Ledger-Scrolls Standard (Lean): `utxo-inline-datum-bytes-v1`
+
+**Goal:** smallest, cleanest, most “node-native” proof.
+
+**Data lives at:**
+
+* `script_address` (ideally always-fails / unspendable)
+* `locked_txin` (txhash#index)
+* `inlineDatum.bytes` = file bytes (hex)
+
+**Reconstruction:**
+
+* hex → bytes → write file
+
+**Verification:**
+
+* SHA-256 of reconstructed file equals published hash
+
+---
+
+### B) Legacy Large Docs: `gzip-pages-v1` (NFT pages + manifest)
+
+#### Page NFT metadata (typical)
+
+* `spec`: format id (e.g. `gzip-pages-v1`)
+* `role`: `page`
+* `i`: page index (1-based)
+* `n`: total pages
+* `seg`: segment count (how many chunks in `payload`)
+* `sha`: sha256 of the page’s reconstructed bytes
+* `payload`: array of segment strings holding hex bytes
+
+> Why segment? Cardano metadata has size limits. Segments keep minting reliable.
+
+#### Manifest NFT metadata (typical)
+
+* page ordering (asset names)
+* codec (`gzip`, `none`, etc.)
+* file hashes (`sha_gz`, `sha_html`, etc.)
+* content type (`text/html`, `image/png`, etc.)
+* counts (pages, segments)
+
+The viewer reads **manifest first**, then fetches each page, verifies, concatenates, and decodes.
+
+---
+
+## How the viewer works (today)
+
+### UI (Streamlit)
+
+`ui.py` provides an option-based interface (preferred over CLI-only). 
+
 ```bash
-export CARDANO_NODE_SOCKET_PATH=/path/to/node.socket
+pip install -U streamlit requests
+streamlit run ui.py
 ```
 
-### Step 2 — Read the registry in one query
-Queries the registry address → finds the NFT UTxO → extracts & gunzips inline datum → gets list of Scrolls.
+The UI can:
 
-### Step 3 — Resolve the manifest pointer
-Uses `manifest_tx_hash` (or future `manifest_utxo`/`manifest_address`) from registry entry.
+* load scrolls from the on-chain registry (default) 
+* reconstruct a selected document
+* download the output
 
-### Step 4 — Fetch pages + reconstruct
-Fetches page metadata → verifies hashes → concatenates → applies codec → outputs file.
+### CLI
 
-## Why this avoids indexing the entire chain
-Everything is **precise pointer lookups** — no scanning, no full policy searches.
+`cli.py` supports listing and reconstructing scrolls. 
 
-## Creating your own library (dev workflow)
-See the full instructions in the README sections above (choose format, naming, mint pages/manifest, publish to registry).
-
-Two models:
-- Use the **global registry** (submit PR)
-- Run your **own registry** (recommended for custom libraries)
-
-## Viewer interface philosophy
-Backend is deterministic + scriptable (CLI), but UX is **option-based**:
-- Local web UI (Streamlit) — recommended default
-- TUI (textual/curses) — optional
-- CLI — always available
-
-Run example:
 ```bash
-./ledger-scrolls          # → opens web UI
-./ledger-scrolls --cli    # → CLI mode
+python cli.py --list
+python cli.py --scroll "Bible" --use-blockfrost --blockfrost-key "$BF_KEY" --output bible_out
 ```
+
+---
+
+## Blockfrost (Legacy / Optional fallback)
+
+**Lean Standard (Hosky PNG):** does **not** need Blockfrost.
+
+**NFT Pages (Bible/BTC):** the current MVP uses Blockfrost to fetch CIP-25 metadata and reconstruct pages.
+`viewer.py` currently raises if you try pure-local manifest fetch. 
+
+---
 
 ## Registry schema (v1)
+
+This is the current idea (and what the MVP expects conceptually):
+
 ```json
 {
   "spec": "ledger-scrolls-registry-v1",
   "version": 1,
   "updated": "2026-01-19T00:00:00Z",
-  "registry_address": "addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy",
-  "registry_asset": "895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062.4c535f5245474953545259",
   "scrolls": [
+    {
+      "id": "hosky-png",
+      "title": "Hosky PNG (Ledger-Scrolls Standard)",
+      "format": "utxo-inline-datum-bytes-v1",
+      "locked_address": "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn",
+      "locked_txin": "728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0",
+      "content_type": "image/png",
+      "sha256": "798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f"
+    },
     {
       "id": "bible",
       "title": "Bible (HTML, gzip compressed)",
+      "format": "gzip-pages-v1",
       "policy_id": "2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0",
-      "manifest_asset_name_hex": "your_manifest_asset_name_hex_here",
       "manifest_tx_hash": "cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4",
       "manifest_slot": "175750638",
       "codec": "gzip",
-      "content_type": "text/html"
+      "content_type": "text/html",
+      "pages_prefix": "BIBLE_P",
+      "pages_total": 237,
+      "seg": 32
     },
     {
       "id": "bitcoin-whitepaper",
       "title": "Bitcoin Whitepaper",
+      "format": "none-pages-v1",
       "policy_id": "8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1",
       "manifest_tx_hash": "2575347068f77b21cfe8d9c23d9082a68bfe4ef7ba7a96608af90515acbe228f",
       "manifest_slot": "176360887",
@@ -165,18 +277,39 @@ Run example:
 }
 ```
 
-## Next recommended improvements
-- Add `manifest_utxo` / `manifest_address` to registry entries
-- Registry selection in UI (default + custom)
-- Wizards for creating registry & publishing scrolls
-- Full Blockfrost fallback option
+---
+
+## Creating your own library (dev workflow)
+
+Two ways:
+
+### 1) Use the global registry (submit PR)
+
+You mint your Scroll, then submit a PR adding its pointer entry.
+
+### 2) Run your own registry (recommended)
+
+You deploy your own registry NFT + datum directory so your library is self-contained.
+
+---
+
+## The permanence rule (important)
+
+When a Ledger-Scroll is created, the intent is:
+
+> **permanently locked, never spendable.**
+
+For the Lean Standard, use a script address that cannot be spent (e.g., always-fails),
+so the UTxO (and datum bytes) remain pinned forever.
+
+---
 
 ## Philosophy
-- **Open standard**
-- **Permissionless**
-- **Non-custodial**
-- **Non-indexed**
 
-If you can run a node → you can read the library forever.
+* **Open standard**
+* **Permissionless**
+* **Non-custodial**
+* **No indexing**
+* **Node-native verification**
 
 Maintained with ❤️ by [@BEACNpool](https://x.com/BEACNpool)
