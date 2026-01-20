@@ -4,7 +4,7 @@ import os
 import json
 from pathlib import Path
 
-from .viewer import (
+from viewer import (
     get_scrolls,
     fetch_manifest,
     reconstruct,
@@ -14,20 +14,20 @@ from .viewer import (
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Ledger Scrolls - Viewer for on-chain immutable documents",
+        description="Ledger Scrolls - Viewer for on-chain immutable documents & images",
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
     parser.add_argument(
         "--list",
         action="store_true",
-        help="List all available scrolls and exit",
+        help="List all available scrolls/images and exit",
     )
 
     parser.add_argument(
         "--scroll",
         type=str,
-        help="Title or id of the scroll to reconstruct (partial match ok)",
+        help="Title or id of the scroll/image to reconstruct (partial match ok)",
     )
 
     parser.add_argument(
@@ -40,13 +40,13 @@ def main():
     parser.add_argument(
         "--use-blockfrost",
         action="store_true",
-        help="Use Blockfrost API for metadata queries (recommended for MVP)",
+        help="Use Blockfrost API for metadata queries (recommended)",
     )
 
     parser.add_argument(
         "--blockfrost-key",
         type=str,
-        help="Blockfrost project ID/API key (required when --use-blockfrost is used)",
+        help="Blockfrost project ID/API key (required when using --use-blockfrost)",
     )
 
     parser.add_argument(
@@ -57,11 +57,10 @@ def main():
 
     args = parser.parse_args()
 
-    # Enforce Blockfrost key requirement when mode is selected
     if args.use_blockfrost and not args.blockfrost_key:
         parser.error("--blockfrost-key is required when using --use-blockfrost")
 
-    # Quick list mode
+    # ── List mode ────────────────────────────────────────────────────────────
     if args.list:
         try:
             if args.registry_file and os.path.exists(args.registry_file):
@@ -75,20 +74,20 @@ def main():
             print("Falling back to demo scrolls.")
             scrolls = DEFAULT_SCROLLS.copy()
 
-        print("\nAvailable Scrolls:")
+        print("\nAvailable Scrolls / Images:")
         print("-" * 50)
         for s in scrolls:
             title = s.get("title", "Untitled")
             sid = s.get("id", "-")
-            print(f"  • {title}  (id: {sid})")
+            kind = s.get("kind", "classic")
+            print(f"  • {title}  (id: {sid})  [{kind}]")
         return
 
-    # Require scroll selection for reconstruction
+    # ── Require scroll for reconstruction ────────────────────────────────────
     if not args.scroll:
         parser.print_help()
         sys.exit(1)
 
-    # Load scrolls
     try:
         if args.registry_file and os.path.exists(args.registry_file):
             with open(args.registry_file, "r", encoding="utf-8") as f:
@@ -102,7 +101,6 @@ def main():
         print("Falling back to built-in demo scrolls.")
         scrolls = DEFAULT_SCROLLS.copy()
 
-    # Find requested scroll (case-insensitive partial match on title or id)
     target = args.scroll.lower()
     scroll = next(
         (
@@ -114,7 +112,7 @@ def main():
     )
 
     if not scroll:
-        print(f"Scroll not found: '{args.scroll}'", file=sys.stderr)
+        print(f"Scroll/image not found: '{args.scroll}'", file=sys.stderr)
         print("\nAvailable options:")
         for s in scrolls:
             print(f"  - {s.get('title')} ({s.get('id')})")
@@ -123,38 +121,42 @@ def main():
     print(f"\nReconstructing: {scroll.get('title', scroll.get('id', 'Unknown'))}")
 
     try:
-        print("→ Fetching manifest...")
-        manifest = fetch_manifest(
-            scroll,
-            use_blockfrost=args.use_blockfrost,
-            bf_key=args.blockfrost_key,
-        )
+        print("→ Fetching manifest (if needed)...")
+        if scroll.get("kind") == "inline_png":
+            manifest = {}
+        else:
+            manifest = fetch_manifest(
+                scroll,
+                use_blockfrost=args.use_blockfrost,
+                bf_key=args.blockfrost_key,
+            )
 
-        print("→ Reconstructing document...")
+        print("→ Reconstructing content...")
         data, content_type = reconstruct(
             scroll,
             manifest,
-            bf_key=args.blockfrost_key,  # Important: pass key to reconstruct
+            bf_key=args.blockfrost_key,
         )
 
-        # Guess file extension
-        ext = "html" if "html" in content_type.lower() else "txt"
-        if "pdf" in content_type.lower():
-            ext = "pdf"
-        elif "json" in content_type.lower():
-            ext = "json"
+        ext_map = {
+            "text/html": "html",
+            "text/plain": "txt",
+            "application/pdf": "pdf",
+            "image/png": "png",
+        }
+        ext = ext_map.get(content_type, "bin")
 
         out_path = Path(f"{args.output}.{ext}")
         with open(out_path, "wb") as f:
             f.write(data)
 
         print(f"\nSuccess!")
-        print(f"Document saved to: {out_path.absolute()}")
+        print(f"Content saved to: {out_path.absolute()}")
         print(f"Size: {len(data):,} bytes")
         print(f"Content-Type: {content_type}")
 
     except Exception as e:
-        print(f"\nFailed to reconstruct scroll:\n{str(e)}", file=sys.stderr)
+        print(f"\nFailed:\n{str(e)}", file=sys.stderr)
         sys.exit(1)
 
 
