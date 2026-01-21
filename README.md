@@ -9,7 +9,7 @@ The design goal is simple:
 - ✅ **No chain indexing required**
 - ✅ **No centralized gatekeepers**
 - ✅ **No "download the whole chain history" requirement**
-- ✅ **Local-first** (your node + your socket) – prioritized in future updates
+- ✅ **Local-first** (your node + your socket) – fully supported
 - ✅ **Forever-readable** as long as the pointer remains valid
 
 ---
@@ -22,14 +22,15 @@ Ledger Scrolls supports two storage styles:
 **Best for:** Small files (icons/images/manifests/configs) that fit inside one on-chain inline datum.
 
 - Supports optional gzip compression for slightly larger files
-- **Default demo:** Hosky PNG (no Blockfrost required in local mode)
+- **Default demo:** Hosky PNG (works in all modes)
 - **Minimal on-chain footprint:** One UTxO, one datum, one fetch, one file
 
 ### 2. 🧾 Legacy Scrolls (Large): Pages + Manifest NFTs (CIP-25 style)
 **Best for:** Large documents (Bible / Whitepaper)
 
-- **Optional legacy fallback via Blockfrost** for convenience
 - Multiple page NFTs with reconstruction logic
+- Automatic detection of page index (`i` field)
+- Supports both explicit page lists and indexed pages
 
 ---
 
@@ -59,8 +60,8 @@ Large document demonstration using the legacy pages + manifest pattern.
 - **Policy ID:** `2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0`
 - **Manifest tx hash:** `cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4`
 - **Manifest slot:** `175750638`
+- **Pages:** 237 NFTs, each with `i` index and `payload` segments
 - **Reconstruction:** `concat_pages + gunzip`
-- **Segments per page payload:** `32`
 - **Content-Type:** `text/html`
 - **Codec:** `gzip`
 
@@ -70,8 +71,9 @@ Small document demonstration using the legacy pattern.
 - **Policy ID:** `8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1`
 - **Manifest tx hash:** `2575347068f77b21cfe8d9c23d9082a68bfe4ef7ba7a96608af90515acbe228f`
 - **Manifest slot:** `176360887`
-- **Content-Type:** `text/plain`
-- **Codec:** `none`
+- **Pages:** 3 NFTs with automatic gzip detection
+- **Content-Type:** Automatically detected as HTML
+- **Codec:** Auto-detected (gzip magic bytes)
 
 ---
 
@@ -90,7 +92,7 @@ Ledger Scrolls avoids that using **deterministic pointers**.
 - **Registry pointer (optional):** 1 address query (find the registry UTxO datum)
 - **Scroll pointer:** points to either:
   - **(Standard)** A single locked UTxO holding bytes in an inline datum, OR
-  - **(Legacy)** A manifest tx hash + policy/asset names for pages
+  - **(Legacy)** A policy ID where all NFTs with `i` index are pages
 
 This transforms "find my document somewhere in the blockchain" into:
 - **1 address query** (registry UTxO) OR direct user input
@@ -134,7 +136,7 @@ To achieve "never spendable," lock the UTxO at a script address that cannot vali
 ### Data Flow: Standard Scroll Reading
 
 1. **Query UTxO:** Fetch UTxO at `lock_address` or by `txin`
-2. **Extract datum:** Read `inlineDatum.bytes` field
+2. **Extract datum:** Read `inlineDatum.bytes` field (handle CBOR encoding)
 3. **Hex decode:** Convert hex string to binary bytes
 4. **Optional decompression:** Apply gunzip if `codec: gzip`
 5. **Verify hash:** Compare `sha256` of reconstructed file
@@ -144,72 +146,54 @@ To achieve "never spendable," lock the UTxO at a script address that cannot vali
 
 ## Technical Specification: Legacy Scrolls (LS-PAGES v1)
 
-### Storage Mechanism: Pages + Manifest NFT Pattern (CIP-25 Style)
+### Storage Mechanism: Pages + Optional Manifest (Index-Based)
 
 A Legacy Scroll is stored as:
-- **Page NFTs** (many): Each page stores `payload` segments in metadata
-- **Manifest NFT** (one): Describes how to fetch pages, order them, decode them, and verify hashes
+- **Page NFTs** (many): Each page has `i` index and `payload` segments in metadata
+- **Manifest NFT** (optional): Provides additional metadata like hashes and codec
+
+**The viewer now uses a simplified approach:**
+1. Fetch ALL assets under the policy
+2. Filter for NFTs with `payload` and `i` fields
+3. Sort by `i` index
+4. Concatenate payloads
+
+This eliminates dependency on manifest format variations.
 
 ### Typical Page Metadata Fields
 
 ```json
 {
-  "spec": "gzip-pages-v1",
-  "role": "page",
   "i": 1,
-  "n": 100,
-  "seg": 32,
-  "sha": "abc123...",
-  "payload": ["hex1", "hex2", ...]
+  "payload": [
+    {"bytes": "hex_data_1"},
+    {"bytes": "hex_data_2"}
+  ]
 }
 ```
 
 **Field definitions:**
-- `spec` — Format identifier (e.g., `gzip-pages-v1`)
-- `role` — Must be `page` for page NFTs
-- `i` — Page index (1-based)
-- `n` — Total number of pages
-- `seg` — Number of segments in this page
-- `sha` — SHA256 of reconstructed page bytes
-- `payload` — Array of hex-encoded segments
+- `i` — Page index (required for ordering)
+- `payload` — Array of hex-encoded segments (supports both `{"bytes": "..."}` and direct string formats)
 
-**Known variations:**
-- Some implementations use `segments` instead of `payload`
-- Some use `seg` as the array instead of `payload`
-
-### Manifest Metadata Fields
-
-```json
-{
-  "spec": "gzip-pages-v1",
-  "role": "manifest",
-  "codec": "gzip",
-  "content_type": "text/html",
-  "pages": 100,
-  "sha_gz": "def456...",
-  "sha_html": "ghi789..."
-}
-```
-
-**Field definitions:**
-- `codec` — Compression format: `gzip` or `none`
-- `content_type` — MIME type of final reconstructed file
-- `pages` — Total page count
-- `sha_gz` — SHA256 of concatenated pages (before decompression)
-- `sha_html` — SHA256 of final decompressed file
+**Supported payload formats:**
+- `[{"bytes": "hex"}, {"bytes": "hex"}]` (CIP-25 style)
+- `["hex1", "hex2"]` (direct strings)
+- Mixed formats
 
 ### Data Flow: Legacy Scroll Reading
 
-1. **Fetch manifest:** Query transaction by `manifest_tx_hash`
-2. **Parse manifest:** Extract codec, page count, naming scheme
-3. **Fetch pages:** Query each page NFT by policy + asset name
-4. **Order pages:** Sort by page index `i`
-5. **Concatenate segments:** Join hex segments within each page
-6. **Concatenate pages:** Join all pages in order
-7. **Hex decode:** Convert full hex string to binary
-8. **Optional decompression:** Apply gunzip if `codec: gzip`
-9. **Verify hashes:** Compare against manifest hashes
-10. **Deliver file:** Save or display based on `content_type`
+1. **Fetch all assets:** Query all NFTs under policy ID
+2. **Filter pages:** Find all NFTs with `payload` and `i` fields
+3. **Sort by index:** Order pages by `i` value
+4. **Concatenate segments:** Join hex segments within each page
+5. **Concatenate pages:** Join all pages in order
+6. **Clean hex:** Remove `0x` prefixes and whitespace
+7. **Hex decode:** Convert to binary
+8. **Auto-detect compression:** Check for gzip magic bytes (`1f 8b`)
+9. **Decompress if needed:** Apply gunzip if detected
+10. **Auto-detect file type:** Check for HTML markers
+11. **Save with correct extension:** `.html`, `.png`, `.txt`, etc.
 
 ---
 
@@ -235,7 +219,7 @@ The Registry is a single on-chain directory that tells Ledger Scrolls what exist
 {
   "spec": "ledger-scrolls-registry-v2",
   "version": 2,
-  "updated": "2026-01-19T00:00:00Z",
+  "updated": "2026-01-21T00:00:00Z",
   "scrolls": [
     {
       "id": "hosky-png",
@@ -255,8 +239,7 @@ The Registry is a single on-chain directory that tells Ledger Scrolls what exist
       "manifest_tx_hash": "cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4",
       "manifest_slot": "175750638",
       "codec": "gzip",
-      "content_type": "text/html",
-      "segments_per_page": 32
+      "content_type": "text/html"
     },
     {
       "id": "bitcoin-whitepaper",
@@ -321,7 +304,7 @@ inlineDatum? true
 jq -r --arg k "$LOCKED_TXIN" '.[$k].inlineDatum' locked_utxo_live.json > datum.json
 
 # Extract the hex bytes field
-jq -r '.bytes' datum.json | tr -d '\n' | xxd -r -p > onchain.png
+jq -r '.fields[0].bytes' datum.json | tr -d '\n' | xxd -r -p > onchain.png
 ```
 
 This converts the hex-encoded bytes back into binary PNG format.
@@ -352,13 +335,15 @@ If hashes match, the image is **byte-for-byte immutable on-chain**. ✅
 
 ## Running the Viewer
 
-The viewer is a cross-platform Python GUI app (Windows/Mac/Linux) with progress bars, safe file saving, and support for both standard and legacy modes.
+The viewer is a cross-platform Python GUI app (Windows/Mac/Linux) with **three connection modes**, progress tracking, safe file saving, and comprehensive error logging.
 
 ### System Requirements
 
 - Python 3.7 or higher
 - `tkinter` (usually included with Python)
-- Internet connection (for Blockfrost API calls)
+- `cbor2` library (for datum decoding)
+- Internet connection (for Blockfrost API mode)
+- **Optional:** Cardano node + `cardano-cli` (for Local Node mode)
 
 ### Installation
 
@@ -368,79 +353,152 @@ git clone https://github.com/BEACNpool/ledger-scrolls.git
 cd ledger-scrolls
 
 # Install dependencies
-pip install requests
+pip install -r requirements.txt
 
 # Run the viewer
 python viewer.py
 ```
 
+### Three Connection Modes
+
+The viewer supports three modes of operation, giving users choice based on their needs:
+
+#### 1. 📡 Blockfrost API Mode (Default - Easy Setup)
+
+**Best for:** Quick start, casual users, no local infrastructure
+
+**Pros:**
+- ✅ Fast and convenient
+- ✅ No node required
+- ✅ Works immediately with free API key
+
+**Cons:**
+- ⚠️ Requires third-party service
+- ⚠️ Rate limits (free tier: 50,000 requests/day)
+
+**Setup:**
+1. Get free API key at [blockfrost.io](https://blockfrost.io)
+2. Create a **Mainnet** project (important!)
+3. Copy your `project_id` (starts with `mainnet...`)
+4. Enter in viewer and click "Save"
+
+#### 2. 🖥️ Local Node Mode (Maximum Sovereignty)
+
+**Best for:** Node operators, privacy-focused users, unlimited queries
+
+**Pros:**
+- ✅ No API dependency
+- ✅ Unlimited queries
+- ✅ Maximum privacy
+- ✅ True decentralization
+
+**Cons:**
+- ⚠️ Requires running full Cardano node
+- ⚠️ ~150GB disk space
+- ⚠️ 2-3 days initial sync
+
+**Setup:**
+1. Install Cardano node: https://developers.cardano.org/docs/get-started/installing-cardano-node
+2. Wait for full sync
+3. Configure in viewer:
+   - Host: `localhost`
+   - Port: `3001` (not used for queries)
+   - Socket Path: `/opt/cardano/cnode/sockets/node.socket`
+4. Click "Test & Save"
+
+#### 3. ⚡ P2P Lightweight Mode (EXPERIMENTAL - Under Construction)
+
+**Best for:** Future - direct P2P without full node
+
+**Status:** 🚧 Under development
+
+**Vision:**
+- Connect directly to Cardano P2P network
+- Query specific blocks without full sync
+- No API, no full node, ~100MB usage
+
+**Current State:**
+- UI ready
+- Configuration interface complete
+- Protocol implementation in progress (estimated 3 months)
+
+**What Works:** Configuration and error messages
+**What Doesn't Work:** Actual P2P queries
+
+See `P2P_DEVELOPMENT_ROADMAP.md` for technical details and implementation timeline.
+
 ### Viewer Features
 
+- ✅ **Three connection modes** with easy switching
 - ✅ **GUI with demo buttons** for Hosky, Bible, BTC Whitepaper
-- ✅ **Blockfrost integration** for fetches (enter API key when prompted)
-- ✅ **Safe file saving** to `~/Downloads/LedgerScrolls/` to avoid permission issues
-- ✅ **Progress explanations** during reconstruction
-- ✅ **Hash verification** for integrity checking
-- ✅ **Custom scroll input** for viewing any scroll by parameters
-
-### Configuration
-
-**Blockfrost API Key:**
-The viewer requires a Blockfrost API key for querying the Cardano blockchain.
-
-1. Get a free API key at [blockfrost.io](https://blockfrost.io)
-2. Enter it in the viewer GUI when prompted
-3. The key is saved locally for convenience
+- ✅ **Automatic format detection** (gzip, HTML, image types)
+- ✅ **Smart file naming** with correct extensions
+- ✅ **Progress tracking** with detailed status messages
+- ✅ **Hash verification** for data integrity
+- ✅ **Error logging** to `~/.ledger-scrolls/logs/` for debugging
+- ✅ **Safe file saving** to `~/Downloads/LedgerScrolls/`
+- ✅ **Custom scroll input** for any scroll by pointer
+- ✅ **Retry logic** with exponential backoff
+- ✅ **CBOR datum decoding** for Standard Scrolls
+- ✅ **0x prefix handling** for hex data
+- ✅ **Multiple metadata field support** for Legacy Scrolls
 
 ### Usage
 
-**Quick start with demos:**
-1. Launch `python viewer.py`
-2. Click "Load Hosky PNG" for a fast standard scroll demo
-3. Click "Load Bible" or "Load Bitcoin Whitepaper" for legacy demos
+#### Quick Start with Blockfrost:
 
-**View custom scrolls:**
-1. Click "Custom Scroll" button
-2. Select scroll type (Standard or Legacy)
-3. Enter required parameters
+1. Launch `python viewer.py`
+2. Select "Blockfrost API" mode (default)
+3. Enter API key and click "Save"
+4. Click "Load Hosky PNG" (~5 seconds)
+5. File saved to `~/Downloads/LedgerScrolls/Hosky PNG.png`
+
+#### Load Legacy Scrolls:
+
+- **Bible:** ~60 seconds (237 pages, 4.6MB)
+- **Bitcoin Whitepaper:** ~15 seconds (3 pages, 33KB)
+
+Both auto-detect as HTML and save with `.html` extension.
+
+#### Custom Scrolls:
+
+1. Click "Custom Scroll"
+2. Choose scroll type (Standard or Legacy)
+3. Enter pointer details
 4. Click "Fetch Scroll"
 
-### Local-Node Mode (Planned v2)
+### Debug Logging
 
-Future versions will support direct queries to your local Cardano node:
-
-```bash
-# Set node socket path
-export CARDANO_NODE_SOCKET_PATH=/opt/cardano/cnode/sockets/node.socket
-
-# Run in local mode
-python viewer.py --local-node
+All operations are logged to:
+```
+~/.ledger-scrolls/logs/viewer_YYYYMMDD_HHMMSS.log
 ```
 
-**Benefits of local-node mode:**
-- No API key required
-- No rate limits
-- No third-party dependencies
-- True local-first operation
+Logs include:
+- Connection attempts
+- API calls and responses
+- CBOR decoding steps
+- Error stack traces
+- Performance metrics
 
-### Current Mode: Blockfrost (Default)
+Check logs when troubleshooting issues.
 
-The current viewer uses Blockfrost API for convenience:
+### Known Issues & Solutions
 
-```bash
-python viewer.py
-# Enter Blockfrost key in GUI
-```
+#### Issue: Blockfrost 403 Errors
+**Solution:** Ensure API key is for **Mainnet** (not Testnet), and is valid/not expired
 
-> **Long-term direction:** Full local-node support for everything (standard + legacy metadata via CLI queries). Blockfrost as optional fallback.
+#### Issue: Files Save as .txt Instead of .html
+**Solution:** Now fixed! Viewer auto-detects HTML content and uses correct extension
 
-### Known Issues
+#### Issue: "Non-hexadecimal digit found"
+**Solution:** Now fixed! Viewer strips `0x` prefixes and handles all hex formats
 
-- **Legacy page fetching:** Some scrolls may use field variations (`payload` vs `seg` vs `segments`). The viewer attempts to handle common variations.
-- **Large files:** Very large legacy scrolls may take time to fetch all pages.
-- **Network errors:** Retry logic is built-in but temporary Blockfrost outages may occur.
+#### Issue: Bible Takes Long to Load
+**This is normal!** 237 pages = 237 API calls = ~60 seconds due to rate limiting
 
-**Contribute fixes via GitHub!** Pull requests welcome.
+#### Issue: cardano-cli Not Found (Local Mode)
+**Solution:** Install Cardano node tools or use Blockfrost mode instead
 
 ---
 
@@ -513,124 +571,49 @@ python viewer.py
    sha256sum my_image.png
    ```
 
-7. **Create registry entry**
+7. **Share your scroll**
    ```json
    {
-     "id": "my-scroll",
      "title": "My Custom Scroll",
      "type": "utxo_datum_bytes_v1",
      "lock_address": "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn",
      "lock_txin": "YOUR_TX_HASH#0",
      "content_type": "image/png",
-     "codec": "gzip",
+     "codec": "none",
      "sha256": "YOUR_SHA256_HASH"
    }
    ```
 
 ### Publishing a Legacy Scroll
 
-**Recommended for:** Large files (>16KB) - though consider IPFS + standard pointer hybrid for new projects
+**Recommended for:** Large files (>16KB)
 
-**Steps:**
+**Simplified approach:** Just ensure each page NFT has:
+- `i` field (page index, 1-based)
+- `payload` field (array of hex segments or `{"bytes": "hex"}` objects)
 
-1. **Split file into pages**
-   - Divide file into chunks (e.g., 32 segments of 64 bytes each per page)
-   - Each segment becomes a hex string in the `payload` array
-
-2. **Mint page NFTs**
-   - Create one NFT per page with metadata containing segments
-   - Follow CIP-25 metadata standard
-
-3. **Mint manifest NFT**
-   - Create manifest with reconstruction instructions
-   - Include hashes, codec, page count
-
-4. **Create registry entry**
-   ```json
-   {
-     "id": "my-large-scroll",
-     "title": "My Large Document",
-     "type": "cip25_pages_v1",
-     "policy_id": "YOUR_POLICY_ID",
-     "manifest_tx_hash": "MANIFEST_TX_HASH",
-     "manifest_slot": "SLOT_NUMBER",
-     "codec": "gzip",
-     "content_type": "text/html",
-     "segments_per_page": 32
-   }
-   ```
-
-### Running Your Own Registry
-
-**Why run your own registry:**
-- Full control over listed scrolls
-- No dependency on public registry availability
-- Can theme/curate for specific use cases
-
-**Steps:**
-
-1. **Mint registry NFT**
-   ```bash
-   # Create unique policy for your registry
-   # Mint asset named "LS_REGISTRY" or custom name
-   ```
-
-2. **Create registry JSON**
-   ```json
-   {
-     "spec": "ledger-scrolls-registry-v2",
-     "version": 2,
-     "updated": "2026-01-21T00:00:00Z",
-     "scrolls": [
-       // Your scroll entries
-     ]
-   }
-   ```
-
-3. **Compress registry**
-   ```bash
-   gzip -c registry.json > registry.json.gz
-   xxd -p registry.json.gz | tr -d '\n' > registry.hex
-   ```
-
-4. **Create registry UTxO**
-   - Lock UTxO at known address
-   - Include registry NFT
-   - Add inline datum with compressed JSON
-
-5. **Distribute pointer**
-   - Share registry address and asset name
-   - Document in viewer configuration
+The viewer will automatically:
+- Find all pages under your policy
+- Sort by `i` index
+- Handle both hex formats
+- Auto-detect compression
+- Auto-detect file type
 
 ### Extending the Viewer
 
-**Areas for contribution:**
+The viewer is designed to be extended. Key areas for contribution:
 
-1. **Local-node support**
-   - Add subprocess calls to `cardano-cli`
-   - Parse `query utxo` output
-   - Parse `query tx` output for legacy metadata
-
-2. **Improved legacy parser**
-   - Handle more metadata field variations
-   - Add auto-detection for page naming schemes
-   - Better error messages for failed reconstructions
-
-3. **UI/UX improvements**
-   - Dark mode toggle
-   - Better progress visualization
-   - Drag-and-drop custom scroll parameters
-
-4. **Advanced features**
-   - Batch downloading multiple scrolls
-   - Scroll comparison tools
-   - Hash verification automation
+1. **P2P Protocol Implementation** - See `P2P_DEVELOPMENT_ROADMAP.md`
+2. **Additional File Formats** - Add support for more MIME types
+3. **UI Improvements** - Dark mode, preview pane, batch operations
+4. **Performance** - Caching, parallel fetches, optimizations
 
 **How to contribute:**
 1. Fork the repository
 2. Create a feature branch
-3. Submit pull request with clear description
-4. Include tests if applicable
+3. Follow existing code style
+4. Add tests if applicable
+5. Submit pull request with clear description
 
 ---
 
@@ -642,6 +625,8 @@ Ledger Scrolls is built on these core principles:
 - ✅ **Permissionless** — No approval needed to publish or read
 - ✅ **Non-custodial** — You control your data and keys
 - ✅ **Permanently locked** — Data that cannot be deleted or modified
+- ✅ **Multiple access paths** — API, local node, or P2P (coming soon)
+- ✅ **Auto-detection** — Smart handling of formats and compression
 
 ### Why This Matters
 
@@ -656,6 +641,7 @@ Ledger Scrolls:
 - ✅ Cannot be modified (cryptographic immutability)
 - ✅ One-time cost (transaction fee only)
 - ✅ Decentralized (no single point of failure)
+- ✅ Multiple access methods (choose your tradeoff)
 
 ### Use Cases
 
@@ -665,6 +651,7 @@ Ledger Scrolls:
 - 📝 **Censorship-resistant publishing** — Unstoppable text/documents
 - 🔐 **Proof of existence** — Timestamp + hash verification
 - 📚 **Digital libraries** — Collections that cannot be erased
+- 🏛️ **Archives** — Preserve knowledge for future generations
 
 ---
 
@@ -678,7 +665,7 @@ Ledger Scrolls:
 
 **A:** 
 - **Standard scrolls:** ~16KB uncompressed or ~8KB compressed (datum size limit)
-- **Legacy scrolls:** Theoretically unlimited (split into pages), but consider IPFS for very large files
+- **Legacy scrolls:** Theoretically unlimited (split into pages), but practical limit is a few MB
 
 ### Q: Can scrolls be deleted or modified?
 
@@ -686,44 +673,105 @@ Ledger Scrolls:
 
 ### Q: Do I need to run a Cardano node?
 
-**A:** Currently, no (Blockfrost API is used). Future versions will support local node queries for true decentralization.
+**A:** No! Blockfrost API mode works without a node. Local Node mode is optional for those who want maximum sovereignty.
 
 ### Q: What happens if Blockfrost goes down?
 
-**A:** Your data is still on-chain. You can query directly with `cardano-cli` or wait for Blockfrost to return. Local-node mode (coming soon) eliminates this dependency.
+**A:** 
+1. Use Local Node mode (if you have a node)
+2. Wait for Blockfrost to return
+3. Query directly with `cardano-cli` 
+4. Your data is still on-chain and accessible
 
+### Q: Will P2P Lightweight mode really work?
+
+**A:** Yes! The protocol design is sound and achievable. It will take ~3 months to implement. See `P2P_DEVELOPMENT_ROADMAP.md` for details.
+
+### Q: How do I get a Blockfrost API key?
+
+**A:** 
+1. Go to https://blockfrost.io
+2. Sign up (free)
+3. Create a **Mainnet** project
+4. Copy your `project_id`
+5. Free tier: 50,000 requests/day
+
+### Q: Can I verify scrolls are really on-chain?
+
+**A:** Yes! See the "Verification Guide" section for step-by-step instructions using `cardano-cli`.
 
 ---
 
 ## Roadmap
 
-### Current (v1.0)
+### Current (v1.0) ✅
 - ✅ Standard scroll specification (locked UTxO + inline datum)
-- ✅ Legacy scroll specification (pages + manifest NFTs)
-- ✅ Registry specification v2
-- ✅ Python viewer with Blockfrost integration
+- ✅ Legacy scroll specification (index-based pages)
+- ✅ Three-mode viewer (Blockfrost, Local Node, P2P UI)
+- ✅ CBOR datum decoding
+- ✅ Auto-detection (gzip, HTML, file types)
+- ✅ Comprehensive error logging
 - ✅ Demo scrolls (Hosky, Bible, Bitcoin Whitepaper)
+- ✅ Smart hex handling (0x prefixes, multiple formats)
 
-### Near-term (v1.5)
-- 🔄 Local node support via `cardano-cli` queries
-- 🔄 Improved error handling and retry logic
-- 🔄 Better legacy metadata parser (handle more variations)
-- 🔄 CLI tool for scroll creation
-- 🔄 Documentation site
+### Near-term (v1.1 - February 2026)
+- 🔄 Bug fixes based on user feedback
+- 🔄 Performance optimizations
+- 🔄 Improved error messages
+- 🔄 Registry browser
+- 🔄 Batch scroll downloads
 
-### Mid-term (v2.0)
-- 📋 Web-based viewer (no installation required)
-- 📋 Scroll creation GUI tool
-- 📋 IPFS hybrid mode (pointer on-chain, data off-chain)
-- 📋 Multi-chain support (other UTXO blockchains)
-- 📋 Enhanced registry management tools
+### Mid-term (v2.0 - Q2 2026)
+- 📋 P2P Lightweight mode fully functional
+- 📋 Web-based viewer (no installation)
+- 📋 CLI tool for scroll creation
+- 📋 Scroll creation GUI
+- 📋 Enhanced documentation
 
-### Long-term (v3.0)
+### Long-term (v3.0 - Q3+ 2026)
+- 💡 Mithril integration
+- 💡 Mobile apps (iOS/Android)
 - 💡 Smart contract-gated scrolls
 - 💡 Decentralized registry discovery
-- 💡 Scroll collections and galleries
-- 💡 Integration with popular Cardano wallets
-- 💡 Mobile apps (iOS/Android)
+- 💡 Multi-chain support
+
+---
+
+## Technical Details
+
+### Dependencies
+
+```
+requests>=2.28.0  # HTTP client for Blockfrost
+cbor2>=5.4.0      # CBOR encoding/decoding for datums
+```
+
+### File Structure
+
+```
+ledger-scrolls/
+├── viewer.py                          # Main GUI application
+├── requirements.txt                    # Python dependencies
+├── README.md                          # This file
+├── P2P_DEVELOPMENT_ROADMAP.md        # P2P implementation plan
+├── lightweight_p2p_client_design.md  # P2P technical design
+└── ~/.ledger-scrolls/                # User data directory
+    ├── config.json                    # Saved configuration
+    ├── logs/                          # Debug logs
+    │   └── viewer_*.log
+    └── p2p_cache/                     # Future P2P cache
+```
+
+### Key Improvements in v1.0
+
+1. **CBOR Decoding** - Proper handling of Blockfrost's CBOR datum format
+2. **Auto-Detection** - Gzip magic bytes and HTML content detection
+3. **0x Prefix Handling** - Strips `0x` before hex decoding
+4. **Multiple Payload Formats** - Handles `{"bytes": "..."}` and direct strings
+5. **Index-Based Legacy** - Simplified approach using `i` field
+6. **Smart File Extensions** - Auto-detects and uses correct extensions
+7. **Comprehensive Logging** - Every operation logged for debugging
+8. **Three Modes** - Blockfrost, Local Node, and P2P (UI ready)
 
 ---
 
@@ -731,25 +779,29 @@ Ledger Scrolls:
 
 We welcome contributions! Areas where you can help:
 
-1. **Code contributions**
-   - Local node integration
-   - Legacy metadata parser improvements
-   - Bug fixes and optimizations
+### Code Contributions
+- 🔥 **P2P Protocol Implementation** (high priority - see roadmap)
+- Local node optimizations
+- UI/UX improvements
+- Bug fixes and testing
 
-2. **Documentation**
-   - Tutorials and guides
-   - API documentation
-   - Translation to other languages
+### Documentation
+- Tutorials and guides
+- Video walkthroughs
+- Translation to other languages
+- API documentation
 
-3. **Testing**
-   - Test with different scrolls
-   - Report bugs and edge cases
-   - Platform-specific testing (Windows/Mac/Linux)
+### Testing
+- Test with different scrolls
+- Report bugs and edge cases
+- Platform-specific testing (Windows/Mac/Linux)
+- Performance benchmarking
 
-4. **Community**
-   - Share your scrolls
-   - Write blog posts or tutorials
-   - Help others in discussions
+### Community
+- Share your scrolls
+- Write blog posts or tutorials
+- Help others in discussions
+- Spread the word about Ledger Scrolls
 
 **How to contribute:**
 1. Check existing issues on GitHub
@@ -764,6 +816,35 @@ We welcome contributions! Areas where you can help:
 
 - **GitHub:** https://github.com/BEACNpool/ledger-scrolls
 - **Twitter/X:** [@BEACNpool](https://x.com/BEACNpool)
+- **Blockfrost:** https://blockfrost.io (for API keys)
+- **Cardano Developers:** https://developers.cardano.org
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**403 Forbidden errors:**
+- Verify API key is for **Mainnet** (not Testnet)
+- Check API key hasn't expired
+- Get new key at blockfrost.io
+
+**Files save as .txt:**
+- Now fixed in v1.0! Viewer auto-detects HTML
+
+**Slow loading (Bible):**
+- This is normal! 237 pages takes ~60 seconds
+
+**cardano-cli not found:**
+- Install Cardano node tools, or use Blockfrost mode
+
+**For more help:**
+- Check logs in `~/.ledger-scrolls/logs/`
+- Open GitHub issue with log excerpts
+- Contact @BEACNpool on Twitter/X
+
+---
 
 ## License
 
@@ -775,4 +856,7 @@ MIT License - See LICENSE file for details
 
 Built with ❤️ by [@BEACNpool](https://x.com/BEACNpool)
 
+
 **"In the digital age, true knowledge must be unstoppable."**
+
+The chain is the library. The scrolls are eternal
