@@ -28,7 +28,6 @@ Ledger Scrolls supports two storage styles:
 ### 2. 🧾 Legacy Scrolls (Large): Pages + Manifest NFTs (CIP-25 style)
 **Best for:** Large documents (Bible / Whitepaper)
 
-- Consider migrating to standard + IPFS for new projects
 - **Optional legacy fallback via Blockfrost** for convenience
 - Multiple page NFTs with reconstruction logic
 
