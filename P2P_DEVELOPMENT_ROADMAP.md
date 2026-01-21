@@ -70,7 +70,7 @@ The viewer now supports THREE connection modes:
 **Testing:**
 ```python
 # Test connection
-client = P2PLightweightClient(P2PConfig("73.209.68.102", 6000))
+client = P2PLightweightClient(P2PConfig("IP-ADDR", 6000))
 assert client.connect() == True
 assert client.is_connected() == True
 ```
@@ -301,7 +301,7 @@ ledger-scrolls/
 - Test caching logic
 
 ### Integration Tests
-- Connect to actual relay (yours: 73.209.68.102:6000)
+- Connect to actual relay (yours: IP-ADDR", 6000)
 - Fetch real blocks
 - Parse real data
 - Reconstruct known scrolls
