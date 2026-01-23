@@ -823,22 +823,6 @@ We welcome contributions! Areas where you can help:
 
 ## Troubleshooting
 
-### Common Issues
-
-**403 Forbidden errors:**
-- Verify API key is for **Mainnet** (not Testnet)
-- Check API key hasn't expired
-- Get new key at blockfrost.io
-
-**Files save as .txt:**
-- Now fixed in v1.0! Viewer auto-detects HTML
-
-**Slow loading (Bible):**
-- This is normal! 237 pages takes ~60 seconds
-
-**cardano-cli not found:**
-- Install Cardano node tools, or use Blockfrost mode
-
 **For more help:**
 - Check logs in `~/.ledger-scrolls/logs/`
 - Open GitHub issue with log excerpts
@@ -856,7 +840,14 @@ MIT License - See LICENSE file for details
 
 Built with ❤️ by [@BEACNpool](https://x.com/BEACNpool)
 
+Special thanks to:
+- The Cardano community
+- Blockfrost team for API access
+- All contributors and testers
+- Early adopters preserving knowledge on-chain
+
+---
 
 **"In the digital age, true knowledge must be unstoppable."**
 
-The chain is the library. The scrolls are eternal
+The chain is the library. The scrolls are eternal.
