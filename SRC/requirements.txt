@@ -1,0 +1,18 @@
+# Ledger Scrolls Viewer - Python Dependencies
+
+# Core dependencies (REQUIRED)
+requests>=2.28.0     # HTTP client for Blockfrost API
+cbor2>=5.4.0         # CBOR encoding/decoding for datums
+
+# Optional dependencies for QR code scanning
+# Install with: pip install -r requirements.txt
+# Or skip with: pip install requests cbor2
+
+opencv-python>=4.5.0  # Camera access for QR scanning
+pyzbar>=0.1.9        # QR code detection and decoding
+
+# Note: tkinter is required but usually comes pre-installed with Python
+# If tkinter is missing:
+#   Ubuntu/Debian: sudo apt-get install python3-tk
+#   macOS: Reinstall Python from python.org
+#   Windows: Reinstall Python and check "tcl/tk" option
