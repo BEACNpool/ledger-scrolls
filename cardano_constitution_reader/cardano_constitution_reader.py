@@ -409,29 +409,29 @@ def main():
         out_path.write_bytes(raw_bytes)
 
         print("\nSuccessfully saved immutable document:")
-        
-print(f"  → {out_path}")
-# Helpful hint if the user accidentally cloned the repo inside itself (common when following copy/paste guides)
-parts = [p.lower() for p in out_path.parts]
-if parts.count("ledger-scrolls") >= 2:
-    print("  (Note: your path includes 'ledger-scrolls' more than once—this usually means you cloned the repo inside the folder.")
-    print("   For a cleaner path, run from: ~/ledger-scrolls/cardano_constitution_reader)")
+        print(f"  → {out_path}")
         print(f"  Size: {len(raw_bytes):,} bytes")
         print(f"  SHA256: {computed_hash}")
-        print("\nTip: open it later with:")
-        if sys.platform.startswith("win"):
-            print(f"  notepad \"{out_path}\"")
-        elif sys.platform == "darwin":
-            print(f"  open \"{out_path}\"")
-        else:
-            print(f"  xdg-open \"{out_path}\"")
 
-        should_open = args.open
-        if not should_open and (not args.no_open) and (not args.non_interactive):
-            ans = input("\nOpen the file now? (Y/n): ").strip().lower()
-            should_open = (ans in ("", "y", "yes"))
-        if should_open:
-            open_text_file(out_path)
+        print("\nTip: open it later with:")
+        if is_wsl():
+            win_path = wsl_to_windows_path(out_path)
+            if win_path:
+                print(f'  notepad.exe "{win_path}"')
+            else:
+                print("  explorer.exe .")
+        elif sys.platform.startswith("win"):
+            print(f'  notepad "{out_path}"')
+        elif sys.platform == "darwin":
+            print(f'  open "{out_path}"')
+        else:
+            print(f'  xdg-open "{out_path}"')
+
+        if not args.no_open:
+            choice = "y" if args.open else (input("\nOpen the file now? (Y/n): ").strip().lower() or "y")
+            if choice.startswith("y"):
+                open_text_file(out_path)
+
 
     except Exception as e:
         print(f"\nError: {e}")
