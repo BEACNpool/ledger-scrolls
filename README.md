@@ -78,6 +78,45 @@ Small document demonstration using the legacy pattern.
 - **Content-Type:** Automatically detected as HTML
 - **Codec:** Auto-detected (gzip magic bytes)
 
+
+### 4) Cardano Constitution (Epoch 608) — Legacy Pages
+A larger legacy-pages demo: the Constitution text is stored as **CIP-25 page NFTs + a manifest**.
+
+- **Policy ID:** `ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750`
+- **Manifest asset name:** `CONSTITUTION_E608_MANIFEST`
+- **Pages:** 11
+- **Content-Type:** `text/plain; charset=utf-8`
+- **Codec:** `gzip`
+- **Integrity (sha256):**
+  - gzip: `4565368ca35d8c6bb08bff712c1b22c0afe300c19292d5aa09c812ed415a4e93`
+  - original: `98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1`
+
+### 5) Cardano Constitution (Epoch 541) — Legacy Pages
+Earlier ratified constitution, also published as legacy pages.
+
+- **Policy ID:** `d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d`
+- **Manifest asset name:** `CONSTITUTION_E541_MANIFEST`
+- **Pages:** 7
+- **Content-Type:** `text/plain; charset=utf-8`
+- **Codec:** `gzip`
+- **Integrity (sha256):**
+  - gzip: `975d1c6bb1c8bf4982c58e41c9b137ecd4272e34095a5ec9b37bdde5ca6f268a`
+  - original: `1939c1627e49b5267114cbdb195d4ac417e545544ba6dcb47e03c679439e9566`
+
+### Optional Reference: IPFS Mirrors (Not Ledger Scrolls)
+These IPFS links are included as a **reference dataset** only. They are not part of the Ledger Scrolls on-chain storage standards.
+
+- IPFS is **content-addressed** (a CID changes if the content changes), but availability depends on **pinning / providers / gateways**. A gateway URL can fail even if the content exists somewhere on the network.
+- Ledger Scrolls aims for “pay once, store forever” by keeping the bytes **on-chain**, so any full node can serve the data without relying on an external content network.
+
+**Constitution version ratified at epoch 541 (enacted at epoch 542)**
+- Published hash: `2a61e2f4b63442978140c77a70daab3961b22b12b63b13949a390c097214d1c5`
+- IPFS gateway: `https://ipfs.io/ipfs/bafkreiazhhawe7sjwuthcfgl3mmv2swec7sukvclu3oli7qdyz4uhhuvmy`
+
+**Constitution version ratified at epoch 608 (enacted at epoch 609)**
+- Published hash: `b368bdad83c727bbfe86425575233fb914eb76d05d89497f7790cf007fd95f52`
+- IPFS gateway: `https://ipfs.io/ipfs/bafkreieyuknozbtewyurfqoagvplvykadn6a4u6wglupavdz46bbsnnl6e`
+
 ---
 
 ## Core Concept: "No Indexing" via Deterministic Pointers
