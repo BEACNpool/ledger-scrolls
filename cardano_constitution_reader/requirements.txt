@@ -1,0 +1,13 @@
+# Cardano Constitution Reader - Requirements
+# ==========================================
+
+# Rich library for beautiful terminal output
+# Provides progress bars, tables, panels, and colored formatting
+rich>=13.0.0
+
+# Note: The tool works without rich (with fallback to plain output),
+# but rich is highly recommended for the best experience.
+
+# Optional: For development/testing
+# pytest>=7.0.0
+# mypy>=1.0.0
