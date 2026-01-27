@@ -202,6 +202,35 @@ This eliminates dependency on manifest format variations.
 - `["hex1", "hex2"]` (direct strings)
 - Mixed formats
 
+
+
+### Burn + Re-mint Safety: Always Read Metadata From the Latest Mint
+
+Sometimes a page NFT must be **burned** and later **re-minted** (for example, a bad payload segment, a corrupted page, or an accidental mint). When that happens, a common failure mode is:
+
+- The asset still exists under the same `policy_id + asset_name` (same asset ID),
+- but the **CIP-25 page metadata you need lives on the most recent mint transaction**,
+- while naive implementations may accidentally read metadata from the **initial** mint.
+
+To make Legacy Scrolls resilient, **viewers MUST resolve the latest mint transaction for each page asset before reading CIP-25 metadata**.
+
+#### Required resolution algorithm (Blockfrost mode)
+
+For each asset under a policy:
+
+1. Fetch asset history (descending):
+   - `GET /assets/{asset}/history?order=desc&count=10`
+2. Find the first event where `action == "minted"`:
+   - Use that event’s `tx_hash` as the authoritative metadata source
+3. Fallback behavior:
+   - If no `"minted"` event is found in the returned window, fall back to `initial_mint_tx_hash`
+   - If the history endpoint fails, fall back to `initial_mint_tx_hash`
+4. Fetch metadata from the resolved mint tx:
+   - `GET /txs/{tx_hash}/metadata`
+5. Extract the page using normal Legacy rules (`i` + `payload`), then continue reconstruction.
+
+This logic is intentionally small, but it prevents a burned/re-minted page from silently reconstructing with stale bytes from the first mint.
+
 ### Data Flow: Legacy Scroll Reading
 
 1. **Fetch all assets:** Query all NFTs under policy ID
@@ -837,6 +866,7 @@ ledger-scrolls/
 6. **Smart File Extensions** - Auto-detects and uses correct extensions
 7. **Comprehensive Logging** - Every operation logged for debugging
 8. **Three Modes** - Blockfrost, Local Node, and P2P (UI ready)
+9. **Burn/Re-mint Recovery (Legacy Pages)** - If a page NFT was burned and re-minted, the viewer resolves the **latest** mint transaction via asset history before reading CIP-25 metadata (prevents stale metadata reads from the initial mint).
 
 ---
 
