@@ -3,6 +3,11 @@
 
 Ledger Scrolls is an open-source **standard + viewer** for publishing and reading **permissionless, immutable data** on the Cardano blockchain.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+
+---
+
 ## Design Principles
 
 The design goal is simple:
@@ -29,11 +34,12 @@ Ledger Scrolls supports two storage styles:
 - **Minimal on-chain footprint:** One UTxO, one datum, one fetch, one file
 
 ### 2. 🧾 Legacy Scrolls (Large): Pages + Manifest NFTs (CIP-25 style)
-**Best for:** Large documents (Bible / Whitepaper)
+**Best for:** Large documents (Bible / Whitepaper / Constitution)
 
 - Multiple page NFTs with reconstruction logic
 - Automatic detection of page index (`i` field)
 - Supports both explicit page lists and indexed pages
+- **Fast mode:** Pre-computed mint tx hashes for 10x faster fetching
 
 ---
 
@@ -78,18 +84,20 @@ Small document demonstration using the legacy pattern.
 - **Content-Type:** Automatically detected as HTML
 - **Codec:** Auto-detected (gzip magic bytes)
 
-
-### 4) Cardano Constitution (Epoch 608) — Legacy Pages
-A larger legacy-pages demo: the Constitution text is stored as **CIP-25 page NFTs + a manifest**.
+### 4) Cardano Constitution (Epoch 608) — Legacy Pages ⚖️
+The **Cardano Constitution** is governance framework for the blockchain. This larger legacy-pages demo stores the Constitution text as **CIP-25 page NFTs + a manifest**.
 
 - **Policy ID:** `ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750`
 - **Manifest asset name:** `CONSTITUTION_E608_MANIFEST`
 - **Pages:** 11
+- **Ratified:** Epoch 608, Enacted: Epoch 609
 - **Content-Type:** `text/plain; charset=utf-8`
 - **Codec:** `gzip`
 - **Integrity (sha256):**
   - gzip: `4565368ca35d8c6bb08bff712c1b22c0afe300c19292d5aa09c812ed415a4e93`
   - original: `98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1`
+
+**See also:** [Cardano Constitution Reader](#cardano-constitution-reader) - A specialized production-grade CLI tool
 
 ### 5) Cardano Constitution (Epoch 541) — Legacy Pages
 Earlier ratified constitution, also published as legacy pages.
@@ -97,6 +105,7 @@ Earlier ratified constitution, also published as legacy pages.
 - **Policy ID:** `d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d`
 - **Manifest asset name:** `CONSTITUTION_E541_MANIFEST`
 - **Pages:** 7
+- **Ratified:** Epoch 541, Enacted: Epoch 542
 - **Content-Type:** `text/plain; charset=utf-8`
 - **Codec:** `gzip`
 - **Integrity (sha256):**
@@ -107,7 +116,7 @@ Earlier ratified constitution, also published as legacy pages.
 These IPFS links are included as a **reference dataset** only. They are not part of the Ledger Scrolls on-chain storage standards.
 
 - IPFS is **content-addressed** (a CID changes if the content changes), but availability depends on **pinning / providers / gateways**. A gateway URL can fail even if the content exists somewhere on the network.
-- Ledger Scrolls aims for “pay once, store forever” by keeping the bytes **on-chain**, so any full node can serve the data without relying on an external content network.
+- Ledger Scrolls aims for "pay once, store forever" by keeping the bytes **on-chain**, so any full node can serve the data without relying on an external content network.
 
 **Constitution version ratified at epoch 541 (enacted at epoch 542)**
 - Published hash: `2a61e2f4b63442978140c77a70daab3961b22b12b63b13949a390c097214d1c5`
@@ -140,6 +149,43 @@ This transforms "find my document somewhere in the blockchain" into:
 - **1 address query** (registry UTxO) OR direct user input
 - **1 pointer resolution**
 - **0 indexing**
+
+### Fast Mode: Pre-Computed Mint Transaction Hashes
+
+For Legacy Scrolls with many pages, scanning an entire policy can be slow (~30-60 seconds). **Fast mode** solves this by using pre-computed mint transaction hashes.
+
+**How it works:**
+
+1. **Discover Phase** (one-time):
+   - Scan the policy once to find all page NFTs
+   - Record each page's mint transaction hash
+   - Save to a "mints file" (JSON)
+
+2. **Fetch Phase** (subsequent uses):
+   - Read mint tx hashes from mints file
+   - Fetch metadata directly from known transactions
+   - **Result:** ~5-10 seconds instead of ~60 seconds
+
+**Example mints file format:**
+
+```json
+{
+  "manifest_tx": "cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4",
+  "pages": [
+    {"page": 1, "tx": "abc123..."},
+    {"page": 2, "tx": "def456..."},
+    {"page": 3, "tx": "789xyz..."}
+  ]
+}
+```
+
+**Benefits:**
+- ✅ 10x faster fetching
+- ✅ Fewer API calls (one per page instead of scanning policy)
+- ✅ Deterministic and shareable (publish mints files alongside scrolls)
+- ✅ Works with any viewer implementation
+
+This optimization is used in production by the [Cardano Constitution Reader](#cardano-constitution-reader).
 
 ---
 
@@ -212,8 +258,8 @@ A Legacy Scroll is stored as:
 - **Page NFTs** (many): Each page has `i` index and `payload` segments in metadata
 - **Manifest NFT** (optional): Provides additional metadata like hashes and codec
 
-**The viewer now uses a simplified approach:**
-1. Fetch ALL assets under the policy
+**The viewer uses a simplified approach:**
+1. Fetch ALL assets under the policy (or use mints file for fast mode)
 2. Filter for NFTs with `payload` and `i` fields
 3. Sort by `i` index
 4. Concatenate payloads
@@ -241,8 +287,6 @@ This eliminates dependency on manifest format variations.
 - `["hex1", "hex2"]` (direct strings)
 - Mixed formats
 
-
-
 ### Burn + Re-mint Safety: Always Read Metadata From the Latest Mint
 
 Sometimes a page NFT must be **burned** and later **re-minted** (for example, a bad payload segment, a corrupted page, or an accidental mint). When that happens, a common failure mode is:
@@ -260,7 +304,7 @@ For each asset under a policy:
 1. Fetch asset history (descending):
    - `GET /assets/{asset}/history?order=desc&count=10`
 2. Find the first event where `action == "minted"`:
-   - Use that event’s `tx_hash` as the authoritative metadata source
+   - Use that event's `tx_hash` as the authoritative metadata source
 3. Fallback behavior:
    - If no `"minted"` event is found in the returned window, fall back to `initial_mint_tx_hash`
    - If the history endpoint fails, fall back to `initial_mint_tx_hash`
@@ -272,7 +316,7 @@ This logic is intentionally small, but it prevents a burned/re-minted page from 
 
 ### Data Flow: Legacy Scroll Reading
 
-1. **Fetch all assets:** Query all NFTs under policy ID
+1. **Fetch all assets:** Query all NFTs under policy ID (or use mints file)
 2. **Filter pages:** Find all NFTs with `payload` and `i` fields
 3. **Sort by index:** Order pages by `i` value
 4. **Concatenate segments:** Join hex segments within each page
@@ -602,22 +646,133 @@ Logs include:
 
 Check logs when troubleshooting issues.
 
-### Known Issues & Solutions
+---
 
-#### Issue: Blockfrost 403 Errors
-**Solution:** Ensure API key is for **Mainnet** (not Testnet), and is valid/not expired
+## Cardano Constitution Reader
 
-#### Issue: Files Save as .txt Instead of .html
-**Solution:** Now fixed! Viewer auto-detects HTML content and uses correct extension
+**⚖️ A specialized production-grade CLI tool for the Cardano Constitution**
 
-#### Issue: "Non-hexadecimal digit found"
-**Solution:** Now fixed! Viewer strips `0x` prefixes and handles all hex formats
+The Constitution Reader is a standalone command-line tool built on Ledger Scrolls principles, designed specifically for fetching and verifying the Cardano Constitution with the elegance and rigor the founding document deserves.
 
-#### Issue: Bible Takes Long to Load
-**This is normal!** 237 pages = 237 API calls = ~60 seconds due to rate limiting
+### Why a Specialized Tool?
 
-#### Issue: cardano-cli Not Found (Local Mode)
-**Solution:** Install Cardano node tools or use Blockfrost mode instead
+While the main Ledger Scrolls viewer is a general-purpose GUI application, the Constitution deserves special treatment:
+
+- **Governance importance** - This is THE founding document of Cardano
+- **Verification emphasis** - Cryptographic integrity is paramount
+- **Production quality** - Beautiful terminal output that reflects blockchain elegance
+- **Audit trails** - Exportable verification reports for compliance
+
+### Features
+
+#### 🎨 Beautiful Terminal Output
+- Rich formatting with colors, panels, and progress bars
+- Elegant verification displays with cryptographic proof
+- Constitution metadata tables showing governance context
+- Graceful fallback to plain output if `rich` not installed
+
+#### ⚡ Performance Optimizations
+- **Fast mode** - Uses pre-computed mint tx hashes (~5-10 seconds)
+- **Legacy mode** - Scans entire policy (~30-60 seconds)
+- **Cache mode** - Returns previously verified constitution instantly
+- **Auto-detection** - Automatically chooses best method
+
+#### 🔒 Verification & Audit
+- SHA-256 hash verification with detailed reports
+- Exportable JSON verification certificates
+- Complete chain-of-custody from blockchain
+- Governance metadata display (ratification epochs, voting periods)
+
+#### 📊 Multiple Output Modes
+- Save to file (standard text format)
+- Display in terminal with paging
+- Export verification reports
+- Auto-open in default text editor
+
+### Installation
+
+```bash
+cd ledger-scrolls/cardano_constitution_reader
+
+# Install dependencies
+pip install rich
+
+# Make executable
+chmod +x cardano_constitution_reader.py
+```
+
+### Quick Start
+
+```bash
+# Fetch current constitution (Epoch 608)
+./cardano_constitution_reader.py --epoch 608
+
+# Display in terminal with paging
+./cardano_constitution_reader.py --epoch 608 --display
+
+# Export verification report
+./cardano_constitution_reader.py --epoch 608 --export-verification
+
+# Use fast mode with mints file
+./cardano_constitution_reader.py --epoch 608 --mints-file constitution_epoch_608_mints.json
+```
+
+### Available Versions
+
+| Epoch | Status | Ratified | Enacted | SHA256 |
+|-------|--------|----------|---------|--------|
+| 608 | ✓ Current | Epoch 608 | Epoch 609 | `98a29aec...` |
+| 541 | Historical | Epoch 541 | Epoch 542 | `1939c162...` |
+
+### Terminal Output Preview
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║   ⚖️  CARDANO CONSTITUTION READER                             ║
+║                                                               ║
+║   Immutable Governance Framework • Verified On-Chain         ║
+║   v2.0.0 by BEACNpool                                         ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+┌─ Integrity Verification ──────────────────────────────────────┐
+│ Check            │ Value                          │ Status     │
+├──────────────────┼────────────────────────────────┼────────────┤
+│ Expected SHA256  │ 98a29aec8664b62912c1c0355ebae… │            │
+│ Computed SHA256  │ 98a29aec8664b62912c1c0355ebae… │            │
+│ File Size        │ 67,234 bytes                   │            │
+│ Verification     │ Hashes Match                   │ ✓ VERIFIED │
+└──────────────────┴────────────────────────────────┴────────────┘
+
+╭─────────────────────────────────────────────────────────────╮
+│ Constitution Epoch 608 is cryptographically verified ✓     │
+│ This document is immutably stored on the Cardano blockchain │
+╰─────────────────────────────────────────────────────────────╯
+```
+
+### Documentation
+
+See `cardano_constitution_reader/README.md` for complete documentation including:
+- Detailed command reference
+- Architecture documentation
+- Verification guide
+- Performance benchmarks
+- Contributing guidelines
+
+### Comparison: Constitution Reader vs. General Viewer
+
+| Feature | Constitution Reader | Ledger Scrolls Viewer |
+|---------|---------------------|----------------------|
+| **Purpose** | Single-document tool | General scroll library |
+| **Interface** | Terminal CLI | GUI application |
+| **Output** | Production-grade text | User-friendly GUI |
+| **Verification** | Constitution-specific | General hash verification |
+| **Caching** | Built-in | Optional |
+| **Fast Mode** | Optimized | Standard |
+| **Reports** | Exportable JSON | Visual only |
+
+Both tools share core principles: **permissionless, immutable, verifiable on-chain data**.
 
 ---
 
@@ -718,6 +873,23 @@ The viewer will automatically:
 - Auto-detect compression
 - Auto-detect file type
 
+**Optional: Create a mints file for fast mode**
+
+After publishing your Legacy Scroll, create a mints file to enable 10x faster fetching:
+
+```json
+{
+  "manifest_tx": "YOUR_MANIFEST_TX_HASH",
+  "pages": [
+    {"page": 1, "tx": "PAGE_1_MINT_TX"},
+    {"page": 2, "tx": "PAGE_2_MINT_TX"},
+    {"page": 3, "tx": "PAGE_3_MINT_TX"}
+  ]
+}
+```
+
+This allows viewers to fetch pages directly without scanning the entire policy.
+
 ### Extending the Viewer
 
 The viewer is designed to be extended. Key areas for contribution:
@@ -726,6 +898,7 @@ The viewer is designed to be extended. Key areas for contribution:
 2. **Additional File Formats** - Add support for more MIME types
 3. **UI Improvements** - Dark mode, preview pane, batch operations
 4. **Performance** - Caching, parallel fetches, optimizations
+5. **Specialized Tools** - Build domain-specific tools like Constitution Reader
 
 **How to contribute:**
 1. Fork the repository
@@ -746,6 +919,7 @@ Ledger Scrolls is built on these core principles:
 - ✅ **Permanently locked** — Data that cannot be deleted or modified
 - ✅ **Multiple access paths** — API, local node, or P2P (coming soon)
 - ✅ **Auto-detection** — Smart handling of formats and compression
+- ✅ **Fast mode optimization** — Pre-computed pointers for performance
 
 ### Why This Matters
 
@@ -771,6 +945,7 @@ Ledger Scrolls:
 - 🔐 **Proof of existence** — Timestamp + hash verification
 - 📚 **Digital libraries** — Collections that cannot be erased
 - 🏛️ **Archives** — Preserve knowledge for future generations
+- ⚖️ **Governance documents** — Constitutions, bylaws, charters
 
 ---
 
@@ -783,8 +958,8 @@ Ledger Scrolls:
 ### Q: What's the maximum file size?
 
 **A:** 
-- **Standard scrolls:** Standard Scrolls are bounded by protocol parameters (tx/UTxO size). In practice, treat LS-LOCK v1 as **~10KB payload territory** once you account for datum structure and metadata overhead.
-- **Legacy scrolls:** Theoretically unlimited (split into pages), but practical limit is a few MB
+- **Standard scrolls:** ~10KB payload territory (accounting for datum structure and metadata overhead)
+- **Legacy scrolls:** Theoretically unlimited (split into pages), practical limit is a few MB
 
 ### Q: Can scrolls be deleted or modified?
 
@@ -801,6 +976,10 @@ Ledger Scrolls:
 2. Wait for Blockfrost to return
 3. Query directly with `cardano-cli` 
 4. Your data is still on-chain and accessible
+
+### Q: What is "fast mode" and how does it work?
+
+**A:** Fast mode uses pre-computed mint transaction hashes to fetch pages directly instead of scanning an entire policy. This reduces fetch time from ~60 seconds to ~5-10 seconds for large documents. See the [Fast Mode](#fast-mode-pre-computed-mint-transaction-hashes) section for details.
 
 ### Q: Will P2P Lightweight mode really work?
 
@@ -830,15 +1009,19 @@ Ledger Scrolls:
 - ✅ CBOR datum decoding
 - ✅ Auto-detection (gzip, HTML, file types)
 - ✅ Comprehensive error logging
-- ✅ Demo scrolls (Hosky, Bible, Bitcoin Whitepaper)
+- ✅ Demo scrolls (Hosky, Bible, Bitcoin Whitepaper, Constitution)
 - ✅ Smart hex handling (0x prefixes, multiple formats)
+- ✅ Fast mode with mints files
+- ✅ Constitution Reader (specialized CLI tool)
+- ✅ Burn/re-mint recovery for Legacy Scrolls
 
-### Near-term (v1.1 - February 2026)
+### Near-term (v1.1 - Q1 2026)
 - 🔄 Bug fixes based on user feedback
 - 🔄 Performance optimizations
 - 🔄 Improved error messages
-- 🔄 Registry browser
+- 🔄 Registry browser in viewer
 - 🔄 Batch scroll downloads
+- 🔄 Mints file auto-generation tool
 
 ### Mid-term (v2.0 - Q2 2026)
 - 📋 P2P Lightweight mode fully functional
@@ -846,6 +1029,7 @@ Ledger Scrolls:
 - 📋 CLI tool for scroll creation
 - 📋 Scroll creation GUI
 - 📋 Enhanced documentation
+- 📋 Additional specialized tools
 
 ### Long-term (v3.0 - Q3+ 2026)
 - 💡 Mithril integration
@@ -872,27 +1056,39 @@ Open protocol. Premium execution.
 
 ## Technical Details
 
+### Repository Structure
+
+```
+ledger-scrolls/
+├── viewer.py                              # Main GUI application
+├── requirements.txt                       # Python dependencies
+├── README.md                              # This file
+├── P2P_DEVELOPMENT_ROADMAP.md            # P2P implementation plan
+├── lightweight_p2p_client_design.md      # P2P technical design
+├── cardano_constitution_reader/          # Constitution Reader tool
+│   ├── cardano_constitution_reader.py    # CLI application
+│   ├── README.md                          # Constitution Reader docs
+│   ├── requirements.txt                   # Dependencies (rich)
+│   ├── constitution_epoch_541_mints.json # Fast mode data (epoch 541)
+│   └── constitution_epoch_608_mints.json # Fast mode data (epoch 608)
+└── ~/.ledger-scrolls/                    # User data directory
+    ├── config.json                        # Saved configuration
+    ├── logs/                              # Debug logs
+    │   └── viewer_*.log
+    └── p2p_cache/                         # Future P2P cache
+```
+
 ### Dependencies
 
+#### Ledger Scrolls Viewer
 ```
 requests>=2.28.0  # HTTP client for Blockfrost
 cbor2>=5.4.0      # CBOR encoding/decoding for datums
 ```
 
-### File Structure
-
+#### Constitution Reader
 ```
-ledger-scrolls/
-├── viewer.py                          # Main GUI application
-├── requirements.txt                    # Python dependencies
-├── README.md                          # This file
-├── P2P_DEVELOPMENT_ROADMAP.md        # P2P implementation plan
-├── lightweight_p2p_client_design.md  # P2P technical design
-└── ~/.ledger-scrolls/                # User data directory
-    ├── config.json                    # Saved configuration
-    ├── logs/                          # Debug logs
-    │   └── viewer_*.log
-    └── p2p_cache/                     # Future P2P cache
+rich>=13.0.0      # Beautiful terminal output
 ```
 
 ### Key Improvements in v1.0
@@ -905,7 +1101,9 @@ ledger-scrolls/
 6. **Smart File Extensions** - Auto-detects and uses correct extensions
 7. **Comprehensive Logging** - Every operation logged for debugging
 8. **Three Modes** - Blockfrost, Local Node, and P2P (UI ready)
-9. **Burn/Re-mint Recovery (Legacy Pages)** - If a page NFT was burned and re-minted, the viewer resolves the **latest** mint transaction via asset history before reading CIP-25 metadata (prevents stale metadata reads from the initial mint).
+9. **Burn/Re-mint Recovery** - Resolves latest mint tx for Legacy Pages
+10. **Fast Mode** - Pre-computed mint hashes for 10x faster fetching
+11. **Constitution Reader** - Production-grade specialized CLI tool
 
 ---
 
@@ -918,6 +1116,8 @@ We welcome contributions! Areas where you can help:
 - Local node optimizations
 - UI/UX improvements
 - Bug fixes and testing
+- Specialized tools (like Constitution Reader)
+- Mints file generation automation
 
 ### Documentation
 - Tutorials and guides
@@ -952,15 +1152,22 @@ We welcome contributions! Areas where you can help:
 - **Twitter/X:** [@BEACNpool](https://x.com/BEACNpool)
 - **Blockfrost:** https://blockfrost.io (for API keys)
 - **Cardano Developers:** https://developers.cardano.org
+- **Constitution Reader:** [cardano_constitution_reader/](cardano_constitution_reader/)
 
 ---
 
 ## Troubleshooting
 
+### General Viewer Issues
+
 **For more help:**
 - Check logs in `~/.ledger-scrolls/logs/`
 - Open GitHub issue with log excerpts
 - Contact @BEACNpool on Twitter/X
+
+### Constitution Reader Issues
+
+**See:** `cardano_constitution_reader/README.md` for detailed troubleshooting
 
 ---
 
@@ -979,9 +1186,10 @@ Special thanks to:
 - Blockfrost team for API access
 - All contributors and testers
 - Early adopters preserving knowledge on-chain
+- Cardano governance participants
 
 ---
 
 **"In the digital age, true knowledge must be unstoppable."**
 
-The chain is the library. The scrolls are eternal.
+*The chain is the library. The scrolls are eternal.*
