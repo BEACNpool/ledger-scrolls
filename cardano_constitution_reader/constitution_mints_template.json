@@ -1,0 +1,13 @@
+{
+  "manifest_tx": "cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4",
+  "pages": [
+    {
+      "page": 1,
+      "tx": "abc123..."
+    },
+    {
+      "page": 2,
+      "tx": "def456..."
+    }
+  ]
+}
