@@ -272,7 +272,28 @@ def fetch_constitution_bytes(policy_id: str, project_id: str) -> bytes:
     return data
 
 
-def open_text_file(path: Path) -> None:
+def is_wsl() -> bool:
+    """Detect if running inside WSL (Windows Subsystem for Linux)."""
+    if os.getenv("WSL_DISTRO_NAME") or os.getenv("WSL_INTEROP"):
+        return True
+    try:
+        with open("/proc/sys/kernel/osrelease", "r", encoding="utf-8") as f:
+            s = f.read().lower()
+        return ("microsoft" in s) or ("wsl" in s)
+    except Exception:
+        return False
+
+
+def wsl_to_windows_path(path: Path) -> str | None:
+    """Convert a Linux path to a Windows path when running under WSL."""
+    try:
+        out = subprocess.check_output(["wslpath", "-w", str(path)], text=True).strip()
+        return out or None
+    except Exception:
+        return None
+
+
+def open_text_file\(path: Path\) -> None:
     """Best-effort: open the file in a user-friendly way on the current OS."""
     try:
         if sys.platform.startswith("win"):
@@ -307,6 +328,7 @@ def main():
     parser.add_argument("--epoch", choices=sorted(CONSTITUTIONS.keys()), help="Which constitution version to fetch (541 or 608).")
     parser.add_argument("--api-key", help="Blockfrost Mainnet API key (or set env BLOCKFROST_PROJECT_ID).")
     parser.add_argument("--config", default=str(DEFAULT_CONFIG_PATH), help="Config path (default: ~/.constitution_reader/config.json)")
+    parser.add_argument("--out-dir", default=str(Path(__file__).resolve().parent), help="Where to save output files (default: alongside this script).")
     parser.add_argument("--no-save-key", action="store_true", help="Do not persist API key to config.")
     parser.add_argument("--non-interactive", action="store_true", help="Fail instead of prompting for missing values.")
     parser.add_argument("--open", action="store_true", help="Open the downloaded file after saving.")
@@ -381,11 +403,19 @@ def main():
             sys.exit(1)
 
         filename = f"Cardano_Constitution_Epoch_{epoch}.txt"
-        out_path = Path(filename).resolve()
+        out_dir = Path(args.out_dir).expanduser()
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = (out_dir / filename).resolve()
         out_path.write_bytes(raw_bytes)
 
         print("\nSuccessfully saved immutable document:")
-        print(f"  → {out_path}")
+        
+print(f"  → {out_path}")
+# Helpful hint if the user accidentally cloned the repo inside itself (common when following copy/paste guides)
+parts = [p.lower() for p in out_path.parts]
+if parts.count("ledger-scrolls") >= 2:
+    print("  (Note: your path includes 'ledger-scrolls' more than once—this usually means you cloned the repo inside the folder.")
+    print("   For a cleaner path, run from: ~/ledger-scrolls/cardano_constitution_reader)")
         print(f"  Size: {len(raw_bytes):,} bytes")
         print(f"  SHA256: {computed_hash}")
         print("\nTip: open it later with:")
