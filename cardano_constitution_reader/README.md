@@ -5,12 +5,7 @@ This script reconstructs the Cardano Constitution directly from on-chain NFT pag
 ## Quick start (Ubuntu)
 
 ```bash
-git clone https://github.com/YOURNAME/cardano-constitution-reader.git
-cd cardano-constitution-reader
+git clone https://github.com/BEACNpool/ledger-scrolls.git
+cd ledger-scrolls/cardano_constitution_reader
+python3 cardano_constitution_reader.py
 
-# Option A (recommended): use an env var so you don't paste the key interactively
-export BLOCKFROST_PROJECT_ID="mainnet_yourkeyhere"
-python3 cardano_constitution_reader.py --epoch 541
-
-# Or epoch 608
-python3 cardano_constitution_reader.py --epoch 608
