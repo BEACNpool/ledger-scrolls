@@ -34,14 +34,12 @@ CONSTITUTIONS = {
     },
 }
 
-
 BANNER = """
 ════════════════════════════════════════════════════════════
           𝐂 𝐀 𝐑 𝐃 𝐀 𝐍 𝐎  𝐂 𝐎 𝐍 𝐒 𝐓 𝐈 𝐓 𝐔 𝐓 𝐈 𝐎 𝐍  𝐑 𝐄 𝐀 𝐃 𝐄 𝐑
                 Immutable On-Chain Governance Document
 ════════════════════════════════════════════════════════════
 """.strip("\n")
-
 
 ABOUT = (
     "The Cardano Constitution is the governance framework for the Cardano blockchain. "
@@ -294,14 +292,36 @@ def wsl_to_windows_path(path: Path) -> str | None:
 
 
 def open_text_file(path: Path) -> None:
-    """Best-effort: open the file in a user-friendly way on the current OS."""
+    """
+    Best-effort: open the file in a user-friendly way on the current OS.
+
+    IMPORTANT: WSL is neither native Linux desktop nor native Windows.
+    In WSL, prefer launching Windows apps with a Windows path.
+    """
     try:
+        if is_wsl():
+            win_path = wsl_to_windows_path(path)
+
+            if win_path:
+                # Notepad can be flaky with UNC paths; Explorer is more reliable for UNC.
+                if win_path.startswith("\\\\"):
+                    subprocess.Popen(["explorer.exe", win_path])
+                else:
+                    subprocess.Popen(["notepad.exe", win_path])
+                return
+
+            # fallback: open folder in Explorer
+            subprocess.Popen(["explorer.exe", "."])
+            return
+
         if sys.platform.startswith("win"):
             subprocess.Popen(["notepad.exe", str(path)])
             return
+
         if sys.platform == "darwin":
             subprocess.Popen(["open", str(path)])
             return
+
         subprocess.Popen(["xdg-open", str(path)])
     except Exception:
         print(f"Could not automatically open the file. It's located here:\n  {path}")
@@ -350,7 +370,7 @@ def main():
             sys.exit(1)
         print("No API key found (CLI/env/config).")
         print("A Blockfrost key is required to query the on-chain metadata.")
-        print("Get a free key at https://blockfrost.io (sign up → create a Cardano MAINNET project → copy the project_id starting with \"mainnet\").")
+        print('Get a free key at https://blockfrost.io (sign up → create a Cardano MAINNET project → copy the project_id starting with "mainnet").')
         print("Note: The free tier is typically sufficient; this script rate-limits and paginates requests.")
         api_key = input("Paste your Blockfrost Mainnet API key (mainnet...): ").strip()
 
@@ -431,7 +451,6 @@ def main():
             choice = "y" if args.open else (input("\nOpen the file now? (Y/n): ").strip().lower() or "y")
             if choice.startswith("y"):
                 open_text_file(out_path)
-
 
     except Exception as e:
         print(f"\nError: {e}")
