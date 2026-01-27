@@ -1,0 +1,434 @@
+§
+    Éxir;  ã            
+       ó&  — d dl Z d dlZd dlZd dlZd dlZd dlZd dlZd dl Z d dlm	Z	 d dl
+m
+Z
+ d dlm
+Z
+mZ d dlmZmZ dZ e	j        ¦   «         d z
+  dz
+  Zd	d
+d
+dd
+ddœdddddddœdœZd                     d¦  «        ZdZde	defd„Zde	deddfd„Zd7d ed!ed"edeez   fd#„Zd8d$d%œd&ed'ed(edz   d)edeez   f
+d*„ Z d+edefd,„Z!d+ede"fd-„Z#d.ed+ed/ede$eef         dz   fd0„Z%d.ed'ede&fd1„Z'd2e	ddfd3„Z(dededz   fd4„Z)d5„ Z*e+d6k    r e*¦   «          dS dS )9é    N)ÚPath)Ú	urlencode)Ú RequestÚ urlopen)Ú	HTTPErrorÚURLErrorz,https://cardano-mainnet.blockfrost.io/api/v0z.constitution_readerz
+config.jsonu,   Cardano Constitution â€“ Epoch 608 (current)Ú8ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750Ú@98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1i`  ia  zTCurrent Constitution text (amended). Ratified at epoch 608 and enacted at epoch 609.)ÚnameÚ	policy_idÚexpected_sha256Úratified_epochÚ
+enacted_epochÚblurbu9   Cardano Constitution â€“ Epoch 541 (earlier ratification)Ú8d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31dÚ@1939c1627e49b5267114cbdb195d4ac417e545544ba6dcb47e03c679439e9566i  i  zqFirst ratified Constitution text (baseline governance framework). Ratified at epoch 541 and enacted at epoch 542.)Ú608Ú541u+  
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          ð‚ ð€ ð‘ ðƒ ð€ ð ðŽ  ð‚ ðŽ ð ð’ ð“ ðˆ ð“ ð” ð“ ðˆ ðŽ ð  ð‘ ð„ ð€ ðƒ ð„ ð‘
+                Immutable On-Chain Governance Document
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+ú
+aŒ  The Cardano Constitution is the governance framework for the Cardano blockchain. It establishes rights and responsibilities of participants, defines governance processes and voting thresholds, and sets guardrails for protocol parameters and treasury withdrawals.
+
+This tool reconstructs the Constitution text from on-chain NFT page payloads (CIP-721 metadata) and verifies integrity with SHA-256.Ú
+config_pathÚreturnc                 ó¢   — 	 |                       ¦   «         r(t          j        |                      d¬¦  «        ¦  «        S n# t          $ r Y nw xY wi S )Núutf-8©Úencoding)ÚexistsÚjsonÚloadsÚ	read_textÚ	Exception)r   s    úl/mnt/data/ledger_scrolls_work/ledger-scrolls-main/cardano_constitution_reader/cardano_constitution_reader.pyÚ
+load_configr"   8   sh   € ð
+Ø
+×
+Ò
+Ñ
+Ô
+ð 	GÝ”:˜k×3Ò3¸WÐ3ÑEÔEÑFÔFÐFð	Gøå
+ð 
+ð 
+ð 
+Øˆð
+øøøà
+
+€Is   ‚;? ¿
+AÁ
+AÚconfigc                 ó”   — | j                              dd¬¦  «         |                      t           j        |d¬¦  «        d¬¦  «         d S ) NT)Ú parentsÚexist_oké   )Úindentr   r   )ÚparentÚmkdirÚ
+write_textr   Údumps)r   r#   s     r!   Ú
+save_configr-   A   sL   € ØÔ×Ò T°DÐÑ9Ô9Ð9Ø×Ò4œ: f°QÐ7Ñ7Ô7À'ÐÑJÔJÐJÐJÐJó    é   ÚurlÚ headersÚ timeoutc                 óò   — t          | |d¬¦  «        }t          ||¬¦  «        5 }|                     ¦   «                              d¦  «        }t	          j        |¦  «        cd d d ¦  «         S # 1 swxY w Y   d S )NÚGET)r1   Úmethod)r2   r   )r   r   ÚreadÚdecoder   r   )r0   r1   r2   ÚreqÚrespÚraws         r!   Ú
+http_get_jsonr;   F   s°   € Ý
+#˜w¨uÐ
+5Ñ
+5Ô
+5€CÝ	˜gÐ	&Ñ	&Ô	&ð ¨$ØiŠi‰kŒk× Ò  Ñ)Ô)ˆÝŒz˜#‰Œðð ð ð ñ ô ð ð ð ð ð ð øøøð ð ð ð ð ð s   ¤;A,Á,A0 Á3A0 é   )Ú
+max_retriesÚendpointÚ
+project_idÚparamsr=   c          
+      óJ  — |rdt          |¦  «        › nd}t          › d| › |› }d|i}d} t          d|dz   ¦  «        D ]V}	 t           ||¬ ¦  «        }	t	          j        d¦  «         |	c S # t          $ r¹}
+d}
+	 |
+                      ¦   «                              d	d
+¬
+¦  «        }
+n# t          $ r Y nw xY w|
+j
+        dv rL||k     rF| d
+|dz
+  z  z  }t          d|
+j
+        › d|› d|› d|d›d	¦  «         t	          j        |¦  «         Y d }
+~
+ŒÉt          d|
+j
+        › d|
+p|
+j        › ¦  «        d ‚d }
+~
+wt          $ r]}
+||k     r?| d
+|dz
+  z  z  }t          d|› d|› d|d›d ¦  «         t	          j        |¦  «         Y d }
+~
+Œ=t          d|
+› ¦  «        d ‚d }
+~
+ww xY wt          d¦  «        ‚)Nú?Ú ú/r?   g      à?é   )r1   g      Ð?r   Úignore©Úerrors)i­  iô  iö  i÷  iø  r'   z  Blockfrost HTTP z
+ (attempt u   ) â€“ retrying in z.1fzs...zBlockfrost error z: z  Network error (attempt zNetwork error: z"Failed after retries (unexpected).)r   ÚBASE_URLÚranger;   ÚtimeÚsleepr    r6   r7   r    ÚcodeÚprintÚreasonr   )
+r>   r?   r@   r=   Úqsr0   r1   Ú backoffÚ attemptÚdataÚeÚbodyÚ sleep_ss
+                r!   Ú api_getrW   M   sS  € Ø$*Ð	2Ð	 YvÑ
+Ô
+Ð	 Ð	 Ð	 °€BÝ
+Ð
+&Ð
+&˜Ð
+& "Ð
+&Ð
+&€CØ˜ZÐ(€Gà€GÝ˜˜K¨!™OÑ,Ô,ð =ñ =ˆ ð	=Ý  ¨gÐ6Ñ6Ô6ˆDÝŒJtÑÔÐØˆKˆKˆKøÝð 	Xð 	Xð 	XØˆDð
+Ø—v’v‘x”x—’ w°xÑ@Ô@øÝð 
+ð 
+ð 
+Øð
+øøøð ŒvÐ2Ð2Ð2°wÀÒ7LÐ7LØ! Q¨7°Q©;Ñ%7Ñ8 ÝÐw¨1¬6ÐwÐw¸WÐwÐwÀ{ÐwÐwÐfmÐwÐwÐwÐwÑxÔxÐxÝ”
+˜7Ñ#Ô#Ð#ØåÐL°´ÐLÐL¸$Ð:JÀ!Ä(ÐLÐLÑMÔMÐSWÐWøøøøÝð 	=ð 	=ð 	=Ø˜Ò$Ð$Ø! Q¨7°Q©;Ñ%7Ñ8 ÝÐl°'ÐlÐl¸KÐlÐlÐ[bÐlÐlÐlÐlÑmÔmÐmÝ”
+˜7Ñ#Ô#Ð#Ø‘ÝÐ1¨aÐ1Ð1Ñ2Ô2¸Ð<øøøøð
+	=øøøõ 
+Ð8Ñ
+9Ô
+9Ð9sU   Á&A+Á+
+FÁ5D)Á8)B"Â!D)Â"
+B/ Â,D)Â.B/ Â/AD)Ä "D)Ä)
+FÄ6?FÅ;FÆFÚasset_name_hexc                 ó†   — 	 t                                | ¦  «                             dd¬¦  «        S # t          $ r | cY S w xY w)Nr   rF   rG   )ÚbytesÚ fromhexr7   r    )rX   s    r!   Útry_decode_asset_namer\   r   sS   € ðÝ}Š}˜^Ñ,Ô,×3Ò3°GÀHÐ3ÑMÔMÐMøÝ
+ð ð ð ØÐÐÐðøøøs   ‚.1 ±A ¿A c                 óŠ   — t          | ¦  «                             ¦   «         }d|v rd|vrdS |                     d¦  «        rdS dS )NÚMANIFESTÚPAGETÚ	_MANIFESTF)r\   ÚupperÚendswith)rX   r
+   s     r!   Úis_manifest_assetrc   y   sS   € Ý
+  Ñ
+0Ô
+0×
+6Ò
+6Ñ
+8Ô
+8€Dà TÐ Ð ˜f¨DÐ0Ð0ØˆtØ 
+‡}‚}[Ñ !Ô !ð ØˆtØ
+ˆ5r.   r   Ú
+metadata_listc                 ó¶  — t          |¦  «        }|}|D ]C}t          |                     d¦  «        ¦  «        dk    rŒ*|                     di ¦  «        pi }| |vrŒG|                     | i ¦  «        pi } ||                     ¦   «         ||                     ¦   «         g}d}	|D ]}
+|
+| v r
+| |
+         }	 nŒt	          |	t
+          ¦  «        sŒ´d|	vsd|	vrŒ½|	d         }
+|	d         }g }
+t	          |t          ¦  «        rÌ|D ]È}t	          |t          ¦  «        r<|
+                      |                     d d¦  «         	                    ¦   «         ¦  «         ŒSt	          |t
+          ¦  «        r`d	|v r\t	          |d	         t          ¦  «        rA|
+                      |d	                              d d¦  «         	                    ¦   «         ¦  «         ŒÉnPt	          |t          ¦  «        r;|
+                      |                     d d¦  «         	                    ¦   «         ¦  «         |
+sŒd 
+                    |
+¦  «        }|sŒ	 t          |
+¦  «        }n# t          $ r Y Œ;w xY w||fc S dS )
+zI
+    Returns (page_index_i, payload_hex_string) if found, else None.
+    ÚlabelÚ721Ú
+json_metadataNÚiÚ payloadÚ0xrC   rZ   )
+r\   ÚstrÚgetra   Ú
+isinstanceÚdictÚlistÚappendÚ replaceÚstripÚjoinÚintr    )r   rX   rd   Úkey_utf8Úkey_hex_fallbackÚmÚmetaÚ
+asset_dictÚcandidate_keysÚ	page_dataÚkri   rj   Ú	hex_partsÚpÚfull_hexÚ
+page_indexs                    r!   Úextract_payload_hex_from_721r‚   ƒ   s¨  € õ % ^Ñ4Ô4€HØ%Ðà
+ð 1&ñ 1&ˆÝ
+ˆquŠuW‰~Œ~Ñ
+Ô
+ %Ò
+'Ð
+'ØØuŠu_ bÑ)Ô)Ð/¨RˆØ
+˜DÐ
+ Ð
+ Øà—X’X˜i¨Ñ,Ô,Ð2°ˆ
+ð # H§N¢NÑ$4Ô$4Ð6FÐHX×H^ÒH^ÑH`ÔH`ÐaˆØˆ	Øð 	ð 	ˆAØJˆˆØ& qœM	Øð õ ˜)¥TÑ*Ô*ð 	Øà
+iÐ
+Ð
+ 9°IÐ#=Ð#=ØàcŒNˆØ˜IÔ&ˆ à!ˆ	å
+gtÑ
+$Ô
+$ð 	@Øð 
+Kð 
+KÝ˜a¥Ñ%Ô%ð KØ×$Ò$ Q§Y¢Y¨t°RÑ%8Ô%8×%>Ò%>Ñ%@Ô%@ÑAÔAÐAÐAÝ ¥4Ñ(Ô(ð K¨W¸¨\¨\½jÈÈ7ÌÕUXÑ>YÔ>Y¨\Ø×$Ò$ Q w¤Z×%7Ò%7¸¸bÑ%AÔ%A×%GÒ%GÑ%IÔ%IÑJÔJÐJøð	
+Kõ
+ ˜ ¥Ñ
+%Ô
+%ð 	@à×Ò˜WŸ_š_¨T°2Ñ6Ô6×<Ò<Ñ>Ô>Ñ?Ô?Ð?àð 	Ùà—7’7˜9Ñ%Ô%ˆØð 	Ùð	Ý˜Q™œˆJˆJøÝð 	ð 	ð 	Ø‰Hð	øøøð ˜HÐ%Ð%Ð%Ð%à
+ˆ4s   È2IÉ
+IÉIc                 ó*  — t          d¦  «         g }d}	 t          d| › ||ddœ¦  «        }t          |t          ¦  «        st	          d ¦  «        ‚t          d|› d	t
+          |¦  «        › d
+¦  «         |sn/|                     |¦  «         t
+          |¦  «        dk     rn|dz
+  }Œt          d
+t
+          |¦  «        › ¦  «         g }|D ]d}|                      d¦  «        d
+k    rŒ|                      d¦  «        } | rt
+          | ¦  «        dk    rŒH| dd …         }t          |¦  «        rŒbt          d| › d|dddœ¦  «        }	d }
+t          |	t          ¦  «        r=|	D ]:}
+|
+                      d¦  «        dk    r|
+                      d¦  «        r
+|
+d         }
+ nŒ;|
+s=t          d| › |¦  «        }t          |t          ¦  «        r|                      d¦  «        }
+|
+sŒt          d|
+› d|¦  «        }
+t          |
+t          ¦  «        sŒ<t          | ||
+¦  «        }|r| 
+                    |¦  «         Œf|st	          d¦  «        ‚|                     d„ ¬¦  «         d 
+                    d„ |D ¦   «         ¦  «        }	 t                               |¦  «        }n# t           $ r t	          d ¦  «        d ‚w xY w|d d!…         d"k    rVt          d#¦  «         	 t#          j        |d$t"          j        z   ¦  «        }n## t"          j        $ r t	          d%¦  «        d ‚w xY w|S )&Nz-  Querying assets under policy (paginated)...rE   Tzassets/policy/éd   )ÚpageÚcountz-Unexpected API response while listing assets.z   Page z... (z  items)z  Total assets under policy: ÚquantityÚ1Úasseté8   z assets/z/historyÚdescé
+   )Úorderr†   ÚactionÚmintedÚ tx_hashÚinitial_mint_tx_hashztxs/z	/metadataz+No valid page NFTs found under this policy.c                 ó   — | d         S )Nr   © ©Úxs    r!   ú<lambda>z*fetch_constitution_bytes.<locals>.<lambda>   s
+   € ˜Q˜qœT€ r.   )ÚkeyrC   c              3   ó    K  — | ]	\  }}|V — Œ
+d S ©Nr“   )Ú.0Ú_Úhs      r!   ú	<genexpr>z+fetch_constitution_bytes.<locals>.<genexpr>  s&   è è € Ð,Ð,™d˜a ˜Ð,Ð,Ð,Ð,Ð,Ð,r.   z/Reconstruction failed: payload hex was invalid.r'   s   ‹u0     Detected gzip compression â€“ decompressing...é   z@Gzip decompression failed (data corrupted or not actually gzip).)rN   rW   rn   rp   r    ÚlenÚextendrm   rc   ro   r‚   rq   Úsortrt   rZ   r[   Ú
+ValueErrorÚzlibÚ
+decompressÚ	MAX_WBITSÚerror)r   r?   Ú
+all_assetsr…   Ú
+assets_pageÚpagesÚ
+asset_infor‰   rX   Ú historyr   rT   Ú detailsrd   Ú	extractedÚ	total_hexrS   s                    r!   Úfetch_constitution_bytesr¯   À   s°  € Ý	Ð
+9Ñ:Ô:Ð:Ø€JØ
+€DðÝÐ:¨yÐ:Ð:¸JÐQUÐ`cÐHdÐHdÑeÔeˆ
+Ý˜+¥tÑ,Ô,ð 	MÝÐKÑLÔLÐLå
+Ð<˜Ð<Ð<¥3 {Ñ#3Ô#3Ð<Ð<Ð<Ñ=Ô=Ð=Øð 	Øà×Ò˜+Ñ&Ô&Ð&Ý
+ˆ{Ñ
+Ô
+˜cÒ
+!Ð
+!ØØ‰	ˆðõ 
+Ð
+;­#¨j©/¬/Ð
+;Ð
+;Ñ<Ô<Ð<à#%€Eà ð $$ñ $$ˆ
+Ø
+>Š>˜*Ñ
+%Ô
+%¨Ò
+,Ð
+,Øà—’˜wÑ'Ô'ˆØð 	˜E™
+œ
+ bÒ(Ð(Øà˜r˜s˜sœˆå
+˜^Ñ
+,Ô
+,ð 	Øõ Ð3 EÐ3Ð3Ð3°ZÈ6Ð\^ÐA_ÐA_Ñ`Ô`ˆ Øˆ Ý
+gtÑ
+$Ô
+$ð 	Øð 
+ð 
+Ø—5’5˜‘?”? hÒ.Ð.°1·5²5¸Ñ3CÔ3CÐ.Ø 	œlGØEøàð 	>ÝÐ/¨Ð/Ð/°Ñ<Ô<ˆGÝ˜'¥4Ñ(Ô(ð 
+>Ø!Ÿ+š+Ð&<Ñ=Ô= àð 	ÙåÐ 9 wÐ 9Ð 9Ð 9¸:ÑFÔFˆ
+Ý˜-­Ñ.Ô.ð 	Ùå0°¸NÈMÑZÔZˆ	Ø
+ð 	$ØLŠL˜Ñ#Ô#Ð#ùà
+ð GÝÐEÑFÔFÐFà	‡J‚J>>€JÑ"Ô"Ð"Ø— ’ Ð,Ð, eÐ,Ñ,Ô,Ñ,Ô,€IðUÝ}Š}˜YÑ'Ô'ˆˆøÝ
+ð Uð Uð UÝÐIÑJÔJÐPTÐTðUøøøð ˆBˆQˆB„x;Ò Ð Ý
+Ð@ÑAÔAÐAð	jÝ”? 4¨­d¬nÑ)<Ñ=Ô=ˆDˆDøÝŒzð 	jð 	jð 	jÝÐ^Ñ_Ô_ÐeiÐið	jøøøð €Ks   É6J ÊJ,Ë
+"K0 Ë0 LÚpathc                 ó†  — 	 t           j                             d¦  «        r%t           j        dt
+          | ¦  «        g¦  «         dS t           j        dk    r%t           j        dt
+          | ¦  «        g¦  «         dS t           j        dt
+          | ¦  «        g¦  «         dS # t          $ r t          d | › ¦  «         Y dS w xY w)zDBest-effort: open the file in a user-friendly way on the current OS.Úwinz
+notepad.exeNÚdarwinÚopenzxdg-openz<Could not automatically open the file. It's located here:
+  )ÚsysÚplatformÚ
+startswithÚ
+subprocessÚPopenrl   r    rN   )r°   s    r!   Úopen_text_filerº     sÐ   € ð	VÝ
+Œ<×
+"Ò
+" 5Ñ
+)Ô
+)ð 	ÝÔ˜m­S°©Y¬YÐ7Ñ8Ô8Ð8ØˆFÝ
+Œ<˜8Ò
+#Ð
+#ÝÔ˜f¥c¨$¡i¤iÐ0Ñ1Ô1Ð1ØˆFÝÔ˜*¥c¨$¡i¤iÐ0Ñ1Ô1Ð1Ð1Ð1øÝ
+ð Vð Vð VÝ
+ÐTÈdÐTÐTÑUÔUÐUÐUÐUÐUðVøøøs   ‚AB  Á3B  Á;#B  Â C Â?C c                 ó2  — | j         r| j                              ¦   «         S t          j        d¦  «        pt          j        d¦  «        }|r|                     ¦   «         S |                     d¦  «        }|r!t
+          |¦  «                             ¦   «         S d S )NÚBLOCKFROST_PROJECT_IDÚBLOCKFROST_API_KEYÚblockfrost_api_key)Ú api_keyrs   ÚosÚgetenvrm   rl   )Úargsr#   Ú env_keyÚsaveds       r!   Úresolve_api_keyrÅ   !  s   € à 
+„|ð $ØŒ|×!Ò!Ñ#Ô#Ð#åŒiÐ/Ñ0Ô0ÐSµB´IÐ>RÑ4SÔ4S€GØ ð Ø}Š}‰ŒÐàJŠJÐ+Ñ,Ô,€EØ ð "Ý5‰zŒz×ÒÑ!Ô!Ð!à
+ˆ4r.   c                  óØ  — t          j        d¬¦  «        } |                      dt           t                               ¦   «         ¦  «        d¬¦  «         |                      dd ¬¦  «         |                      d	t
+          t          ¦  «        d
+¬
+¦  «         |                      dd
+d¬¦  «         |                      dd
+d¬¦  «         |                      dd
+d¬¦  «         |                      dd
+d¬¦  «         |                      ¦   «         }t          dt          z   dz   ¦  «         t          t          dz   ¦  «         t          |j
+        ¦  «                             ¦   «         }t          |¦  «        }t!          ||¦  «        }|s‡|j        r#t          d¦  «         t%          j        d¦  «         t          d¦  «         t          d¦  «         t          d¦  «         t          d¦  «         t)          d¦  «                             ¦   «         }|                     d¦  «        s#t          d¦  «         t%          j        d¦  «         |j        s@|                     d ¦  «        |k    r'||d <   t3          ||¦  «         t          d!|› ¦  «         |j        }|s|j        r#t          d"¦  «         t%          j        d¦  «         t          d#¦  «         t           t                               ¦   «         d$„ d%¬&¦  «        D ]’}t          |         } |                      d'¦  «        }|                      d(¦  «        }	|r
+|	r	d)|› d*|	› d+nd,}
+t          d-|› d.| d/         › |
+› ¦  «         |                      d0¦  «        rt          d1| d0         › ¦  «         Œ“t)          d2¦  «                             ¦   «         }|t          vr#t          d3¦  «         t%          j        d¦  «         t          |         }
+t          d4|
+d/         › ¦  «         t          d5|
+d6         › ¦  «         	 t7          |
+d6         |¦  «        }t9          j        |¦  «                             ¦   «         }
+t          d7|
+› ¦  «         |
+|
+d8         k    rt          d9¦  «         n;t          d:¦  «         t          d;|
+d8         › ¦  «         t%          j        d¦  «         d<|› d=}t          |¦  «                             ¦   «         }|                      |¦  «         t          d>¦  «         t          d?|› ¦  «         t          d@tC          |¦  «        dA›dB¦  «         t          dC|
+› ¦  «         t          dD¦  «         t$          j"                             dE¦  «        rt          dF|› dG¦  «         n7t$          j"        dHk    rt          dI|› dG¦  «         nt          dJ|› dG¦  «         |j#        }|sE|j$        s>|j        s7t)          dK¦  «                             ¦   «          %                    ¦   «         }|dLv }|rtM          |¦  «         n=# tN          $ r0}t          dM|› ¦  «         t%          j        d¦  «         Y d }~nd }~ww xY wt          dN¦  «         d S )ONzFFetch & verify Cardano Constitution from on-chain NFTs via Blockfrost.)Ú
+descriptionz --epochz1Which constitution version to fetch (541 or 608).)Ú choicesÚhelpz	--api-keyz>Blockfrost Mainnet API key (or set env BLOCKFROST_PROJECT_ID).)rÉ   z--configz9Config path (default: ~/.constitution_reader/config.json))Ú defaultrÉ   z
+--no-save-keyÚ
+store_truez!Do not persist API key to config.)rŽ   rÉ   z--non-interactivez-Fail instead of prompting for missing values.z--openz&Open the downloaded file after saving.z	--no-openzDo not prompt to open the file.r   zGError: Missing API key. Provide --api-key or set BLOCKFROST_PROJECT_ID.rE   z"No API key found (CLI/env/config).z<A Blockfrost key is required to query the on-chain metadata.u‡   Get a free key at https://blockfrost.io (sign up â†’ create a Cardano MAINNET project â†’ copy the project_id starting with "mainnet").z\Note: The free tier is typically sufficient; this script rate-limits and paginates requests.z4Paste your Blockfrost Mainnet API key (mainnet...): Ú mainnetz5Error: Blockfrost key should start with 'mainnet...'.r¾   zAPI key saved to: z$Error: Missing --epoch (541 or 608).z
+Available versions:c                 ó    — t          | ¦  «        S r™   )ru   r”   s    r!   r–   zmain.<locals>.<lambda>`  s   € ½CÀ¹F¼F€ r.   T)r—   Ú reverser   r   z
+ (ratified z
+, enacted ú)rC   z  u    â†’ r
+   r   z      - z"
+Enter epoch number (541 or 608): zInvalid epoch. Use 541 or 608.z
+
+Fetching: zPolicy: r   z
+Computed SHA256: r
+   u1   âœ“ Integrity verified â€“ matches published hashu1   âš  Hash mismatch! Possible reconstruction issue.z
+Expected: ÚCardano_Constitution_Epoch_z.txtz'
+Successfully saved immutable document:u     â†’ z  Size: ú,z bytesz
+  SHA256: z
+Tip: open it later with:r²   z
+  notepad "ú"r³   z  open "z  xdg-open "z
+Open the file now? (Y/n): )rC   ÚyÚyesz
+Error: uµ   
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•)(ÚargparseÚArgumentParserÚadd_argumentÚsortedÚ
+CONSTITUTIONSÚkeysrl   ÚDEFAULT_CONFIG_PATHÚ
+parse_argsrN   ÚBANNERÚABOUTr   r#   Ú
+expanduserr"   rÅ   Únon_interactiverµ   ÚexitÚinputrs   r·   Ú
+no_save_keyrm   r-   Úepochr¯   Ú hashlibÚsha256Ú	hexdigestÚ resolveÚ
+write_bytesrŸ   r¶   r´   Ú no_openÚlowerrº   r    )ÚparserrÂ   r   r#   r¿   rä   r}   ÚvÚratÚenÚextraÚconfÚ	raw_bytesÚ
+computed_hashÚfilenameÚout_pathÚ
+should_openÚansrT   s                      r!   Úmainrø   1  sÕ  € Ý
+Ô
+$Ð1yÐ
+zÑ
+zÔ
+z€FØ
+×Ò˜	­6µ-×2DÒ2DÑ2FÔ2FÑ+GÔ+Gð  OBÐñ  Cô  Cð  CØ
+×Ò˜
+Ð*jÐÑkÔkÐkØ
+×Ò˜
+­CÕ0CÑ,DÔ,Dð  LGÐñ  Hô  Hð  HØ
+×Ò˜°ÐCfÐÑgÔgÐgØ
+×ÒÐ+°LÐGvÐÑwÔwÐwØ
+×Ò˜¨Ð<dÐÑeÔeÐeØ
+×Ò˜
+¨LÐ?`ÐÑaÔaÐaØ
+×
+Ò
+Ñ
+Ô
+€Då	ˆ$•‰-˜$Ñ
+ÑÔÐÝ	%$‰,ÑÔÐåt”{Ñ#Ô#×.Ò.Ñ0Ô0€KÝ
+˜Ñ
+%Ô
+%€Få˜d FÑ+Ô+€Gð ð XØ
+Ô
+ð 	ÝÐ[Ñ\Ô\Ð\ÝŒHQ‰KŒKˆKÝ
+Ð2Ñ3Ô3Ð3Ý
+ÐLÑMÔMÐMÝ
+ð  Zñ  	[ô  	[ð  	[Ý
+ÐlÑmÔmÐmÝÐNÑOÔO×UÒUÑWÔWˆ à
+×
+Ò
+˜iÑ
+(Ô
+(ð Ý
+ÐEÑFÔFÐFÝ
+Œ‰
+Œ
+ˆ
+ð 
+Ôð 2 6§:¢:Ð.BÑ#CÔ#CÀwÒ#NÐ#NØ'.ˆÐ#Ñ$ÝK Ñ(Ô(Ð(Ý
+Ð0 ;Ð0Ð0Ñ1Ô1Ð1ð 
+ŒJ€EØ
+ñ 
+EØ
+Ô
+ð 	ÝÐ8Ñ9Ô9Ð9ÝŒHQ‰KŒKˆKÝ
+Ð%Ñ&Ô&Ð&Ý
+×*Ò*Ñ,Ô,Ð2BÐ2BÈDÐQÑQÔQð  	/ð  	/ˆAÝ˜aÔ ˆAØ—%’%Ð(Ñ)Ô)ˆCØ—’Ñ'Ô'ˆBØ:=ÐLÀ"ÐLÐ6 #Ð6Ð6°Ð6Ð6Ð6Ð6È"ˆEÝÐ1qÐ1Ð1˜q œyÐ1¨%Ð1Ð1Ñ2Ô2Ð2ØuŠuW‰~Œ~ð 
+/ÝÐ-  7¤Ð-Ð-Ñ.Ô.Ð.øÝÐ;Ñ<Ô<×BÒBÑDÔDˆà •MÐ !Ð !Ý
+Ð.Ñ/Ô/Ð/Ý
+Œ‰
+Œ
+ˆ
+å
+˜Ô
+€DÝ	Ð
+'˜˜fœÐ
+'Ð
+'Ñ(Ô(Ð(Ý	Ð
+(T˜+Ô&Ð
+(Ð
+(Ñ)Ô)Ð)ð&Ý,¨T°+Ô->À ÑHÔHˆ	åœ yÑ1Ô1×;Ò;Ñ=Ô=ˆ
+Ý
+Ð3 MÐ3Ð3Ñ4Ô4Ð4à
+˜DÐ!2Ô3Ò
+3Ð
+3ÝÐEÑFÔFÐFÐFåÐEÑFÔFÐFÝÐ8˜tÐ$5Ô6Ð8Ð8Ñ9Ô9Ð9ÝŒHQ‰KŒKˆKà<°Ð<Ð<Ð<ˆÝ˜‘>”>×)Ò)Ñ+Ô+ˆØ×Ò˜YÑ'Ô'Ð'å
+Ð8Ñ9Ô9Ð9Ý
+Ð!xÐ!Ð!Ñ"Ô"Ð"Ý
+Ð1˜Y™œÐ1Ð1Ð1Ð1Ñ2Ô2Ð2Ý
+Ð*˜=Ð*Ð*Ñ+Ô+Ð+Ý
+Ð*Ñ+Ô+Ð+Ý
+Œ<×
+"Ò
+" 5Ñ
+)Ô
+)ð 	0ÝÐ- Ð-Ð-Ð-Ñ.Ô.Ð.Ð.Ý
+Œ\˜XÒ
+%Ð
+%ÝÐ*˜hÐ*Ð*Ð*Ñ+Ô+Ð+Ð+åÐ. (Ð.Ð.Ð.Ñ/Ô/Ð/à”iˆ
+Øð 	4 D¤Lð 	4¸4Ô;Oð 	4ÝÐ6Ñ7Ô7×=Ò=Ñ?Ô?×EÒEÑGÔGˆCØÐ"2Ð2ˆKØ
+ð 	%Ý˜8Ñ$Ô$Ð$øøå
+ð ð ð Ý
+ˆo˜!ˆoˆoÑÔÐÝ
+Œ‰
+Œ
+ˆ
+ˆ
+ˆ
+ˆ
+ˆ
+ˆ
+øøøøðøøøõ 
+Ð
+ÑÔÐÐÐs   ÐH
+X Ø
+YØ(&YÙYÚ__main__)r/   r™   ),rÕ   rå   r   rÀ   rµ   rK   r£   r¸   Ú pathlibr   Úurllib.parser   Úurllib.requestr   r   Úurllib.errorr    r   rI   ÚhomerÛ   rÙ   rs   rÝ   rÞ   ro   r"   r-   rl   ru   rp   r;   rW   r\   Úboolrc   Útupler‚   rZ   r¯   rº   rÅ   rø   Ú__name__r“   r.   r!   ú<module>r     sO  ðà €€€Ø €€€Ø 
+€
+€
+€
+Ø 	€	€	€	Ø 
+€
+€
+€
+Ø 
+€
+€
+€
+Ø 
+€
+€
+€
+Ø Ð Ð Ð Ø Ð Ð Ð Ð Ð Ø "Ð "Ð "Ð "Ð "Ð "Ø +Ð +Ð +Ð +Ð +Ð +Ð +Ð +Ø ,Ð ,Ð ,Ð ,Ð ,Ð ,Ð ,Ð ,à
+9€Ød”i‘k”kÐ$:Ñ:¸]ÑJÐ ð ?ØOØ]ØØØgð
+ ð  ð LØOØ]ØØð Eð
+ ð  ðð €
+ð(
+÷
+ 
+‚Eˆ$K„Kð
+  ð+ð ð˜Tð  dð ð ð ð ðK˜Tð K¨4ð K°Dð Kð Kð Kð Kð
+ð sð  Tð °Cð ÀÈÁð ð ð ð ð":Ð^_ð ":ð ":ð ":cð ": sð ":°D¸4±Kð ":ÐX[ð ":ÐdhÐkoÑdoð ":ð ":ð ":ð ":ðJ¨#ð °#ð ð ð ð ð  cð  ¨dð  ð  ð  ð  ð:¨Cð :Àð :ÐUYð :Ð^cÐdgÐilÐdlÔ^mÐptÑ^tð :ð :ð :ð :ðzP¨ð P¸ð PÀð Pð Pð Pð Pðf
+V˜ð 
+V $ð 
+Vð 
+Vð 
+Vð 
+Vð
+ $ð 
+¨3°©:ð 
+ð 
+ð 
+ð 
+ð ið ið iðX ˆzÒÐØ€DF„F€F€F€Fð Ðr.   
