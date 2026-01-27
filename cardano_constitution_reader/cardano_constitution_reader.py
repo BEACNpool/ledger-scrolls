@@ -293,7 +293,7 @@ def wsl_to_windows_path(path: Path) -> str | None:
         return None
 
 
-def open_text_file\(path: Path\) -> None:
+def open_text_file(path: Path) -> None:
     """Best-effort: open the file in a user-friendly way on the current OS."""
     try:
         if sys.platform.startswith("win"):
