@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import zlib
+import subprocess
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -19,13 +20,20 @@ CONSTITUTIONS = {
         "name": "Cardano Constitution – Epoch 608 (current)",
         "policy_id": "ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750",
         "expected_sha256": "98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1",
+        "ratified_epoch": 608,
+        "enacted_epoch": 609,
+        "blurb": "Current Constitution text (amended). Ratified at epoch 608 and enacted at epoch 609.",
     },
     "541": {
         "name": "Cardano Constitution – Epoch 541 (earlier ratification)",
         "policy_id": "d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d",
         "expected_sha256": "1939c1627e49b5267114cbdb195d4ac417e545544ba6dcb47e03c679439e9566",
+        "ratified_epoch": 541,
+        "enacted_epoch": 542,
+        "blurb": "First ratified Constitution text (baseline governance framework). Ratified at epoch 541 and enacted at epoch 542.",
     },
 }
+
 
 BANNER = """
 ════════════════════════════════════════════════════════════
@@ -33,6 +41,16 @@ BANNER = """
                 Immutable On-Chain Governance Document
 ════════════════════════════════════════════════════════════
 """.strip("\n")
+
+
+ABOUT = (
+    "The Cardano Constitution is the governance framework for the Cardano blockchain. "
+    "It establishes rights and responsibilities of participants, defines governance processes "
+    "and voting thresholds, and sets guardrails for protocol parameters and treasury withdrawals.\n"
+    "\n"
+    "This tool reconstructs the Constitution text from on-chain NFT page payloads (CIP-721 metadata) "
+    "and verifies integrity with SHA-256."
+)
 
 
 def load_config(config_path: Path) -> dict:
@@ -254,6 +272,20 @@ def fetch_constitution_bytes(policy_id: str, project_id: str) -> bytes:
     return data
 
 
+def open_text_file(path: Path) -> None:
+    """Best-effort: open the file in a user-friendly way on the current OS."""
+    try:
+        if sys.platform.startswith("win"):
+            subprocess.Popen(["notepad.exe", str(path)])
+            return
+        if sys.platform == "darwin":
+            subprocess.Popen(["open", str(path)])
+            return
+        subprocess.Popen(["xdg-open", str(path)])
+    except Exception:
+        print(f"Could not automatically open the file. It's located here:\n  {path}")
+
+
 def resolve_api_key(args, config: dict) -> str | None:
     # Priority: CLI -> env -> config
     if args.api_key:
@@ -277,9 +309,12 @@ def main():
     parser.add_argument("--config", default=str(DEFAULT_CONFIG_PATH), help="Config path (default: ~/.constitution_reader/config.json)")
     parser.add_argument("--no-save-key", action="store_true", help="Do not persist API key to config.")
     parser.add_argument("--non-interactive", action="store_true", help="Fail instead of prompting for missing values.")
+    parser.add_argument("--open", action="store_true", help="Open the downloaded file after saving.")
+    parser.add_argument("--no-open", action="store_true", help="Do not prompt to open the file.")
     args = parser.parse_args()
 
     print("\n" + BANNER + "\n")
+    print(ABOUT + "\n")
 
     config_path = Path(args.config).expanduser()
     config = load_config(config_path)
@@ -292,6 +327,9 @@ def main():
             print("Error: Missing API key. Provide --api-key or set BLOCKFROST_PROJECT_ID.")
             sys.exit(1)
         print("No API key found (CLI/env/config).")
+        print("A Blockfrost key is required to query the on-chain metadata.")
+        print("Get a free key at https://blockfrost.io (sign up → create a Cardano MAINNET project → copy the project_id starting with \"mainnet\").")
+        print("Note: The free tier is typically sufficient; this script rate-limits and paginates requests.")
         api_key = input("Paste your Blockfrost Mainnet API key (mainnet...): ").strip()
 
     if not api_key.startswith("mainnet"):
@@ -311,8 +349,14 @@ def main():
             print("Error: Missing --epoch (541 or 608).")
             sys.exit(1)
         print("\nAvailable versions:")
-        for k, v in CONSTITUTIONS.items():
-            print(f"  {k} → {v['name']}")
+        for k in sorted(CONSTITUTIONS.keys(), key=lambda x: int(x), reverse=True):
+            v = CONSTITUTIONS[k]
+            rat = v.get("ratified_epoch")
+            en = v.get("enacted_epoch")
+            extra = f" (ratified {rat}, enacted {en})" if rat and en else ""
+            print(f"  {k} → {v['name']}{extra}")
+            if v.get("blurb"):
+                print(f"      - {v['blurb']}")
         epoch = input("\nEnter epoch number (541 or 608): ").strip()
 
     if epoch not in CONSTITUTIONS:
@@ -337,13 +381,27 @@ def main():
             sys.exit(1)
 
         filename = f"Cardano_Constitution_Epoch_{epoch}.txt"
-        Path(filename).write_bytes(raw_bytes)
+        out_path = Path(filename).resolve()
+        out_path.write_bytes(raw_bytes)
 
         print("\nSuccessfully saved immutable document:")
-        print(f"  → {filename}")
+        print(f"  → {out_path}")
         print(f"  Size: {len(raw_bytes):,} bytes")
         print(f"  SHA256: {computed_hash}")
-        print("\nYou may now open the file in any text editor.")
+        print("\nTip: open it later with:")
+        if sys.platform.startswith("win"):
+            print(f"  notepad \"{out_path}\"")
+        elif sys.platform == "darwin":
+            print(f"  open \"{out_path}\"")
+        else:
+            print(f"  xdg-open \"{out_path}\"")
+
+        should_open = args.open
+        if not should_open and (not args.no_open) and (not args.non_interactive):
+            ans = input("\nOpen the file now? (Y/n): ").strip().lower()
+            should_open = (ans in ("", "y", "yes"))
+        if should_open:
+            open_text_file(out_path)
 
     except Exception as e:
         print(f"\nError: {e}")
