@@ -7,6 +7,7 @@ import sys
 import time
 import zlib
 import subprocess
+import socket
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -65,7 +66,7 @@ def save_config(config_path: Path, config: dict) -> None:
     config_path.write_text(json.dumps(config, indent=2), encoding="utf-8")
 
 
-def http_get_json(url: str, headers: dict, timeout: int = 30) -> dict | list:
+def http_get_json(url: str, headers: dict, timeout: int = 20) -> dict | list:
     req = Request(url, headers=headers, method="GET")
     with urlopen(req, timeout=timeout) as resp:
         raw = resp.read().decode("utf-8")
@@ -77,12 +78,13 @@ def api_get(endpoint: str, project_id: str, params: dict | None = None, *, max_r
     url = f"{BASE_URL}/{endpoint}{qs}"
     headers = {"project_id": project_id}
 
-    backoff = 0.5
+    backoff = 0.75
     for attempt in range(1, max_retries + 1):
         try:
-            data = http_get_json(url, headers=headers)
+            data = http_get_json(url, headers=headers, timeout=20)
             time.sleep(0.25)  # be gentle on free tier
             return data
+
         except HTTPError as e:
             body = ""
             try:
@@ -90,21 +92,21 @@ def api_get(endpoint: str, project_id: str, params: dict | None = None, *, max_r
             except Exception:
                 pass
 
-            # Rate limit or transient errors: retry with backoff
             if e.code in (429, 500, 502, 503, 504) and attempt < max_retries:
                 sleep_s = backoff * (2 ** (attempt - 1))
-                print(f"  Blockfrost HTTP {e.code} (attempt {attempt}/{max_retries}) – retrying in {sleep_s:.1f}s...")
+                print(f"  Blockfrost HTTP {e.code} (attempt {attempt}/{max_retries}) – retrying in {sleep_s:.1f}s...", flush=True)
                 time.sleep(sleep_s)
                 continue
 
             raise Exception(f"Blockfrost error {e.code}: {body or e.reason}") from None
-        except URLError as e:
+
+        except (URLError, socket.timeout, TimeoutError) as e:
             if attempt < max_retries:
                 sleep_s = backoff * (2 ** (attempt - 1))
-                print(f"  Network error (attempt {attempt}/{max_retries}) – retrying in {sleep_s:.1f}s...")
+                print(f"  Network/timeout error (attempt {attempt}/{max_retries}) – retrying in {sleep_s:.1f}s...", flush=True)
                 time.sleep(sleep_s)
                 continue
-            raise Exception(f"Network error: {e}") from None
+            raise Exception(f"Network/timeout error: {e}") from None
 
     raise Exception("Failed after retries (unexpected).")
 
@@ -118,7 +120,6 @@ def try_decode_asset_name(asset_name_hex: str) -> str:
 
 def is_manifest_asset(asset_name_hex: str) -> bool:
     name = try_decode_asset_name(asset_name_hex).upper()
-    # Keep simple and safe: skip obvious manifest-like assets
     if "MANIFEST" in name and "PAGE" not in name:
         return True
     if name.endswith("_MANIFEST"):
@@ -127,9 +128,6 @@ def is_manifest_asset(asset_name_hex: str) -> bool:
 
 
 def extract_payload_hex_from_721(policy_id: str, asset_name_hex: str, metadata_list: list) -> tuple[int, str] | None:
-    """
-    Returns (page_index_i, payload_hex_string) if found, else None.
-    """
     key_utf8 = try_decode_asset_name(asset_name_hex)
     key_hex_fallback = asset_name_hex
 
@@ -141,9 +139,8 @@ def extract_payload_hex_from_721(policy_id: str, asset_name_hex: str, metadata_l
             continue
 
         asset_dict = meta.get(policy_id, {}) or {}
-
-        # Some tools store the asset name as UTF-8, some as raw hex, some as dict keys with odd decoding.
         candidate_keys = [key_utf8, key_utf8.upper(), key_hex_fallback, key_hex_fallback.upper()]
+
         page_data = None
         for k in candidate_keys:
             if k in asset_dict:
@@ -159,7 +156,6 @@ def extract_payload_hex_from_721(policy_id: str, asset_name_hex: str, metadata_l
         payload = page_data["payload"]
 
         hex_parts: list[str] = []
-
         if isinstance(payload, list):
             for p in payload:
                 if isinstance(p, str):
@@ -167,13 +163,12 @@ def extract_payload_hex_from_721(policy_id: str, asset_name_hex: str, metadata_l
                 elif isinstance(p, dict) and "bytes" in p and isinstance(p["bytes"], str):
                     hex_parts.append(p["bytes"].replace("0x", "").strip())
         elif isinstance(payload, str):
-            # Allow single-string payloads
             hex_parts.append(payload.replace("0x", "").strip())
 
         if not hex_parts:
             continue
 
-        full_hex = "".join(hex_parts)
+        full_hex = "".join(hex_parts).strip()
         if not full_hex:
             continue
 
@@ -188,7 +183,7 @@ def extract_payload_hex_from_721(policy_id: str, asset_name_hex: str, metadata_l
 
 
 def fetch_constitution_bytes(policy_id: str, project_id: str) -> bytes:
-    print("  Querying assets under policy (paginated)...")
+    print("  Querying assets under policy (paginated)...", flush=True)
     all_assets: list[dict] = []
     page = 1
 
@@ -197,7 +192,7 @@ def fetch_constitution_bytes(policy_id: str, project_id: str) -> bytes:
         if not isinstance(assets_page, list):
             raise Exception("Unexpected API response while listing assets.")
 
-        print(f"  Page {page}... ({len(assets_page)} items)")
+        print(f"  Page {page}... ({len(assets_page)} items)", flush=True)
         if not assets_page:
             break
 
@@ -206,11 +201,13 @@ def fetch_constitution_bytes(policy_id: str, project_id: str) -> bytes:
             break
         page += 1
 
-    print(f"  Total assets under policy: {len(all_assets)}")
+    print(f"  Total assets under policy: {len(all_assets)}", flush=True)
+    print("  Reconstructing pages (this can take ~10–60s on free tier)...", flush=True)
 
     pages: list[tuple[int, str]] = []
+    total = len(all_assets)
 
-    for asset_info in all_assets:
+    for idx, asset_info in enumerate(all_assets, start=1):
         if asset_info.get("quantity") != "1":
             continue
 
@@ -219,23 +216,28 @@ def fetch_constitution_bytes(policy_id: str, project_id: str) -> bytes:
             continue
 
         asset_name_hex = asset[56:]
-
         if is_manifest_asset(asset_name_hex):
             continue
 
-        # Latest mint tx (prefer minted action)
-        history = api_get(f"assets/{asset}/history", project_id, {"order": "desc", "count": 10})
-        tx_hash = None
-        if isinstance(history, list):
-            for e in history:
-                if e.get("action") == "minted" and e.get("tx_hash"):
-                    tx_hash = e["tx_hash"]
-                    break
+        # Progress line so users never think it froze
+        pretty_name = try_decode_asset_name(asset_name_hex).strip()
+        pretty_name = pretty_name if pretty_name else asset_name_hex
+        print(f"  Processing asset {idx}/{total}: {pretty_name}", flush=True)
 
+        # Prefer the fast path: asset details contains the initial mint tx hash
+        tx_hash = None
+        details = api_get(f"assets/{asset}", project_id)
+        if isinstance(details, dict):
+            tx_hash = details.get("initial_mint_tx_hash")
+
+        # Fallback to history only if needed (history is slower / more likely to stall)
         if not tx_hash:
-            details = api_get(f"assets/{asset}", project_id)
-            if isinstance(details, dict):
-                tx_hash = details.get("initial_mint_tx_hash")
+            history = api_get(f"assets/{asset}/history", project_id, {"order": "asc", "count": 50})
+            if isinstance(history, list):
+                for e in history:
+                    if e.get("action") == "minted" and e.get("tx_hash"):
+                        tx_hash = e["tx_hash"]
+                        break
 
         if not tx_hash:
             continue
@@ -259,9 +261,8 @@ def fetch_constitution_bytes(policy_id: str, project_id: str) -> bytes:
     except ValueError:
         raise Exception("Reconstruction failed: payload hex was invalid.") from None
 
-    # gzip magic bytes
     if data[:2] == b"\x1f\x8b":
-        print("  Detected gzip compression – decompressing...")
+        print("  Detected gzip compression – decompressing...", flush=True)
         try:
             data = zlib.decompress(data, 16 + zlib.MAX_WBITS)
         except zlib.error:
@@ -271,7 +272,6 @@ def fetch_constitution_bytes(policy_id: str, project_id: str) -> bytes:
 
 
 def is_wsl() -> bool:
-    """Detect if running inside WSL (Windows Subsystem for Linux)."""
     if os.getenv("WSL_DISTRO_NAME") or os.getenv("WSL_INTEROP"):
         return True
     try:
@@ -283,7 +283,6 @@ def is_wsl() -> bool:
 
 
 def wsl_to_windows_path(path: Path) -> str | None:
-    """Convert a Linux path to a Windows path when running under WSL."""
     try:
         out = subprocess.check_output(["wslpath", "-w", str(path)], text=True).strip()
         return out or None
@@ -292,25 +291,15 @@ def wsl_to_windows_path(path: Path) -> str | None:
 
 
 def open_text_file(path: Path) -> None:
-    """
-    Best-effort: open the file in a user-friendly way on the current OS.
-
-    IMPORTANT: WSL is neither native Linux desktop nor native Windows.
-    In WSL, prefer launching Windows apps with a Windows path.
-    """
     try:
         if is_wsl():
             win_path = wsl_to_windows_path(path)
-
             if win_path:
-                # Notepad can be flaky with UNC paths; Explorer is more reliable for UNC.
                 if win_path.startswith("\\\\"):
                     subprocess.Popen(["explorer.exe", win_path])
                 else:
                     subprocess.Popen(["notepad.exe", win_path])
                 return
-
-            # fallback: open folder in Explorer
             subprocess.Popen(["explorer.exe", "."])
             return
 
@@ -324,11 +313,10 @@ def open_text_file(path: Path) -> None:
 
         subprocess.Popen(["xdg-open", str(path)])
     except Exception:
-        print(f"Could not automatically open the file. It's located here:\n  {path}")
+        print(f"Could not automatically open the file. It's located here:\n  {path}", flush=True)
 
 
 def resolve_api_key(args, config: dict) -> str | None:
-    # Priority: CLI -> env -> config
     if args.api_key:
         return args.api_key.strip()
 
@@ -363,7 +351,6 @@ def main():
 
     api_key = resolve_api_key(args, config)
 
-    # Prompt for API key if missing
     if not api_key:
         if args.non_interactive:
             print("Error: Missing API key. Provide --api-key or set BLOCKFROST_PROJECT_ID.")
@@ -371,20 +358,18 @@ def main():
         print("No API key found (CLI/env/config).")
         print("A Blockfrost key is required to query the on-chain metadata.")
         print('Get a free key at https://blockfrost.io (sign up → create a Cardano MAINNET project → copy the project_id starting with "mainnet").')
-        print("Note: The free tier is typically sufficient; this script rate-limits and paginates requests.")
+        print("Note: Free tier is typically sufficient; this script rate-limits and paginates requests.")
         api_key = input("Paste your Blockfrost Mainnet API key (mainnet...): ").strip()
 
     if not api_key.startswith("mainnet"):
         print("Error: Blockfrost key should start with 'mainnet...'.")
         sys.exit(1)
 
-    # Save key (unless disabled)
     if (not args.no_save_key) and (config.get("blockfrost_api_key") != api_key):
         config["blockfrost_api_key"] = api_key
         save_config(config_path, config)
-        print(f"API key saved to: {config_path}")
+        print(f"API key saved to: {config_path}", flush=True)
 
-    # Choose epoch
     epoch = args.epoch
     if not epoch:
         if args.non_interactive:
@@ -393,12 +378,9 @@ def main():
         print("\nAvailable versions:")
         for k in sorted(CONSTITUTIONS.keys(), key=lambda x: int(x), reverse=True):
             v = CONSTITUTIONS[k]
-            rat = v.get("ratified_epoch")
-            en = v.get("enacted_epoch")
-            extra = f" (ratified {rat}, enacted {en})" if rat and en else ""
+            extra = f" (ratified {v['ratified_epoch']}, enacted {v['enacted_epoch']})"
             print(f"  {k} → {v['name']}{extra}")
-            if v.get("blurb"):
-                print(f"      - {v['blurb']}")
+            print(f"      - {v['blurb']}")
         epoch = input("\nEnter epoch number (541 or 608): ").strip()
 
     if epoch not in CONSTITUTIONS:
@@ -406,20 +388,20 @@ def main():
         sys.exit(1)
 
     conf = CONSTITUTIONS[epoch]
-    print(f"\nFetching: {conf['name']}")
-    print(f"Policy: {conf['policy_id']}")
+    print(f"\nFetching: {conf['name']}", flush=True)
+    print(f"Policy: {conf['policy_id']}", flush=True)
 
     try:
         raw_bytes = fetch_constitution_bytes(conf["policy_id"], api_key)
 
         computed_hash = hashlib.sha256(raw_bytes).hexdigest()
-        print(f"\nComputed SHA256: {computed_hash}")
+        print(f"\nComputed SHA256: {computed_hash}", flush=True)
 
         if computed_hash == conf["expected_sha256"]:
-            print("✓ Integrity verified – matches published hash")
+            print("✓ Integrity verified – matches published hash", flush=True)
         else:
-            print("⚠ Hash mismatch! Possible reconstruction issue.")
-            print(f"Expected: {conf['expected_sha256']}")
+            print("⚠ Hash mismatch! Possible reconstruction issue.", flush=True)
+            print(f"Expected: {conf['expected_sha256']}", flush=True)
             sys.exit(1)
 
         filename = f"Cardano_Constitution_Epoch_{epoch}.txt"
@@ -428,24 +410,24 @@ def main():
         out_path = (out_dir / filename).resolve()
         out_path.write_bytes(raw_bytes)
 
-        print("\nSuccessfully saved immutable document:")
-        print(f"  → {out_path}")
-        print(f"  Size: {len(raw_bytes):,} bytes")
-        print(f"  SHA256: {computed_hash}")
+        print("\nSuccessfully saved immutable document:", flush=True)
+        print(f"  → {out_path}", flush=True)
+        print(f"  Size: {len(raw_bytes):,} bytes", flush=True)
+        print(f"  SHA256: {computed_hash}", flush=True)
 
-        print("\nTip: open it later with:")
+        print("\nTip: open it later with:", flush=True)
         if is_wsl():
             win_path = wsl_to_windows_path(out_path)
             if win_path:
-                print(f'  notepad.exe "{win_path}"')
+                print(f'  notepad.exe "{win_path}"', flush=True)
             else:
-                print("  explorer.exe .")
+                print("  explorer.exe .", flush=True)
         elif sys.platform.startswith("win"):
-            print(f'  notepad "{out_path}"')
+            print(f'  notepad "{out_path}"', flush=True)
         elif sys.platform == "darwin":
-            print(f'  open "{out_path}"')
+            print(f'  open "{out_path}"', flush=True)
         else:
-            print(f'  xdg-open "{out_path}"')
+            print(f'  xdg-open "{out_path}"', flush=True)
 
         if not args.no_open:
             choice = "y" if args.open else (input("\nOpen the file now? (Y/n): ").strip().lower() or "y")
@@ -453,10 +435,10 @@ def main():
                 open_text_file(out_path)
 
     except Exception as e:
-        print(f"\nError: {e}")
+        print(f"\nError: {e}", flush=True)
         sys.exit(1)
 
-    print("\n" + "═" * 60)
+    print("\n" + "═" * 60, flush=True)
 
 
 if __name__ == "__main__":
