@@ -8,6 +8,7 @@ import time
 import zlib
 import subprocess
 import socket
+import re
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -37,7 +38,7 @@ CONSTITUTIONS = {
 
 BANNER = """
 ════════════════════════════════════════════════════════════
-          𝐂 𝐀 𝐑 𝐃 𝐀 𝐍 𝐎  𝐂 𝐎 𝐍 𝐒 𝐓 𝐈 𝐓 𝐔 𝐓 𝐈 𝐎 𝐍  𝐑 𝐄 𝐀 𝐃 𝐄 𝐑
+          𝐂 𝐀 𝐑 𝐃 𝐀 𝐍 𝐎  𝐂 𝐎  𝐒 𝐓 𝐈 𝐓 𝐔 𝐓 𝐈 𝐎 𝐍  𝐑 𝐄 𝐀 𝐃 𝐄 𝐑
                 Immutable On-Chain Governance Document
 ════════════════════════════════════════════════════════════
 """.strip("\n")
@@ -51,6 +52,163 @@ ABOUT = (
     "and verifies integrity with SHA-256."
 )
 
+# ---------------------------
+# FAST MODE (mints file) helpers
+# ---------------------------
+
+HEX64_RE = re.compile(r"^[0-9a-f]{64}$", re.IGNORECASE)
+
+
+def _looks_like_txhash(s: str) -> bool:
+    return isinstance(s, str) and bool(HEX64_RE.match(s.strip()))
+
+
+def extract_page_payload_any_asset(policy_id: str, metadata_list: list) -> tuple[int, str] | None:
+    """
+    Extract the first {i,payload} found under the given policy_id in a CIP-721 label.
+    This avoids needing the exact asset name key when we already know the page's mint tx.
+    Returns (page_index_i, payload_hex_string).
+    """
+    for m in metadata_list:
+        if str(m.get("label")) != "721":
+            continue
+
+        meta = m.get("json_metadata", {}) or {}
+        policy_bucket = meta.get(policy_id)
+        if not isinstance(policy_bucket, dict):
+            continue
+
+        for _asset_key, page_data in policy_bucket.items():
+            if not isinstance(page_data, dict):
+                continue
+            if "i" not in page_data or "payload" not in page_data:
+                continue
+
+            i = page_data["i"]
+            payload = page_data["payload"]
+
+            hex_parts: list[str] = []
+            if isinstance(payload, list):
+                for p in payload:
+                    if isinstance(p, str):
+                        hex_parts.append(p.replace("0x", "").strip())
+                    elif isinstance(p, dict) and isinstance(p.get("bytes"), str):
+                        hex_parts.append(p["bytes"].replace("0x", "").strip())
+            elif isinstance(payload, str):
+                hex_parts.append(payload.replace("0x", "").strip())
+
+            full_hex = "".join(hex_parts).strip()
+            if not full_hex:
+                continue
+
+            try:
+                page_index = int(i)
+            except Exception:
+                continue
+
+            return (page_index, full_hex)
+
+    return None
+
+
+def load_mints_file(path: Path) -> tuple[str | None, dict[int, str]]:
+    """
+    Tolerant parser for constitution_epoch_XXX_mints.json produced by discover_constitution_mints.py.
+    Returns (manifest_tx_or_None, {page_index: page_mint_tx}).
+    """
+    obj = json.loads(path.read_text(encoding="utf-8"))
+    manifest_tx = None
+    pages: dict[int, str] = {}
+
+    def walk(x):
+        nonlocal manifest_tx, pages
+        if isinstance(x, dict):
+            # manifest keys (try a few common variants)
+            for k in ("manifest_mint_tx", "manifest_tx", "manifestMintTx", "manifestTx", "manifest_mint"):
+                v = x.get(k)
+                if _looks_like_txhash(v):
+                    manifest_tx = v.strip()
+
+            # common list form: {"pages":[{"page":1,"tx":"..."}, ...]}
+            if isinstance(x.get("pages"), list):
+                for item in x["pages"]:
+                    if isinstance(item, dict):
+                        p = item.get("page") or item.get("i") or item.get("index")
+                        tx = item.get("tx") or item.get("tx_hash") or item.get("txhash")
+                        if p is not None and tx and _looks_like_txhash(tx):
+                            try:
+                                pages[int(p)] = tx.strip()
+                            except Exception:
+                                pass
+
+            # common map form: {"PAGE001":{"tx_hash":"...","i":1}, ...}
+            for k, v in x.items():
+                m = re.search(r"PAGE\s*0*(\d+)", str(k), re.IGNORECASE)
+                if m and isinstance(v, dict):
+                    pnum = int(m.group(1))
+                    tx = v.get("tx") or v.get("tx_hash") or v.get("txhash")
+                    if tx and _looks_like_txhash(tx):
+                        pages[pnum] = tx.strip()
+
+                walk(v)
+
+        elif isinstance(x, list):
+            for item in x:
+                walk(item)
+
+    walk(obj)
+
+    return manifest_tx, pages
+
+
+def fetch_constitution_bytes_fast(policy_id: str, project_id: str, page_mint_txs: dict[int, str]) -> bytes:
+    """
+    Fast path: use known mint tx hashes (from mints file) to fetch tx metadata directly.
+    """
+    if not page_mint_txs:
+        raise Exception("Fast mode requested but no page tx hashes were found in the mints file.")
+
+    pages: list[tuple[int, str]] = []
+    ordered_pages = sorted(page_mint_txs.keys())
+
+    print(f"  Fast mode: fetching metadata for {len(ordered_pages)} page txs...", flush=True)
+
+    for idx, page_i in enumerate(ordered_pages, start=1):
+        tx = page_mint_txs[page_i]
+        print(f"  Page {page_i:03d} ({idx}/{len(ordered_pages)}): tx {tx[:8]}…", flush=True)
+
+        metadata_list = api_get(f"txs/{tx}/metadata", project_id)
+        if not isinstance(metadata_list, list):
+            raise Exception(f"Unexpected metadata response for tx {tx}")
+
+        extracted = extract_page_payload_any_asset(policy_id, metadata_list)
+        if not extracted:
+            raise Exception(f"Could not find 721 payload in tx {tx} for page {page_i}")
+
+        i_found, payload_hex = extracted
+        pages.append((i_found, payload_hex))
+
+    pages.sort(key=lambda x: x[0])
+    total_hex = "".join(h for _, h in pages)
+
+    try:
+        data = bytes.fromhex(total_hex)
+    except ValueError:
+        raise Exception("Reconstruction failed: payload hex was invalid.") from None
+
+    if data[:2] == b"\x1f\x8b":
+        print("  Detected gzip compression – decompressing...", flush=True)
+        try:
+            data = zlib.decompress(data, 16 + zlib.MAX_WBITS)
+        except zlib.error:
+            raise Exception("Gzip decompression failed (data corrupted or not actually gzip).") from None
+
+    return data
+
+
+# ---------------------------
+# config + http helpers
+# ---------------------------
 
 def load_config(config_path: Path) -> dict:
     try:
@@ -94,7 +252,10 @@ def api_get(endpoint: str, project_id: str, params: dict | None = None, *, max_r
 
             if e.code in (429, 500, 502, 503, 504) and attempt < max_retries:
                 sleep_s = backoff * (2 ** (attempt - 1))
-                print(f"  Blockfrost HTTP {e.code} (attempt {attempt}/{max_retries}) – retrying in {sleep_s:.1f}s...", flush=True)
+                print(
+                    f"  Blockfrost HTTP {e.code} (attempt {attempt}/{max_retries}) – retrying in {sleep_s:.1f}s...",
+                    flush=True
+                )
                 time.sleep(sleep_s)
                 continue
 
@@ -103,13 +264,20 @@ def api_get(endpoint: str, project_id: str, params: dict | None = None, *, max_r
         except (URLError, socket.timeout, TimeoutError) as e:
             if attempt < max_retries:
                 sleep_s = backoff * (2 ** (attempt - 1))
-                print(f"  Network/timeout error (attempt {attempt}/{max_retries}) – retrying in {sleep_s:.1f}s...", flush=True)
+                print(
+                    f"  Network/timeout error (attempt {attempt}/{max_retries}) – retrying in {sleep_s:.1f}s...",
+                    flush=True
+                )
                 time.sleep(sleep_s)
                 continue
             raise Exception(f"Network/timeout error: {e}") from None
 
     raise Exception("Failed after retries (unexpected).")
 
+
+# ---------------------------
+# legacy (scan policy) helpers
+# ---------------------------
 
 def try_decode_asset_name(asset_name_hex: str) -> str:
     try:
@@ -219,18 +387,15 @@ def fetch_constitution_bytes(policy_id: str, project_id: str) -> bytes:
         if is_manifest_asset(asset_name_hex):
             continue
 
-        # Progress line so users never think it froze
         pretty_name = try_decode_asset_name(asset_name_hex).strip()
         pretty_name = pretty_name if pretty_name else asset_name_hex
         print(f"  Processing asset {idx}/{total}: {pretty_name}", flush=True)
 
-        # Prefer the fast path: asset details contains the initial mint tx hash
         tx_hash = None
         details = api_get(f"assets/{asset}", project_id)
         if isinstance(details, dict):
             tx_hash = details.get("initial_mint_tx_hash")
 
-        # Fallback to history only if needed (history is slower / more likely to stall)
         if not tx_hash:
             history = api_get(f"assets/{asset}/history", project_id, {"order": "asc", "count": 50})
             if isinstance(history, list):
@@ -270,6 +435,10 @@ def fetch_constitution_bytes(policy_id: str, project_id: str) -> bytes:
 
     return data
 
+
+# ---------------------------
+# OS helpers
+# ---------------------------
 
 def is_wsl() -> bool:
     if os.getenv("WSL_DISTRO_NAME") or os.getenv("WSL_INTEROP"):
@@ -341,6 +510,7 @@ def main():
     parser.add_argument("--non-interactive", action="store_true", help="Fail instead of prompting for missing values.")
     parser.add_argument("--open", action="store_true", help="Open the downloaded file after saving.")
     parser.add_argument("--no-open", action="store_true", help="Do not prompt to open the file.")
+    parser.add_argument("--mints-file", help="Path to constitution_epoch_XXX_mints.json (enables fast mode).")
     args = parser.parse_args()
 
     print("\n" + BANNER + "\n")
@@ -392,7 +562,24 @@ def main():
     print(f"Policy: {conf['policy_id']}", flush=True)
 
     try:
-        raw_bytes = fetch_constitution_bytes(conf["policy_id"], api_key)
+        # ---- FAST MODE selection ----
+        mints_file: Path | None = None
+        if args.mints_file:
+            mints_file = Path(args.mints_file).expanduser()
+        else:
+            # auto-detect next to script
+            candidate = Path(__file__).resolve().parent / f"constitution_epoch_{epoch}_mints.json"
+            if candidate.exists():
+                mints_file = candidate
+
+        if mints_file and mints_file.exists():
+            print(f"  Using mints file: {mints_file}", flush=True)
+            manifest_tx, page_map = load_mints_file(mints_file)
+            if manifest_tx:
+                print(f"  Manifest mint tx: {manifest_tx}", flush=True)
+            raw_bytes = fetch_constitution_bytes_fast(conf["policy_id"], api_key, page_map)
+        else:
+            raw_bytes = fetch_constitution_bytes(conf["policy_id"], api_key)
 
         computed_hash = hashlib.sha256(raw_bytes).hexdigest()
         print(f"\nComputed SHA256: {computed_hash}", flush=True)
