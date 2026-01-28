@@ -729,9 +729,9 @@ chmod +x cardano_constitution_reader.py
 ```
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
-║   ⚖️  CARDANO CONSTITUTION READER                             ║
+║   ⚖️  CARDANO CONSTITUTION READER                            ║
 ║                                                               ║
-║   Immutable Governance Framework • Verified On-Chain         ║
+║   Immutable Governance Framework • Verified On-Chain          ║
 ║   v2.0.0 by BEACNpool                                         ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
@@ -746,7 +746,7 @@ chmod +x cardano_constitution_reader.py
 └──────────────────┴────────────────────────────────┴────────────┘
 
 ╭─────────────────────────────────────────────────────────────╮
-│ Constitution Epoch 608 is cryptographically verified ✓     │
+│ Constitution Epoch 608 is cryptographically verified ✓      │
 │ This document is immutably stored on the Cardano blockchain │
 ╰─────────────────────────────────────────────────────────────╯
 ```
