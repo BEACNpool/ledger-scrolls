@@ -268,3 +268,4 @@ Viewer architecture crafted by **Claude** (Anthropic) — January 2026
 *30 lives. Infinite knowledge.*
 
 </details>
+
