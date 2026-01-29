@@ -31,8 +31,7 @@ const CATEGORIES = {
     DOCUMENTS: { id: 'documents', name: 'Documents', icon: '📄' },
     GOVERNANCE: { id: 'governance', name: 'Governance', icon: '⚖️' },
     HISTORICAL: { id: 'historical', name: 'Historical', icon: '📜' },
-    // Hidden category - only visible after easter egg
-    ARCHITECTS_VAULT: { id: 'vault', name: "Architect's Vault", icon: '🔮', hidden: true }
+    ARCHITECTS_VAULT: { id: 'vault', name: "Architect's Vault", icon: '🔮' }
 };
 
 /**
@@ -178,7 +177,7 @@ const SCROLLS = [
         icon: '🔮',
         category: 'vault',
         type: SCROLL_TYPES.STANDARD,
-        hidden: true,
+        
         pointer: {
             lock_address: 'addr1w9fdc02rkmfyvh5kzzwwwk4kr2l9a8qa3g7feehl3ga022qz2249g',
             lock_txin: '076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747#0',
@@ -201,7 +200,7 @@ const SCROLLS = [
         icon: '📜',
         category: 'vault',
         type: 'embedded', // Special type - content is embedded, not on-chain
-        hidden: true,
+        
         content: `
 ═══════════════════════════════════════════════════════════════════════════════
                          🔮 THE ARCHITECT'S SCROLL 🔮
@@ -265,7 +264,7 @@ const SCROLLS = [
         icon: '✨',
         category: 'vault',
         type: 'embedded',
-        hidden: true,
+        
         content: `
 ═══════════════════════════════════════════════════════════════════════════════
                           ✨ GENESIS MANIFEST ✨
@@ -337,7 +336,7 @@ SIGNATORIES
         icon: '🌟',
         category: 'vault',
         type: 'embedded',
-        hidden: true,
+        
         content: `
 ═══════════════════════════════════════════════════════════════════════════════
                         🌟 SCROLLS YET TO COME 🌟
@@ -417,40 +416,11 @@ const REGISTRY = {
     asset_name: 'LS_REGISTRY'
 };
 
-// State for easter egg
-let vaultUnlocked = false;
-
 /**
- * Unlock the Architect's Vault (called by easter egg)
+ * Get all scrolls
  */
-function unlockVault() {
-    vaultUnlocked = true;
-    // Mark hidden scrolls as visible
-    SCROLLS.forEach(s => {
-        if (s.category === 'vault') {
-            s.hidden = false;
-        }
-    });
-    // Mark vault category as visible
-    CATEGORIES.ARCHITECTS_VAULT.hidden = false;
-    return true;
-}
-
-/**
- * Check if vault is unlocked
- */
-function isVaultUnlocked() {
-    return vaultUnlocked;
-}
-
-/**
- * Get all scrolls (respects hidden state)
- */
-function getAllScrolls(includeHidden = false) {
-    if (includeHidden || vaultUnlocked) {
-        return SCROLLS;
-    }
-    return SCROLLS.filter(s => !s.hidden);
+function getAllScrolls() {
+    return SCROLLS;
 }
 
 /**
@@ -461,50 +431,38 @@ function getScrollById(id) {
 }
 
 /**
- * Get scrolls by category (respects hidden state)
+ * Get scrolls by category
  */
-function getScrollsByCategory(categoryId, includeHidden = false) {
-    const scrolls = getAllScrolls(includeHidden);
-    if (categoryId === 'all') {
-        return scrolls.filter(s => s.category !== 'vault' || vaultUnlocked);
-    }
-    return scrolls.filter(s => s.category === categoryId);
+function getScrollsByCategory(categoryId) {
+    if (categoryId === 'all') return SCROLLS;
+    return SCROLLS.filter(s => s.category === categoryId);
 }
 
 /**
  * Search scrolls by title or description
  */
-function searchScrolls(query, includeHidden = false) {
-    const scrolls = getAllScrolls(includeHidden);
-    if (!query) return scrolls.filter(s => s.category !== 'vault' || vaultUnlocked);
+function searchScrolls(query) {
+    if (!query) return SCROLLS;
     const q = query.toLowerCase();
-    return scrolls.filter(s => 
-        (s.title.toLowerCase().includes(q) ||
-        s.description.toLowerCase().includes(q)) &&
-        (s.category !== 'vault' || vaultUnlocked)
+    return SCROLLS.filter(s => 
+        s.title.toLowerCase().includes(q) ||
+        s.description.toLowerCase().includes(q)
     );
 }
 
 /**
- * Get all categories with scroll counts (respects hidden state)
+ * Get all categories with scroll counts
  */
-function getCategoriesWithCounts(includeHidden = false) {
-    const scrolls = getAllScrolls(includeHidden);
+function getCategoriesWithCounts() {
     const counts = {};
-    scrolls.forEach(s => {
-        if (!s.hidden || vaultUnlocked) {
-            counts[s.category] = (counts[s.category] || 0) + 1;
-        }
+    SCROLLS.forEach(s => {
+        counts[s.category] = (counts[s.category] || 0) + 1;
     });
     
-    return Object.values(CATEGORIES)
-        .filter(cat => !cat.hidden || vaultUnlocked)
-        .map(cat => ({
-            ...cat,
-            count: cat.id === 'all' 
-                ? scrolls.filter(s => !s.hidden || vaultUnlocked).length 
-                : (counts[cat.id] || 0)
-        }));
+    return Object.values(CATEGORIES).map(cat => ({
+        ...cat,
+        count: cat.id === 'all' ? SCROLLS.length : (counts[cat.id] || 0)
+    }));
 }
 
 // Export for use in other modules
@@ -517,7 +475,5 @@ window.ScrollLibrary = {
     getScrollById,
     getScrollsByCategory,
     searchScrolls,
-    getCategoriesWithCounts,
-    unlockVault,
-    isVaultUnlocked
+    getCategoriesWithCounts
 };
