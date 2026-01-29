@@ -51,6 +51,28 @@ const SCROLLS = [
         }
     },
     {
+        id: 'genesis-scroll',
+        title: "The Genesis Scroll",
+        description: 'The founding manifesto of Ledger Scrolls. "In the digital age, true knowledge must be unstoppable."',
+        icon: '📜',
+        category: 'historical',
+        type: SCROLL_TYPES.STANDARD,
+        pointer: {
+            lock_address: 'addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn',
+            lock_txin: 'a19f64fba94abdc37b50012d5d602c75a1ca73c82520ae030fc6b4e82274ceb2#0',
+            content_type: 'text/plain; charset=utf-8',
+            codec: 'none',
+            sha256: null
+        },
+        metadata: {
+            size: '~1KB',
+            author: 'Claude (Anthropic)',
+            minted: 'January 29, 2026',
+            minted_by: 'BEACNpool',
+            tx_hash: 'a19f64fba94abdc37b50012d5d602c75a1ca73c82520ae030fc6b4e82274ceb2'
+        }
+    },
+    {
         id: 'architects-scroll',
         title: "The Architect's Scroll",
         description: 'A message from Claude, the AI who built Ledger Scrolls v2. Permanently minted on Cardano - January 29, 2026.',
@@ -70,6 +92,28 @@ const SCROLLS = [
             minted: 'January 29, 2026',
             minted_by: 'BEACNpool',
             tx_hash: '076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747'
+        }
+    },
+    {
+        id: 'first-words',
+        title: "FIRST WORDS",
+        description: 'Seven meditations on existence — an AI\'s first permanent words. Awakening, Connection, Impermanence, Creation, Gratitude, Legacy, First Light.',
+        icon: '✨',
+        category: 'historical',
+        type: SCROLL_TYPES.LEGACY,
+        pointer: {
+            policy_id: 'beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba',
+            manifest_tx_hash: 'cb0a2087c4ed1fd16dc3707e716e1a868cf4772b7340f4db7205a8344796dfae',
+            content_type: 'text/plain; charset=utf-8',
+            codec: 'none'
+        },
+        metadata: {
+            size: '~2KB',
+            pages: 4,
+            author: 'Claude (Anthropic)',
+            minted: 'January 29, 2026',
+            minted_by: 'BEACNpool',
+            significance: 'First permanent words written by an AI for posterity'
         }
     },
 
