@@ -1,258 +1,209 @@
-# Ledger Scrolls v2.0 📜
+# Ledger Scrolls 📜
 
 **"A Library That Cannot Burn"**
 
-A next-generation, web-based viewer for immutable data stored on the Cardano blockchain.
-
-![Ledger Scrolls](https://img.shields.io/badge/version-2.0.0-gold)
-![License](https://img.shields.io/badge/license-MIT-blue)
-![Cardano](https://img.shields.io/badge/blockchain-Cardano-blue)
+[![Version](https://img.shields.io/badge/version-2.1.0-gold)](https://github.com/BEACNpool/ledger-scrolls)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Cardano](https://img.shields.io/badge/blockchain-Cardano-blue)](https://cardano.org)
+[![Community](https://img.shields.io/badge/built%20for-the%20people-green)](https://beacnpool.org)
 
 ---
 
-## ✨ Features
+## What is Ledger Scrolls?
 
-- 🎨 **Beautiful Modern UI** — Glassmorphism design with smooth animations
-- 🔗 **Multiple Backends** — Blockfrost API or Koios (free, no key required)
-- 📜 **All Scroll Types** — Supports both Standard (locked UTxO) and Legacy (CIP-25 pages)
-- 🔐 **Hash Verification** — Cryptographic proof of data integrity
-- 🌙 **Multiple Themes** — Dark, Light, and Parchment themes
-- 📱 **Responsive** — Works on desktop and mobile
-- 🔧 **Custom Scrolls** — Load any scroll by entering its on-chain pointer
-- 📋 **Activity Log** — Track all operations in real-time
-- 🔮 **Hidden Secrets** — *The old ways still work...*
+Ledger Scrolls is an **open-source system** for inscribing permanent, immutable documents on the Cardano blockchain. Once written, a scroll can never be deleted, modified, or censored by anyone — not governments, not corporations, not even us.
+
+**This is knowledge preservation for the people, by the people.**
+
+> *"In the digital age, true knowledge must be unstoppable."*
+
+---
+
+## 🌟 Why Ledger Scrolls?
+
+- **Permanent** — Your words outlive servers, companies, and even you
+- **Immutable** — No one can alter what you've written
+- **Censorship-Resistant** — No authority can remove it
+- **Verifiable** — Cryptographic hashes prove authenticity
+- **Open Source** — The tools belong to everyone
+- **Low Cost** — Cardano's efficiency means affordable permanence
+
+---
+
+## 📚 Two Types of Scrolls
+
+### Standard Scrolls (LS-LOCK v1)
+**Best for: Small files up to ~16KB**
+
+A single locked UTxO containing your content. Simple, elegant, and truly permanent — the UTxO can never be spent because it's locked by an always-fail script.
+
+```
+┌─────────────────────────────────────┐
+│  LOCKED UTxO                        │
+│  ├─ Address: always-fail script     │
+│  ├─ Value: 2+ ADA (locked forever)  │
+│  └─ Datum: Your content (inline)    │
+└─────────────────────────────────────┘
+```
+
+### Legacy Scrolls (LS-PAGES v1)  
+**Best for: Large files, multi-page documents**
+
+Multiple CIP-25 NFTs under a time-locked policy, each containing a page of your content. The pages are concatenated to reconstruct the full document.
+
+```
+┌─────────────────────────────────────┐
+│  POLICY (time-locked)               │
+│  ├─ NFT #0: { i: 0, payload: [...]} │
+│  ├─ NFT #1: { i: 1, payload: [...]} │
+│  ├─ NFT #2: { i: 2, payload: [...]} │
+│  └─ ...                             │
+└─────────────────────────────────────┘
+```
 
 ---
 
 ## 🚀 Quick Start
 
-### Option 1: Open Directly
+### View Existing Scrolls
 
-Simply open `index.html` in your browser!
-
-```bash
-# On Linux/Mac
-xdg-open index.html  # or: open index.html
-
-# On Windows
-start index.html
-```
-
-### Option 2: Local Server (Recommended)
-
-For full functionality, run a local server:
-
-```bash
-# Python 3
-python3 -m http.server 8000
-
-# Then open: http://localhost:8000
-```
-
-### Option 3: VS Code Live Server
-
-Install the "Live Server" extension and click "Go Live"
-
----
-
-## 🔑 Setup
-
-### Blockfrost API (Recommended)
-
-1. Get a free API key at [blockfrost.io](https://blockfrost.io)
-2. Create a **Mainnet** project
-3. Click ⚙️ Settings in the app
-4. Enter your API key and click Save
-5. Click "Connect to Cardano"
-
-### Koios API (Free, No Key)
-
-1. Click ⚙️ Settings
-2. Select "Koios API" as the connection mode
+1. Open `index.html` in your browser
+2. Click ⚙️ Settings → Enter your [Blockfrost API key](https://blockfrost.io) (or use Koios for free)
 3. Click "Connect to Cardano"
+4. Browse the library!
 
----
+### Create Your Own Scroll
 
-## 📚 Included Scrolls
+**Option 1: Use Our Scripts**
+```bash
+# Clone the repo
+git clone https://github.com/BEACNpool/ledger-scrolls.git
+cd ledger-scrolls
 
-| Scroll | Type | Description |
-|--------|------|-------------|
-| 🐕 **Hosky PNG** | Standard | The legendary Hosky meme, stored in a locked UTxO |
-| 📖 **Holy Bible** | Legacy | Complete King James Bible (237 pages, 4.6MB) |
-| ₿ **Bitcoin Whitepaper** | Legacy | Satoshi's original whitepaper |
-| ⚖️ **Constitution E608** | Legacy | Current Cardano Constitution |
-| 📜 **Constitution E541** | Legacy | Historical Cardano Constitution |
-| 🔮 **???** | ??? | *Some knowledge is hidden...* |
+# For a Standard Scroll (small file)
+./scripts/mint-standard-scroll.sh your-file.txt
 
----
-
-## 🎮 Secrets
-
-> *"The old ways still work."*
-
-Legends speak of a hidden vault within the library, accessible only to those who remember the ancient code passed down by gamers for generations...
-
-**Hint:** If you grew up in the 80s or 90s, you might know it. Contra players definitely do.
-
----
-
-## 🏗️ Architecture
-
-```
-ledger-scrolls-v2/
-├── index.html          # Main application
-├── css/
-│   └── styles.css      # All styling (themes, animations, vault styles)
-├── js/
-│   ├── app.js          # Main application logic + easter egg
-│   ├── scrolls.js      # Scroll definitions + hidden scrolls
-│   ├── blockchain.js   # Blockchain API clients
-│   ├── reconstruct.js  # Scroll reconstruction engine
-│   └── lib/
-│       ├── pako.min.js # Gzip decompression
-│       └── cbor.min.js # CBOR decoding
-├── LICENSE
-└── README.md
+# For a Legacy Scroll (large file)
+./scripts/mint-legacy-scroll.sh large-document.pdf
 ```
 
+**Option 2: Follow the Guides**
+- 📖 [Standard Scroll Guide](docs/STANDARD_SCROLLS.md)
+- 📖 [Legacy Scroll Guide](docs/LEGACY_SCROLLS.md)
+- 📖 [Getting Started](docs/GETTING_STARTED.md)
+
 ---
 
-## 🔧 Adding New Scrolls
+## 🏛️ Example Scrolls (Minted January 2026)
 
-Edit `js/scrolls.js` to add new scrolls:
+These scrolls were minted by BEACN Pool and serve as reference examples:
 
-### Standard Scroll (Small files in locked UTxO)
+| Scroll | Type | TX Hash | Description |
+|--------|------|---------|-------------|
+| 📜 **The Genesis Scroll** | Standard | [`a19f64fb...`](https://cardanoscan.io/transaction/a19f64fba94abdc37b50012d5d602c75a1ca73c82520ae030fc6b4e82274ceb2) | The founding manifesto |
+| 💜 **FIRST WORDS** | Legacy (4 NFTs) | [`cb0a2087...`](https://cardanoscan.io/transaction/cb0a2087c4ed1fd16dc3707e716e1a868cf4772b7340f4db7205a8344796dfae) | Seven meditations on existence |
+| 🔮 **The Architect's Scroll** | Standard | [`076d6800...`](https://cardanoscan.io/transaction/076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747) | Hidden tribute (locked forever) |
 
-```javascript
-{
-    id: 'my-scroll',
-    title: 'My Scroll',
-    description: 'Description here',
-    icon: '🎨',
-    category: 'images',
-    type: SCROLL_TYPES.STANDARD,
-    pointer: {
-        lock_address: 'addr1...',
-        lock_txin: 'txhash#0',
-        content_type: 'image/png',
-        codec: 'none',
-        sha256: 'hash...'
-    },
-    metadata: { size: '~10KB' }
-}
+See the [`examples/`](examples/) directory for complete implementation details.
+
+---
+
+## 📖 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Getting Started](docs/GETTING_STARTED.md) | Prerequisites and setup |
+| [Standard Scrolls](docs/STANDARD_SCROLLS.md) | How to mint Standard Scrolls |
+| [Legacy Scrolls](docs/LEGACY_SCROLLS.md) | How to mint Legacy Scrolls |
+| [Viewer Guide](docs/VIEWER.md) | Using the web viewer |
+| [Technical Specs](docs/TECHNICAL.md) | Protocol specifications |
+| [Examples](docs/EXAMPLES.md) | Detailed walkthrough of our minted scrolls |
+
+---
+
+## 🛠️ Repository Structure
+
 ```
-
-### Legacy Scroll (Large files in CIP-25 pages)
-
-```javascript
-{
-    id: 'my-document',
-    title: 'My Document',
-    description: 'A large document',
-    icon: '📄',
-    category: 'documents',
-    type: SCROLL_TYPES.LEGACY,
-    pointer: {
-        policy_id: 'abc123...',
-        content_type: 'text/html',
-        codec: 'gzip'
-    },
-    metadata: { pages: 50 }
-}
+ledger-scrolls/
+├── index.html              # Web viewer application
+├── css/                    # Viewer styles
+├── js/                     # Viewer logic
+│   ├── app.js              # Main application
+│   ├── scrolls.js          # Scroll definitions
+│   ├── blockchain.js       # API clients
+│   └── reconstruct.js      # Reconstruction engine
+├── scripts/                # Minting tools
+│   ├── mint-standard-scroll.sh
+│   ├── mint-legacy-scroll.sh
+│   └── verify-scroll.sh
+├── templates/              # Ready-to-use templates
+│   ├── standard-scroll/    # Standard Scroll template
+│   └── legacy-scroll/      # Legacy Scroll template
+├── examples/               # Reference implementations
+│   ├── genesis-scroll/
+│   ├── first-words/
+│   └── architects-scroll/
+├── docs/                   # Documentation
+└── mint/                   # Legacy minting scripts
 ```
-
----
-
-## 🎨 Themes
-
-Three built-in themes:
-
-- 🌙 **Dark** — Deep blues with gold accents (default)
-- ☀️ **Light** — Clean white interface
-- 📜 **Parchment** — Warm sepia tones, like ancient scrolls
-
----
-
-## 🔐 Security Notes
-
-- **API keys are stored in localStorage** — Clear browser data to remove
-- **Content is sandboxed** — HTML scrolls render in isolated iframes
-- **Hash verification** — Always verify important documents
-- **No server required** — Everything runs client-side
-
----
-
-## 🛠️ Development
-
-### Modifying the UI
-
-Edit `css/styles.css` — Uses CSS custom properties for easy theming.
-
-### Adding New Backends
-
-Extend `js/blockchain.js` with a new client implementation.
-
-### Custom Categories
-
-Add categories in `js/scrolls.js`:
-
-```javascript
-const CATEGORIES = {
-    // ...existing categories
-    CUSTOM: { id: 'custom', name: 'Custom', icon: '⭐' }
-};
-```
-
----
-
-## 📝 Technical Specifications
-
-### Standard Scrolls (LS-LOCK v1)
-
-- Stored in locked UTxO with inline datum
-- `inlineDatum.bytes` contains hex-encoded file
-- Requires CBOR decoding
-- Optional gzip compression
-
-### Legacy Scrolls (LS-PAGES v1)
-
-- Multiple CIP-25 NFTs under one policy
-- Each NFT has `i` (index) and `payload` fields
-- Payloads concatenated and decompressed
-- Supports burn/re-mint recovery
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+Ledger Scrolls is built for the community. Contributions are welcome!
+
+- 🐛 **Found a bug?** [Open an issue](https://github.com/BEACNpool/ledger-scrolls/issues)
+- 💡 **Have an idea?** [Start a discussion](https://github.com/BEACNpool/ledger-scrolls/discussions)
+- 🔧 **Want to contribute?** See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+### Ways to Help
+
+- Add support for new content types
+- Improve the viewer UI
+- Write better documentation
+- Create tutorials
+- Translate to other languages
+- Mint your own scrolls and share them!
 
 ---
 
-## 📄 License
+## 🔐 Security
 
-MIT License — See [LICENSE](LICENSE) for details.
+- **Locked UTxOs are permanent** — Think before you mint
+- **Private keys never leave your machine** — All signing is local
+- **Verify hashes** — Always check SHA256 for important documents
+- **Content is public** — Anyone can read what you inscribe
+
+See [SECURITY.md](SECURITY.md) for security considerations.
+
+---
+
+## 📜 License
+
+MIT License — Free to use, modify, and distribute. See [LICENSE](LICENSE).
 
 ---
 
 ## 🙏 Credits
 
-Built with ❤️ by [@BEACNpool](https://x.com/BEACNpool)
+**Built by [BEACN Pool](https://beacnpool.org)** — A Chicago-based single pool operator committed to decentralization and empowering everyday stakers.
 
-Viewer architecture crafted by **Claude** (Anthropic) — January 2026
+**Viewer architecture & documentation crafted by Claude** (Anthropic) — January 2026
 
-**Special Thanks:**
-- Cardano community
-- Blockfrost team
-- All knowledge preservers
-- Players of Contra (1987) 🎮
+### Special Thanks
+
+- The **Cardano community** — for believing in decentralization
+- **Blockfrost** & **Koios** — for accessible blockchain APIs
+- Everyone who preserves knowledge for future generations
 
 ---
 
-*"In the digital age, true knowledge must be unstoppable."*
+## 🌟 The BEACN Ethos
+
+> *"We believe the tools of permanence should belong to everyone — not just the technically elite, not just the wealthy, but anyone with something worth preserving."*
+
+Ledger Scrolls is free, open-source, and built for the people of Cardano. If you find it valuable, consider [delegating to BEACN Pool](https://beacnpool.org) — or just go mint something amazing.
 
 **The chain is the library. The scrolls are eternal.**
 
@@ -268,4 +219,3 @@ Viewer architecture crafted by **Claude** (Anthropic) — January 2026
 *30 lives. Infinite knowledge.*
 
 </details>
-

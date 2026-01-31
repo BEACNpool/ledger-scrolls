@@ -1,0 +1,5 @@
+{
+    "type": "PlutusScriptV2",
+    "description": "Always fails - Ledger Scrolls permanent lock",
+    "cborHex": "4e4d01000033222220051"
+}
