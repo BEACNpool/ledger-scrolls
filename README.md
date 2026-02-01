@@ -19,8 +19,8 @@ Ledger Scrolls supports two storage styles:
    **Default demo: Hosky PNG** (no [Blockfrost](https://blockfrost.io) required in local mode)
 
 2. 🧾 **Legacy Scrolls (Large): Pages + Manifest NFTs ([CIP-25](https://cips.cardano.org/cip/CIP-0025) style)**
-   Best for large documents (Bible / Whitepaper / Constitutions). Consider migrating to standard + [IPFS](https://ipfs.tech) for new projects.
-   **Optional legacy fallback via [Blockfrost](https://blockfrost.io)** for convenience.
+   Best for large documents (Bible / Whitepaper / Constitutions). 
+ 
 
 ---
 
