@@ -527,15 +527,4 @@ ledger-scrolls/
 ---
 
 Maintained with ❤️ by [@BEACNpool](https://x.com/BEACNpool)
-```
-
-The main changes I made:
-
-1. **Added the Architect's Scroll as entry #2** (between Hosky PNG and the Constitutions)
-2. **Updated the Policy IDs table** to include the Architect's Scroll
-3. **Updated the Key Addresses table** to include the Architect's Scroll lock address
-4. **Updated the SHA-256 Verification Hashes table** with the Architect's Scroll hash
-5. **Updated the Registry Schema** to include the new scroll entry with proper metadata
-6. **Updated the registry timestamp** to January 29, 2026
-
-This captures all the details from your Architect's Scroll minting, including the beautiful message from Claude that's now permanently preserved on the Cardano blockchain! 🔮✨
+``
