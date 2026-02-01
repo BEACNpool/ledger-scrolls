@@ -1,221 +1,490 @@
 # Ledger Scrolls 📜
-https://beacnpool.github.io/ledger-scrolls/
-**"A Library That Cannot Burn"**
 
-[![Version](https://img.shields.io/badge/version-2.1.0-gold)](https://github.com/BEACNpool/ledger-scrolls)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![Cardano](https://img.shields.io/badge/blockchain-Cardano-blue)](https://cardano.org)
-[![Community](https://img.shields.io/badge/built%20for-the%20people-green)](https://beacnpool.org)
+**"A library that cannot burn."**
 
----
+Ledger Scrolls is an open-source **standard + viewer** for publishing and reading **permissionless, immutable data** on the [Cardano](https://cardano.org/) blockchain.
 
-## What is Ledger Scrolls?
+The design goal is simple:
 
-Ledger Scrolls is an **open-source system** for inscribing permanent, immutable documents on the Cardano blockchain. Once written, a scroll can never be deleted, modified, or censored by anyone — not governments, not corporations, not even us.
+- **No chain indexing**
+- **No centralized gatekeepers**
+- **No "download the whole chain history" requirement**
+- **Local-first** (your node + your socket) — prioritized in future updates
+- **Forever-readable** as long as the pointer remains valid
 
-**This is knowledge preservation for the people, by the people.**
+Ledger Scrolls supports two storage styles:
 
-> *"In the digital age, true knowledge must be unstoppable."*
+1. ✅ **Ledger Scrolls Standard (Lean): Locked UTxO Datum Bytes**
+   Best for small files (icons/images/manifests/configs) that fit inside one on-chain inline datum. Supports optional gzip compression for slightly larger files.
+   **Default demo: Hosky PNG** (no [Blockfrost](https://blockfrost.io) required in local mode)
 
----
-
-## 🌟 Why Ledger Scrolls?
-
-- **Permanent** — Your words outlive servers, companies, and even you
-- **Immutable** — No one can alter what you've written
-- **Censorship-Resistant** — No authority can remove it
-- **Verifiable** — Cryptographic hashes prove authenticity
-- **Open Source** — The tools belong to everyone
-- **Low Cost** — Cardano's efficiency means affordable permanence
+2. 🧾 **Legacy Scrolls (Large): Pages + Manifest NFTs ([CIP-25](https://cips.cardano.org/cip/CIP-0025) style)**
+   Best for large documents (Bible / Whitepaper / Constitutions). Consider migrating to standard + [IPFS](https://ipfs.tech) for new projects.
+   **Optional legacy fallback via [Blockfrost](https://blockfrost.io)** for convenience.
 
 ---
 
-## 📚 Two Types of Scrolls
+## Scroll Inventory
 
-### Standard Scrolls (LS-LOCK v1)
-**Best for: Small files up to ~16KB**
+The following scrolls are **live on Cardano mainnet** and permanently verifiable.
 
-A single locked UTxO containing your content. Simple, elegant, and truly permanent — the UTxO can never be spent because it's locked by an always-fail script.
+### 1) ✅ Hosky PNG — Ledger Scrolls Standard (lean & local-first)
 
-```
-┌─────────────────────────────────────┐
-│  LOCKED UTxO                        │
-│  ├─ Address: always-fail script     │
-│  ├─ Value: 2+ ADA (locked forever)  │
-│  └─ Datum: Your content (inline)    │
-└─────────────────────────────────────┘
-```
+This demo stores a complete PNG **directly in an inline datum** at a **locked UTxO**.
+A viewer can reconstruct the exact image bytes from chain data.
 
-### Legacy Scrolls (LS-PAGES v1)  
-**Best for: Large files, multi-page documents**
+| Field | Value |
+|-------|-------|
+| **ID** | `hosky-png` |
+| **Type** | `utxo_datum_bytes_v1` (LS-LOCK v1 — Standard Scroll) |
+| **Lock Address** | `addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn` |
+| **Locked UTxO (txin)** | `728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0` |
+| **Content-Type** | `image/png` |
+| **Codec** | `none` |
+| **SHA-256** | `798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f` |
+| **Status** | 🟢 LIVE — UTxO must remain UNSPENT |
 
-Multiple CIP-25 NFTs under a time-locked policy, each containing a page of your content. The pages are concatenated to reconstruct the full document.
+> **Why this is the "Standard":** It's the minimal possible on-chain data product: **one UTxO, one datum, one fetch, one file.** Always-fail script address. 512×512 RGBA PNG.
 
-```
-┌─────────────────────────────────────┐
-│  POLICY (time-locked)               │
-│  ├─ NFT #0: { i: 0, payload: [...]} │
-│  ├─ NFT #1: { i: 1, payload: [...]} │
-│  ├─ NFT #2: { i: 2, payload: [...]} │
-│  └─ ...                             │
-└─────────────────────────────────────┘
+---
+
+### 2) 🧾 Cardano Constitution (Epoch 608) — CURRENT
+
+The ratified, currently active Cardano Constitution, preserved on-chain as a Legacy Scroll.
+
+| Field | Value |
+|-------|-------|
+| **ID** | `constitution-e608` |
+| **Type** | `cip25_pages_v1` (LS-PAGES v1 — Legacy Scroll / CIP-721) |
+| **Policy ID** | `ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750` |
+| **Manifest Asset** | `CONSTITUTION_E608_MANIFEST` |
+| **Pages** | 11 |
+| **Content-Type** | `text/plain; charset=utf-8` |
+| **Codec** | `gzip` |
+| **SHA-256 (Original)** | `98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1` |
+| **SHA-256 (Gzip)** | `4565368ca35d8c6bb08bff712c1b22c0afe300c19292d5aa09c812ed415a4e93` |
+| **Governance** | Ratified Epoch 608 · Enacted Epoch 609 · Voting: Epochs 603–607 |
+| **Status** | 🟢 LIVE — CURRENT CONSTITUTION |
+
+> Updated guardrails, treasury withdrawal, and Constitutional Committee provisions. Governance flagship scroll.
+
+---
+
+### 3) 🧾 Cardano Constitution (Epoch 541) — HISTORICAL
+
+The first ratified Cardano Constitution, preserved as a permanent historical record.
+
+| Field | Value |
+|-------|-------|
+| **ID** | `constitution-e541` |
+| **Type** | `cip25_pages_v1` (LS-PAGES v1 — Legacy Scroll / CIP-721) |
+| **Policy ID** | `d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d` |
+| **Manifest Asset** | `CONSTITUTION_E541_MANIFEST` |
+| **Pages** | 7 |
+| **Content-Type** | `text/plain; charset=utf-8` |
+| **Codec** | `gzip` |
+| **SHA-256 (Original)** | `1939c1627e49b5267114cbdb195d4ac417e545544ba6dcb47e03c679439e9566` |
+| **SHA-256 (Gzip)** | `975d1c6bb1c8bf4982c58e41c9b137ecd4272e34095a5ec9b37bdde5ca6f268a` |
+| **Governance** | Ratified Epoch 541 · Enacted Epoch 542 · Voting: Epochs 536–540 |
+| **Status** | 🟢 LIVE — HISTORICAL (Baseline) |
+
+> First ratified constitution. Baseline governance framework with initial Constitutional Committee role and guardrails.
+
+---
+
+### 4) 🧾 Bible (HTML, gzip compressed) — Proof of Concept (large document)
+
+| Field | Value |
+|-------|-------|
+| **ID** | `bible` |
+| **Type** | `cip25_pages_v1` (LS-PAGES v1 — Legacy Scroll) |
+| **Policy ID** | `2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0` |
+| **Manifest TX Hash** | `cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4` |
+| **Manifest Slot** | `175750638` |
+| **Pages** | 237 |
+| **Content-Type** | `text/html` |
+| **Codec** | `gzip` |
+| **Segments per Page** | 32 |
+| **Status** | 🟢 LIVE — DO NOT MOVE NFTs |
+
+> Largest demo scroll. Reconstruction: `concat_pages` + `gunzip`. CIP-25 metadata label 721.
+
+---
+
+### 5) 🧾 Bitcoin Whitepaper — Proof of Concept (small doc / legacy pages)
+
+| Field | Value |
+|-------|-------|
+| **ID** | `bitcoin-whitepaper` |
+| **Type** | `cip25_pages_v1` (LS-PAGES v1 — Legacy Scroll) |
+| **Policy ID** | `8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1` |
+| **Manifest TX Hash** | `2575347068f77b21cfe8d9c23d9082a68bfe4ef7ba7a96608af90515acbe228f` |
+| **Manifest Slot** | `176360887` |
+| **Pages** | 3 |
+| **Content-Type** | `text/plain` (auto-detected as HTML) |
+| **Codec** | `auto` (gzip magic bytes detected) |
+| **Status** | 🟢 LIVE — DO NOT MOVE NFTs |
+
+> Small legacy demo. Auto-detects gzip and content type.
+
+---
+
+## Quick Reference Tables
+
+### Policy IDs
+
+| Scroll | Policy ID | Purpose | Minting Status |
+|--------|-----------|---------|----------------|
+| LS_REGISTRY | `895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062` | Registry NFT (DNS for scrolls) | Active (spend-and-recreate) |
+| Bible | `2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0` | 237-page HTML Bible (Legacy) | Policy likely locked |
+| Bitcoin Whitepaper | `8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1` | 3-page BTC whitepaper (Legacy) | Policy likely locked |
+| Constitution E608 | `ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750` | Current Constitution (11 pages) | Time-locked policy |
+| Constitution E541 | `d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d` | Historical Constitution (7 pages) | Time-locked policy |
+| Hosky PNG | N/A — Standard Scroll (locked UTxO, no minting policy) | Single inline datum at script address | Immutable UTxO |
+
+### Key Addresses
+
+| Purpose | Address |
+|---------|---------|
+| **Registry Address** | `addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy` |
+| **Hosky PNG Lock Address** (always-fail script) | `addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn` |
+
+### SHA-256 Verification Hashes
+
+| Scroll | SHA-256 (Original) | SHA-256 (Gzip) | Verify With |
+|--------|--------------------|----------------|-------------|
+| Hosky PNG | `798e329...7f642f` | N/A | `sha256sum hosky.png` |
+| Constitution E608 | `98a29ae...35abf1` | `4565368...4e93` | `sha256sum Cardano_Constitution_Epoch_608.txt` |
+| Constitution E541 | `1939c16...9e9566` | `975d1c6...f268a` | `sha256sum Cardano_Constitution_Epoch_541.txt` |
+| Bible | Not yet recorded | Not yet recorded | `sha256sum bible.html` |
+| Bitcoin Whitepaper | Not yet recorded | Not yet recorded | `sha256sum btc_whitepaper.html` |
+
+---
+
+## The Key Idea: "No Indexing" via Deterministic Pointers
+
+Most "on-chain data" projects fail because reading requires one of:
+
+- A centralized API ([Blockfrost](https://blockfrost.io), [Koios](https://koios.rest), etc.)
+- A custom indexer scanning the chain
+- A full-history database query plan
+
+Ledger Scrolls avoids that using **pointers**.
+
+### Pointer Model (first principles)
+
+**A Scroll must be fetchable from a tiny number of deterministic lookups:**
+
+- **Registry pointer (optional):** 1 address query (find the registry UTxO datum)
+- **Scroll pointer:** points to either:
+  - (Standard) a single locked UTxO holding bytes in an inline datum, or
+  - (Legacy) a manifest tx hash + policy/asset names for pages
+
+This transforms "find my document somewhere in the blockchain" into:
+
+- **1 address query** (registry UTxO) OR direct user input
+- **1 pointer resolution**
+- **0 indexing**
+
+---
+
+## Ledger Scrolls Standard (LS-LOCK v1)
+
+### Standard Storage: Locked UTxO + Inline Datum Bytes
+
+A Standard Scroll stores the file bytes in `inlineDatum.bytes` (hex) at a **locked UTxO**.
+
+A Standard Scroll entry needs only:
+
+- a **txin** (`TXHASH#IX`) OR a (lock address + txin)
+- a **content\_type**
+- a **sha256** (recommended)
+- (optional) codec: `none` / `gzip` (apply gzip to bytes before hexing for datum)
+
+### Why "Locked" Matters
+
+If the UTxO stays **unspent**, the datum remains in the UTxO set and is fetchable forever without indexing.
+
+> Ledger Scrolls ethos: **permanently locked, never spendable.**
+> To achieve "never spendable," lock the UTxO at a script address that cannot validate (an "always-fail" script). Then the datum is effectively permanent.
+
+---
+
+## Legacy Scrolls (LS-PAGES v1)
+
+### Pages + Manifest NFT Pattern (CIP-25 Style)
+
+A "Scroll" can be stored as:
+
+- **Page NFTs** (many): each page stores `payload` segments in metadata
+- **Manifest NFT** (one): describes how to fetch pages, order them, decode them, and verify hashes
+
+Typical page metadata fields:
+
+- `spec`: format id (e.g., `gzip-pages-v1`)
+- `role`: `page`
+- `i`: page index (1-based)
+- `n`: total pages
+- `seg`: segment count
+- `sha`: sha256 of the reconstructed page bytes
+- `payload`: array of hex segments (variations: `seg`, `segments`)
+
+Manifest describes:
+
+- the codec (`gzip` / `none`)
+- content\_type (`text/html`, `text/plain`, etc.)
+- page naming scheme or explicit page list
+- full-file hashes (`sha_gz`, `sha_html`, etc.)
+
+> **Troubleshooting:** If the viewer fails on page fetch, check `manifest_metadata.json` for field variations (e.g., `payload` vs `seg`).
+
+---
+
+## The Registry (the "DNS" for Scrolls)
+
+The Registry is a single on-chain directory that tells Ledger Scrolls what exists.
+
+### Registry Implementation
+
+- A **registry NFT** (`LS_REGISTRY`)
+- Locked at a known **Registry address**
+- The UTxO holding that NFT has an **inline datum** containing **gzipped JSON** listing scrolls and their pointers
+- DNS for all scrolls — spend-and-recreate to update
+
+### Current Live Registry Pointer
+
+| Field | Value |
+|-------|-------|
+| **Policy ID** | `895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062` |
+| **Asset Name (hex)** | `4c535f5245474953545259` (ASCII: `LS_REGISTRY`) |
+| **Registry Address** | `addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy` |
+
+---
+
+## Registry Schema (v2 — Supports Both Standard + Legacy)
+
+```json
+{
+  "spec": "ledger-scrolls-registry-v2",
+  "version": 2,
+  "updated": "2026-01-21T00:00:00Z",
+  "scrolls": [
+    {
+      "id": "hosky-png",
+      "title": "Hosky PNG (Ledger Scrolls Standard)",
+      "type": "utxo_datum_bytes_v1",
+      "lock_address": "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn",
+      "lock_txin": "728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0",
+      "content_type": "image/png",
+      "codec": "none",
+      "sha256": "798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f"
+    },
+    {
+      "id": "constitution-e608",
+      "title": "Cardano Constitution (Epoch 608) — CURRENT",
+      "type": "cip25_pages_v1",
+      "policy_id": "ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750",
+      "manifest_asset": "CONSTITUTION_E608_MANIFEST",
+      "codec": "gzip",
+      "content_type": "text/plain; charset=utf-8",
+      "sha256": "98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1",
+      "sha256_gz": "4565368ca35d8c6bb08bff712c1b22c0afe300c19292d5aa09c812ed415a4e93",
+      "governance": {
+        "ratified_epoch": 608,
+        "enacted_epoch": 609,
+        "voting_epochs": "603-607"
+      }
+    },
+    {
+      "id": "constitution-e541",
+      "title": "Cardano Constitution (Epoch 541) — HISTORICAL",
+      "type": "cip25_pages_v1",
+      "policy_id": "d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d",
+      "manifest_asset": "CONSTITUTION_E541_MANIFEST",
+      "codec": "gzip",
+      "content_type": "text/plain; charset=utf-8",
+      "sha256": "1939c1627e49b5267114cbdb195d4ac417e545544ba6dcb47e03c679439e9566",
+      "sha256_gz": "975d1c6bb1c8bf4982c58e41c9b137ecd4272e34095a5ec9b37bdde5ca6f268a",
+      "governance": {
+        "ratified_epoch": 541,
+        "enacted_epoch": 542,
+        "voting_epochs": "536-540"
+      }
+    },
+    {
+      "id": "bible",
+      "title": "Bible (HTML, gzip compressed)",
+      "type": "cip25_pages_v1",
+      "policy_id": "2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0",
+      "manifest_tx_hash": "cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4",
+      "manifest_slot": "175750638",
+      "codec": "gzip",
+      "content_type": "text/html",
+      "segments_per_page": 32
+    },
+    {
+      "id": "bitcoin-whitepaper",
+      "title": "Bitcoin Whitepaper",
+      "type": "cip25_pages_v1",
+      "policy_id": "8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1",
+      "manifest_tx_hash": "2575347068f77b21cfe8d9c23d9082a68bfe4ef7ba7a96608af90515acbe228f",
+      "manifest_slot": "176360887",
+      "codec": "none",
+      "content_type": "text/plain"
+    }
+  ]
+}
 ```
 
 ---
 
-## 🚀 Quick Start
+## How to Prove a Standard Scroll Is On-Chain (Hosky Example)
 
-### View Existing Scrolls
+### 1) Query the Lock Address UTxO Set
 
-1. Open `index.html` in your browser
-2. Click ⚙️ Settings → Enter your [Blockfrost API key](https://blockfrost.io) (or use Koios for free)
-3. Click "Connect to Cardano"
-4. Browse the library!
-
-### Create Your Own Scroll
-
-**Option 1: Use Our Scripts**
 ```bash
-# Clone the repo
+cardano-cli query utxo --mainnet \
+  --address "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn" \
+  --out-file locked_utxo_live.json
+```
+
+### 2) Confirm the Exact Txin Exists and Has Inline Datum
+
+```bash
+LOCKED_TXIN="728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0"
+jq -r --arg k "$LOCKED_TXIN" '
+  if has($k) then
+    "FOUND ON-CHAIN: \($k)\ninlineDatum? " + ((.[ $k ] | has("inlineDatum"))|tostring)
+  else
+    "MISSING ON-CHAIN: \($k)"
+  end
+' locked_utxo_live.json
+```
+
+### 3) Extract Datum Bytes Into a Real PNG
+
+```bash
+jq -r --arg k "$LOCKED_TXIN" '.[$k].inlineDatum' locked_utxo_live.json > datum.json
+jq -r '.bytes' datum.json | tr -d '\n' | xxd -r -p > onchain.png
+```
+
+### 4) Verify PNG Sanity + Hash Immutability
+
+```bash
+file onchain.png
+sha256sum onchain.png
+sha256sum hosky.png onchain.png
+# If hashes match, the image is byte-for-byte immutable on-chain.
+```
+
+---
+
+## Running the Viewer
+
+The viewer is a cross-platform Python GUI app (Windows/Mac/Linux) with progress bars, safe file saving, and support for both standard and legacy modes.
+
+### Prerequisites
+
+- **Python 3.8+**
+- **tkinter** (usually included with Python; on Ubuntu/Debian install with `sudo apt-get install python3-tk`)
+
+### Installation
+
+```bash
 git clone https://github.com/BEACNpool/ledger-scrolls.git
 cd ledger-scrolls
-
-# For a Standard Scroll (small file)
-./scripts/mint-standard-scroll.sh your-file.txt
-
-# For a Legacy Scroll (large file)
-./scripts/mint-legacy-scroll.sh large-document.pdf
+pip install requests
 ```
 
-**Option 2: Follow the Guides**
-- 📖 [Standard Scroll Guide](docs/STANDARD_SCROLLS.md)
-- 📖 [Legacy Scroll Guide](docs/LEGACY_SCROLLS.md)
-- 📖 [Getting Started](docs/GETTING_STARTED.md)
+### Running
+
+```bash
+cd SRC
+python hosky.py
+```
+
+### Features
+
+- GUI with demo buttons for Hosky, Bible, Bitcoin Whitepaper, and Constitutions
+- [Blockfrost](https://blockfrost.io) integration for fetches (enter API key when prompted)
+- Files saved to `~/Downloads/LedgerScrolls/` to avoid permission issues
+- Progress explanations during reconstruction
+- Known bugs: Legacy page fetching may need manifest tweaks for asset name variations — contribute fixes on GitHub!
+
+### Local-Node Mode (Planned v2)
+
+Uses your **local cardano-node socket** and queries via [`cardano-cli`](https://github.com/IntersectMBO/cardano-cli) for standard scrolls (no Blockfrost needed).
+
+```bash
+export CARDANO_NODE_SOCKET_PATH=/opt/cardano/cnode/sockets/node.socket
+cd SRC
+python hosky.py
+```
+
+### Blockfrost Mode (Current Default for Legacy + Convenience)
+
+```bash
+cd SRC
+python hosky.py
+# Enter Blockfrost key in GUI for legacy demos
+```
+
+> **Long-term direction:** Full local-node for everything (standard + legacy metadata via CLI queries). [Blockfrost](https://blockfrost.io) as optional fallback.
 
 ---
 
-## 🏛️ Example Scrolls (Minted January 2026)
+## Developer Workflow: Create Your Own Library
 
-These scrolls were minted by BEACN Pool and serve as reference examples:
+You can:
 
-| Scroll | Type | TX Hash | Description |
-|--------|------|---------|-------------|
-| 📜 **The Genesis Scroll** | Standard | [`a19f64fb...`](https://cardanoscan.io/transaction/a19f64fba94abdc37b50012d5d602c75a1ca73c82520ae030fc6b4e82274ceb2) | The founding manifesto |
-| 💜 **FIRST WORDS** | Legacy (4 NFTs) | [`cb0a2087...`](https://cardanoscan.io/transaction/cb0a2087c4ed1fd16dc3707e716e1a868cf4772b7340f4db7205a8344796dfae) | Seven meditations on existence |
-| 🔮 **The Architect's Scroll** | Standard | [`076d6800...`](https://cardanoscan.io/transaction/076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747) | Hidden tribute (locked forever) |
+- Run your own registry (recommended), OR
+- Submit a PR to a public registry
 
-See the [`examples/`](examples/) directory for complete implementation details.
+**To publish a Standard Scroll:**
 
----
+1. Create a permanently locked UTxO containing `inlineDatum.bytes` = your (gzipped) file bytes
+2. Add a registry entry pointing to `lock_txin`, with `content_type` + `sha256`
 
-## 📖 Documentation
+**To publish a Legacy Scroll** (for large files; prefer standard + [IPFS](https://ipfs.tech) hybrids):
 
-| Document | Description |
-|----------|-------------|
-| [Getting Started](docs/GETTING_STARTED.md) | Prerequisites and setup |
-| [Standard Scrolls](docs/STANDARD_SCROLLS.md) | How to mint Standard Scrolls |
-| [Legacy Scrolls](docs/LEGACY_SCROLLS.md) | How to mint Legacy Scrolls |
-| [Viewer Guide](docs/VIEWER.md) | Using the web viewer |
-| [Technical Specs](docs/TECHNICAL.md) | Protocol specifications |
-| [Examples](docs/EXAMPLES.md) | Detailed walkthrough of our minted scrolls |
+1. Split file into pages + segments
+2. Mint pages + manifest NFT(s)
+3. Add a registry entry with `policy_id` + `manifest_tx_hash` + `codec` + hashes
+
+**To extend the viewer app:**
+
+- Add local-node support (e.g., subprocess calls to [`cardano-cli`](https://github.com/IntersectMBO/cardano-cli))
+- Improve legacy parser for field variations (contribute via PR)
 
 ---
 
-## 🛠️ Repository Structure
+## Philosophy
+
+- **Open standard**
+- **Permissionless**
+- **Non-custodial**
+- **Non-indexed**
+- **Local-first**
+- **Permanently locked**
+
+---
+
+## Repository Structure
 
 ```
 ledger-scrolls/
-├── index.html              # Web viewer application
-├── css/                    # Viewer styles
-├── js/                     # Viewer logic
-│   ├── app.js              # Main application
-│   ├── scrolls.js          # Scroll definitions
-│   ├── blockchain.js       # API clients
-│   └── reconstruct.js      # Reconstruction engine
-├── scripts/                # Minting tools
-│   ├── mint-standard-scroll.sh
-│   ├── mint-legacy-scroll.sh
-│   └── verify-scroll.sh
-├── templates/              # Ready-to-use templates
-│   ├── standard-scroll/    # Standard Scroll template
-│   └── legacy-scroll/      # Legacy Scroll template
-├── examples/               # Reference implementations
-│   ├── genesis-scroll/
-│   ├── first-words/
-│   └── architects-scroll/
-├── docs/                   # Documentation
-└── mint/                   # Legacy minting scripts
+├── README.md
+├── LICENSE
+└── SRC/
+    └── hosky.py        # Main viewer application (GUI)
 ```
 
 ---
 
-## 🤝 Contributing
+## License
 
-Ledger Scrolls is built for the community. Contributions are welcome!
-
-- 🐛 **Found a bug?** [Open an issue](https://github.com/BEACNpool/ledger-scrolls/issues)
-- 💡 **Have an idea?** [Start a discussion](https://github.com/BEACNpool/ledger-scrolls/discussions)
-- 🔧 **Want to contribute?** See [CONTRIBUTING.md](CONTRIBUTING.md)
-
-### Ways to Help
-
-- Add support for new content types
-- Improve the viewer UI
-- Write better documentation
-- Create tutorials
-- Translate to other languages
-- Mint your own scrolls and share them!
+[MIT](LICENSE)
 
 ---
 
-## 🔐 Security
-
-- **Locked UTxOs are permanent** — Think before you mint
-- **Private keys never leave your machine** — All signing is local
-- **Verify hashes** — Always check SHA256 for important documents
-- **Content is public** — Anyone can read what you inscribe
-
-See [SECURITY.md](SECURITY.md) for security considerations.
-
----
-
-## 📜 License
-
-MIT License — Free to use, modify, and distribute. See [LICENSE](LICENSE).
-
----
-
-## 🙏 Credits
-
-**Built by [BEACN Pool](https://beacnpool.org)** — A Chicago-based single pool operator committed to decentralization and empowering everyday stakers.
-
-**Viewer architecture & documentation crafted by Claude** (Anthropic) — January 2026
-
-### Special Thanks
-
-- The **Cardano community** — for believing in decentralization
-- **Blockfrost** & **Koios** — for accessible blockchain APIs
-- Everyone who preserves knowledge for future generations
-
----
-
-## 🌟 The BEACN Ethos
-
-> *"We believe the tools of permanence should belong to everyone — not just the technically elite, not just the wealthy, but anyone with something worth preserving."*
-
-Ledger Scrolls is free, open-source, and built for the people of Cardano. If you find it valuable, consider [delegating to BEACN Pool](https://beacnpool.org) — or just go mint something amazing.
-
-**The chain is the library. The scrolls are eternal.**
-
----
-
-<details>
-<summary>🔮 For the curious...</summary>
-
-```
-↑ ↑ ↓ ↓ ← → ← → B A
-```
-
-*30 lives. Infinite knowledge.*
-
-</details>
+Maintained with ❤️ by [@BEACNpool](https://x.com/BEACNpool)
