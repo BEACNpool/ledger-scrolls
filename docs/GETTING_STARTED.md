@@ -116,20 +116,13 @@ The script will:
 
 ## Quick Mint (Legacy Scroll)
 
-```bash
-# 1. Navigate to scripts
-cd scripts
+> **Note:** Legacy Scroll automated tooling is still in development. For now, follow the manual process in `docs/LEGACY_SCROLLS.md`.
 
-# 2. Make executable
-chmod +x mint-legacy-scroll.sh
-
-# 3. Mint your scroll
-./mint-legacy-scroll.sh \
-    /path/to/large-document.pdf \
-    /path/to/payment.skey \
-    /path/to/payment.addr \
-    --policy-deadline "2024-12-31T23:59:59Z"
-```
+The general process involves:
+1. Splitting your document into ~14KB chunks
+2. Creating a time-locked minting policy
+3. Minting each chunk as a CIP-25 NFT with sequential indices
+4. Minting a manifest NFT that references all pages
 
 ---
 

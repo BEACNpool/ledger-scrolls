@@ -19,7 +19,9 @@ const CATEGORIES = {
     IMAGES: { id: 'images', name: 'Images', icon: '🖼️' },
     DOCUMENTS: { id: 'documents', name: 'Documents', icon: '📄' },
     GOVERNANCE: { id: 'governance', name: 'Governance', icon: '⚖️' },
-    HISTORICAL: { id: 'historical', name: 'Historical', icon: '📜' }
+    HISTORICAL: { id: 'historical', name: 'Historical', icon: '📜' },
+    PHILOSOPHICAL: { id: 'philosophical', name: 'Philosophical', icon: '🔮' },
+    VAULT: { id: 'vault', name: 'Vault', icon: '🔒' }
 };
 
 /**
@@ -84,7 +86,7 @@ const SCROLLS = [
             lock_txin: '076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747#0',
             content_type: 'text/plain; charset=utf-8',
             codec: 'none',
-            sha256: '78e292a727883657e202f0299584dbf2943c34da805e07cf778f2810e3bf9f4a'
+            sha256: '531a1eba80b297f8822b1505d480bb1c7f1bad2878ab29d8be01ba0e1fc67e12'
         },
         metadata: {
             size: '~3KB',

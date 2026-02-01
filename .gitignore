@@ -1,0 +1,25 @@
+# Build artifacts
+mint/work/
+scripts/work/
+*.tmp
+
+# API keys (never commit these!)
+.blockfrost_key
+*.key
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log

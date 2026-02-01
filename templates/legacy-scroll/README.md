@@ -1,33 +1,32 @@
 # Legacy Scroll Template
 
-This template provides everything you need to mint a Legacy Scroll (LS-PAGES v1) for large documents.
+This template provides guidance for minting a Legacy Scroll (LS-PAGES v1) for large documents.
 
-## Files
+> **Note:** Legacy Scroll tooling is still in development. The process below describes the manual approach. Automated scripts are planned for a future release.
+
+## Planned Files (Coming Soon)
 
 - `policy-template.script` — Time-locked policy template
 - `metadata-template.json` — CIP-25 metadata template
-- `split-content.sh` — Script to split large files into pages
-- `mint-pages.sh` — Script to mint all pages
 
-## Quick Start
+## Manual Process Overview
 
 ```bash
-# 1. Copy this directory
-cp -r templates/legacy-scroll my-document
-cd my-document
+# 1. Compress your document
+gzip -k large-document.pdf
 
-# 2. Add your document
-cp /path/to/large-document.pdf document.pdf
+# 2. Split into ~14KB chunks (CIP-25 metadata limit)
+split -b 14000 large-document.pdf.gz page_
 
-# 3. Compress (recommended)
-gzip -k document.pdf
+# 3. Convert each chunk to hex
+for f in page_*; do xxd -p "$f" | tr -d '\n' > "$f.hex"; done
 
-# 4. Split into pages
-./split-content.sh document.pdf.gz
-
-# 5. Create policy and mint
-./mint-pages.sh /path/to/payment.skey /path/to/payment.addr
+# 4. Create time-locked policy
+# 5. Mint each page as CIP-25 NFT
+# 6. Mint manifest NFT pointing to all pages
 ```
+
+For a complete working example, see `docs/LEGACY_SCROLLS.md`.
 
 ## Page Structure
 

@@ -43,14 +43,17 @@ If you use Blockfrost:
 HTML scrolls render in sandboxed iframes:
 
 ```javascript
-sandbox="allow-same-origin"
+sandbox="allow-scripts"
 ```
 
-This prevents:
-- Script execution
-- Form submissions
-- Popup windows
-- Navigation to other pages
+This configuration:
+- **Allows** script execution (needed for interactive HTML scrolls)
+- **Prevents** same-origin access (scripts cannot access localStorage, cookies, or parent page)
+- **Prevents** form submissions to external URLs
+- **Prevents** popup windows
+- **Prevents** navigation that could escape the sandbox
+
+> **Note:** The `allow-scripts` without `allow-same-origin` creates a unique origin for the iframe, isolating it from the parent page's data including stored API keys.
 
 ### Hash Verification
 

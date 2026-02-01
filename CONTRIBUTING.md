@@ -118,7 +118,7 @@ When contributing to the UI:
 
 - **GitHub Issues** — Bug reports and feature requests
 - **GitHub Discussions** — General questions and ideas
-- **Twitter/X** — [@Cardano_BEACN](https://x.com/Cardano_BEACN)
+- **Twitter/X** — [@BEACNpool](https://x.com/BEACNpool)
 
 ## 📜 License
 

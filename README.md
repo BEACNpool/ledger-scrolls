@@ -381,55 +381,35 @@ sha256sum hosky.png onchain.png
 
 ## Running the Viewer
 
-The viewer is a cross-platform Python GUI app (Windows/Mac/Linux) with progress bars, safe file saving, and support for both standard and legacy modes.
+The viewer is a modern web application that runs entirely in your browser. No installation required!
 
-### Prerequisites
+### Quick Start
 
-- **Python 3.8+**
-- **tkinter** (usually included with Python; on Ubuntu/Debian install with `sudo apt-get install python3-tk`)
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/BEACNpool/ledger-scrolls.git
+   cd ledger-scrolls
+   ```
 
-### Installation
+2. Open `index.html` in any modern browser
 
-```bash
-git clone https://github.com/BEACNpool/ledger-scrolls.git
-cd ledger-scrolls
-pip install requests
-```
+3. Click **Settings** (⚙️) and choose your data source:
+   - **Koios** (default) — No API key required
+   - **Blockfrost** — Enter your API key from [blockfrost.io](https://blockfrost.io)
 
-### Running
+4. Click **Connect to Cardano**
 
-```bash
-cd SRC
-python hosky.py
-```
+5. Select any scroll from the library to view it!
 
 ### Features
 
-- GUI with demo buttons for Hosky, Bible, Bitcoin Whitepaper, and Constitutions
-- [Blockfrost](https://blockfrost.io) integration for fetches (enter API key when prompted)
-- Files saved to `~/Downloads/LedgerScrolls/` to avoid permission issues
-- Progress explanations during reconstruction
-- Known bugs: Legacy page fetching may need manifest tweaks for asset name variations — contribute fixes on GitHub!
-
-### Local-Node Mode (Planned v2)
-
-Uses your **local cardano-node socket** and queries via [`cardano-cli`](https://github.com/IntersectMBO/cardano-cli) for standard scrolls (no Blockfrost needed).
-
-```bash
-export CARDANO_NODE_SOCKET_PATH=/opt/cardano/cnode/sockets/node.socket
-cd SRC
-python hosky.py
-```
-
-### Blockfrost Mode (Current Default for Legacy + Convenience)
-
-```bash
-cd SRC
-python hosky.py
-# Enter Blockfrost key in GUI for legacy demos
-```
-
-> **Long-term direction:** Full local-node for everything (standard + legacy metadata via CLI queries). [Blockfrost](https://blockfrost.io) as optional fallback.
+- 🎨 Modern, responsive UI with dark/light themes
+- 📖 Browse and search the scroll library
+- 🔍 Reconstruct and verify on-chain content
+- ⬇️ Download original files
+- ✅ SHA-256 hash verification
+- 🔄 Support for both Standard and Legacy scroll formats
+- 🌐 Works with Blockfrost or Koios (no API key needed for Koios)
 
 ---
 
@@ -473,10 +453,28 @@ You can:
 
 ```
 ledger-scrolls/
-├── README.md
-├── LICENSE
-└── SRC/
-    └── hosky.py        # Main viewer application (GUI)
+├── index.html              # Main application entry point
+├── css/
+│   └── styles.css          # Themes and styling
+├── js/
+│   ├── app.js              # Main UI controller
+│   ├── blockchain.js       # Blockfrost/Koios API client
+│   ├── reconstruct.js      # Scroll reconstruction engine
+│   ├── scrolls.js          # Scroll registry/definitions
+│   └── lib/                # Vendor libraries (pako, cbor)
+├── scripts/                # CLI minting & verification tools
+│   ├── mint-standard-scroll.sh
+│   └── verify-scroll.sh
+├── mint/                   # Architect's Scroll mint artifacts
+├── templates/              # Templates for new scrolls
+│   ├── standard-scroll/
+│   └── legacy-scroll/
+├── docs/                   # Documentation
+│   ├── GETTING_STARTED.md
+│   ├── STANDARD_SCROLLS.md
+│   ├── LEGACY_SCROLLS.md
+│   └── EXAMPLES.md
+└── examples/               # Example scroll documentation
 ```
 
 ---

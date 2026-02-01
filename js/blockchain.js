@@ -36,7 +36,7 @@ class BlockchainClient {
         this.baseUrl = this._getBaseUrl();
     }
 
-    async _rateLimitedFetch(url, options = {}) {
+    async _rateLimitedFetch(url, options = {}, retries = 0) {
         // Enforce rate limiting
         const now = Date.now();
         const elapsed = now - this.lastRequest;
@@ -48,10 +48,11 @@ class BlockchainClient {
         const response = await fetch(url, options);
         
         if (response.status === 429) {
-            // Rate limited - wait and retry
+            // Rate limited - wait and retry (max 5 retries)
+            if (retries >= 5) throw new Error('Rate limit exceeded after 5 retries');
             const retryAfter = parseInt(response.headers.get('Retry-After') || '2');
             await new Promise(r => setTimeout(r, retryAfter * 1000));
-            return this._rateLimitedFetch(url, options);
+            return this._rateLimitedFetch(url, options, retries + 1);
         }
 
         if (!response.ok) {

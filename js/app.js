@@ -15,6 +15,7 @@ class LedgerScrollsApp {
         this.currentScroll = null;
         this.currentCategory = 'all';
         this.loadedContent = null;
+        this._currentBlobUrl = null;
 
         // Settings
         this.settings = this._loadSettings();
@@ -307,6 +308,12 @@ class LedgerScrollsApp {
     }
 
     _displayContent(result, scroll) {
+        // Revoke previous blob URL to prevent memory leaks
+        if (this._currentBlobUrl) {
+            URL.revokeObjectURL(this._currentBlobUrl);
+            this._currentBlobUrl = null;
+        }
+
         this.elements.viewerLoading.classList.add('hidden');
         this.elements.viewerContent.classList.add('active');
 
@@ -314,15 +321,15 @@ class LedgerScrollsApp {
 
         if (contentType.startsWith('image/')) {
             const blob = new Blob([result.data], { type: contentType });
-            const url = URL.createObjectURL(blob);
+            this._currentBlobUrl = URL.createObjectURL(blob);
             this.elements.viewerContent.innerHTML = `
-                <img src="${url}" alt="${scroll.title}" style="max-width: 100%; height: auto;">
+                <img src="${this._currentBlobUrl}" alt="${scroll.title}" style="max-width: 100%; height: auto;">
             `;
         } else if (contentType === 'text/html') {
             const blob = new Blob([result.data], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
+            this._currentBlobUrl = URL.createObjectURL(blob);
             this.elements.viewerContent.innerHTML = `
-                <iframe src="${url}" sandbox="allow-same-origin" style="width: 100%; height: 600px; border: none; border-radius: 12px; background: white;"></iframe>
+                <iframe src="${this._currentBlobUrl}" sandbox="allow-scripts" style="width: 100%; height: 600px; border: none; border-radius: 12px; background: white;"></iframe>
             `;
         } else if (contentType.startsWith('text/')) {
             const text = new TextDecoder().decode(result.data);
@@ -367,6 +374,12 @@ class LedgerScrollsApp {
     }
 
     _closeViewer() {
+        // Revoke blob URL to prevent memory leaks
+        if (this._currentBlobUrl) {
+            URL.revokeObjectURL(this._currentBlobUrl);
+            this._currentBlobUrl = null;
+        }
+
         this.currentScroll = null;
         this.loadedContent = null;
         this.elements.viewerTitle.textContent = '📖 Select a Scroll';
@@ -410,13 +423,14 @@ class LedgerScrollsApp {
         const expected = this.currentScroll.pointer?.sha256 || 
                         this.currentScroll.pointer?.sha256_original;
         const computed = this.loadedContent.hash;
-        const verified = !expected || expected.toLowerCase() === computed.toLowerCase();
+        const noHash = !expected;
+        const verified = !noHash && expected.toLowerCase() === computed.toLowerCase();
 
         const resultDiv = document.getElementById('verificationResult');
         resultDiv.innerHTML = `
-            <div class="verification-icon">${verified ? '✅' : '❌'}</div>
-            <div class="verification-status ${verified ? 'verified' : 'failed'}">
-                ${verified ? 'VERIFIED' : 'VERIFICATION FAILED'}
+            <div class="verification-icon">${noHash ? '⚠️' : (verified ? '✅' : '❌')}</div>
+            <div class="verification-status ${noHash ? 'no-hash' : (verified ? 'verified' : 'failed')}">
+                ${noHash ? 'NO EXPECTED HASH' : (verified ? 'VERIFIED' : 'VERIFICATION FAILED')}
             </div>
             <div class="hash-comparison">
                 ${expected ? `
@@ -558,7 +572,7 @@ class LedgerScrollsApp {
         entry.className = `log-entry ${type}`;
         entry.innerHTML = `
             <span class="log-time">${time}</span>
-            <span class="log-message">${message}</span>
+            <span class="log-message">${this._escapeHtml(message)}</span>
         `;
         this.elements.logEntries.appendChild(entry);
         this.elements.logEntries.scrollTop = this.elements.logEntries.scrollHeight;
@@ -579,7 +593,7 @@ class LedgerScrollsApp {
         const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
         toast.innerHTML = `
             <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
-            <span class="toast-message">${message}</span>
+            <span class="toast-message">${this._escapeHtml(message)}</span>
         `;
         this.elements.toastContainer.appendChild(toast);
         setTimeout(() => {

@@ -229,7 +229,7 @@ class ScrollReconstructor {
         // Auto-detect gzip or use specified codec
         const isGzipped = rawBytes.length >= 2 && rawBytes[0] === 0x1f && rawBytes[1] === 0x8b;
         
-        if (pointer.codec === 'gzip' || pointer.codec === 'auto' && isGzipped || isGzipped) {
+        if (pointer.codec === 'gzip' || (pointer.codec === 'auto' && isGzipped)) {
             this._progress('📂 Decompressing (gzip detected)...', 90);
             try {
                 rawBytes = pako.inflate(rawBytes);

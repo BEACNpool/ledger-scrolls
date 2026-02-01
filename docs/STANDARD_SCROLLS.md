@@ -42,7 +42,7 @@ The magic of Standard Scrolls is the lock script. It's a Plutus script that **al
 {
     "type": "PlutusScriptV2",
     "description": "Always fails - Ledger Scrolls permanent lock",
-    "cborHex": "4e4d01000033222220051"
+    "cborHex": "4e4d010000332222200510"
 }
 ```
 
@@ -79,7 +79,7 @@ cat > always-fail.plutus << 'EOF'
 {
     "type": "PlutusScriptV2",
     "description": "Always fails - Ledger Scrolls permanent lock",
-    "cborHex": "4e4d01000033222220051"
+    "cborHex": "4e4d010000332222200510"
 }
 EOF
 ```

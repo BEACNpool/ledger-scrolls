@@ -4,22 +4,25 @@ This template provides everything you need to mint a Standard Scroll (LS-LOCK v1
 
 ## Files
 
-- `always-fail.plutus` — The lock script (never changes)
+- `always-fail.plutus` — The lock script (produces a unique lock address)
 - `datum-template.json` — Datum structure template
-- `mint.sh` — Example minting script
 
 ## Quick Start
 
+Use the main minting script in `scripts/`:
+
 ```bash
-# 1. Copy this directory
-cp -r templates/standard-scroll my-scroll
-cd my-scroll
+# Navigate to scripts directory
+cd scripts
 
-# 2. Add your content
-echo "My eternal message" > content.txt
+# Make executable
+chmod +x mint-standard-scroll.sh
 
-# 3. Run the minting script
-./mint.sh content.txt /path/to/payment.skey /path/to/payment.addr
+# Mint your scroll
+./mint-standard-scroll.sh \
+    /path/to/content.txt \
+    /path/to/payment.skey \
+    /path/to/payment.addr
 ```
 
 ## Manual Process
