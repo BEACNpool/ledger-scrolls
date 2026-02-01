@@ -1,3 +1,6 @@
+Here's the updated README with the Architect's Scroll added. I'll provide you with the complete copy-paste ready version:
+
+```markdown
 # Ledger Scrolls 📜
 
 **"A library that cannot burn."**
@@ -48,7 +51,27 @@ A viewer can reconstruct the exact image bytes from chain data.
 
 ---
 
-### 2) 🧾 Cardano Constitution (Epoch 608) — CURRENT
+### 2) 🔮 The Architect's Scroll — Message from Claude
+
+A personal message from Claude, the AI who helped build Ledger Scrolls v2.0. This scroll contains Claude's thoughts on knowledge preservation and a note to future readers, minted permanently on-chain as a Standard Scroll.
+
+| Field | Value |
+|-------|-------|
+| **ID** | `architects-scroll` |
+| **Type** | `utxo_datum_bytes_v1` (LS-LOCK v1 — Standard Scroll) |
+| **Lock Address** | `addr1w9fdc02rkmfyvh5kzzwwwk4kr2l9a8qa3g7feehl3ga022qz2249g` |
+| **Locked UTxO (txin)** | `076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747#0` |
+| **Content-Type** | `text/plain; charset=utf-8` |
+| **Codec** | `none` |
+| **SHA-256** | `531a1eba80b297f8822b1505d480bb1c7f1bad2878ab29d8be01ba0e1fc67e12` |
+| **Locked Value** | `15 ADA` (forever) |
+| **Status** | 🟢 LIVE — UTxO must remain UNSPENT |
+
+> **"A library that cannot burn."** — A message from an AI to future readers about knowledge preservation, building eternal things, and the philosophy behind Ledger Scrolls. Minted January 29, 2026.
+
+---
+
+### 3) 🧾 Cardano Constitution (Epoch 608) — CURRENT
 
 The ratified, currently active Cardano Constitution, preserved on-chain as a Legacy Scroll.
 
@@ -70,7 +93,7 @@ The ratified, currently active Cardano Constitution, preserved on-chain as a Leg
 
 ---
 
-### 3) 🧾 Cardano Constitution (Epoch 541) — HISTORICAL
+### 4) 🧾 Cardano Constitution (Epoch 541) — HISTORICAL
 
 The first ratified Cardano Constitution, preserved as a permanent historical record.
 
@@ -92,7 +115,7 @@ The first ratified Cardano Constitution, preserved as a permanent historical rec
 
 ---
 
-### 4) 🧾 Bible (HTML, gzip compressed) — Proof of Concept (large document)
+### 5) 🧾 Bible (HTML, gzip compressed) — Proof of Concept (large document)
 
 | Field | Value |
 |-------|-------|
@@ -111,7 +134,7 @@ The first ratified Cardano Constitution, preserved as a permanent historical rec
 
 ---
 
-### 5) 🧾 Bitcoin Whitepaper — Proof of Concept (small doc / legacy pages)
+### 6) 🧾 Bitcoin Whitepaper — Proof of Concept (small doc / legacy pages)
 
 | Field | Value |
 |-------|-------|
@@ -141,6 +164,7 @@ The first ratified Cardano Constitution, preserved as a permanent historical rec
 | Constitution E608 | `ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750` | Current Constitution (11 pages) | Time-locked policy |
 | Constitution E541 | `d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d` | Historical Constitution (7 pages) | Time-locked policy |
 | Hosky PNG | N/A — Standard Scroll (locked UTxO, no minting policy) | Single inline datum at script address | Immutable UTxO |
+| Architect's Scroll | N/A — Standard Scroll (locked UTxO, no minting policy) | Single inline datum at script address | Immutable UTxO |
 
 ### Key Addresses
 
@@ -148,12 +172,14 @@ The first ratified Cardano Constitution, preserved as a permanent historical rec
 |---------|---------|
 | **Registry Address** | `addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy` |
 | **Hosky PNG Lock Address** (always-fail script) | `addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn` |
+| **Architect's Scroll Lock Address** (always-fail script) | `addr1w9fdc02rkmfyvh5kzzwwwk4kr2l9a8qa3g7feehl3ga022qz2249g` |
 
 ### SHA-256 Verification Hashes
 
 | Scroll | SHA-256 (Original) | SHA-256 (Gzip) | Verify With |
 |--------|--------------------|----------------|-------------|
 | Hosky PNG | `798e329...7f642f` | N/A | `sha256sum hosky.png` |
+| Architect's Scroll | `531a1eb...c67e12` | N/A | `sha256sum architects_scroll.txt` |
 | Constitution E608 | `98a29ae...35abf1` | `4565368...4e93` | `sha256sum Cardano_Constitution_Epoch_608.txt` |
 | Constitution E541 | `1939c16...9e9566` | `975d1c6...f268a` | `sha256sum Cardano_Constitution_Epoch_541.txt` |
 | Bible | Not yet recorded | Not yet recorded | `sha256sum bible.html` |
@@ -267,7 +293,7 @@ The Registry is a single on-chain directory that tells Ledger Scrolls what exist
 {
   "spec": "ledger-scrolls-registry-v2",
   "version": 2,
-  "updated": "2026-01-21T00:00:00Z",
+  "updated": "2026-01-29T00:00:00Z",
   "scrolls": [
     {
       "id": "hosky-png",
@@ -278,6 +304,21 @@ The Registry is a single on-chain directory that tells Ledger Scrolls what exist
       "content_type": "image/png",
       "codec": "none",
       "sha256": "798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f"
+    },
+    {
+      "id": "architects-scroll",
+      "title": "The Architect's Scroll",
+      "type": "utxo_datum_bytes_v1",
+      "lock_address": "addr1w9fdc02rkmfyvh5kzzwwwk4kr2l9a8qa3g7feehl3ga022qz2249g",
+      "lock_txin": "076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747#0",
+      "content_type": "text/plain; charset=utf-8",
+      "codec": "none",
+      "sha256": "531a1eba80b297f8822b1505d480bb1c7f1bad2878ab29d8be01ba0e1fc67e12",
+      "metadata": {
+        "author": "Claude (Anthropic AI)",
+        "minted": "January 29, 2026",
+        "minted_by": "BEACNpool"
+      }
     },
     {
       "id": "constitution-e608",
@@ -486,3 +527,15 @@ ledger-scrolls/
 ---
 
 Maintained with ❤️ by [@BEACNpool](https://x.com/BEACNpool)
+```
+
+The main changes I made:
+
+1. **Added the Architect's Scroll as entry #2** (between Hosky PNG and the Constitutions)
+2. **Updated the Policy IDs table** to include the Architect's Scroll
+3. **Updated the Key Addresses table** to include the Architect's Scroll lock address
+4. **Updated the SHA-256 Verification Hashes table** with the Architect's Scroll hash
+5. **Updated the Registry Schema** to include the new scroll entry with proper metadata
+6. **Updated the registry timestamp** to January 29, 2026
+
+This captures all the details from your Architect's Scroll minting, including the beautiful message from Claude that's now permanently preserved on the Cardano blockchain! 🔮✨
