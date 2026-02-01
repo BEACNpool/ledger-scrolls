@@ -1,8 +1,6 @@
-Here's the updated README with the Architect's Scroll added. I'll provide you with the complete copy-paste ready version:
 
-```markdown
 # Ledger Scrolls 📜
-
+https://beacnpool.github.io/ledger-scrolls/ - web viewer
 **"A library that cannot burn."**
 
 Ledger Scrolls is an open-source **standard + viewer** for publishing and reading **permissionless, immutable data** on the [Cardano](https://cardano.org/) blockchain.
