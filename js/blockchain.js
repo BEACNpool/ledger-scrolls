@@ -12,6 +12,11 @@ class BlockchainClient {
         this.mode = mode;
         this.apiKey = apiKey;
         this.baseUrl = this._getBaseUrl();
+        this.koiosBaseUrls = [
+            'https://api.koios.rest/api/v1',
+            'https://corsproxy.io/?https://api.koios.rest/api/v1',
+            'https://cors.isomorphic-git.org/https://api.koios.rest/api/v1'
+        ];
         this.rateLimitDelay = 100; // ms between requests
         this.lastRequest = 0;
     }
@@ -64,14 +69,42 @@ class BlockchainClient {
     }
 
     async _request(endpoint, options = {}) {
-        const url = `${this.baseUrl}${endpoint}`;
         const headers = { ...options.headers };
 
-        if (this.mode === 'blockfrost' && this.apiKey) {
-            headers['project_id'] = this.apiKey;
+        if (this.mode === 'blockfrost') {
+            const url = `${this.baseUrl}${endpoint}`;
+            if (this.apiKey) {
+                headers['project_id'] = this.apiKey;
+            }
+            return this._rateLimitedFetch(url, { ...options, headers });
         }
 
+        if (this.mode === 'koios') {
+            return this._requestKoiosWithFallback(endpoint, options, headers);
+        }
+
+        const url = `${this.baseUrl}${endpoint}`;
         return this._rateLimitedFetch(url, { ...options, headers });
+    }
+
+    async _requestKoiosWithFallback(endpoint, options = {}, headers = {}) {
+        const errors = [];
+        for (const base of this.koiosBaseUrls) {
+            try {
+                const url = `${base}${endpoint}`;
+                const resp = await this._rateLimitedFetch(url, {
+                    ...options,
+                    headers,
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                this.baseUrl = base;
+                return resp;
+            } catch (e) {
+                errors.push({ base, message: e.message || String(e) });
+            }
+        }
+        throw new Error(`Koios request failed: ${errors.map(e => `${e.base} -> ${e.message}`).join(' | ')}`);
     }
 
     /**
@@ -306,7 +339,12 @@ class BlockchainClient {
             if (this.mode === 'blockfrost') {
                 await this._request('/health');
             } else if (this.mode === 'koios') {
-                await this._request('/tip');
+                const registryAddress = 'addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy';
+                await this._request('/address_utxos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ _addresses: [registryAddress] })
+                });
             }
             return { success: true };
         } catch (e) {
