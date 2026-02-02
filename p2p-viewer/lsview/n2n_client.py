@@ -144,9 +144,24 @@ class N2NConnection:
 
     async def recv(self, expected_protocol: MiniProtocol) -> bytes:
         assert self.reader
-        header = await asyncio.wait_for(self.reader.readexactly(MUX_HEADER_SIZE), timeout=self.timeout)
-        _ts, proto, _initiator, length = mux_decode_header(header)
-        if proto != int(expected_protocol):
-            raise ValueError(f"unexpected protocol: got={proto} expected={int(expected_protocol)}")
-        payload = await asyncio.wait_for(self.reader.readexactly(length), timeout=self.timeout)
-        return payload
+        buf = bytearray()
+        while True:
+            header = await asyncio.wait_for(
+                self.reader.readexactly(MUX_HEADER_SIZE),
+                timeout=self.timeout,
+            )
+            _ts, proto, _initiator, length = mux_decode_header(header)
+            if proto != int(expected_protocol):
+                raise ValueError(
+                    f"unexpected protocol: got={proto} expected={int(expected_protocol)}"
+                )
+            chunk = await asyncio.wait_for(
+                self.reader.readexactly(length),
+                timeout=self.timeout,
+            )
+            buf.extend(chunk)
+            try:
+                safe_cbor_loads(bytes(buf))
+                return bytes(buf)
+            except cbor2.CBORDecodeEOF:
+                continue
