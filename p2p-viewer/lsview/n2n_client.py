@@ -98,6 +98,7 @@ class N2NConnection:
         return await self.handshake()
 
     async def close(self) -> None:
+        # NEVER let close() mask the real error.
         w = self.writer
         self.reader = None
         self.writer = None
@@ -106,11 +107,10 @@ class N2NConnection:
         try:
             w.close()
         except Exception:
-            return
-        try:
-            await w.wait_closed()
-        except Exception:
             pass
+        # Do NOT await wait_closed(): relays can reset mid-shutdown and asyncio
+        # can surface ConnectionResetError from the transport path.
+        return
 
     async def handshake(self) -> Dict[str, Any]:
         assert self.writer and self.reader
