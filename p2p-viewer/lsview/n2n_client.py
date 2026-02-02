@@ -30,20 +30,20 @@ class N2NVersion(IntEnum):
     V14 = 14
 
 
-def mux_encode(protocol_id: int, payload: bytes, mode: int = MUX_MODE_INITIATOR) -> bytes:
-    timestamp = int(time.monotonic() * 1_000_000) & 0xFFFFFFFF
-    proto_word = ((mode & 1) << 15) | (protocol_id & 0x7FFF)
-    header = struct.pack("!IHH", timestamp, proto_word, len(payload))
+def mux_encode(protocol_id: int, payload: bytes, initiator: bool = True, timestamp: int = 0) -> bytes:
+    mp = ((int(protocol_id) & 0x7FFF) << 1) | (0 if initiator else 1)
+    header = struct.pack(">IHH", timestamp & 0xFFFFFFFF, mp & 0xFFFF, len(payload) & 0xFFFF
+    )
     return header + payload
 
 
-def mux_decode_header(header: bytes) -> Tuple[int, int, int]:
+def mux_decode_header(header: bytes) -> Tuple[int, int, bool, int]:
     if len(header) != MUX_HEADER_SIZE:
         raise ValueError("invalid mux header size")
-    timestamp, proto_word, length = struct.unpack("!IHH", header)
-    mode = (proto_word >> 15) & 1
-    proto_id = proto_word & 0x7FFF
-    return mode, proto_id, length
+    timestamp, mp, length = struct.unpack(">IHH", header)
+    proto_id = (mp >> 1) & 0x7FFF
+    initiator = (mp & 1) == 0
+    return timestamp, proto_id, initiator, length
 
 
 class HandshakeMsg:
@@ -121,7 +121,7 @@ class N2NConnection:
         await self.writer.drain()
 
         header = await asyncio.wait_for(self.reader.readexactly(MUX_HEADER_SIZE), timeout=self.timeout)
-        _mode, proto, length = mux_decode_header(header)
+        _ts, proto, _initiator, length = mux_decode_header(header)
         if proto != int(MiniProtocol.HANDSHAKE):
             raise ValueError(f"unexpected protocol during handshake: {proto}")
         resp_payload = await asyncio.wait_for(self.reader.readexactly(length), timeout=self.timeout)
@@ -142,7 +142,7 @@ class N2NConnection:
     async def recv(self, expected_protocol: MiniProtocol) -> bytes:
         assert self.reader
         header = await asyncio.wait_for(self.reader.readexactly(MUX_HEADER_SIZE), timeout=self.timeout)
-        _mode, proto, length = mux_decode_header(header)
+        _ts, proto, _initiator, length = mux_decode_header(header)
         if proto != int(expected_protocol):
             raise ValueError(f"unexpected protocol: got={proto} expected={int(expected_protocol)}")
         payload = await asyncio.wait_for(self.reader.readexactly(length), timeout=self.timeout)
