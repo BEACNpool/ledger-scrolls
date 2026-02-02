@@ -63,8 +63,17 @@ def _unwrap_header_bytes(header_obj: Any) -> Tuple[str, bytes]:
 
     Returns (era_tag, header_bytes).
     """
+    # Common: [era, header_bytes]
     if isinstance(header_obj, list) and len(header_obj) == 2 and isinstance(header_obj[1], (bytes, bytearray)):
         return str(header_obj[0]), bytes(header_obj[1])
+
+    # Sometimes nested: [era, [header_bytes]] or [era, [<tag>, header_bytes]]
+    if isinstance(header_obj, list) and len(header_obj) == 2 and isinstance(header_obj[1], list):
+        inner = header_obj[1]
+        if len(inner) == 1 and isinstance(inner[0], (bytes, bytearray)):
+            return str(header_obj[0]), bytes(inner[0])
+        if len(inner) == 2 and isinstance(inner[1], (bytes, bytearray)):
+            return str(header_obj[0]), bytes(inner[1])
 
     if isinstance(header_obj, cbor2.CBORTag) and isinstance(header_obj.value, (bytes, bytearray)):
         return str(header_obj.tag), bytes(header_obj.value)

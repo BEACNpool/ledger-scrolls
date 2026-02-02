@@ -84,7 +84,7 @@ class N2NConnection:
     relay_host: str
     relay_port: int
     network_magic: int = MAINNET_MAGIC
-    timeout: float = 15.0
+    timeout: float = 60.0
 
     reader: Optional[asyncio.StreamReader] = None
     writer: Optional[asyncio.StreamWriter] = None

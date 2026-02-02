@@ -316,7 +316,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--port", type=int, default=3001)
     p.add_argument("--topology", help="Path or URL to topology JSON (relay fallback list)")
     p.add_argument("--magic", type=int, default=MAINNET_MAGIC)
-    p.add_argument("--timeout", type=float, default=15.0)
+    p.add_argument("--timeout", type=float, default=60.0)
     p.add_argument("-v", "--verbose", action="store_true")
 
     sp = p.add_subparsers(dest="cmd", required=True)
