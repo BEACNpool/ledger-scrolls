@@ -51,9 +51,7 @@ python -m lsview tip --relay backbone.cardano.iog.io --port 3001
 
 # Reconstruct a legacy scroll (Constitution example)
 python -m lsview reconstruct-cip25 \
-  --relay backbone.cardano.iog.io --port 3001 \
-  --policy ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750 \
-  --manifest-asset CONSTITUTION_E608_MANIFEST \
+  --scroll constitution-e608 \
   --start-slot 175000000 \
   --start-hash <BLOCK_HEADER_HASH_HEX> \
   --max-blocks 400 \
@@ -98,11 +96,13 @@ These are **live on mainnet** and work with `reconstruct-cip25` once you have a 
   - Policy: `ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750`
   - Manifest asset: `CONSTITUTION_E608_MANIFEST`
   - Pages: 11
+  - Note: start point not yet recorded in catalog; use `blockfrost-point` if you have the manifest TX.
 
 - **Constitution (Epoch 541)**
   - Policy: `d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d`
   - Manifest asset: `CONSTITUTION_E541_MANIFEST`
   - Pages: 7
+  - Note: start point not yet recorded in catalog; use `blockfrost-point` if you have the manifest TX.
 
 - **Bible (HTML, gzip)**
   - Policy: `2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0`
@@ -125,14 +125,12 @@ Examples:
 ```bash
 # Hosky PNG (txin index 0)
 python -m lsview reconstruct-utxo \
-  --tx-hash 728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be \
-  --tx-ix 0 \
+  --scroll hosky-png \
   --out hosky.png
 
 # Architect's Scroll (txin index 0)
 python -m lsview reconstruct-utxo \
-  --tx-hash 076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747 \
-  --tx-ix 0 \
+  --scroll architects-scroll \
   --out architects_scroll.txt
 ```
 
@@ -143,6 +141,13 @@ python -m lsview reconstruct-utxo \
   --block-slot <SLOT> --block-hash <BLOCK_HASH> \
   --tx-hash <TX_HASH> --tx-ix 0 \
   --out output.bin
+```
+
+Catalog-driven usage:
+
+```bash
+# List catalog path (default)
+ls -la p2p-viewer/examples/scrolls.json
 ```
 
 Known Standard Scrolls:

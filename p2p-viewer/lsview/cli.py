@@ -6,6 +6,7 @@ import logging
 
 from .blockfrost import resolve_point_from_tx
 from .cbor_helpers import Point, blake2b_256_hex, safe_cbor_loads
+from .catalog import load_catalog
 from .n2n_client import MAINNET_MAGIC, N2NConnection
 from .chainsync import ChainSyncClient
 from .blockfetch import BlockFetchClient
@@ -87,6 +88,22 @@ async def cmd_fetch_block(args) -> None:
 
 
 async def cmd_reconstruct_cip25(args) -> None:
+    if args.scroll:
+        catalog = load_catalog(args.catalog)
+        entry = catalog.get(args.scroll)
+        if not entry:
+            raise SystemExit(f"Unknown scroll id: {args.scroll}")
+        if entry.data.get("type") != "cip25_pages_v1":
+            raise SystemExit("Selected scroll is not a CIP-25 pages scroll.")
+        args.policy = entry.data.get("policy_id") or args.policy
+        args.manifest_asset = entry.data.get("manifest_asset") or args.manifest_asset
+        if entry.data.get("block_slot") and entry.data.get("block_hash"):
+            args.start_slot = int(entry.data["block_slot"])
+            args.start_hash = entry.data["block_hash"]
+
+    if not (args.policy and args.manifest_asset and args.start_slot and args.start_hash):
+        raise SystemExit("Missing policy/manifest/start point. Provide args or use --scroll with a catalog entry that includes a start point.")
+
     start_point = Point.from_hex(args.start_slot, args.start_hash)
     wanted_policy = args.policy.lower()
 
@@ -190,6 +207,19 @@ def _extract_inline_datum(output: object) -> bytes | None:
 
 
 async def cmd_reconstruct_utxo(args) -> None:
+    if args.scroll:
+        catalog = load_catalog(args.catalog)
+        entry = catalog.get(args.scroll)
+        if not entry:
+            raise SystemExit(f"Unknown scroll id: {args.scroll}")
+        if entry.data.get("type") != "utxo_datum_bytes_v1":
+            raise SystemExit("Selected scroll is not a Standard Scroll.")
+        args.tx_hash = entry.data.get("tx_hash") or args.tx_hash
+        args.tx_ix = int(entry.data.get("tx_ix", args.tx_ix))
+        if entry.data.get("block_slot") and entry.data.get("block_hash"):
+            args.block_slot = int(entry.data["block_slot"])
+            args.block_hash = entry.data["block_hash"]
+
     if args.block_hash and args.block_slot:
         point = Point.from_hex(args.block_slot, args.block_hash)
     else:
@@ -268,10 +298,12 @@ def build_parser() -> argparse.ArgumentParser:
     fb.set_defaults(func=cmd_fetch_block)
 
     rc = sp.add_parser("reconstruct-cip25", help="Reconstruct CIP-25 pages+manifest scroll by scanning forward from a start point")
-    rc.add_argument("--policy", required=True, help="Policy ID hex")
-    rc.add_argument("--manifest-asset", required=True, help="Manifest asset name (e.g., CONSTITUTION_E608_MANIFEST)")
-    rc.add_argument("--start-slot", type=int, required=True)
-    rc.add_argument("--start-hash", required=True)
+    rc.add_argument("--scroll", help="Scroll id from catalog (e.g., constitution-e608)")
+    rc.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")
+    rc.add_argument("--policy", help="Policy ID hex")
+    rc.add_argument("--manifest-asset", help="Manifest asset name (e.g., CONSTITUTION_E608_MANIFEST)")
+    rc.add_argument("--start-slot", type=int)
+    rc.add_argument("--start-hash")
     rc.add_argument("--max-blocks", type=int, default=400, help="How many headers/blocks to scan forward")
     rc.add_argument("--out", required=True, help="Output filename")
     rc.set_defaults(func=cmd_reconstruct_cip25)
@@ -282,6 +314,8 @@ def build_parser() -> argparse.ArgumentParser:
     bf.set_defaults(func=cmd_blockfrost_point)
 
     ru = sp.add_parser("reconstruct-utxo", help="Reconstruct Standard Scroll from inline datum at a tx output")
+    ru.add_argument("--scroll", help="Scroll id from catalog (e.g., hosky-png)")
+    ru.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")
     ru.add_argument("--tx-hash", help="Transaction hash (optional if block point provided)")
     ru.add_argument("--tx-ix", type=int, required=True, help="Output index within the transaction (txin index)")
     ru.add_argument("--block-hash", help="Block header hash (64 hex chars)")

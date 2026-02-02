@@ -1,0 +1,68 @@
+{
+  "scrolls": [
+    {
+      "id": "hosky-png",
+      "type": "utxo_datum_bytes_v1",
+      "tx_hash": "728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be",
+      "tx_ix": 0,
+      "block_slot": 177308291,
+      "block_hash": "0c6833715cb6646b099318cde27eb9c36d954a5ec67ad30513fec36b7b6c975e",
+      "content_type": "image/png",
+      "sha256": "798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f"
+    },
+    {
+      "id": "architects-scroll",
+      "type": "utxo_datum_bytes_v1",
+      "tx_hash": "076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747",
+      "tx_ix": 0,
+      "block_slot": 178134116,
+      "block_hash": "513d70f3a582fcbfcab1f8c85ef1b4d825117e80ff291c42539289df5feb5857",
+      "content_type": "text/plain; charset=utf-8",
+      "sha256": "531a1eba80b297f8822b1505d480bb1c7f1bad2878ab29d8be01ba0e1fc67e12"
+    },
+    {
+      "id": "constitution-e608",
+      "type": "cip25_pages_v1",
+      "policy_id": "ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750",
+      "manifest_asset": "CONSTITUTION_E608_MANIFEST",
+      "pages": 11,
+      "content_type": "text/plain; charset=utf-8",
+      "codec": "gzip",
+      "sha256": "98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1",
+      "sha256_gz": "4565368ca35d8c6bb08bff712c1b22c0afe300c19292d5aa09c812ed415a4e93"
+    },
+    {
+      "id": "constitution-e541",
+      "type": "cip25_pages_v1",
+      "policy_id": "d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d",
+      "manifest_asset": "CONSTITUTION_E541_MANIFEST",
+      "pages": 7,
+      "content_type": "text/plain; charset=utf-8",
+      "codec": "gzip",
+      "sha256": "1939c1627e49b5267114cbdb195d4ac417e545544ba6dcb47e03c679439e9566",
+      "sha256_gz": "975d1c6bb1c8bf4982c58e41c9b137ecd4272e34095a5ec9b37bdde5ca6f268a"
+    },
+    {
+      "id": "bible",
+      "type": "cip25_pages_v1",
+      "policy_id": "2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0",
+      "manifest_tx": "cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4",
+      "block_slot": 175750638,
+      "block_hash": "2121ca9456673488b780266f57129c19aab2b300405a4dcba76b13ae56784e54",
+      "pages": 237,
+      "content_type": "text/html",
+      "codec": "gzip"
+    },
+    {
+      "id": "bitcoin-whitepaper",
+      "type": "cip25_pages_v1",
+      "policy_id": "8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1",
+      "manifest_tx": "2575347068f77b21cfe8d9c23d9082a68bfe4ef7ba7a96608af90515acbe228f",
+      "block_slot": 176360887,
+      "block_hash": "7ff44423859e8786955c97dd70a57a24474309871bfa39df9e00eee5f3fff3a5",
+      "pages": 3,
+      "content_type": "text/plain",
+      "codec": "auto"
+    }
+  ]
+}
