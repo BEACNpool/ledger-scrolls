@@ -17,10 +17,13 @@ Ledger Scrolls supports two storage styles:
 
 ## Viewers
 
-- **Web viewer (Blockfrost API)** — this repo’s main site (see `/index.html`).
-- **P2P viewer (no indexer)** — direct relay connection using ChainSync + BlockFetch.
-  - Source: [`/p2p-viewer`](./p2p-viewer)
-  - Goal: read scrolls with **no API required** (Blockfrost only as optional bootstrap for start points)
+| Viewer | Best For | Requirements | Path |
+|--------|----------|--------------|------|
+| **Web Viewer** | Browsing & downloading any scroll | Browser (Koios or Blockfrost) | `/index.html` |
+| **Koios CLI** | Zero‑deps verification | Python 3 only | `viewers/koios-cli/` |
+| **P2P Viewer** | No API at all (direct relay) | Python + relay access | `p2p-viewer/` |
+
+See **docs/VIEWERS.md** for a quick overview.
 
 
 1. ✅ **Ledger Scrolls Standard (Lean): Locked UTxO Datum Bytes**

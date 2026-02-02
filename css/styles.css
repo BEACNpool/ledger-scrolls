@@ -797,6 +797,7 @@ body {
     background: var(--color-bg-tertiary);
     border-radius: var(--radius-sm);
     border-left: 3px solid var(--color-text-muted);
+    flex-wrap: wrap;
 }
 
 .log-entry.info { border-left-color: var(--color-info); }
@@ -811,6 +812,24 @@ body {
 
 .log-message {
     color: var(--color-text-secondary);
+}
+
+.log-details {
+    width: 100%;
+    margin-left: calc(1.2rem + var(--space-sm));
+    color: var(--color-text-secondary);
+}
+
+.log-details summary {
+    cursor: pointer;
+    color: var(--color-text-muted);
+}
+
+.log-details pre {
+    white-space: pre-wrap;
+    margin-top: var(--space-xs);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
 }
 
 /* --------------------------------------------------------------------------
@@ -1427,4 +1446,50 @@ body {
         box-shadow: none;
         border: 1px solid #ccc;
     }
+}
+
+/* Viewer Choice Cards */
+.viewer-choice {
+    margin: var(--space-lg) 0 var(--space-xl);
+    padding: var(--space-lg);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: var(--glass-blur);
+}
+
+.viewer-choice-header h2 {
+    font-family: var(--font-display);
+    margin-bottom: var(--space-xs);
+}
+
+.viewer-choice-header p {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-md);
+}
+
+.viewer-choice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-md);
+}
+
+.viewer-card {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.viewer-card-title {
+    font-weight: 700;
+}
+
+.viewer-card-text {
+    color: var(--color-text-secondary);
+    min-height: 3.5em;
 }

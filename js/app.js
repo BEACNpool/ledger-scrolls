@@ -195,7 +195,7 @@ class LedgerScrollsApp {
         } catch (e) {
             this.connected = false;
             this._setConnectionStatus('disconnected', 'Connection failed');
-            this._log('error', `Connection failed: ${e.message}`);
+            this._log('error', `Connection failed: ${e.message}`, this._formatErrorDetails(e));
             this._toast('error', `Connection failed: ${e.message}`);
         }
     }
@@ -299,7 +299,7 @@ class LedgerScrollsApp {
             this._log('success', `Successfully loaded ${scroll.title} (${this._formatSize(result.size)})`);
             this._toast('success', `${scroll.title} loaded successfully!`);
         } catch (e) {
-            this._log('error', `Failed to load scroll: ${e.message}`);
+            this._log('error', `Failed to load scroll: ${e.message}`, this._formatErrorDetails(e));
             this._toast('error', `Failed to load: ${e.message}`);
             this.elements.loadingText.textContent = `❌ Error: ${e.message}`;
         } finally {
@@ -566,13 +566,17 @@ class LedgerScrollsApp {
     // Logging & Toasts
     // =========================================================================
 
-    _log(type, message) {
+    _log(type, message, details = null) {
         const time = new Date().toLocaleTimeString();
         const entry = document.createElement('div');
         entry.className = `log-entry ${type}`;
+        const detailsHtml = details
+            ? `<details class="log-details"><summary>Details</summary><pre>${this._escapeHtml(details)}</pre></details>`
+            : '';
         entry.innerHTML = `
             <span class="log-time">${time}</span>
             <span class="log-message">${this._escapeHtml(message)}</span>
+            ${detailsHtml}
         `;
         this.elements.logEntries.appendChild(entry);
         this.elements.logEntries.scrollTop = this.elements.logEntries.scrollHeight;
@@ -610,6 +614,16 @@ class LedgerScrollsApp {
         if (bytes < 1024) return `${bytes} B`;
         if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
         return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    }
+
+    _formatErrorDetails(error) {
+        const parts = [];
+        if (!error) return '';
+        if (error.name) parts.push(`name: ${error.name}`);
+        if (error.message) parts.push(`message: ${error.message}`);
+        if (error.stack) parts.push(`stack:\n${error.stack}`);
+        if (error.cause) parts.push(`cause: ${JSON.stringify(error.cause, null, 2)}`);
+        return parts.join('\n');
     }
 
     _getExtension(contentType) {
