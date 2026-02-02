@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
+import cbor2
+
 from .cbor_helpers import safe_cbor_loads
 
 
@@ -41,17 +43,41 @@ def _extract_metadata_map(aux: Any) -> Dict[int, Any]:
     return {}
 
 
+def _unwrap_cbor(obj: Any) -> Any:
+    if isinstance(obj, (bytes, bytearray)):
+        try:
+            return safe_cbor_loads(bytes(obj))
+        except Exception:
+            return obj
+    if isinstance(obj, cbor2.CBORTag):
+        if isinstance(obj.value, (bytes, bytearray)):
+            try:
+                return safe_cbor_loads(bytes(obj.value))
+            except Exception:
+                return obj.value
+        return obj.value
+    return obj
+
+
 def parse_block(block_body_cbor: bytes) -> ParsedBlock:
     obj = safe_cbor_loads(block_body_cbor)
+    obj = _unwrap_cbor(obj)
 
     era = None
     block = None
+
     if isinstance(obj, list) and obj:
+        # common: [era, block]
         if isinstance(obj[0], int):
             era = obj[0]
             block = obj[1] if len(obj) > 1 else None
+            block = _unwrap_cbor(block)
         else:
             block = obj
+
+    # sometimes the block is nested in a single-element list
+    if isinstance(block, list) and len(block) == 1:
+        block = block[0]
 
     if block is None:
         raise ValueError("unrecognized block structure")

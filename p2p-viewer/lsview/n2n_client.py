@@ -102,6 +102,8 @@ class N2NConnection:
             try:
                 self.writer.close()
                 await self.writer.wait_closed()
+            except (ConnectionResetError, OSError):
+                pass
             except Exception:
                 pass
         self.reader = None
