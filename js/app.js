@@ -87,6 +87,7 @@ class LedgerScrollsApp {
             customScrollModal: document.getElementById('customScrollModal'),
             apiKeyInput: document.getElementById('apiKeyInput'),
             koiosProxyInput: document.getElementById('koiosProxyInput'),
+            koiosProxyStatus: document.getElementById('koiosProxyStatus'),
             modeRadios: document.querySelectorAll('input[name="connectionMode"]'),
             themeBtns: document.querySelectorAll('.theme-btn'),
             toastContainer: document.getElementById('toastContainer')
@@ -97,6 +98,9 @@ class LedgerScrollsApp {
         }
         if (this.settings.koiosProxy && this.elements.koiosProxyInput) {
             this.elements.koiosProxyInput.value = this.settings.koiosProxy;
+        }
+        if (this.elements.koiosProxyStatus) {
+            this.elements.koiosProxyStatus.textContent = `Current: ${this.settings.koiosProxy || '(none)'}`;
         }
     }
 
@@ -176,6 +180,9 @@ class LedgerScrollsApp {
 
         this._setConnectionStatus('connecting', 'Connecting...');
         this._log('info', `Connecting to Cardano via ${mode}...`);
+        if (mode === 'koios') {
+            this._log('info', `Koios proxy: ${this.settings.koiosProxy || '(none)'}`);
+        }
 
         try {
             this.client = new BlockchainClient(mode, apiKey, this.settings.koiosProxy);
@@ -540,7 +547,10 @@ class LedgerScrollsApp {
         const value = this.elements.koiosProxyInput?.value?.trim() || '';
         this.settings.koiosProxy = value;
         this._saveSettings();
-        this._log('info', value ? 'Koios proxy updated' : 'Koios proxy cleared');
+        if (this.elements.koiosProxyStatus) {
+            this.elements.koiosProxyStatus.textContent = `Current: ${value || '(none)'}`;
+        }
+        this._log('info', value ? `Koios proxy updated: ${value}` : 'Koios proxy cleared');
         this._toast('success', value ? 'Koios proxy saved' : 'Koios proxy cleared');
     }
 
