@@ -16,6 +16,7 @@ class ParsedTx:
 class ParsedBlock:
     era: Optional[int]
     txs: List[ParsedTx]
+    tx_bodies: List[Any]
 
 
 def _extract_metadata_map(aux: Any) -> Dict[int, Any]:
@@ -71,7 +72,7 @@ def parse_block(block_body_cbor: bytes) -> ParsedBlock:
         md = _extract_metadata_map(aux_map.get(i) if isinstance(aux_map, dict) else None)
         txs.append(ParsedTx(index=i, metadata=md))
 
-    return ParsedBlock(era=era, txs=txs)
+    return ParsedBlock(era=era, txs=txs, tx_bodies=tx_bodies)
 
 
 def iter_label(block: ParsedBlock, label: int) -> List[Any]:

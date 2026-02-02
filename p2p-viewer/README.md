@@ -118,9 +118,34 @@ These are **live on mainnet** and work with `reconstruct-cip25` once you have a 
 
 ## Standard Scrolls (LS-LOCK v1)
 
-Standard Scrolls store the file bytes in a **single inline datum** at a **locked UTxO** (no policy, no pages). P2P extraction for inline datums is planned next — the goal is to fetch the block containing the txin and read the datum bytes directly, with **no API required**.
+Standard Scrolls store the file bytes in a **single inline datum** at a **locked UTxO** (no policy, no pages). You can reconstruct them directly from a relay using `reconstruct-utxo`.
 
-For now, you can still use the Web Viewer or Blockfrost to locate/confirm the txin:
+Examples:
+
+```bash
+# Hosky PNG (txin index 0)
+python -m lsview reconstruct-utxo \
+  --tx-hash 728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be \
+  --tx-ix 0 \
+  --out hosky.png
+
+# Architect's Scroll (txin index 0)
+python -m lsview reconstruct-utxo \
+  --tx-hash 076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747 \
+  --tx-ix 0 \
+  --out architects_scroll.txt
+```
+
+If you already know the **block slot + block hash**, you can avoid Blockfrost entirely:
+
+```bash
+python -m lsview reconstruct-utxo \
+  --block-slot <SLOT> --block-hash <BLOCK_HASH> \
+  --tx-hash <TX_HASH> --tx-ix 0 \
+  --out output.bin
+```
+
+Known Standard Scrolls:
 
 - **Hosky PNG**
   - Lock address: `addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn`

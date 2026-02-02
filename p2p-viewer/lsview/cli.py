@@ -5,7 +5,7 @@ import asyncio
 import logging
 
 from .blockfrost import resolve_point_from_tx
-from .cbor_helpers import Point
+from .cbor_helpers import Point, blake2b_256_hex, safe_cbor_loads
 from .n2n_client import MAINNET_MAGIC, N2NConnection
 from .chainsync import ChainSyncClient
 from .blockfetch import BlockFetchClient
@@ -144,6 +144,103 @@ async def cmd_reconstruct_cip25(args) -> None:
     print(f"SHA-256:       {out.sha256}")
 
 
+def _tx_hash_from_body(tx_body: object) -> str:
+    import cbor2
+
+    raw = cbor2.dumps(tx_body, canonical=True)
+    return blake2b_256_hex(raw)
+
+
+def _extract_outputs(tx_body: object) -> list:
+    if isinstance(tx_body, dict):
+        return list(tx_body.get(1) or [])
+    if isinstance(tx_body, list) and len(tx_body) > 1:
+        return list(tx_body[1])
+    return []
+
+
+def _extract_inline_datum(output: object) -> bytes | None:
+    datum = None
+
+    if isinstance(output, list) and len(output) >= 3:
+        datum = output[2]
+    elif isinstance(output, dict):
+        datum = output.get(2)
+
+    if datum is None:
+        return None
+
+    if isinstance(datum, list) and len(datum) >= 2:
+        tag = datum[0]
+        if tag == 2:  # inline datum
+            datum = datum[1]
+        else:
+            return None
+
+    if isinstance(datum, bytes):
+        try:
+            decoded = safe_cbor_loads(datum)
+            if isinstance(decoded, bytes):
+                return decoded
+        except Exception:
+            pass
+        return datum
+
+    return None
+
+
+async def cmd_reconstruct_utxo(args) -> None:
+    if args.block_hash and args.block_slot:
+        point = Point.from_hex(args.block_slot, args.block_hash)
+    else:
+        if not args.tx_hash:
+            raise SystemExit("Provide --tx-hash or both --block-hash and --block-slot.")
+        resolved = resolve_point_from_tx(args.tx_hash, args.blockfrost_key)
+        point = Point.from_hex(resolved.slot, resolved.block_hash)
+
+    conn = await open_connection(args)
+    try:
+        bf = BlockFetchClient(conn)
+        body = await bf.fetch_block_body(point)
+        if body is None:
+            raise SystemExit("Block not found on relay for this point.")
+
+        block = parse_block(body)
+        target_hash = args.tx_hash.lower() if args.tx_hash else None
+
+        tx_index = None
+        tx_body = None
+        for i, tb in enumerate(block.tx_bodies):
+            if target_hash:
+                if _tx_hash_from_body(tb) != target_hash:
+                    continue
+            tx_index = i
+            tx_body = tb
+            break
+
+        if tx_body is None:
+            raise SystemExit("Transaction not found in block.")
+
+        outputs = _extract_outputs(tx_body)
+        if args.tx_ix >= len(outputs):
+            raise SystemExit("tx output index out of range for this transaction.")
+
+        datum_bytes = _extract_inline_datum(outputs[args.tx_ix])
+        if datum_bytes is None:
+            raise SystemExit("No inline datum bytes found at that tx output.")
+
+        with open(args.out, "wb") as f:
+            f.write(datum_bytes)
+
+        print(f"Reconstructed: {args.out}")
+        print(f"Bytes:         {len(datum_bytes)}")
+        print(f"SHA-256:       {blake2b_256_hex(datum_bytes)}")
+
+        await bf.done()
+    finally:
+        await conn.close()
+
+
 def cmd_blockfrost_point(args) -> None:
     point = resolve_point_from_tx(args.tx_hash, args.blockfrost_key)
     print(f"slot={point.slot}")
@@ -183,6 +280,15 @@ def build_parser() -> argparse.ArgumentParser:
     bf.add_argument("--tx-hash", required=True, help="Transaction hash to resolve")
     bf.add_argument("--blockfrost-key", help="Blockfrost project_id (or env BLOCKFROST_PROJECT_ID)")
     bf.set_defaults(func=cmd_blockfrost_point)
+
+    ru = sp.add_parser("reconstruct-utxo", help="Reconstruct Standard Scroll from inline datum at a tx output")
+    ru.add_argument("--tx-hash", help="Transaction hash (optional if block point provided)")
+    ru.add_argument("--tx-ix", type=int, required=True, help="Output index within the transaction (txin index)")
+    ru.add_argument("--block-hash", help="Block header hash (64 hex chars)")
+    ru.add_argument("--block-slot", type=int, help="Block slot number")
+    ru.add_argument("--blockfrost-key", help="Blockfrost project_id (or env BLOCKFROST_PROJECT_ID)")
+    ru.add_argument("--out", required=True, help="Output filename")
+    ru.set_defaults(func=cmd_reconstruct_utxo)
 
     return p
 

@@ -11,6 +11,10 @@ def blake2b_256(data: bytes) -> bytes:
     return hashlib.blake2b(data, digest_size=32).digest()
 
 
+def blake2b_256_hex(data: bytes) -> str:
+    return blake2b_256(data).hex()
+
+
 def safe_cbor_loads(b: bytes) -> Any:
     return cbor2.loads(b)
 
