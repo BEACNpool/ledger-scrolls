@@ -46,8 +46,12 @@ class BlockFetchMsg:
 class BlockFetchClient:
     conn: N2NConnection
 
-    async def fetch_block_body(self, point: Point) -> Optional[bytes]:
-        await self.conn.send(MiniProtocol.BLOCK_FETCH, BlockFetchMsg.request_range(point, point_to=point))
+    async def fetch_block_body(self, point: Point, prev_point: Point | None = None) -> Optional[bytes]:
+        from_point = prev_point or point
+        await self.conn.send(
+            MiniProtocol.BLOCK_FETCH,
+            BlockFetchMsg.request_range(from_point, point_to=point),
+        )
 
         first = BlockFetchMsg.decode(await self.conn.recv(MiniProtocol.BLOCK_FETCH))
         if first["type"] == "no_blocks":

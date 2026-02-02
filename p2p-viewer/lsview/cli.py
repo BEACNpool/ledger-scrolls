@@ -14,6 +14,7 @@ from .block_parser import parse_block, iter_label
 from .scrolls.cip25 import CIP25_LABEL, extract_cip25_assets, classify_assets
 from .scrolls.reconstruct import reconstruct_cip25
 from .topology import load_topology
+from .koios import block_info_by_hash, prev_point_from_height, tx_point
 
 
 logger = logging.getLogger("lsview")
@@ -97,16 +98,29 @@ async def cmd_reconstruct_cip25(args) -> None:
             raise SystemExit("Selected scroll is not a CIP-25 pages scroll.")
         args.policy = entry.data.get("policy_id") or args.policy
         args.manifest_asset = entry.data.get("manifest_asset") or args.manifest_asset
-        if entry.data.get("manifest_tx") and not args.start_slot and not args.start_hash:
-            if entry.data.get("block_slot") and entry.data.get("block_hash"):
-                args.start_slot = int(entry.data["block_slot"])
-                args.start_hash = entry.data["block_hash"]
+        if entry.data.get("manifest_tx"):
+            args.manifest_tx = entry.data.get("manifest_tx")
         if entry.data.get("block_slot") and entry.data.get("block_hash"):
-            args.start_slot = int(entry.data["block_slot"])
-            args.start_hash = entry.data["block_hash"]
+            args.manifest_slot = int(entry.data["block_slot"])
+            args.manifest_hash = entry.data["block_hash"]
 
-    if not (args.policy and args.start_slot and args.start_hash):
-        raise SystemExit("Missing policy/start point. Provide args or use --scroll with a catalog entry that includes a start point.")
+    if not (args.policy and args.manifest_asset):
+        raise SystemExit("Missing policy or manifest asset. Provide args or use --scroll with a catalog entry.")
+
+    if not (args.start_slot and args.start_hash):
+        manifest_info = None
+        if args.manifest_tx:
+            manifest_info = tx_point(args.manifest_tx)
+        elif args.manifest_hash:
+            manifest_info = block_info_by_hash(args.manifest_hash)
+        if manifest_info is None:
+            raise SystemExit("Missing start point. Provide --start-slot/--start-hash or --manifest-tx/--manifest-hash.")
+        prev_info = prev_point_from_height(manifest_info["height"])
+        args.start_slot = prev_info["slot"]
+        args.start_hash = prev_info["hash"]
+
+    if not (args.start_slot and args.start_hash):
+        raise SystemExit("Missing start point. Provide --start-slot/--start-hash or --manifest-tx/--manifest-hash.")
 
     start_point = Point.from_hex(args.start_slot, args.start_hash)
     wanted_policy = args.policy.lower()
@@ -123,8 +137,10 @@ async def cmd_reconstruct_cip25(args) -> None:
         if intersect.get("type") != "intersect_found":
             raise SystemExit(f"Start point not on relay chain: {intersect}")
 
+        prev_point = start_point
         async for pt, _ in cs.stream_headers(max_headers=args.max_blocks, idle_timeout=args.timeout):
-            body = await bf.fetch_block_body(pt)
+            body = await bf.fetch_block_body(pt, prev_point=prev_point)
+            prev_point = pt
             if body is None:
                 continue
 
@@ -335,8 +351,11 @@ def build_parser() -> argparse.ArgumentParser:
     rc.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")
     rc.add_argument("--policy", help="Policy ID hex")
     rc.add_argument("--manifest-asset", help="Manifest asset name (e.g., CONSTITUTION_E608_MANIFEST)")
-    rc.add_argument("--start-slot", type=int)
-    rc.add_argument("--start-hash")
+    rc.add_argument("--manifest-tx", help="Manifest minting tx hash (used to resolve start point via Koios)")
+    rc.add_argument("--manifest-slot", type=int, help="Manifest block slot (optional, used to resolve start point)")
+    rc.add_argument("--manifest-hash", help="Manifest block header hash (optional, used to resolve start point)")
+    rc.add_argument("--start-slot", type=int, help="Start slot (previous block point before the manifest block)")
+    rc.add_argument("--start-hash", help="Start header hash (previous block point before the manifest block)")
     rc.add_argument("--max-blocks", type=int, default=400, help="How many headers/blocks to scan forward")
     rc.add_argument("--out", required=True, help="Output filename")
     rc.set_defaults(func=cmd_reconstruct_cip25)
