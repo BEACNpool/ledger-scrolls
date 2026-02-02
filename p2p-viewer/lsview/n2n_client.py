@@ -31,9 +31,9 @@ class N2NVersion(IntEnum):
 
 
 def mux_encode(protocol_id: int, payload: bytes, initiator: bool = True, timestamp: int = 0) -> bytes:
-    mp = ((int(protocol_id) & 0x7FFF) << 1) | (0 if initiator else 1)
-    header = struct.pack(">IHH", timestamp & 0xFFFFFFFF, mp & 0xFFFF, len(payload) & 0xFFFF
-    )
+    mode = 0 if initiator else 1
+    mp = ((mode & 1) << 14) | (int(protocol_id) & 0x3FFF)
+    header = struct.pack(">IHH", timestamp & 0xFFFFFFFF, mp & 0xFFFF, len(payload) & 0xFFFF)
     return header + payload
 
 
@@ -41,8 +41,8 @@ def mux_decode_header(header: bytes) -> Tuple[int, int, bool, int]:
     if len(header) != MUX_HEADER_SIZE:
         raise ValueError("invalid mux header size")
     timestamp, mp, length = struct.unpack(">IHH", header)
-    proto_id = (mp >> 1) & 0x7FFF
-    initiator = (mp & 1) == 0
+    proto_id = mp & 0x3FFF
+    initiator = ((mp >> 14) & 1) == 0
     return timestamp, proto_id, initiator, length
 
 
