@@ -15,6 +15,14 @@ The design goal is simple:
 
 Ledger Scrolls supports two storage styles:
 
+## Viewers
+
+- **Web viewer (Blockfrost API)** — this repo’s main site (see `/index.html`).
+- **P2P viewer (no indexer)** — direct relay connection using ChainSync + BlockFetch.
+  - Source: [`/p2p-viewer`](./p2p-viewer)
+  - Goal: read scrolls with **no API required** (Blockfrost only as optional bootstrap for start points)
+
+
 1. ✅ **Ledger Scrolls Standard (Lean): Locked UTxO Datum Bytes**
    Best for small files (icons/images/manifests/configs) that fit inside one on-chain inline datum. Supports optional gzip compression for slightly larger files.
    **Default demo: Hosky PNG** (no [Blockfrost](https://blockfrost.io) required in local mode)
