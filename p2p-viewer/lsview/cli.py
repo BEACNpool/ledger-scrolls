@@ -6,7 +6,7 @@ import logging
 
 from .blockfrost import resolve_point_from_tx
 from .cbor_helpers import Point, blake2b_256_hex, safe_cbor_loads
-from .catalog import load_catalog
+from .catalog import load_catalog, refresh_catalog
 from .n2n_client import MAINNET_MAGIC, N2NConnection
 from .chainsync import ChainSyncClient
 from .blockfetch import BlockFetchClient
@@ -277,6 +277,11 @@ def cmd_blockfrost_point(args) -> None:
     print(f"hash={point.block_hash}")
 
 
+def cmd_refresh_catalog(args) -> None:
+    refresh_catalog(args.catalog, args.blockfrost_key)
+    print("Catalog refreshed.")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="lsview", description="Ledger Scrolls P2P Viewer (N2N ChainSync + BlockFetch)")
     p.add_argument("--relay", default="backbone.cardano.iog.io")
@@ -312,6 +317,11 @@ def build_parser() -> argparse.ArgumentParser:
     bf.add_argument("--tx-hash", required=True, help="Transaction hash to resolve")
     bf.add_argument("--blockfrost-key", help="Blockfrost project_id (or env BLOCKFROST_PROJECT_ID)")
     bf.set_defaults(func=cmd_blockfrost_point)
+
+    rcatalog = sp.add_parser("refresh-catalog", help="Update catalog with block slot/hash via Blockfrost")
+    rcatalog.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")
+    rcatalog.add_argument("--blockfrost-key", help="Blockfrost project_id (or env BLOCKFROST_PROJECT_ID)")
+    rcatalog.set_defaults(func=cmd_refresh_catalog)
 
     ru = sp.add_parser("reconstruct-utxo", help="Reconstruct Standard Scroll from inline datum at a tx output")
     ru.add_argument("--scroll", help="Scroll id from catalog (e.g., hosky-png)")

@@ -148,6 +148,9 @@ Catalog-driven usage:
 ```bash
 # List catalog path (default)
 ls -la p2p-viewer/examples/scrolls.json
+
+# Refresh catalog with Blockfrost (optional)
+python -m lsview refresh-catalog
 ```
 
 Known Standard Scrolls:
