@@ -282,6 +282,26 @@ def cmd_refresh_catalog(args) -> None:
     print("Catalog refreshed.")
 
 
+def cmd_list_scrolls(args) -> None:
+    catalog = load_catalog(args.catalog)
+    for entry in catalog.values():
+        data = entry.data
+        kind = data.get("type")
+        line = f"{entry.id}  ({kind})"
+        extra = []
+        if data.get("policy_id"):
+            extra.append(f"policy={data.get('policy_id')}")
+        if data.get("tx_hash"):
+            extra.append(f"tx={data.get('tx_hash')}")
+        if data.get("manifest_tx"):
+            extra.append(f"manifest_tx={data.get('manifest_tx')}")
+        if data.get("block_slot"):
+            extra.append(f"slot={data.get('block_slot')}")
+        if extra:
+            line += "  " + " ".join(extra)
+        print(line)
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="lsview", description="Ledger Scrolls P2P Viewer (N2N ChainSync + BlockFetch)")
     p.add_argument("--relay", default="backbone.cardano.iog.io")
@@ -322,6 +342,10 @@ def build_parser() -> argparse.ArgumentParser:
     rcatalog.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")
     rcatalog.add_argument("--blockfrost-key", help="Blockfrost project_id (or env BLOCKFROST_PROJECT_ID)")
     rcatalog.set_defaults(func=cmd_refresh_catalog)
+
+    lsc = sp.add_parser("list-scrolls", help="List known scrolls from catalog")
+    lsc.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")
+    lsc.set_defaults(func=cmd_list_scrolls)
 
     ru = sp.add_parser("reconstruct-utxo", help="Reconstruct Standard Scroll from inline datum at a tx output")
     ru.add_argument("--scroll", help="Scroll id from catalog (e.g., hosky-png)")

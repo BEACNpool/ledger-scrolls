@@ -149,6 +149,9 @@ Catalog-driven usage:
 # List catalog path (default)
 ls -la p2p-viewer/examples/scrolls.json
 
+# Show known scrolls
+python -m lsview list-scrolls
+
 # Refresh catalog with Blockfrost (optional)
 python -m lsview refresh-catalog
 ```
