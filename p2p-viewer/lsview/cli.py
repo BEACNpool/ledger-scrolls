@@ -147,7 +147,28 @@ async def cmd_reconstruct_cip25(args) -> None:
 
         prev_point = start_point
         async for pt, _ in cs.stream_headers(max_headers=args.max_blocks, idle_timeout=args.timeout):
-            body = await bf.fetch_block_body(pt, prev_point=prev_point)
+            # --- Rollback/ordering guard ---
+            pt_slot = getattr(pt, "slot", getattr(pt, "slot_no", None))
+            prev_slot = getattr(prev_point, "slot", getattr(prev_point, "slot_no", None))
+            if pt == prev_point:
+                continue
+            if pt_slot is not None and prev_slot is not None and pt_slot <= prev_slot:
+                prev_point = pt
+                continue
+
+            # --- BlockFetch with one reconnect retry on relay resets ---
+            try:
+                body = await bf.fetch_block_body(pt, prev_point=prev_point)
+            except (ConnectionResetError, OSError) as e:
+                logger.warning("BlockFetch reset (%r); reconnecting and retrying once...", e)
+                try:
+                    await bf_conn.close()
+                except Exception:
+                    pass
+                bf_conn = await open_connection(args)
+                bf = BlockFetchClient(bf_conn)
+                body = await bf.fetch_block_body(pt, prev_point=prev_point)
+
             prev_point = pt
             if body is None:
                 continue
