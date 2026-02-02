@@ -78,12 +78,19 @@ def extract_cip25_assets(metadata_721: Any, wanted_policy_hex: str) -> List[Cip2
     return out
 
 
-def classify_assets(assets: List[Cip25Asset], manifest_asset: str) -> Tuple[List[Cip25Page], Optional[Cip25Manifest]]:
+def classify_assets(assets: List[Cip25Asset], manifest_asset: str | None) -> Tuple[List[Cip25Page], Optional[Cip25Manifest]]:
     pages: List[Cip25Page] = []
     manifest: Optional[Cip25Manifest] = None
 
     for a in assets:
-        if a.asset_name == manifest_asset:
+        is_manifest = False
+        if manifest_asset and a.asset_name == manifest_asset:
+            is_manifest = True
+        elif manifest_asset is None:
+            if any(k in a.fields for k in ("codec", "content_type", "content-type", "sha256", "sha", "sha256_gz", "sha_gz")):
+                is_manifest = True
+
+        if is_manifest:
             codec = _as_str(a.fields.get("codec"))
             content_type = _as_str(a.fields.get("content_type") or a.fields.get("content-type"))
             total_pages = _as_int(a.fields.get("n") or a.fields.get("pages") or a.fields.get("total_pages"))

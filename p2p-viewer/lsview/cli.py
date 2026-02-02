@@ -97,12 +97,16 @@ async def cmd_reconstruct_cip25(args) -> None:
             raise SystemExit("Selected scroll is not a CIP-25 pages scroll.")
         args.policy = entry.data.get("policy_id") or args.policy
         args.manifest_asset = entry.data.get("manifest_asset") or args.manifest_asset
+        if entry.data.get("manifest_tx") and not args.start_slot and not args.start_hash:
+            if entry.data.get("block_slot") and entry.data.get("block_hash"):
+                args.start_slot = int(entry.data["block_slot"])
+                args.start_hash = entry.data["block_hash"]
         if entry.data.get("block_slot") and entry.data.get("block_hash"):
             args.start_slot = int(entry.data["block_slot"])
             args.start_hash = entry.data["block_hash"]
 
-    if not (args.policy and args.manifest_asset and args.start_slot and args.start_hash):
-        raise SystemExit("Missing policy/manifest/start point. Provide args or use --scroll with a catalog entry that includes a start point.")
+    if not (args.policy and args.start_slot and args.start_hash):
+        raise SystemExit("Missing policy/start point. Provide args or use --scroll with a catalog entry that includes a start point.")
 
     start_point = Point.from_hex(args.start_slot, args.start_hash)
     wanted_policy = args.policy.lower()
@@ -215,10 +219,14 @@ async def cmd_reconstruct_utxo(args) -> None:
         if entry.data.get("type") != "utxo_datum_bytes_v1":
             raise SystemExit("Selected scroll is not a Standard Scroll.")
         args.tx_hash = entry.data.get("tx_hash") or args.tx_hash
-        args.tx_ix = int(entry.data.get("tx_ix", args.tx_ix))
+        if entry.data.get("tx_ix") is not None:
+            args.tx_ix = int(entry.data.get("tx_ix"))
         if entry.data.get("block_slot") and entry.data.get("block_hash"):
             args.block_slot = int(entry.data["block_slot"])
             args.block_hash = entry.data["block_hash"]
+
+    if args.tx_ix is None:
+        raise SystemExit("Missing --tx-ix (output index). Provide it or select a catalog scroll that includes tx_ix.")
 
     if args.block_hash and args.block_slot:
         point = Point.from_hex(args.block_slot, args.block_hash)
@@ -351,7 +359,7 @@ def build_parser() -> argparse.ArgumentParser:
     ru.add_argument("--scroll", help="Scroll id from catalog (e.g., hosky-png)")
     ru.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")
     ru.add_argument("--tx-hash", help="Transaction hash (optional if block point provided)")
-    ru.add_argument("--tx-ix", type=int, required=True, help="Output index within the transaction (txin index)")
+    ru.add_argument("--tx-ix", type=int, help="Output index within the transaction (txin index)")
     ru.add_argument("--block-hash", help="Block header hash (64 hex chars)")
     ru.add_argument("--block-slot", type=int, help="Block slot number")
     ru.add_argument("--blockfrost-key", help="Blockfrost project_id (or env BLOCKFROST_PROJECT_ID)")

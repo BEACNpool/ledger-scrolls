@@ -122,12 +122,14 @@ These are **live on mainnet** and work with `reconstruct-cip25` once you have a 
   - Manifest TX: `cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4`
   - Manifest slot: `175750638`
   - Pages: 237
+  - Note: manifest asset auto-detected from metadata (no manual name needed)
 
 - **Bitcoin Whitepaper**
   - Policy: `8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1`
   - Manifest TX: `2575347068f77b21cfe8d9c23d9082a68bfe4ef7ba7a96608af90515acbe228f`
   - Manifest slot: `176360887`
   - Pages: 3
+  - Note: manifest asset auto-detected from metadata (no manual name needed)
 
 ## Standard Scrolls (LS-LOCK v1)
 
@@ -145,6 +147,11 @@ python -m lsview reconstruct-utxo \
 python -m lsview reconstruct-utxo \
   --scroll architects-scroll \
   --out architects_scroll.txt
+```
+
+If you prefer manual args:
+```bash
+python -m lsview reconstruct-utxo --tx-hash <TX_HASH> --tx-ix 0 --out output.bin
 ```
 
 If you already know the **block slot + block hash**, you can avoid Blockfrost entirely:

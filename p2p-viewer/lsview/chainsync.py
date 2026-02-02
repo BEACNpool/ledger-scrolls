@@ -125,7 +125,7 @@ class ChainSyncClient:
                     break
 
                 if resp["type"] == "roll_backward":
-                    logger.warning("Chain rollback encountered; stopping stream.")
-                    return
+                    logger.warning("Chain rollback encountered; continuing.")
+                    break
 
                 break
