@@ -128,10 +128,18 @@ async def cmd_reconstruct_cip25(args) -> None:
     conn = await open_connection(args)
     pages = []
     manifest = None
+    bf_conn = None
 
     try:
         cs = ChainSyncClient(conn)
-        bf = BlockFetchClient(conn)
+        bf_conn = N2NConnection(
+            relay_host=conn.relay_host,
+            relay_port=conn.relay_port,
+            network_magic=conn.network_magic,
+            timeout=conn.timeout,
+        )
+        await bf_conn.open()
+        bf = BlockFetchClient(bf_conn)
 
         intersect = await cs.find_intersect([start_point])
         if intersect.get("type") != "intersect_found":
@@ -165,6 +173,11 @@ async def cmd_reconstruct_cip25(args) -> None:
         await cs.done()
 
     finally:
+        try:
+            if bf_conn is not None:
+                await bf_conn.close()
+        except Exception:
+            pass
         await conn.close()
 
     if not pages:
