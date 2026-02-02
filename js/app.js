@@ -45,10 +45,11 @@ class LedgerScrollsApp {
             return saved ? JSON.parse(saved) : {
                 mode: 'blockfrost',
                 apiKey: '',
+                koiosProxy: '',
                 theme: 'dark'
             };
         } catch {
-            return { mode: 'blockfrost', apiKey: '', theme: 'dark' };
+            return { mode: 'blockfrost', apiKey: '', koiosProxy: '', theme: 'dark' };
         }
     }
 
@@ -85,6 +86,7 @@ class LedgerScrollsApp {
             verifyModal: document.getElementById('verifyModal'),
             customScrollModal: document.getElementById('customScrollModal'),
             apiKeyInput: document.getElementById('apiKeyInput'),
+            koiosProxyInput: document.getElementById('koiosProxyInput'),
             modeRadios: document.querySelectorAll('input[name="connectionMode"]'),
             themeBtns: document.querySelectorAll('.theme-btn'),
             toastContainer: document.getElementById('toastContainer')
@@ -92,6 +94,9 @@ class LedgerScrollsApp {
 
         if (this.settings.apiKey) {
             this.elements.apiKeyInput.value = this.settings.apiKey;
+        }
+        if (this.settings.koiosProxy && this.elements.koiosProxyInput) {
+            this.elements.koiosProxyInput.value = this.settings.koiosProxy;
         }
     }
 
@@ -117,6 +122,7 @@ class LedgerScrollsApp {
         });
 
         document.getElementById('saveApiKey').addEventListener('click', () => this._saveApiKey());
+        document.getElementById('saveKoiosProxy')?.addEventListener('click', () => this._saveKoiosProxy());
 
         this.elements.modeRadios.forEach(radio => {
             radio.addEventListener('change', (e) => this._onModeChange(e.target.value));
@@ -172,7 +178,7 @@ class LedgerScrollsApp {
         this._log('info', `Connecting to Cardano via ${mode}...`);
 
         try {
-            this.client = new BlockchainClient(mode, apiKey);
+            this.client = new BlockchainClient(mode, apiKey, this.settings.koiosProxy);
             this.reconstructor = new ScrollReconstructor(this.client);
 
             const result = await this.client.testConnection();
@@ -528,6 +534,14 @@ class LedgerScrollsApp {
         this._toast('success', 'API key saved');
         this._log('info', 'Blockfrost API key updated');
         if (key) this._connect();
+    }
+
+    _saveKoiosProxy() {
+        const value = this.elements.koiosProxyInput?.value?.trim() || '';
+        this.settings.koiosProxy = value;
+        this._saveSettings();
+        this._log('info', value ? 'Koios proxy updated' : 'Koios proxy cleared');
+        this._toast('success', value ? 'Koios proxy saved' : 'Koios proxy cleared');
     }
 
     _onModeChange(mode) {

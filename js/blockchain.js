@@ -8,9 +8,10 @@
  */
 
 class BlockchainClient {
-    constructor(mode = 'blockfrost', apiKey = null) {
+    constructor(mode = 'blockfrost', apiKey = null, koiosProxy = '') {
         this.mode = mode;
         this.apiKey = apiKey;
+        this.koiosProxy = koiosProxy;
         this.baseUrl = this._getBaseUrl();
         this.koiosBaseUrls = [
             'https://api.koios.rest/api/v1',
@@ -89,7 +90,12 @@ class BlockchainClient {
 
     async _requestKoiosWithFallback(endpoint, options = {}, headers = {}) {
         const errors = [];
-        for (const base of this.koiosBaseUrls) {
+        const bases = [...this.koiosBaseUrls];
+        if (this.koiosProxy) {
+            bases.unshift(this.koiosProxy.replace(/\/$/, ''));
+        }
+
+        for (const base of bases) {
             try {
                 const url = `${base}${endpoint}`;
                 const resp = await this._rateLimitedFetch(url, {
