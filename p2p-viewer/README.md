@@ -56,6 +56,23 @@ python -m lsview reconstruct-cip25 \
   --out Cardano_Constitution_E608.txt
 ```
 
+## GUI (Proof‑of‑Concept)
+
+The GUI provides a themed Ledger‑Scrolls interface with:
+- Catalog dropdown (one‑click scroll reconstruction)
+- Manual entry for new scrolls
+- Relay + topology settings
+
+**Run on Windows (PowerShell):**
+```powershell
+./run-gui.ps1
+```
+
+**Run on macOS/Linux:**
+```bash
+python -m gui.app
+```
+
 ## Relay topology (P2P fallback)
 
 You can point the viewer at a **Cardano topology JSON** (file path or URL). The CLI will try each relay in order until it can handshake.
