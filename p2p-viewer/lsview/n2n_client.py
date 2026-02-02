@@ -98,16 +98,19 @@ class N2NConnection:
         return await self.handshake()
 
     async def close(self) -> None:
-        if self.writer is not None:
-            try:
-                self.writer.close()
-                await self.writer.wait_closed()
-            except (ConnectionResetError, OSError):
-                pass
-            except Exception:
-                pass
+        w = self.writer
         self.reader = None
         self.writer = None
+        if w is None:
+            return
+        try:
+            w.close()
+        except Exception:
+            return
+        try:
+            await w.wait_closed()
+        except Exception:
+            pass
 
     async def handshake(self) -> Dict[str, Any]:
         assert self.writer and self.reader
