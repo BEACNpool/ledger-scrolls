@@ -72,8 +72,12 @@ class ScrollReconstructor {
 
         this._progress('✓ UTxO found, extracting datum...', 30);
 
-        // Extract inline datum
-        const inlineDatum = utxo.inline_datum;
+        // Extract inline datum (fallback to direct UTxO query if missing)
+        let inlineDatum = utxo.inline_datum;
+        if (!inlineDatum) {
+            const fresh = await this.client.queryUtxoByTxIn(txHash, txIndex);
+            inlineDatum = fresh.inline_datum;
+        }
         if (!inlineDatum) {
             throw new Error('UTxO does not contain inline datum');
         }
