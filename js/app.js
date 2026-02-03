@@ -187,6 +187,9 @@ class LedgerScrollsApp {
         try {
             this.client = new BlockchainClient(mode, apiKey, this.settings.koiosProxy);
             if (!window.ScrollReconstructor) {
+                await new Promise(r => setTimeout(r, 500));
+            }
+            if (!window.ScrollReconstructor) {
                 throw new Error('ScrollReconstructor missing (reconstruct.js failed to load)');
             }
             this.reconstructor = new ScrollReconstructor(this.client);
