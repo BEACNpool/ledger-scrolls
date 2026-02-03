@@ -414,3 +414,6 @@ class ScrollReconstructor {
 // Export for use in other modules
 window.ScrollReconstructor = ScrollReconstructor;
 console.log('ScrollReconstructor loaded');
+
+// Ensure global access when loaded via plain script tag
+window.ScrollReconstructor = ScrollReconstructor;

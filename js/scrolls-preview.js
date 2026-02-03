@@ -62,3 +62,48 @@ const SCROLLS = [
         }
     }
 ];
+
+const REGISTRY = null;
+
+function getAllScrolls() {
+    return SCROLLS;
+}
+
+function getScrollById(id) {
+    return SCROLLS.find(s => s.id === id);
+}
+
+function getScrollsByCategory(category) {
+    if (category === 'all') return SCROLLS;
+    return SCROLLS.filter(s => s.category === category);
+}
+
+function searchScrolls(query) {
+    if (!query) return SCROLLS;
+    const q = query.toLowerCase();
+    return SCROLLS.filter(s =>
+        s.title.toLowerCase().includes(q) ||
+        s.description.toLowerCase().includes(q)
+    );
+}
+
+function getCategoriesWithCounts() {
+    const counts = {};
+    SCROLLS.forEach(s => { counts[s.category] = (counts[s.category] || 0) + 1; });
+    return Object.values(CATEGORIES).map(cat => ({
+        ...cat,
+        count: cat.id === 'all' ? SCROLLS.length : (counts[cat.id] || 0)
+    }));
+}
+
+window.ScrollLibrary = {
+    SCROLL_TYPES,
+    CATEGORIES,
+    SCROLLS,
+    REGISTRY,
+    getAllScrolls,
+    getScrollById,
+    getScrollsByCategory,
+    searchScrolls,
+    getCategoriesWithCounts
+};
