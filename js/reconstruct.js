@@ -413,3 +413,4 @@ class ScrollReconstructor {
 
 // Export for use in other modules
 window.ScrollReconstructor = ScrollReconstructor;
+console.log('ScrollReconstructor loaded');

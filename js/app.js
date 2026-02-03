@@ -670,5 +670,7 @@ class LedgerScrollsApp {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.app) return;
+    console.log('Init: ScrollReconstructor present?', !!window.ScrollReconstructor);
     window.app = new LedgerScrollsApp();
 });
