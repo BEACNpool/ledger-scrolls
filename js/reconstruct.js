@@ -321,7 +321,6 @@ class ScrollReconstructor {
             if (datum.value?.fields?.[0]?.bytes) return datum.value.fields[0].bytes;
             if (datum.value?.bytes) return datum.value.bytes;
         }
-        }
         
         // If it's already parsed (dict with fields)
         if (typeof datum === 'object') {
