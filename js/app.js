@@ -187,7 +187,7 @@ class LedgerScrollsApp {
         try {
             this.client = new BlockchainClient(mode, apiKey, this.settings.koiosProxy);
             if (!window.ScrollReconstructor) {
-                await new Promise(r => setTimeout(r, 500));
+                await this._loadScript(`js/reconstruct.js?cb=${Date.now()}`);
             }
             if (!window.ScrollReconstructor) {
                 throw new Error('ScrollReconstructor missing (reconstruct.js failed to load)');
@@ -654,6 +654,17 @@ class LedgerScrollsApp {
         if (error.stack) parts.push(`stack:\n${error.stack}`);
         if (error.cause) parts.push(`cause: ${JSON.stringify(error.cause, null, 2)}`);
         return parts.join('\n');
+    }
+
+    _loadScript(src) {
+        return new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = src;
+            s.async = true;
+            s.onload = () => resolve();
+            s.onerror = (e) => reject(e);
+            document.head.appendChild(s);
+        });
     }
 
     _getExtension(contentType) {
