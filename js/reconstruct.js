@@ -160,6 +160,9 @@ class ScrollReconstructor {
             this._progress(`📄 Processing asset ${i + 1}/${total}...`, progress);
 
             try {
+                const assetNameHex = assetId.substring(56);
+                const assetNameAscii = this._hexToAscii(assetNameHex);
+
                 // Get asset info with on-chain metadata
                 const assetInfo = await this.client.queryAssetInfo(assetId);
                 
@@ -181,9 +184,7 @@ class ScrollReconstructor {
                             const policyMeta = cip25.json_metadata?.[pointer.policy_id];
                             if (policyMeta) {
                                 // Find the asset in the policy metadata
-                                const assetName = assetId.substring(56);
-                                const assetNameAscii = this._hexToAscii(assetName);
-                                meta = policyMeta[assetNameAscii] || policyMeta[assetName];
+                                meta = policyMeta[assetNameAscii] || policyMeta[assetNameHex];
                             }
                         }
                     }
