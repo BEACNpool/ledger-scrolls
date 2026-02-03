@@ -62,6 +62,29 @@ const SCROLLS = [
             minted_by: 'BEACNpool',
             policy_id: 'e41a8acf867853aa0a8989077790f05a80baf036c7303d0392c87077'
         }
+    },
+    {
+        id: 'earthrise-preview-6500',
+        title: 'Apollo 8 — Earthrise (Preview)',
+        description: 'NASA Apollo 8 Earthrise (public domain). Minimal-NFT video scroll on Cardano preview testnet.',
+        icon: '🌍',
+        category: 'video',
+        type: SCROLL_TYPES.LEGACY,
+        pointer: {
+            policy_id: '0f585fd064d9e84de425b91c34b272b5f64c1aad3e2861feef2ea1b6',
+            manifest_tx_hash: 'a77f162e0d162e4c6f45cd6e206213bcc0db42c09bc195b3ec7dc18d55401254',
+            manifest_asset: 'ER_MANIFEST',
+            content_type: 'video/mp4',
+            codec: 'none',
+            sha256: '154ba3eca52ed1350b18976112c5016b40b972f2fac4ba9cadb961ebcf7c56ea'
+        },
+        metadata: {
+            network: 'Preview Testnet (magic: 2)',
+            pages: 11,
+            manifest_asset: 'ER_MANIFEST',
+            minted_by: 'BEACNpool',
+            policy_id: '0f585fd064d9e84de425b91c34b272b5f64c1aad3e2861feef2ea1b6'
+        }
     }
 ];
 
