@@ -190,6 +190,9 @@ class LedgerScrollsApp {
                 await this._loadScript(`js/reconstruct.js?cb=${Date.now()}`);
             }
             if (!window.ScrollReconstructor) {
+                await this._loadScriptText(`js/reconstruct.js?cb=${Date.now()}`);
+            }
+            if (!window.ScrollReconstructor) {
                 throw new Error('ScrollReconstructor missing (reconstruct.js failed to load)');
             }
             this.reconstructor = new ScrollReconstructor(this.client);
@@ -665,6 +668,16 @@ class LedgerScrollsApp {
             s.onerror = (e) => reject(e);
             document.head.appendChild(s);
         });
+    }
+
+    async _loadScriptText(src) {
+        const res = await fetch(src, { cache: 'no-store' });
+        if (!res.ok) {
+            throw new Error(`Failed to fetch ${src} (${res.status})`);
+        }
+        const code = await res.text();
+        // eslint-disable-next-line no-eval
+        eval(code);
     }
 
     _getExtension(contentType) {
