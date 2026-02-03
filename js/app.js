@@ -678,9 +678,12 @@ class LedgerScrollsApp {
         const map = {
             'image/png': '.png', 'image/jpeg': '.jpg', 'image/gif': '.gif',
             'text/html': '.html', 'text/plain': '.txt',
-            'application/pdf': '.pdf', 'application/json': '.json'
+            'application/pdf': '.pdf', 'application/json': '.json',
+            'audio/opus': '.opus', 'audio/mpeg': '.mp3',
+            'video/mp4': '.mp4'
         };
-        return map[contentType] || '.bin';
+        const key = (contentType || '').split(';')[0].trim();
+        return map[key] || '.bin';
     }
 
     _escapeHtml(text) {
