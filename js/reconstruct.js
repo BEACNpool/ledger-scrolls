@@ -201,6 +201,14 @@ class ScrollReconstructor {
 
                 // Check if this is a page with payload and index
                 if (meta.payload !== undefined && meta.i !== undefined) {
+                    // If manifest_asset provided, filter pages to matching prefix
+                    if (pointer.manifest_asset) {
+                        const pagePrefix = pointer.manifest_asset.replace(/_MANIFEST$/i, '_PAGE');
+                        const assetName = assetNameAscii;
+                        if (!assetName || !assetName.startsWith(pagePrefix)) {
+                            continue;
+                        }
+                    }
                     pages.push({
                         index: parseInt(meta.i),
                         payload: meta.payload,
