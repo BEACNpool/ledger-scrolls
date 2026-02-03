@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ledger Scrolls — A Library That Cannot Burn (Latest)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css?v=d40a5c1">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
+</head>
+<body>
+    <div class="background-animation">
+        <div class="particles" id="particles"></div>
+        <div class="gradient-overlay"></div>
+    </div>
+
+    <div class="app-container">
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo-icon">📜</div>
+                <div class="logo-text">
+                    <h1>Ledger Scrolls</h1>
+                    <p class="tagline">A Library That Cannot Burn</p>
+                    <p class="build-version">Latest: d40a5c1</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-ghost" id="settingsBtn" title="Settings">
+                    <span class="icon">⚙️</span>
+                </button>
+                <button class="btn btn-ghost" id="infoBtn" title="About">
+                    <span class="icon">ℹ️</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="status-bar" id="statusBar">
+            <div class="status-indicator" id="connectionStatus">
+                <span class="status-dot disconnected"></span>
+                <span class="status-text">Not Connected</span>
+            </div>
+            <div class="status-actions">
+                <button class="btn btn-sm btn-primary" id="connectBtn">Connect to Cardano</button>
+            </div>
+        </div>
+
+        <section class="viewer-choice" id="viewerChoice">
+            <div class="viewer-choice-header">
+                <h2>🧭 Choose Your Viewer</h2>
+                <p>Pick the experience that fits your setup — browser, zero‑dependency CLI, or direct relay.</p>
+            </div>
+            <div class="viewer-choice-grid">
+                <div class="viewer-card">
+                    <div class="viewer-card-title">🌐 Web Viewer</div>
+                    <div class="viewer-card-text">Browse and download scrolls in your browser (Koios or Blockfrost).</div>
+                    <a class="btn btn-sm btn-primary" href="docs/VIEWERS.md" target="_blank" rel="noopener">View Docs</a>
+                </div>
+                <div class="viewer-card">
+                    <div class="viewer-card-title">⚡ Koios CLI</div>
+                    <div class="viewer-card-text">Zero‑dependency verification using Koios public REST.</div>
+                    <a class="btn btn-sm btn-primary" href="docs/KOIOS_CLI.md" target="_blank" rel="noopener">View Docs</a>
+                </div>
+                <div class="viewer-card">
+                    <div class="viewer-card-title">🧬 P2P Viewer</div>
+                    <div class="viewer-card-text">Direct relay connection with ChainSync + BlockFetch (no API).</div>
+                    <a class="btn btn-sm btn-primary" href="p2p-viewer/README.md" target="_blank" rel="noopener">View Docs</a>
+                </div>
+            </div>
+        </section>
+
+        <main class="main-content">
+            <section class="panel library-panel">
+                <div class="panel-header">
+                    <h2>📚 The Library</h2>
+                    <div class="panel-controls">
+                        <input type="text" class="search-input" id="searchScrolls" placeholder="Search scrolls...">
+                        <button class="btn btn-icon" id="refreshLibrary" title="Refresh">🔄</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="scroll-categories" id="scrollCategories"></div>
+                    <div class="scroll-grid" id="scrollGrid"></div>
+                </div>
+            </section>
+
+            <section class="panel viewer-panel" id="viewerPanel">
+                <div class="panel-header">
+                    <h2 id="viewerTitle">📖 Select a Scroll</h2>
+                    <div class="panel-controls">
+                        <button class="btn btn-icon" id="downloadBtn" title="Download" disabled>💾</button>
+                        <button class="btn btn-icon" id="verifyBtn" title="Verify Hash" disabled>🔐</button>
+                        <button class="btn btn-icon" id="closeViewerBtn" title="Close">✕</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="viewer-loading" id="viewerLoading">
+                        <div class="loading-spinner"></div>
+                        <p class="loading-text" id="loadingText">Ready to explore the eternal library...</p>
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+                    <div class="viewer-content" id="viewerContent"></div>
+                    <div class="scroll-metadata" id="scrollMetadata"></div>
+                </div>
+            </section>
+        </main>
+
+        <aside class="activity-log" id="activityLog">
+            <div class="log-header" id="logToggle">
+                <span>📋 Activity Log</span>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="log-content" id="logContent">
+                <div class="log-entries" id="logEntries">
+                    <div class="log-entry info">
+                        <span class="log-time">--:--:--</span>
+                        <span class="log-message">Ledger Scrolls v2.0 initialized. Welcome to the eternal library.</span>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-ghost" id="clearLogBtn">Clear Log</button>
+            </div>
+        </aside>
+    </div>
+
+    <div class="modal" id="settingsModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ Settings</h3>
+                <button class="btn btn-icon modal-close" data-close="settingsModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h4>🔗 Connection Mode</h4>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="connectionMode" value="blockfrost" checked>
+                            <span class="radio-custom"></span>
+                            <span class="radio-text">
+                                <strong>Blockfrost API</strong>
+                                <small>Easy setup, requires API key</small>
+                            </span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="connectionMode" value="koios">
+                            <span class="radio-custom"></span>
+                            <span class="radio-text">
+                                <strong>Koios API</strong>
+                                <small>Free, no key required</small>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-section" id="blockfrostSettings">
+                    <h4>🔑 Blockfrost API Key</h4>
+                    <div class="input-group">
+                        <input type="password" id="apiKeyInput" placeholder="mainnetXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
+                        <button class="btn btn-sm btn-primary" id="saveApiKey">Save</button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h4>🛰️ Koios Proxy (optional)</h4>
+                    <div class="input-group">
+                        <input type="text" id="koiosProxyInput" placeholder="https://koios.beacnpool.org">
+                        <button class="btn btn-sm btn-primary" id="saveKoiosProxy">Save</button>
+                    </div>
+                    <p class="help-text" id="koiosProxyStatus">Current: (none)</p>
+                    <p class="help-text">Use if your network blocks Koios. Leave blank to use built-in fallbacks.</p>
+                </div>
+
+                <div class="settings-section">
+                    <h4>🎨 Theme</h4>
+                    <div class="theme-selector">
+                        <button class="theme-btn active" data-theme="dark">🌙 Dark</button>
+                        <button class="theme-btn" data-theme="light">☀️ Light</button>
+                        <button class="theme-btn" data-theme="parchment">📜 Parchment</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="aboutModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>📜 About Ledger Scrolls</h3>
+                <button class="btn btn-icon modal-close" data-close="aboutModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="about-content">
+                    <blockquote class="philosophy-quote">"In the digital age, true knowledge must be unstoppable."</blockquote>
+                    <h4>What is Ledger Scrolls?</h4>
+                    <p>Ledger Scrolls is an open standard and viewer for <strong>permissionless, immutable data</strong> stored on the Cardano blockchain. Once a scroll is published, it exists forever—as long as Cardano exists.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="verifyModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔐 Hash Verification</h3>
+                <button class="btn btn-icon modal-close" data-close="verifyModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="verification-result" id="verificationResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="customScrollModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔧 Load Custom Scroll</h3>
+                <button class="btn btn-icon modal-close" data-close="customScrollModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="standard">Standard Scroll</button>
+                    <button class="tab-btn" data-tab="legacy">Legacy Scroll</button>
+                </div>
+                <div class="tab-content active" id="tab-standard">
+                    <div class="form-group">
+                        <label>Lock Address</label>
+                        <input type="text" id="customLockAddr" placeholder="addr1...">
+                    </div>
+                    <div class="form-group">
+                        <label>Transaction Input (txhash#index)</label>
+                        <input type="text" id="customTxIn" placeholder="abc123...#0">
+                    </div>
+                </div>
+                <div class="tab-content" id="tab-legacy">
+                    <div class="form-group">
+                        <label>Policy ID</label>
+                        <input type="text" id="customPolicyId" placeholder="abc123...">
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-block" id="loadCustomScroll">Load Scroll</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/lib/pako.min.js?v=d40a5c1"></script>
+    <script src="js/lib/cbor.min.js?v=d40a5c1"></script>
+    <script src="js/scrolls.js?v=d40a5c1"></script>
+    <script src="js/blockchain.js?v=d40a5c1"></script>
+    <script src="js/reconstruct.js?v=d40a5c1"></script>
+    <script src="js/app.js?v=d40a5c1"></script>
+</body>
+</html>
