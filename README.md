@@ -25,6 +25,11 @@ Ledger Scrolls supports two storage styles:
 
 See **docs/VIEWERS.md** for a quick overview.
 
+## Preview Testnet PoC (Blockfrost-only)
+- **Viewer:** `/preview.html`
+- **Docs:** `docs/PREVIEW_TESTNET_POC.md`
+- Requires a **Blockfrost Preview** project_id (no keys stored in repo).
+
 
 1. ✅ **Ledger Scrolls Standard (Lean): Locked UTxO Datum Bytes**
    Best for small files (icons/images/manifests/configs) that fit inside one on-chain inline datum. Supports optional gzip compression for slightly larger files.

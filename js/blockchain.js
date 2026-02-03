@@ -26,6 +26,8 @@ class BlockchainClient {
         switch (this.mode) {
             case 'blockfrost':
                 return 'https://cardano-mainnet.blockfrost.io/api/v0';
+            case 'blockfrost-preview':
+                return 'https://cardano-preview.blockfrost.io/api/v0';
             case 'koios':
                 return 'https://api.koios.rest/api/v1';
             default:
@@ -72,7 +74,7 @@ class BlockchainClient {
     async _request(endpoint, options = {}) {
         const headers = { ...options.headers };
 
-        if (this.mode === 'blockfrost') {
+        if (this.mode.startsWith('blockfrost')) {
             const url = `${this.baseUrl}${endpoint}`;
             if (this.apiKey) {
                 headers['project_id'] = this.apiKey;
@@ -119,7 +121,7 @@ class BlockchainClient {
      * Query UTxOs at an address
      */
     async queryUtxosAtAddress(address) {
-        if (this.mode === 'blockfrost') {
+        if (this.mode.startsWith('blockfrost')) {
             return this._blockfrostQueryUtxos(address);
         } else if (this.mode === 'koios') {
             return this._koiosQueryUtxos(address);
@@ -174,7 +176,7 @@ class BlockchainClient {
      * Query specific UTxO by txin
      */
     async queryUtxoByTxIn(txHash, txIndex) {
-        if (this.mode === 'blockfrost') {
+        if (this.mode.startsWith('blockfrost')) {
             const response = await this._request(`/txs/${txHash}/utxos`);
             const utxo = response.outputs?.find(o => o.output_index === txIndex);
             if (!utxo) throw new Error(`UTxO not found: ${txHash}#${txIndex}`);
@@ -227,7 +229,7 @@ class BlockchainClient {
      * Query transaction metadata
      */
     async queryTxMetadata(txHash) {
-        if (this.mode === 'blockfrost') {
+        if (this.mode.startsWith('blockfrost')) {
             try {
                 return await this._request(`/txs/${txHash}/metadata`);
             } catch (e) {
@@ -248,7 +250,7 @@ class BlockchainClient {
      * Query all assets under a policy
      */
     async queryPolicyAssets(policyId, progressCallback = null) {
-        if (this.mode === 'blockfrost') {
+        if (this.mode.startsWith('blockfrost')) {
             return this._blockfrostQueryPolicyAssets(policyId, progressCallback);
         } else if (this.mode === 'koios') {
             return this._koiosQueryPolicyAssets(policyId, progressCallback);
@@ -307,7 +309,7 @@ class BlockchainClient {
      * Query asset info including on-chain metadata
      */
     async queryAssetInfo(assetId) {
-        if (this.mode === 'blockfrost') {
+        if (this.mode.startsWith('blockfrost')) {
             return this._request(`/assets/${assetId}`);
         } else if (this.mode === 'koios') {
             // Extract policy and asset name
@@ -339,7 +341,7 @@ class BlockchainClient {
      * Query asset history to find latest mint
      */
     async queryAssetHistory(assetId, limit = 10) {
-        if (this.mode === 'blockfrost') {
+        if (this.mode.startsWith('blockfrost')) {
             try {
                 return await this._request(`/assets/${assetId}/history?order=desc&count=${limit}`);
             } catch (e) {
@@ -369,7 +371,7 @@ class BlockchainClient {
      */
     async testConnection() {
         try {
-            if (this.mode === 'blockfrost') {
+            if (this.mode.startsWith('blockfrost')) {
                 await this._request('/health');
             } else if (this.mode === 'koios') {
                 const registryAddress = 'addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy';
@@ -389,7 +391,7 @@ class BlockchainClient {
      * Get current blockchain tip
      */
     async getTip() {
-        if (this.mode === 'blockfrost') {
+        if (this.mode.startsWith('blockfrost')) {
             return this._request('/blocks/latest');
         } else if (this.mode === 'koios') {
             const response = await this._request('/tip');

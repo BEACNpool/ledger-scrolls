@@ -42,14 +42,19 @@ class LedgerScrollsApp {
     _loadSettings() {
         try {
             const saved = localStorage.getItem('ledgerScrollsSettings');
-            return saved ? JSON.parse(saved) : {
-                mode: 'blockfrost',
+            const fallback = {
+                mode: window.LS_DEFAULT_MODE || 'blockfrost',
                 apiKey: '',
                 koiosProxy: '',
                 theme: 'dark'
             };
+            const settings = saved ? JSON.parse(saved) : fallback;
+            if (window.LS_OVERRIDE_MODE) {
+                settings.mode = window.LS_OVERRIDE_MODE;
+            }
+            return settings;
         } catch {
-            return { mode: 'blockfrost', apiKey: '', koiosProxy: '', theme: 'dark' };
+            return { mode: window.LS_DEFAULT_MODE || 'blockfrost', apiKey: '', koiosProxy: '', theme: 'dark' };
         }
     }
 
@@ -172,7 +177,7 @@ class LedgerScrollsApp {
         const mode = this.settings.mode;
         const apiKey = this.settings.apiKey;
 
-        if (mode === 'blockfrost' && !apiKey) {
+        if (mode.startsWith('blockfrost') && !apiKey) {
             this._toast('error', 'Please enter a Blockfrost API key in Settings');
             this._openModal('settingsModal');
             return;
@@ -564,7 +569,7 @@ class LedgerScrollsApp {
         this.settings.mode = mode;
         this._saveSettings();
         const blockfrostSettings = document.getElementById('blockfrostSettings');
-        blockfrostSettings.style.display = mode === 'blockfrost' ? 'block' : 'none';
+        blockfrostSettings.style.display = mode.startsWith('blockfrost') ? 'block' : 'none';
         this._log('info', `Connection mode changed to: ${mode}`);
     }
 
