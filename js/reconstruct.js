@@ -74,9 +74,15 @@ class ScrollReconstructor {
 
         // Extract inline datum (fallback to direct UTxO query if missing)
         let inlineDatum = utxo.inline_datum;
+        let datumHash = utxo.datum_hash;
         if (!inlineDatum) {
             const fresh = await this.client.queryUtxoByTxIn(txHash, txIndex);
             inlineDatum = fresh.inline_datum;
+            datumHash = datumHash || fresh.datum_hash;
+        }
+        if (!inlineDatum && datumHash && this.client.queryDatumByHash) {
+            const datumInfo = await this.client.queryDatumByHash(datumHash);
+            inlineDatum = datumInfo?.value?.fields?.[0]?.bytes || datumInfo?.value?.bytes || datumInfo?.bytes || null;
         }
         if (!inlineDatum) {
             throw new Error('UTxO does not contain inline datum');
@@ -307,6 +313,14 @@ class ScrollReconstructor {
                 console.warn('CBOR decode failed, trying raw hex:', e);
                 return datum;
             }
+        }
+
+        // Koios datum_info style objects
+        if (typeof datum === 'object' && datum !== null) {
+            if (datum.bytes) return datum.bytes;
+            if (datum.value?.fields?.[0]?.bytes) return datum.value.fields[0].bytes;
+            if (datum.value?.bytes) return datum.value.bytes;
+        }
         }
         
         // If it's already parsed (dict with fields)

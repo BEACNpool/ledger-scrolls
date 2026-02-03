@@ -197,11 +197,30 @@ class BlockchainClient {
                 tx_index: txIndex,
                 output_index: txIndex,
                 inline_datum: response[0].inline_datum?.bytes || null,
+                datum_hash: response[0].datum_hash || null,
                 amount: response[0].value ? [
                     { unit: 'lovelace', quantity: response[0].value }
                 ] : []
             };
         }
+    }
+
+    /**
+     * Query datum by hash (Koios)
+     */
+    async queryDatumByHash(datumHash) {
+        if (this.mode !== 'koios') {
+            throw new Error('datum_info is only supported in Koios mode');
+        }
+        const response = await this._request('/datum_info', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ _datum_hashes: [datumHash] })
+        });
+        if (!response || response.length === 0) {
+            throw new Error(`Datum not found: ${datumHash}`);
+        }
+        return response[0];
     }
 
     /**
