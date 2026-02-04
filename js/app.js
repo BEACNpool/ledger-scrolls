@@ -28,7 +28,7 @@ class LedgerScrollsApp {
         this._renderScrollLibrary();
 
         // Auto-connect if we have an API key
-        if (this.settings.apiKey) {
+        if (this.settings.apiKey || this.settings.mode === 'koios') {
             this._connect();
         }
 
@@ -49,6 +49,9 @@ class LedgerScrollsApp {
                 theme: 'dark'
             };
             const settings = saved ? JSON.parse(saved) : fallback;
+            if (!settings.koiosProxy) {
+                settings.koiosProxy = 'https://koios.beacnpool.org';
+            }
             if (window.LS_OVERRIDE_MODE) {
                 settings.mode = window.LS_OVERRIDE_MODE;
             }
@@ -101,8 +104,8 @@ class LedgerScrollsApp {
         if (this.settings.apiKey) {
             this.elements.apiKeyInput.value = this.settings.apiKey;
         }
-        if (this.settings.koiosProxy && this.elements.koiosProxyInput) {
-            this.elements.koiosProxyInput.value = this.settings.koiosProxy;
+        if (this.elements.koiosProxyInput) {
+            this.elements.koiosProxyInput.value = this.settings.koiosProxy || 'https://koios.beacnpool.org';
         }
         if (this.elements.koiosProxyStatus) {
             this.elements.koiosProxyStatus.textContent = `Current: ${this.settings.koiosProxy || '(none)'}`;
