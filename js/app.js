@@ -6,6 +6,116 @@
  * A viewer for immutable documents stored on the Cardano blockchain.
  */
 
+// --- Binary rendering helpers (MP4, images, PDFs, etc.) ---
+let _activeObjectUrl = null;
+function revokeActiveObjectUrl() {
+    if (_activeObjectUrl) {
+        URL.revokeObjectURL(_activeObjectUrl);
+        _activeObjectUrl = null;
+    }
+}
+function makeObjectUrl(bytes, contentType) {
+    const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    const blob = new Blob([u8], { type: contentType || "application/octet-stream" });
+    revokeActiveObjectUrl();
+    _activeObjectUrl = URL.createObjectURL(blob);
+    return { blob, url: _activeObjectUrl };
+}
+function guessFileExtension(contentType) {
+    const ct = (contentType || "").toLowerCase();
+    if (ct.includes("video/mp4")) return "mp4";
+    if (ct.includes("image/png")) return "png";
+    if (ct.includes("image/jpeg")) return "jpg";
+    if (ct.includes("application/pdf")) return "pdf";
+    if (ct.includes("text/html")) return "html";
+    if (ct.includes("text/plain")) return "txt";
+    return "bin";
+}
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename || "download";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+function renderScrollBytesIntoViewer({ bytes, contentType, filename }, viewerContentEl) {
+    const ct = (contentType || "application/octet-stream").toLowerCase();
+    const ext = guessFileExtension(ct);
+    const finalName = filename || `ledger_scroll.${ext}`;
+    const { blob, url } = makeObjectUrl(bytes, ct);
+
+    viewerContentEl.innerHTML = "";
+
+    if (ct.startsWith("video/") || ct.includes("video/mp4")) {
+        const wrap = document.createElement("div");
+        wrap.className = "video-wrap";
+        const vid = document.createElement("video");
+        vid.controls = true;
+        vid.playsInline = true;
+        vid.preload = "metadata";
+        vid.src = url;
+        vid.style.width = "100%";
+        vid.style.maxHeight = "70vh";
+        vid.style.borderRadius = "12px";
+        wrap.appendChild(vid);
+        viewerContentEl.appendChild(wrap);
+        return { blob, url, filename: finalName, kind: "video" };
+    }
+
+    if (ct.startsWith("image/")) {
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = finalName;
+        img.style.maxWidth = "100%";
+        img.style.borderRadius = "12px";
+        viewerContentEl.appendChild(img);
+        return { blob, url, filename: finalName, kind: "image" };
+    }
+
+    if (ct.includes("application/pdf")) {
+        const iframe = document.createElement("iframe");
+        iframe.src = url;
+        iframe.style.width = "100%";
+        iframe.style.height = "70vh";
+        iframe.style.border = "0";
+        iframe.style.borderRadius = "12px";
+        viewerContentEl.appendChild(iframe);
+        return { blob, url, filename: finalName, kind: "pdf" };
+    }
+
+    if (ct.startsWith("text/") || ct.includes("application/json")) {
+        const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+        const text = new TextDecoder("utf-8", { fatal: false }).decode(u8);
+        if (ct.includes("text/html")) {
+            const iframe = document.createElement("iframe");
+            iframe.setAttribute("sandbox", "allow-same-origin");
+            iframe.style.width = "100%";
+            iframe.style.height = "70vh";
+            iframe.style.border = "0";
+            iframe.style.borderRadius = "12px";
+            viewerContentEl.appendChild(iframe);
+            const doc = iframe.contentDocument;
+            doc.open();
+            doc.write(text);
+            doc.close();
+            return { blob, url, filename: finalName, kind: "html" };
+        }
+        const pre = document.createElement("pre");
+        pre.textContent = text.length > 50000 ? text.substring(0, 50000) + "\n\n... (truncated)" : text;
+        pre.style.whiteSpace = "pre-wrap";
+        viewerContentEl.appendChild(pre);
+        return { blob, url, filename: finalName, kind: "text" };
+    }
+
+    const p = document.createElement("p");
+    p.textContent = `Binary content (${ct}). Use Download.`;
+    viewerContentEl.appendChild(p);
+    return { blob, url, filename: finalName, kind: "binary" };
+}
+
 class LedgerScrollsApp {
     constructor() {
         // State
@@ -335,44 +445,18 @@ class LedgerScrollsApp {
     }
 
     _displayContent(result, scroll) {
-        // Revoke previous blob URL to prevent memory leaks
-        if (this._currentBlobUrl) {
-            URL.revokeObjectURL(this._currentBlobUrl);
-            this._currentBlobUrl = null;
-        }
+        revokeActiveObjectUrl();
 
         this.elements.viewerLoading.classList.add('hidden');
         this.elements.viewerContent.classList.add('active');
 
         const contentType = result.contentType.split(';')[0].trim();
+        const filename = scroll.file_name || scroll.id || scroll.title;
 
-        if (contentType.startsWith('image/')) {
-            const blob = new Blob([result.data], { type: contentType });
-            this._currentBlobUrl = URL.createObjectURL(blob);
-            this.elements.viewerContent.innerHTML = `
-                <img src="${this._currentBlobUrl}" alt="${scroll.title}" style="max-width: 100%; height: auto;">
-            `;
-        } else if (contentType === 'text/html') {
-            const blob = new Blob([result.data], { type: 'text/html' });
-            this._currentBlobUrl = URL.createObjectURL(blob);
-            this.elements.viewerContent.innerHTML = `
-                <iframe src="${this._currentBlobUrl}" sandbox="allow-scripts" style="width: 100%; height: 600px; border: none; border-radius: 12px; background: white;"></iframe>
-            `;
-        } else if (contentType.startsWith('text/')) {
-            const text = new TextDecoder().decode(result.data);
-            const preview = text.length > 50000 ? text.substring(0, 50000) + '\n\n... (truncated)' : text;
-            this.elements.viewerContent.innerHTML = `
-                <div class="text-content"><pre>${this._escapeHtml(preview)}</pre></div>
-            `;
-        } else {
-            this.elements.viewerContent.innerHTML = `
-                <div style="text-align: center; padding: 40px;">
-                    <p style="font-size: 3rem; margin-bottom: 20px;">📦</p>
-                    <p>This scroll contains binary data (${contentType})</p>
-                    <p style="color: var(--color-text-muted);">Click Download to save the file</p>
-                </div>
-            `;
-        }
+        window.__LS_OPEN = renderScrollBytesIntoViewer(
+            { bytes: result.data, contentType, filename },
+            this.elements.viewerContent
+        );
     }
 
     _displayMetadata(result, scroll) {
@@ -401,11 +485,8 @@ class LedgerScrollsApp {
     }
 
     _closeViewer() {
-        // Revoke blob URL to prevent memory leaks
-        if (this._currentBlobUrl) {
-            URL.revokeObjectURL(this._currentBlobUrl);
-            this._currentBlobUrl = null;
-        }
+        revokeActiveObjectUrl();
+        window.__LS_OPEN = null;
 
         this.currentScroll = null;
         this.loadedContent = null;
@@ -425,6 +506,13 @@ class LedgerScrollsApp {
     // =========================================================================
 
     _downloadCurrentScroll() {
+        const open = window.__LS_OPEN;
+        if (open?.blob) {
+            downloadBlob(open.blob, open.filename);
+            this._log('info', `Downloaded: ${open.filename}`);
+            this._toast('success', `Downloaded ${open.filename}`);
+            return;
+        }
         if (!this.loadedContent || !this.currentScroll) return;
 
         const contentType = this.loadedContent.contentType.split(';')[0].trim();
@@ -432,14 +520,7 @@ class LedgerScrollsApp {
         const filename = `${this.currentScroll.title.replace(/[^a-z0-9]/gi, '_')}${extension}`;
 
         const blob = new Blob([this.loadedContent.data], { type: contentType });
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-
-        URL.revokeObjectURL(url);
+        downloadBlob(blob, filename);
         this._log('info', `Downloaded: ${filename}`);
         this._toast('success', `Downloaded ${filename}`);
     }
