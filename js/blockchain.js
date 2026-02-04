@@ -297,7 +297,7 @@ class BlockchainClient {
 
         while (true) {
             const response = await this._request(
-                `/asset_list?policy_id=eq.${policyId}&select=asset_name&limit=${limit}&offset=${offset}`
+                `/asset_list?policy_id=eq.${policyId}&limit=${limit}&offset=${offset}`
             );
             if (!response || response.length === 0) break;
             assets.push(...response.map(a => {
