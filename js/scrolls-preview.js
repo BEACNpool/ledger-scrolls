@@ -108,6 +108,29 @@ const SCROLLS = [
             minted_by: 'BEACNpool',
             policy_id: '0f137c5e879dd47bbc91d70fac4172a2a97d2b3c030b9fccd5ef47cf'
         }
+    },
+    {
+        id: 'commercial-preview',
+        title: 'Commercial Scroll (Preview)',
+        description: 'Commercial video scroll on Cardano preview testnet — for final metadata and viewer validation.',
+        icon: '🎬',
+        category: 'video',
+        type: SCROLL_TYPES.LEGACY,
+        pointer: {
+            policy_id: '232ca19bb375be1c4df082d32962d60c55a98bdef172702d7390a8a1',
+            manifest_tx_hash: '9fc744aa279b483328b9a03fc4effc5e43179f47c4a993f9bae6b7380ab48fce',
+            manifest_asset: 'CM_MANIFEST',
+            content_type: 'video/mp4',
+            codec: 'none',
+            sha256: '692a2b9b8ea31da036669b7be17a401ad2e093881ce0a9df7ca93260ab1d0f57'
+        },
+        metadata: {
+            network: 'Preview Testnet (magic: 2)',
+            pages: 46,
+            manifest_asset: 'CM_MANIFEST',
+            minted_by: 'BEACNpool',
+            policy_id: '232ca19bb375be1c4df082d32962d60c55a98bdef172702d7390a8a1'
+        }
     }
 ];
 
