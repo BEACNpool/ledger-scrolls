@@ -37,7 +37,25 @@ See **docs/VIEWERS.md** for a quick overview.
 
 2. 🧾 **Legacy Scrolls (Large): Pages + Manifest NFTs ([CIP-25](https://cips.cardano.org/cip/CIP-0025) style)**
    Best for large documents (Bible / Whitepaper / Constitutions). 
- 
+
+### Pre‑Mint Tx Size Validation (Legacy / CIP‑25)
+To avoid guessing, validate **tx size** before minting each part. The tx body must be **≤ 16KB** (use a buffer like **15,500 bytes** for safety). Also: payload hex strings must be **≤ 64 bytes**, so use **seg‑bytes ≤ 32**.
+
+**Script:** `mint/validate_tx_size.sh`
+
+Example:
+```bash
+./mint/validate_tx_size.sh \
+  part01.json part01.assets \
+  policy/policy.id policy/policy.script \
+  ~/payment.addr ./assets_to_value.py \
+  ~/relay/db/node.socket
+```
+
+Output:
+- `PASS` if `tx_raw_bytes <= 15500`
+- `WARN` if `<= 16384` but above buffer
+- `FAIL` if `> 16384`
 
 ---
 
