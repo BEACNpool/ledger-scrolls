@@ -45,19 +45,19 @@ class LedgerScrollsApp {
             const fallback = {
                 mode: window.LS_DEFAULT_MODE || 'blockfrost',
                 apiKey: '',
-                koiosProxy: 'https://koios.beacnpool.org/api/v1',
+                koiosProxy: '',
                 theme: 'dark'
             };
             const settings = saved ? JSON.parse(saved) : fallback;
             if (typeof settings.koiosProxy === 'undefined') {
-                settings.koiosProxy = 'https://koios.beacnpool.org/api/v1';
+                settings.koiosProxy = '';
             }
             if (window.LS_OVERRIDE_MODE) {
                 settings.mode = window.LS_OVERRIDE_MODE;
             }
             return settings;
         } catch {
-            return { mode: window.LS_DEFAULT_MODE || 'blockfrost', apiKey: '', koiosProxy: 'https://koios.beacnpool.org/api/v1', theme: 'dark' };
+            return { mode: window.LS_DEFAULT_MODE || 'blockfrost', apiKey: '', koiosProxy: '', theme: 'dark' };
         }
     }
 
@@ -105,7 +105,7 @@ class LedgerScrollsApp {
             this.elements.apiKeyInput.value = this.settings.apiKey;
         }
         if (this.elements.koiosProxyInput) {
-            this.elements.koiosProxyInput.value = this.settings.koiosProxy || 'https://koios.beacnpool.org/api/v1';
+            this.elements.koiosProxyInput.value = this.settings.koiosProxy || '';
         }
         if (this.elements.koiosProxyStatus) {
             this.elements.koiosProxyStatus.textContent = `Current: ${this.settings.koiosProxy || '(none)'}`;
