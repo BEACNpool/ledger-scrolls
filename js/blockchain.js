@@ -296,15 +296,21 @@ class BlockchainClient {
         const limit = 1000;
 
         while (true) {
-            const response = await this._request(
-                `/asset_list?policy_id=eq.${policyId}&select=asset_name&limit=${limit}&offset=${offset}`
-            );
+            const response = await this._request('/asset_list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ _asset_policy: policyId, _offset: offset, _limit: limit })
+            });
             if (!response || response.length === 0) break;
-            assets.push(...response.map(a => ({
-                asset: policyId + a.asset_name,
-                asset_name: a.asset_name,
-                quantity: a.total_supply || 1
-            })));
+            assets.push(...response.map(a => {
+                const assetName = a.asset_name ?? a.asset_name_hex ?? '';
+                const supply = a.total_supply ?? a.quantity ?? 1;
+                return {
+                    asset: policyId + assetName,
+                    asset_name: assetName,
+                    quantity: supply
+                };
+            }));
             if (response.length < limit) break;
             offset += limit;
         }
