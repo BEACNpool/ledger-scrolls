@@ -95,8 +95,9 @@ class BlockchainClient {
         const bases = [...this.koiosBaseUrls];
         if (this.koiosProxy) {
             const trimmed = this.koiosProxy.replace(/\/$/, '');
-            const withApi = trimmed.includes('/api/v1') ? trimmed : `${trimmed}/api/v1`;
-            bases.unshift(withApi);
+            const withApi = trimmed.includes('/api') ? trimmed : `${trimmed}/api/v1`;
+            if (!bases.includes(trimmed)) bases.unshift(trimmed);
+            if (!bases.includes(withApi)) bases.unshift(withApi);
         }
 
         for (const base of bases) {
