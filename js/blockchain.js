@@ -44,6 +44,10 @@ class BlockchainClient {
         this.baseUrl = this._getBaseUrl();
     }
 
+    setKoiosProxy(proxy) {
+        this.koiosProxy = proxy || '';
+    }
+
     async _rateLimitedFetch(url, options = {}, retries = 0) {
         // Enforce rate limiting
         const now = Date.now();

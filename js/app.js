@@ -45,19 +45,19 @@ class LedgerScrollsApp {
             const fallback = {
                 mode: window.LS_DEFAULT_MODE || 'blockfrost',
                 apiKey: '',
-                koiosProxy: 'https://koios.beacnpool.org',
+                koiosProxy: 'https://koios.beacn.workers.dev',
                 theme: 'dark'
             };
             const settings = saved ? JSON.parse(saved) : fallback;
-            if (!settings.koiosProxy) {
-                settings.koiosProxy = 'https://koios.beacnpool.org';
+            if (typeof settings.koiosProxy === 'undefined') {
+                settings.koiosProxy = 'https://koios.beacn.workers.dev';
             }
             if (window.LS_OVERRIDE_MODE) {
                 settings.mode = window.LS_OVERRIDE_MODE;
             }
             return settings;
         } catch {
-            return { mode: window.LS_DEFAULT_MODE || 'blockfrost', apiKey: '', koiosProxy: 'https://koios.beacnpool.org', theme: 'dark' };
+            return { mode: window.LS_DEFAULT_MODE || 'blockfrost', apiKey: '', koiosProxy: 'https://koios.beacn.workers.dev', theme: 'dark' };
         }
     }
 
@@ -105,7 +105,7 @@ class LedgerScrollsApp {
             this.elements.apiKeyInput.value = this.settings.apiKey;
         }
         if (this.elements.koiosProxyInput) {
-            this.elements.koiosProxyInput.value = this.settings.koiosProxy || 'https://koios.beacnpool.org';
+            this.elements.koiosProxyInput.value = this.settings.koiosProxy || 'https://koios.beacn.workers.dev';
         }
         if (this.elements.koiosProxyStatus) {
             this.elements.koiosProxyStatus.textContent = `Current: ${this.settings.koiosProxy || '(none)'}`;
@@ -561,6 +561,9 @@ class LedgerScrollsApp {
         const value = this.elements.koiosProxyInput?.value?.trim() || '';
         this.settings.koiosProxy = value;
         this._saveSettings();
+        if (this.client && typeof this.client.setKoiosProxy === 'function') {
+            this.client.setKoiosProxy(value);
+        }
         if (this.elements.koiosProxyStatus) {
             this.elements.koiosProxyStatus.textContent = `Current: ${value || '(none)'}`;
         }
