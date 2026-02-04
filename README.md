@@ -498,7 +498,7 @@ You can:
 1. Create a permanently locked UTxO containing `inlineDatum.bytes` = your (gzipped) file bytes
 2. Add a registry entry pointing to `lock_txin`, with `content_type` + `sha256`
 
-**To publish a Legacy Scroll** (for large files; prefer standard + [IPFS](https://ipfs.tech) hybrids):
+**To publish a Legacy Scroll** :
 
 1. Split file into pages + segments
 2. Mint pages + manifest NFT(s)
