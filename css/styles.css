@@ -1448,48 +1448,69 @@ body {
     }
 }
 
-/* Viewer Choice Cards */
-.viewer-choice {
+/* Manifesto */
+.manifesto {
     margin: var(--space-lg) 0 var(--space-xl);
-    padding: var(--space-lg);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    padding: var(--space-2xl);
     border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, rgba(26, 30, 40, 0.85), rgba(18, 21, 28, 0.85));
+    border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: var(--glass-shadow);
-    backdrop-filter: var(--glass-blur);
+    backdrop-filter: blur(18px);
 }
 
-.viewer-choice-header h2 {
+.manifesto-header {
+    text-align: center;
+    max-width: 760px;
+    margin: 0 auto var(--space-xl);
+}
+
+.manifesto-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
+}
+
+.manifesto-header h2 {
     font-family: var(--font-display);
-    margin-bottom: var(--space-xs);
-}
-
-.viewer-choice-header p {
-    color: var(--color-text-secondary);
+    font-size: 2.2rem;
     margin-bottom: var(--space-md);
 }
 
-.viewer-choice-grid {
+.manifesto-subtext {
+    color: var(--color-text-secondary);
+    font-size: 1.05rem;
+}
+
+.manifesto-pillars {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: var(--space-md);
+    gap: var(--space-lg);
 }
 
-.viewer-card {
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    padding: var(--space-md);
+.pillar {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
+    gap: var(--space-md);
+    align-items: flex-start;
+    padding: var(--space-lg);
+    border-radius: var(--radius-md);
+    background: rgba(18, 21, 28, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.viewer-card-title {
-    font-weight: 700;
+.pillar-icon {
+    font-size: 1.6rem;
 }
 
-.viewer-card-text {
+.pillar h3 {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    margin-bottom: var(--space-xs);
+}
+
+.pillar p {
     color: var(--color-text-secondary);
-    min-height: 3.5em;
+    font-size: 0.98rem;
 }

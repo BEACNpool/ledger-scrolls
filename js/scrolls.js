@@ -29,29 +29,57 @@ const CATEGORIES = {
  */
 const SCROLLS = [
     // =========================================================================
-    // STANDARD SCROLLS (Locked UTxO + Inline Datum)
+    // FOUNDATIONAL GOVERNANCE SCROLLS
     // =========================================================================
     {
-        id: 'hosky-png',
-        title: 'Hosky PNG',
-        description: 'The legendary Hosky dog meme, preserved forever on-chain as a demonstration of the Ledger Scrolls Standard.',
-        icon: '🐕',
-        category: 'images',
-        type: SCROLL_TYPES.STANDARD,
+        id: 'constitution-e608',
+        title: 'Cardano Constitution (Epoch 608)',
+        description: 'The current Cardano Constitution, ratified at Epoch 608. The governance framework for the Cardano blockchain.',
+        icon: '⚖️',
+        category: 'governance',
+        type: SCROLL_TYPES.LEGACY,
         pointer: {
-            lock_address: 'addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn',
-            lock_txin: '728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0',
-            content_type: 'image/png',
-            codec: 'none',
-            sha256: '798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f'
+            policy_id: 'ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750',
+            manifest_asset_name: 'CONSTITUTION_E608_MANIFEST',
+            content_type: 'text/plain; charset=utf-8',
+            codec: 'gzip',
+            sha256_gzip: '4565368ca35d8c6bb08bff712c1b22c0afe300c19292d5aa09c812ed415a4e93',
+            sha256_original: '98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1'
         },
         metadata: {
-            size: '~15KB',
-            dimensions: '512x512',
-            published: '2024',
-            author: 'BEACNpool'
+            size: '~67KB',
+            pages: 11,
+            ratified: 'Epoch 608',
+            enacted: 'Epoch 609',
+            status: 'Current'
         }
     },
+    {
+        id: 'constitution-e541',
+        title: 'Cardano Constitution (Epoch 541)',
+        description: 'The original Cardano Constitution, ratified at Epoch 541. Historical governance document.',
+        icon: '📜',
+        category: 'governance',
+        type: SCROLL_TYPES.LEGACY,
+        pointer: {
+            policy_id: 'd7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d',
+            manifest_asset_name: 'CONSTITUTION_E541_MANIFEST',
+            content_type: 'text/plain; charset=utf-8',
+            codec: 'gzip',
+            sha256_gzip: '975d1c6bb1c8bf4982c58e41c9b137ecd4272e34095a5ec9b37bdde5ca6f268a',
+            sha256_original: '1939c1627e49b5267114cbdb195d4ac417e545544ba6dcb47e03c679439e9566'
+        },
+        metadata: {
+            size: '~45KB',
+            pages: 7,
+            ratified: 'Epoch 541',
+            enacted: 'Epoch 542',
+            status: 'Historical'
+        }
+    },
+    // =========================================================================
+    // STANDARD SCROLLS (Locked UTxO + Inline Datum)
+    // =========================================================================
     {
         id: 'genesis-scroll',
         title: "The Genesis Scroll",
@@ -210,7 +238,31 @@ const SCROLLS = [
             enacted: 'Epoch 542',
             status: 'Historical'
         }
-    }
+    },
+    // =========================================================================
+    // MEME / EASTER EGG
+    // =========================================================================
+    {
+        id: 'hosky-png',
+        title: 'Hosky PNG',
+        description: 'The legendary Hosky dog meme, preserved forever on-chain as a demonstration of the Ledger Scrolls Standard.',
+        icon: '🐕',
+        category: 'images',
+        type: SCROLL_TYPES.STANDARD,
+        pointer: {
+            lock_address: 'addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn',
+            lock_txin: '728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0',
+            content_type: 'image/png',
+            codec: 'none',
+            sha256: '798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f'
+        },
+        metadata: {
+            size: '~15KB',
+            dimensions: '512x512',
+            published: '2024',
+            author: 'BEACNpool'
+        }
+    },
 ];
 
 /**
