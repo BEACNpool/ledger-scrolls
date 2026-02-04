@@ -287,17 +287,25 @@ class BlockchainClient {
             progressCallback('Querying policy assets...');
         }
 
-        const response = await this._request('/policy_asset_list', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ _policy_id: policyId })
-        });
+        const assets = [];
+        let offset = 0;
+        const limit = 1000;
 
-        return (response || []).map(a => ({
-            asset: policyId + a.asset_name,
-            asset_name: a.asset_name,
-            quantity: a.total_supply
-        }));
+        while (true) {
+            const response = await this._request(
+                `/asset_list?policy_id=eq.${policyId}&select=asset_name&limit=${limit}&offset=${offset}`
+            );
+            if (!response || response.length === 0) break;
+            assets.push(...response.map(a => ({
+                asset: policyId + a.asset_name,
+                asset_name: a.asset_name,
+                quantity: a.total_supply || 1
+            })));
+            if (response.length < limit) break;
+            offset += limit;
+        }
+
+        return assets;
     }
 
     /**
