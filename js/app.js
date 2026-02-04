@@ -45,7 +45,7 @@ class LedgerScrollsApp {
             const fallback = {
                 mode: window.LS_DEFAULT_MODE || 'blockfrost',
                 apiKey: '',
-                koiosProxy: '',
+                koiosProxy: 'https://koios.beacnpool.org',
                 theme: 'dark'
             };
             const settings = saved ? JSON.parse(saved) : fallback;
@@ -54,7 +54,7 @@ class LedgerScrollsApp {
             }
             return settings;
         } catch {
-            return { mode: window.LS_DEFAULT_MODE || 'blockfrost', apiKey: '', koiosProxy: '', theme: 'dark' };
+            return { mode: window.LS_DEFAULT_MODE || 'blockfrost', apiKey: '', koiosProxy: 'https://koios.beacnpool.org', theme: 'dark' };
         }
     }
 
