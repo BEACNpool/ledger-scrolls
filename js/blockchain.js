@@ -14,6 +14,7 @@ class BlockchainClient {
         this.koiosProxy = koiosProxy;
         this.baseUrl = this._getBaseUrl();
         this.koiosBaseUrls = [
+            'https://koios.beacnpool.org/api/v1',
             'https://api.koios.rest/api/v1',
             'https://corsproxy.io/?https://api.koios.rest/api/v1',
             'https://cors.isomorphic-git.org/https://api.koios.rest/api/v1'
@@ -29,7 +30,7 @@ class BlockchainClient {
             case 'blockfrost-preview':
                 return 'https://cardano-preview.blockfrost.io/api/v0';
             case 'koios':
-                return 'https://api.koios.rest/api/v1';
+                return 'https://koios.beacnpool.org/api/v1';
             default:
                 throw new Error(`Unknown mode: ${this.mode}`);
         }
