@@ -287,17 +287,11 @@ class BlockchainClient {
             progressCallback('Querying policy assets...');
         }
 
-        let response;
-        try {
-            response = await this._request('/policy_asset_list', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ _policy_id: policyId })
-            });
-        } catch (e) {
-            // Fallback to GET variant if POST is blocked by proxy
-            response = await this._request(`/policy_asset_list?_policy_id=${policyId}`);
-        }
+        const response = await this._request('/policy_asset_list', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ _policy_id: policyId })
+        });
 
         return (response || []).map(a => ({
             asset: policyId + a.asset_name,
