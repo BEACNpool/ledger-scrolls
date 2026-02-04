@@ -85,6 +85,29 @@ const SCROLLS = [
             minted_by: 'BEACNpool',
             policy_id: '0f585fd064d9e84de425b91c34b272b5f64c1aad3e2861feef2ea1b6'
         }
+    },
+    {
+        id: 'signal-preview',
+        title: 'The Signal (Preview)',
+        description: 'Original digital art + audio — a hopeful transmission from the future (preview testnet).',
+        icon: '✨',
+        category: 'video',
+        type: SCROLL_TYPES.LEGACY,
+        pointer: {
+            policy_id: '0f137c5e879dd47bbc91d70fac4172a2a97d2b3c030b9fccd5ef47cf',
+            manifest_tx_hash: '6616c6a748be5d5b53b25bcb3b1b422032ae75a2b0055aa772439192ca988edb',
+            manifest_asset: 'SIG_MANIFEST',
+            content_type: 'video/mp4',
+            codec: 'none',
+            sha256: '1bde086f689b34aefd260d2b1d1eecdcf5006d25403148b96c31eaf3ca39bbab'
+        },
+        metadata: {
+            network: 'Preview Testnet (magic: 2)',
+            pages: 31,
+            manifest_asset: 'SIG_MANIFEST',
+            minted_by: 'BEACNpool',
+            policy_id: '0f137c5e879dd47bbc91d70fac4172a2a97d2b3c030b9fccd5ef47cf'
+        }
     }
 ];
 

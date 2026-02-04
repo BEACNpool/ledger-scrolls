@@ -159,7 +159,7 @@
                     <h4>🔗 Connection Mode</h4>
                     <div class="radio-group">
                         <label class="radio-label">
-                            <input type="radio" name="connectionMode" value="blockfrost" checked>
+                            <input type="radio" name="connectionMode" value="blockfrost">
                             <span class="radio-custom"></span>
                             <span class="radio-text">
                                 <strong>Blockfrost API</strong>
@@ -167,7 +167,7 @@
                             </span>
                         </label>
                         <label class="radio-label">
-                            <input type="radio" name="connectionMode" value="koios">
+                            <input type="radio" name="connectionMode" value="koios" checked>
                             <span class="radio-custom"></span>
                             <span class="radio-text">
                                 <strong>Koios API</strong>
@@ -356,6 +356,9 @@
     <script src="js/scrolls.js?v=40ead0c1"></script>
     <script src="js/blockchain.js?v=40ead0c1"></script>
     <script src="js/reconstruct.js?v=b377198"></script>
+    <script>
+        window.LS_DEFAULT_MODE = 'koios';
+    </script>
     <script src="js/app.js?v=b377198"></script>
 </body>
 </html>
