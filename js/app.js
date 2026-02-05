@@ -26,9 +26,6 @@ function guessFileExtension(contentType) {
     if (ct.includes("video/mp4")) return "mp4";
     if (ct.includes("image/png")) return "png";
     if (ct.includes("image/jpeg")) return "jpg";
-    if (ct.includes("audio/mpeg")) return "mp3";
-    if (ct.includes("audio/opus")) return "opus";
-    if (ct.includes("audio/")) return "audio";
     if (ct.includes("application/pdf")) return "pdf";
     if (ct.includes("text/html")) return "html";
     if (ct.includes("text/plain")) return "txt";
@@ -76,19 +73,6 @@ function renderScrollBytesIntoViewer({ bytes, contentType, filename }, viewerCon
         img.style.borderRadius = "12px";
         viewerContentEl.appendChild(img);
         return { blob, url, filename: finalName, kind: "image" };
-    }
-
-    if (ct.startsWith("audio/")) {
-        const wrap = document.createElement("div");
-        wrap.className = "audio-wrap";
-        const audio = document.createElement("audio");
-        audio.controls = true;
-        audio.preload = "metadata";
-        audio.src = url;
-        audio.style.width = "100%";
-        wrap.appendChild(audio);
-        viewerContentEl.appendChild(wrap);
-        return { blob, url, filename: finalName, kind: "audio" };
     }
 
     if (ct.includes("application/pdf")) {
@@ -236,11 +220,6 @@ class LedgerScrollsApp {
         if (this.elements.koiosProxyStatus) {
             this.elements.koiosProxyStatus.textContent = `Current: ${this.settings.koiosProxy || '(none)'}`;
         }
-        const blockfrostSettings = document.getElementById('blockfrostSettings');
-        if (blockfrostSettings) {
-            blockfrostSettings.style.display = this.settings.mode.startsWith('blockfrost') ? 'block' : 'none';
-        }
-        this._updateLogConnectionStatus();
     }
 
     _bindEvents() {
@@ -256,13 +235,6 @@ class LedgerScrollsApp {
             this.elements.activityLog.classList.toggle('collapsed');
         });
         document.getElementById('clearLogBtn').addEventListener('click', () => this._clearLog());
-        document.getElementById('troubleshootBtn').addEventListener('click', () => this._showActivityLog());
-        document.getElementById('openSettingsFromLog').addEventListener('click', () => {
-            this._openModal('settingsModal');
-        });
-        document.getElementById('scrollToLatestLog').addEventListener('click', () => {
-            this.elements.logEntries.scrollTop = this.elements.logEntries.scrollHeight;
-        });
 
         document.querySelectorAll('.modal-backdrop, .modal-close').forEach(el => {
             el.addEventListener('click', (e) => {
@@ -369,7 +341,6 @@ class LedgerScrollsApp {
         this.elements.statusDot.className = `status-dot ${status}`;
         this.elements.statusText.textContent = text;
         this.elements.connectBtn.textContent = status === 'connected' ? 'Reconnect' : 'Connect to Cardano';
-        this._updateLogConnectionStatus();
     }
 
     // =========================================================================
@@ -403,7 +374,7 @@ class LedgerScrollsApp {
                 <div class="scroll-card-title">${scroll.title}</div>
                 <div class="scroll-card-meta">${scroll.metadata?.size || 'Unknown'}</div>
                 <div class="scroll-card-type">${
-                    ScrollLibrary.getCategoryById(scroll.category)?.name || 'Scroll'
+                    scroll.type === ScrollLibrary.SCROLL_TYPES.STANDARD ? 'Standard' : 'Legacy'
                 }</div>
             </div>
         `).join('');
@@ -664,7 +635,6 @@ class LedgerScrollsApp {
         this._saveSettings();
         this._toast('success', 'API key saved');
         this._log('info', 'Blockfrost API key updated');
-        this._updateLogConnectionStatus();
         if (key) this._connect();
     }
 
@@ -680,7 +650,6 @@ class LedgerScrollsApp {
         }
         this._log('info', value ? `Koios proxy updated: ${value}` : 'Koios proxy cleared');
         this._toast('success', value ? 'Koios proxy saved' : 'Koios proxy cleared');
-        this._updateLogConnectionStatus();
     }
 
     _onModeChange(mode) {
@@ -689,7 +658,6 @@ class LedgerScrollsApp {
         const blockfrostSettings = document.getElementById('blockfrostSettings');
         blockfrostSettings.style.display = mode.startsWith('blockfrost') ? 'block' : 'none';
         this._log('info', `Connection mode changed to: ${mode}`);
-        this._updateLogConnectionStatus();
     }
 
     _applyTheme(theme) {
@@ -736,9 +704,6 @@ class LedgerScrollsApp {
         this.elements.logEntries.scrollTop = this.elements.logEntries.scrollHeight;
         while (this.elements.logEntries.children.length > 100) {
             this.elements.logEntries.removeChild(this.elements.logEntries.firstChild);
-        }
-        if (type === 'error' || type === 'warning') {
-            this._showActivityLog();
         }
         console.log(`[${type.toUpperCase()}] ${message}`);
     }
@@ -812,21 +777,6 @@ class LedgerScrollsApp {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
-    }
-
-    _showActivityLog() {
-        this.elements.activityLog.classList.remove('collapsed');
-        this.elements.activityLog.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }
-
-    _updateLogConnectionStatus() {
-        const el = document.getElementById('logConnectionStatus');
-        if (!el) return;
-        const modeLabel = this.settings.mode === 'koios' ? 'Koios' : 'Blockfrost';
-        const endpoint = this.settings.mode === 'koios'
-            ? (this.settings.koiosProxy || 'Default')
-            : (this.settings.apiKey ? 'API Key Saved' : 'API Key Missing');
-        el.textContent = `Mode: ${modeLabel} • Endpoint: ${endpoint}`;
     }
 }
 
