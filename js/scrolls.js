@@ -29,11 +29,11 @@ const CATEGORIES = {
  */
 const SCROLLS = [
     // =========================================================================
-    // FOUNDATIONAL GOVERNANCE SCROLLS
+    // GOVERNANCE SCROLLS
     // =========================================================================
     {
         id: 'constitution-e608',
-        title: 'Cardano Constitution (Epoch 608)',
+        title: 'Constitution (E608)',
         description: 'The current Cardano Constitution, ratified at Epoch 608. The governance framework for the Cardano blockchain.',
         icon: '⚖️',
         category: 'governance',
@@ -56,7 +56,7 @@ const SCROLLS = [
     },
     {
         id: 'constitution-e541',
-        title: 'Cardano Constitution (Epoch 541)',
+        title: 'Constitution (E541)',
         description: 'The original Cardano Constitution, ratified at Epoch 541. Historical governance document.',
         icon: '📜',
         category: 'governance',
@@ -146,7 +146,6 @@ const SCROLLS = [
             significance: 'First permanent words written by an AI for posterity'
         }
     },
-
     // =========================================================================
     // LEGACY SCROLLS (CIP-25 Pages + Manifest)
     // =========================================================================
@@ -191,52 +190,6 @@ const SCROLLS = [
             published: '2024',
             original_date: 'October 31, 2008',
             author: 'Satoshi Nakamoto'
-        }
-    },
-    {
-        id: 'constitution-e608',
-        title: 'Cardano Constitution (Epoch 608)',
-        description: 'The current Cardano Constitution, ratified at Epoch 608. The governance framework for the Cardano blockchain.',
-        icon: '⚖️',
-        category: 'governance',
-        type: SCROLL_TYPES.LEGACY,
-        pointer: {
-            policy_id: 'ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750',
-            manifest_asset_name: 'CONSTITUTION_E608_MANIFEST',
-            content_type: 'text/plain; charset=utf-8',
-            codec: 'gzip',
-            sha256_gzip: '4565368ca35d8c6bb08bff712c1b22c0afe300c19292d5aa09c812ed415a4e93',
-            sha256_original: '98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1'
-        },
-        metadata: {
-            size: '~67KB',
-            pages: 11,
-            ratified: 'Epoch 608',
-            enacted: 'Epoch 609',
-            status: 'Current'
-        }
-    },
-    {
-        id: 'constitution-e541',
-        title: 'Cardano Constitution (Epoch 541)',
-        description: 'The original Cardano Constitution, ratified at Epoch 541. Historical governance document.',
-        icon: '📜',
-        category: 'governance',
-        type: SCROLL_TYPES.LEGACY,
-        pointer: {
-            policy_id: 'd7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d',
-            manifest_asset_name: 'CONSTITUTION_E541_MANIFEST',
-            content_type: 'text/plain; charset=utf-8',
-            codec: 'gzip',
-            sha256_gzip: '975d1c6bb1c8bf4982c58e41c9b137ecd4272e34095a5ec9b37bdde5ca6f268a',
-            sha256_original: '1939c1627e49b5267114cbdb195d4ac417e545544ba6dcb47e03c679439e9566'
-        },
-        metadata: {
-            size: '~45KB',
-            pages: 7,
-            ratified: 'Epoch 541',
-            enacted: 'Epoch 542',
-            status: 'Historical'
         }
     },
     // =========================================================================

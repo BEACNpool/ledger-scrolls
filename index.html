@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=mobile-2">
+    <link rel="stylesheet" href="css/styles.css?v=mobile-3">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
 </head>
 <body>
@@ -100,17 +100,15 @@
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
-            <button class="nav-btn" id="libraryBtn">
+            <button class="nav-btn nav-btn-secondary" id="aboutBtn" title="About">
+                <span class="nav-icon">ℹ️</span>
+            </button>
+            <button class="nav-btn nav-btn-primary" id="libraryBtn">
                 <span class="nav-icon">📚</span>
                 <span class="nav-label">The Library</span>
             </button>
-            <button class="nav-btn" id="aboutBtn">
-                <span class="nav-icon">ℹ️</span>
-                <span class="nav-label">About</span>
-            </button>
-            <button class="nav-btn" id="settingsBtn">
+            <button class="nav-btn nav-btn-secondary" id="settingsBtn" title="Settings">
                 <span class="nav-icon">⚙️</span>
-                <span class="nav-label">Settings</span>
             </button>
         </nav>
     </div>
@@ -352,14 +350,14 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- Scripts -->
-    <script src="js/lib/pako.min.js?v=mobile-2"></script>
-    <script src="js/lib/cbor.min.js?v=mobile-2"></script>
-    <script src="js/scrolls.js?v=mobile-2"></script>
-    <script src="js/blockchain.js?v=mobile-2"></script>
-    <script src="js/reconstruct.js?v=mobile-2"></script>
+    <script src="js/lib/pako.min.js?v=mobile-3"></script>
+    <script src="js/lib/cbor.min.js?v=mobile-3"></script>
+    <script src="js/scrolls.js?v=mobile-3"></script>
+    <script src="js/blockchain.js?v=mobile-3"></script>
+    <script src="js/reconstruct.js?v=mobile-3"></script>
     <script>
         window.LS_DEFAULT_MODE = 'koios';
     </script>
-    <script src="js/app.js?v=mobile-2"></script>
+    <script src="js/app.js?v=mobile-3"></script>
 </body>
 </html>
