@@ -46,6 +46,7 @@
             </div>
             <div class="status-actions">
                 <button class="btn btn-sm btn-primary" id="connectBtn">Connect to Cardano</button>
+                <button class="btn btn-sm btn-ghost" id="troubleshootBtn">🩺 Troubleshoot</button>
             </div>
         </div>
 
@@ -145,6 +146,14 @@
                 <span class="toggle-icon">▼</span>
             </div>
             <div class="log-content" id="logContent">
+                <div class="log-tools">
+                    <p class="log-tip">If scrolls are not loading, open the connection settings or review the latest log entries below.</p>
+                    <div class="log-actions">
+                        <button class="btn btn-sm btn-primary" id="openSettingsFromLog">Connection Settings</button>
+                        <button class="btn btn-sm btn-ghost" id="scrollToLatestLog">Latest Logs</button>
+                    </div>
+                    <div class="log-connection-status" id="logConnectionStatus">Mode: Koios • Endpoint: Default</div>
+                </div>
                 <div class="log-entries" id="logEntries">
                     <div class="log-entry info">
                         <span class="log-time">--:--:--</span>
@@ -197,13 +206,13 @@
                 </div>
 
                 <div class="settings-section">
-                    <h4>🛰️ Koios Proxy (optional)</h4>
+                    <h4>🛰️ Koios Endpoint (optional)</h4>
                     <div class="input-group">
-                        <input type="text" id="koiosProxyInput" placeholder="Optional proxy (e.g., https://koios.beacnpool.org/api/v1)">
+                        <input type="text" id="koiosProxyInput" placeholder="Custom Koios API (e.g., https://koios.beacnpool.org/api/v1)">
                         <button class="btn btn-sm btn-primary" id="saveKoiosProxy">Save</button>
                     </div>
                     <p class="help-text" id="koiosProxyStatus">Current: (none)</p>
-                    <p class="help-text">Use if your network blocks Koios. Leave blank to use built-in fallbacks.</p>
+                    <p class="help-text">Use a custom Koios API or proxy. Leave blank to use built-in fallbacks.</p>
                 </div>
 
                 <div class="settings-section">
