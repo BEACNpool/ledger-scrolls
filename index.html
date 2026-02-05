@@ -2,18 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ledger Scrolls — A Library That Cannot Burn</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=2.1.0">
+    <link rel="stylesheet" href="css/styles.css?v=40ead0c1">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
-    
-    <!-- PWA / Mobile optimizations -->
-    <meta name="theme-color" content="#0a0c10">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
     <!-- Animated Background -->
@@ -22,9 +17,9 @@
         <div class="gradient-overlay"></div>
     </div>
 
-    <!-- Main Application - Mobile First Layout -->
+    <!-- Main Application -->
     <div class="app-container">
-        <!-- Compact Header for Mobile -->
+        <!-- Header -->
         <header class="header">
             <div class="logo-section">
                 <div class="logo-icon">📜</div>
@@ -34,8 +29,8 @@
                 </div>
             </div>
             <div class="header-actions">
-                <button class="btn btn-ghost" id="troubleshootBtn" title="Troubleshoot">
-                    <span class="icon">🔧</span>
+                <button class="btn btn-ghost" id="settingsBtn" title="Settings">
+                    <span class="icon">⚙️</span>
                 </button>
                 <button class="btn btn-ghost" id="infoBtn" title="About">
                     <span class="icon">ℹ️</span>
@@ -43,64 +38,88 @@
             </div>
         </header>
 
-        <!-- Connection Status - Sticky on Mobile -->
+        <!-- Connection Status Bar -->
         <div class="status-bar" id="statusBar">
             <div class="status-indicator" id="connectionStatus">
                 <span class="status-dot disconnected"></span>
-                <span class="status-text">Connecting...</span>
+                <span class="status-text">Not Connected</span>
             </div>
             <div class="status-actions">
-                <button class="btn btn-sm btn-ghost" id="settingsBtn" title="Connection Settings">⚙️</button>
+                <button class="btn btn-sm btn-primary" id="connectBtn">Connect to Cardano</button>
             </div>
         </div>
 
-        <!-- Error Banner (hidden by default) -->
-        <div class="error-banner" id="errorBanner" style="display: none;">
-            <div class="error-content">
-                <span class="error-icon">⚠️</span>
-                <span class="error-message" id="errorMessage">Connection issue detected</span>
+        <!-- Manifesto -->
+        <section class="manifesto" id="manifesto">
+            <div class="manifesto-header">
+                <p class="manifesto-kicker">BEACNpool • Ledger Scrolls</p>
+                <h2>A library for everyone. Owned by no one.</h2>
+                <p class="manifesto-subtext">
+                    Ledger Scrolls is built on open source, public infrastructure, and the belief that knowledge should outlive empires.
+                    Koios makes the chain readable without permission. The chain makes the words unburnable.
+                </p>
             </div>
-            <button class="btn btn-sm btn-warning" id="showTroubleshootBtn">Fix It</button>
-        </div>
-
-        <!-- Main Content - Single Column Mobile, Two Column Desktop -->
-        <main class="main-content">
-            <!-- Scroll Library -->
-            <section class="panel library-panel" id="libraryPanel">
-                <div class="panel-header">
-                    <h2>📚 Library</h2>
-                    <div class="panel-controls">
-                        <input type="text" class="search-input" id="searchScrolls" placeholder="Search...">
+            <div class="manifesto-pillars">
+                <div class="pillar">
+                    <span class="pillar-icon">🌐</span>
+                    <div>
+                        <h3>Open by default</h3>
+                        <p>Public data, public tools, zero gatekeepers. If you can read a URL, you can read a scroll.</p>
                     </div>
                 </div>
-                
-                <!-- Category Filters - Horizontal Scroll on Mobile -->
-                <div class="category-bar" id="scrollCategories">
-                    <!-- Categories populated by JS -->
+                <div class="pillar">
+                    <span class="pillar-icon">🧭</span>
+                    <div>
+                        <h3>Decentralized truth</h3>
+                        <p>Governance, history, and culture anchored on-chain—auditable by anyone, forever.</p>
+                    </div>
                 </div>
-                
+                <div class="pillar">
+                    <span class="pillar-icon">🔥</span>
+                    <div>
+                        <h3>Impossible to erase</h3>
+                        <p>No single host. No single failure. The library persists with the network.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Scroll Library Panel -->
+            <section class="panel library-panel">
+                <div class="panel-header">
+                    <h2>📚 The Library</h2>
+                    <div class="panel-controls">
+                        <input type="text" class="search-input" id="searchScrolls" placeholder="Search scrolls...">
+                        <button class="btn btn-icon" id="refreshLibrary" title="Refresh">🔄</button>
+                    </div>
+                </div>
                 <div class="panel-content">
-                    <div class="scroll-list" id="scrollGrid">
-                        <!-- Scrolls populated by JS -->
+                    <div class="scroll-categories" id="scrollCategories">
+                        <!-- Categories will be populated by JS -->
+                    </div>
+                    <div class="scroll-grid" id="scrollGrid">
+                        <!-- Scrolls will be populated by JS -->
                     </div>
                 </div>
             </section>
 
-            <!-- Scroll Viewer - Full Screen on Mobile -->
+            <!-- Scroll Viewer Panel -->
             <section class="panel viewer-panel" id="viewerPanel">
                 <div class="panel-header">
-                    <button class="btn btn-icon back-btn" id="backToLibraryBtn" title="Back">←</button>
-                    <h2 id="viewerTitle">Select a Scroll</h2>
+                    <h2 id="viewerTitle">📖 Select a Scroll</h2>
                     <div class="panel-controls">
                         <button class="btn btn-icon" id="downloadBtn" title="Download" disabled>💾</button>
-                        <button class="btn btn-icon" id="verifyBtn" title="Verify" disabled>🔐</button>
+                        <button class="btn btn-icon" id="verifyBtn" title="Verify Hash" disabled>🔐</button>
+                        <button class="btn btn-icon" id="closeViewerBtn" title="Close">✕</button>
                     </div>
                 </div>
                 <div class="panel-content">
                     <!-- Loading State -->
                     <div class="viewer-loading" id="viewerLoading">
                         <div class="loading-spinner"></div>
-                        <p class="loading-text" id="loadingText">Ready to explore...</p>
+                        <p class="loading-text" id="loadingText">Ready to explore the eternal library...</p>
                         <div class="progress-bar" id="progressBar">
                             <div class="progress-fill" id="progressFill"></div>
                         </div>
@@ -108,95 +127,33 @@
                     
                     <!-- Content Display -->
                     <div class="viewer-content" id="viewerContent">
-                        <!-- Content injected here -->
+                        <!-- Content will be injected here -->
                     </div>
                     
-                    <!-- Metadata -->
+                    <!-- Scroll Metadata -->
                     <div class="scroll-metadata" id="scrollMetadata">
-                        <!-- Metadata populated by JS -->
+                        <!-- Metadata will be populated by JS -->
                     </div>
                 </div>
             </section>
         </main>
 
-        <!-- Activity Log - Expandable from Bottom -->
+        <!-- Activity Log (Collapsible) -->
         <aside class="activity-log" id="activityLog">
             <div class="log-header" id="logToggle">
                 <span>📋 Activity Log</span>
-                <span class="log-badge" id="logBadge" style="display: none;">!</span>
-                <span class="toggle-icon">▲</span>
+                <span class="toggle-icon">▼</span>
             </div>
             <div class="log-content" id="logContent">
                 <div class="log-entries" id="logEntries">
                     <div class="log-entry info">
                         <span class="log-time">--:--:--</span>
-                        <span class="log-message">Ledger Scrolls v2.1 initialized</span>
+                        <span class="log-message">Ledger Scrolls v2.0 initialized. Welcome to the eternal library.</span>
                     </div>
                 </div>
-                <div class="log-actions">
-                    <button class="btn btn-sm btn-ghost" id="clearLogBtn">Clear</button>
-                    <button class="btn btn-sm btn-ghost" id="copyLogBtn">Copy Log</button>
-                </div>
+                <button class="btn btn-sm btn-ghost" id="clearLogBtn">Clear Log</button>
             </div>
         </aside>
-    </div>
-
-    <!-- Troubleshoot Modal -->
-    <div class="modal" id="troubleshootModal">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>🔧 Troubleshoot Connection</h3>
-                <button class="btn btn-icon modal-close" data-close="troubleshootModal">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="troubleshoot-section">
-                    <h4>Connection Status</h4>
-                    <div class="status-check" id="troubleshootStatus">
-                        <span class="check-icon">⏳</span>
-                        <span class="check-text">Checking connection...</span>
-                    </div>
-                </div>
-
-                <div class="troubleshoot-section">
-                    <h4>Quick Fixes</h4>
-                    <div class="quick-fixes">
-                        <button class="btn btn-block" id="retryConnectionBtn">🔄 Retry Connection</button>
-                        <button class="btn btn-block" id="switchToKoiosBtn">🌐 Use Koios API (Free)</button>
-                        <button class="btn btn-block" id="switchToBlockfrostBtn">🔑 Use Blockfrost API</button>
-                    </div>
-                </div>
-
-                <div class="troubleshoot-section" id="blockfrostSection" style="display: none;">
-                    <h4>Blockfrost API Key</h4>
-                    <div class="input-group">
-                        <input type="password" id="troubleshootApiKey" placeholder="mainnetXXXX...">
-                        <button class="btn btn-sm btn-primary" id="saveTroubleshootApiKey">Save</button>
-                    </div>
-                    <p class="help-text">Get a free key at <a href="https://blockfrost.io" target="_blank">blockfrost.io</a></p>
-                </div>
-
-                <div class="troubleshoot-section">
-                    <h4>Common Issues</h4>
-                    <details class="faq-item">
-                        <summary>Scrolls won't load</summary>
-                        <p>Try switching between Koios and Blockfrost APIs. Network issues are usually temporary.</p>
-                    </details>
-                    <details class="faq-item">
-                        <summary>Connection keeps failing</summary>
-                        <p>Check your internet connection. If on a corporate network, try using a VPN or mobile data.</p>
-                    </details>
-                    <details class="faq-item">
-                        <summary>Slow loading</summary>
-                        <p>Large scrolls (like the Bible) can take 30-60 seconds. Check the Activity Log for progress.</p>
-                    </details>
-                </div>
-
-                <div class="troubleshoot-section">
-                    <button class="btn btn-ghost btn-block" id="viewFullLogBtn">📋 View Full Activity Log</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Settings Modal -->
@@ -212,25 +169,25 @@
                     <h4>🔗 Connection Mode</h4>
                     <div class="radio-group">
                         <label class="radio-label">
-                            <input type="radio" name="connectionMode" value="koios" checked>
-                            <span class="radio-custom"></span>
-                            <span class="radio-text">
-                                <strong>Koios API</strong>
-                                <small>Free, no key required (Recommended)</small>
-                            </span>
-                        </label>
-                        <label class="radio-label">
                             <input type="radio" name="connectionMode" value="blockfrost">
                             <span class="radio-custom"></span>
                             <span class="radio-text">
                                 <strong>Blockfrost API</strong>
-                                <small>Requires free API key</small>
+                                <small>Easy setup, requires API key</small>
+                            </span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="connectionMode" value="koios" checked>
+                            <span class="radio-custom"></span>
+                            <span class="radio-text">
+                                <strong>Koios API</strong>
+                                <small>Free, no key required</small>
                             </span>
                         </label>
                     </div>
                 </div>
                 
-                <div class="settings-section" id="blockfrostSettings" style="display: none;">
+                <div class="settings-section" id="blockfrostSettings">
                     <h4>🔑 Blockfrost API Key</h4>
                     <div class="input-group">
                         <input type="password" id="apiKeyInput" placeholder="mainnetXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
@@ -240,12 +197,13 @@
                 </div>
 
                 <div class="settings-section">
-                    <h4>🛰️ Koios Proxy (Advanced)</h4>
+                    <h4>🛰️ Koios Proxy (optional)</h4>
                     <div class="input-group">
-                        <input type="text" id="koiosProxyInput" placeholder="Optional custom proxy URL">
+                        <input type="text" id="koiosProxyInput" placeholder="Optional proxy (e.g., https://koios.beacnpool.org/api/v1)">
                         <button class="btn btn-sm btn-primary" id="saveKoiosProxy">Save</button>
                     </div>
-                    <p class="help-text" id="koiosProxyStatus">Using default Koios endpoints</p>
+                    <p class="help-text" id="koiosProxyStatus">Current: (none)</p>
+                    <p class="help-text">Use if your network blocks Koios. Leave blank to use built-in fallbacks.</p>
                 </div>
 
                 <div class="settings-section">
@@ -275,15 +233,27 @@
                     </blockquote>
                     
                     <h4>What is Ledger Scrolls?</h4>
-                    <p>Ledger Scrolls is an open standard and viewer for <strong>permissionless, immutable data</strong> stored on the Cardano blockchain. Once a scroll is published, it exists forever.</p>
+                    <p>Ledger Scrolls is an open standard and viewer for <strong>permissionless, immutable data</strong> stored on the Cardano blockchain. Once a scroll is published, it exists forever—as long as Cardano exists.</p>
                     
                     <h4>Design Principles</h4>
                     <ul class="principles-list">
-                        <li>✅ <strong>No chain indexing required</strong></li>
-                        <li>✅ <strong>No centralized gatekeepers</strong></li>
-                        <li>✅ <strong>No "download the whole chain" requirement</strong></li>
-                        <li>✅ <strong>Forever-readable by design</strong></li>
+                        <li>✅ <strong>No chain indexing required</strong> — Direct pointer resolution</li>
+                        <li>✅ <strong>No centralized gatekeepers</strong> — Anyone can publish, anyone can read</li>
+                        <li>✅ <strong>No "download the whole chain" requirement</strong> — Minimal queries</li>
+                        <li>✅ <strong>Forever-readable by design</strong> — Locked UTxOs and deterministic pointers</li>
                     </ul>
+                    
+                    <h4>Two Storage Standards</h4>
+                    <div class="standards-grid">
+                        <div class="standard-card">
+                            <h5>📄 Standard Scrolls</h5>
+                            <p>Small files (≤10KB) stored directly in a locked UTxO's inline datum. One fetch, one file.</p>
+                        </div>
+                        <div class="standard-card">
+                            <h5>📚 Legacy Scrolls</h5>
+                            <p>Large documents split into page NFTs with CIP-25 metadata. Supports compression and multi-MB files.</p>
+                        </div>
+                    </div>
                     
                     <div class="credits">
                         <p>Built with ❤️ by <a href="https://x.com/BEACNpool" target="_blank">@BEACNpool</a></p>
@@ -343,7 +313,6 @@
                                 <option value="text/plain">Plain Text</option>
                                 <option value="application/pdf">PDF</option>
                                 <option value="video/mp4">Video (MP4)</option>
-                                <option value="audio/mpeg">Audio (MP3)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -373,7 +342,6 @@
                                 <option value="text/plain">Plain Text</option>
                                 <option value="application/pdf">PDF</option>
                                 <option value="video/mp4">Video (MP4)</option>
-                                <option value="audio/mpeg">Audio (MP3)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -395,14 +363,14 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- Scripts -->
-    <script src="js/lib/pako.min.js?v=2.1.0"></script>
-    <script src="js/lib/cbor.min.js?v=2.1.0"></script>
-    <script src="js/scrolls.js?v=2.1.0"></script>
-    <script src="js/blockchain.js?v=2.1.0"></script>
-    <script src="js/reconstruct.js?v=2.1.0"></script>
+    <script src="js/lib/pako.min.js?v=40ead0c1"></script>
+    <script src="js/lib/cbor.min.js?v=40ead0c1"></script>
+    <script src="js/scrolls.js?v=40ead0c1"></script>
+    <script src="js/blockchain.js?v=40ead0c1"></script>
+    <script src="js/reconstruct.js?v=b377198"></script>
     <script>
         window.LS_DEFAULT_MODE = 'koios';
     </script>
-    <script src="js/app.js?v=2.1.0"></script>
+    <script src="js/app.js?v=b377198"></script>
 </body>
 </html>

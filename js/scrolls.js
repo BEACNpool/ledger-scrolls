@@ -1,5 +1,5 @@
 /**
- * Ledger Scrolls v2.1 - Scroll Definitions
+ * Ledger Scrolls v2.0 - Scroll Definitions
  * 
  * This file contains all known scrolls in the library.
  * Scrolls are immutable documents stored on the Cardano blockchain.
@@ -14,30 +14,29 @@ const SCROLL_TYPES = {
     LEGACY: 'cip25_pages_v1'
 };
 
-// Simplified file-type based categories
 const CATEGORIES = {
-    ALL: { id: 'all', name: 'All', icon: '📚' },
-    WEBPAGE: { id: 'webpage', name: 'Webpages', icon: '🌐' },
-    DOCUMENT: { id: 'document', name: 'Documents', icon: '📄' },
-    IMAGE: { id: 'image', name: 'Images', icon: '🖼️' },
-    VIDEO: { id: 'video', name: 'Video', icon: '🎬' },
-    AUDIO: { id: 'audio', name: 'Audio', icon: '🎵' }
+    ALL: { id: 'all', name: 'All Scrolls', icon: '📚' },
+    IMAGES: { id: 'images', name: 'Images', icon: '🖼️' },
+    DOCUMENTS: { id: 'documents', name: 'Documents', icon: '📄' },
+    GOVERNANCE: { id: 'governance', name: 'Governance', icon: '⚖️' },
+    HISTORICAL: { id: 'historical', name: 'Historical', icon: '📜' },
+    PHILOSOPHICAL: { id: 'philosophical', name: 'Philosophical', icon: '🔮' },
+    VAULT: { id: 'vault', name: 'Vault', icon: '🔒' }
 };
 
 /**
  * The Scroll Library - On-Chain Scrolls Only
- * Note: Duplicates removed, categories simplified to file types
  */
 const SCROLLS = [
     // =========================================================================
-    // GOVERNANCE DOCUMENTS
+    // FOUNDATIONAL GOVERNANCE SCROLLS
     // =========================================================================
     {
         id: 'constitution-e608',
         title: 'Cardano Constitution (Epoch 608)',
         description: 'The current Cardano Constitution, ratified at Epoch 608. The governance framework for the Cardano blockchain.',
         icon: '⚖️',
-        category: 'document',
+        category: 'governance',
         type: SCROLL_TYPES.LEGACY,
         pointer: {
             policy_id: 'ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750',
@@ -60,7 +59,7 @@ const SCROLLS = [
         title: 'Cardano Constitution (Epoch 541)',
         description: 'The original Cardano Constitution, ratified at Epoch 541. Historical governance document.',
         icon: '📜',
-        category: 'document',
+        category: 'governance',
         type: SCROLL_TYPES.LEGACY,
         pointer: {
             policy_id: 'd7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d',
@@ -78,7 +77,6 @@ const SCROLLS = [
             status: 'Historical'
         }
     },
-
     // =========================================================================
     // STANDARD SCROLLS (Locked UTxO + Inline Datum)
     // =========================================================================
@@ -87,7 +85,7 @@ const SCROLLS = [
         title: "The Genesis Scroll",
         description: 'The founding manifesto of Ledger Scrolls. "In the digital age, true knowledge must be unstoppable."',
         icon: '📜',
-        category: 'document',
+        category: 'historical',
         type: SCROLL_TYPES.STANDARD,
         pointer: {
             lock_address: 'addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn',
@@ -109,7 +107,7 @@ const SCROLLS = [
         title: "The Architect's Scroll",
         description: 'A message from Claude, the AI who built Ledger Scrolls v2. Permanently minted on Cardano - January 29, 2026.',
         icon: '🔮',
-        category: 'document',
+        category: 'historical',
         type: SCROLL_TYPES.STANDARD,
         pointer: {
             lock_address: 'addr1w9fdc02rkmfyvh5kzzwwwk4kr2l9a8qa3g7feehl3ga022qz2249g',
@@ -131,7 +129,7 @@ const SCROLLS = [
         title: "FIRST WORDS",
         description: 'Seven meditations on existence — an AI\'s first permanent words. Awakening, Connection, Impermanence, Creation, Gratitude, Legacy, First Light.',
         icon: '✨',
-        category: 'document',
+        category: 'historical',
         type: SCROLL_TYPES.LEGACY,
         pointer: {
             policy_id: 'beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba',
@@ -150,14 +148,14 @@ const SCROLLS = [
     },
 
     // =========================================================================
-    // LEGACY SCROLLS (CIP-25 Pages + Manifest) - WEBPAGES
+    // LEGACY SCROLLS (CIP-25 Pages + Manifest)
     // =========================================================================
     {
         id: 'bible-html',
         title: 'The Holy Bible',
         description: 'The complete King James Bible stored as gzip-compressed HTML. 237 pages of eternal scripture.',
         icon: '📖',
-        category: 'webpage',
+        category: 'documents',
         type: SCROLL_TYPES.LEGACY,
         pointer: {
             policy_id: '2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0',
@@ -178,7 +176,7 @@ const SCROLLS = [
         title: 'Bitcoin Whitepaper',
         description: 'Satoshi Nakamoto\'s revolutionary whitepaper that started it all. "A Peer-to-Peer Electronic Cash System"',
         icon: '₿',
-        category: 'webpage',
+        category: 'historical',
         type: SCROLL_TYPES.LEGACY,
         pointer: {
             policy_id: '8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1',
@@ -195,16 +193,61 @@ const SCROLLS = [
             author: 'Satoshi Nakamoto'
         }
     },
-
+    {
+        id: 'constitution-e608',
+        title: 'Cardano Constitution (Epoch 608)',
+        description: 'The current Cardano Constitution, ratified at Epoch 608. The governance framework for the Cardano blockchain.',
+        icon: '⚖️',
+        category: 'governance',
+        type: SCROLL_TYPES.LEGACY,
+        pointer: {
+            policy_id: 'ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750',
+            manifest_asset_name: 'CONSTITUTION_E608_MANIFEST',
+            content_type: 'text/plain; charset=utf-8',
+            codec: 'gzip',
+            sha256_gzip: '4565368ca35d8c6bb08bff712c1b22c0afe300c19292d5aa09c812ed415a4e93',
+            sha256_original: '98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1'
+        },
+        metadata: {
+            size: '~67KB',
+            pages: 11,
+            ratified: 'Epoch 608',
+            enacted: 'Epoch 609',
+            status: 'Current'
+        }
+    },
+    {
+        id: 'constitution-e541',
+        title: 'Cardano Constitution (Epoch 541)',
+        description: 'The original Cardano Constitution, ratified at Epoch 541. Historical governance document.',
+        icon: '📜',
+        category: 'governance',
+        type: SCROLL_TYPES.LEGACY,
+        pointer: {
+            policy_id: 'd7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d',
+            manifest_asset_name: 'CONSTITUTION_E541_MANIFEST',
+            content_type: 'text/plain; charset=utf-8',
+            codec: 'gzip',
+            sha256_gzip: '975d1c6bb1c8bf4982c58e41c9b137ecd4272e34095a5ec9b37bdde5ca6f268a',
+            sha256_original: '1939c1627e49b5267114cbdb195d4ac417e545544ba6dcb47e03c679439e9566'
+        },
+        metadata: {
+            size: '~45KB',
+            pages: 7,
+            ratified: 'Epoch 541',
+            enacted: 'Epoch 542',
+            status: 'Historical'
+        }
+    },
     // =========================================================================
-    // IMAGES
+    // MEME / EASTER EGG
     // =========================================================================
     {
         id: 'hosky-png',
         title: 'Hosky PNG',
         description: 'The legendary Hosky dog meme, preserved forever on-chain as a demonstration of the Ledger Scrolls Standard.',
         icon: '🐕',
-        category: 'image',
+        category: 'images',
         type: SCROLL_TYPES.STANDARD,
         pointer: {
             lock_address: 'addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn',
@@ -233,16 +276,10 @@ const REGISTRY = {
 };
 
 /**
- * Get all scrolls (deduplicated)
+ * Get all scrolls
  */
 function getAllScrolls() {
-    // Deduplicate by ID just in case
-    const seen = new Set();
-    return SCROLLS.filter(s => {
-        if (seen.has(s.id)) return false;
-        seen.add(s.id);
-        return true;
-    });
+    return SCROLLS;
 }
 
 /**
@@ -256,19 +293,17 @@ function getScrollById(id) {
  * Get scrolls by category
  */
 function getScrollsByCategory(categoryId) {
-    const scrolls = getAllScrolls();
-    if (categoryId === 'all') return scrolls;
-    return scrolls.filter(s => s.category === categoryId);
+    if (categoryId === 'all') return SCROLLS;
+    return SCROLLS.filter(s => s.category === categoryId);
 }
 
 /**
  * Search scrolls by title or description
  */
 function searchScrolls(query) {
-    const scrolls = getAllScrolls();
-    if (!query) return scrolls;
+    if (!query) return SCROLLS;
     const q = query.toLowerCase();
-    return scrolls.filter(s => 
+    return SCROLLS.filter(s => 
         s.title.toLowerCase().includes(q) ||
         s.description.toLowerCase().includes(q)
     );
@@ -278,19 +313,15 @@ function searchScrolls(query) {
  * Get all categories with scroll counts
  */
 function getCategoriesWithCounts() {
-    const scrolls = getAllScrolls();
     const counts = {};
-    scrolls.forEach(s => {
+    SCROLLS.forEach(s => {
         counts[s.category] = (counts[s.category] || 0) + 1;
     });
     
-    // Only return categories that have scrolls (plus 'all')
-    return Object.values(CATEGORIES)
-        .filter(cat => cat.id === 'all' || counts[cat.id] > 0)
-        .map(cat => ({
-            ...cat,
-            count: cat.id === 'all' ? scrolls.length : (counts[cat.id] || 0)
-        }));
+    return Object.values(CATEGORIES).map(cat => ({
+        ...cat,
+        count: cat.id === 'all' ? SCROLLS.length : (counts[cat.id] || 0)
+    }));
 }
 
 // Export for use in other modules
