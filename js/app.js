@@ -1,19 +1,21 @@
 /**
- * Ledger Scrolls v2.0 - Main Application
+ * Ledger Scrolls v2.1 - Main Application
  * 
  * "A Library That Cannot Burn"
  * 
- * A viewer for immutable documents stored on the Cardano blockchain.
+ * Mobile-first viewer for immutable documents stored on Cardano.
  */
 
-// --- Binary rendering helpers (MP4, images, PDFs, etc.) ---
+// --- Binary rendering helpers ---
 let _activeObjectUrl = null;
+
 function revokeActiveObjectUrl() {
     if (_activeObjectUrl) {
         URL.revokeObjectURL(_activeObjectUrl);
         _activeObjectUrl = null;
     }
 }
+
 function makeObjectUrl(bytes, contentType) {
     const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
     const blob = new Blob([u8], { type: contentType || "application/octet-stream" });
@@ -21,6 +23,7 @@ function makeObjectUrl(bytes, contentType) {
     _activeObjectUrl = URL.createObjectURL(blob);
     return { blob, url: _activeObjectUrl };
 }
+
 function guessFileExtension(contentType) {
     const ct = (contentType || "").toLowerCase();
     if (ct.includes("video/mp4")) return "mp4";
@@ -29,8 +32,10 @@ function guessFileExtension(contentType) {
     if (ct.includes("application/pdf")) return "pdf";
     if (ct.includes("text/html")) return "html";
     if (ct.includes("text/plain")) return "txt";
+    if (ct.includes("audio/")) return ct.includes("mpeg") ? "mp3" : "opus";
     return "bin";
 }
+
 function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -41,6 +46,7 @@ function downloadBlob(blob, filename) {
     a.remove();
     URL.revokeObjectURL(url);
 }
+
 function renderScrollBytesIntoViewer({ bytes, contentType, filename }, viewerContentEl) {
     const ct = (contentType || "application/octet-stream").toLowerCase();
     const ext = guessFileExtension(ct);
@@ -49,53 +55,51 @@ function renderScrollBytesIntoViewer({ bytes, contentType, filename }, viewerCon
 
     viewerContentEl.innerHTML = "";
 
+    // Video
     if (ct.startsWith("video/") || ct.includes("video/mp4")) {
-        const wrap = document.createElement("div");
-        wrap.className = "video-wrap";
         const vid = document.createElement("video");
         vid.controls = true;
         vid.playsInline = true;
         vid.preload = "metadata";
         vid.src = url;
-        vid.style.width = "100%";
-        vid.style.maxHeight = "70vh";
-        vid.style.borderRadius = "12px";
-        wrap.appendChild(vid);
-        viewerContentEl.appendChild(wrap);
+        viewerContentEl.appendChild(vid);
         return { blob, url, filename: finalName, kind: "video" };
     }
 
+    // Audio
+    if (ct.startsWith("audio/")) {
+        const audio = document.createElement("audio");
+        audio.controls = true;
+        audio.src = url;
+        viewerContentEl.appendChild(audio);
+        return { blob, url, filename: finalName, kind: "audio" };
+    }
+
+    // Image
     if (ct.startsWith("image/")) {
         const img = document.createElement("img");
         img.src = url;
         img.alt = finalName;
-        img.style.maxWidth = "100%";
-        img.style.borderRadius = "12px";
         viewerContentEl.appendChild(img);
         return { blob, url, filename: finalName, kind: "image" };
     }
 
+    // PDF
     if (ct.includes("application/pdf")) {
         const iframe = document.createElement("iframe");
         iframe.src = url;
-        iframe.style.width = "100%";
-        iframe.style.height = "70vh";
-        iframe.style.border = "0";
-        iframe.style.borderRadius = "12px";
         viewerContentEl.appendChild(iframe);
         return { blob, url, filename: finalName, kind: "pdf" };
     }
 
+    // Text / HTML
     if (ct.startsWith("text/") || ct.includes("application/json")) {
         const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
         const text = new TextDecoder("utf-8", { fatal: false }).decode(u8);
+        
         if (ct.includes("text/html")) {
             const iframe = document.createElement("iframe");
             iframe.setAttribute("sandbox", "allow-same-origin");
-            iframe.style.width = "100%";
-            iframe.style.height = "70vh";
-            iframe.style.border = "0";
-            iframe.style.borderRadius = "12px";
             viewerContentEl.appendChild(iframe);
             const doc = iframe.contentDocument;
             doc.open();
@@ -103,19 +107,23 @@ function renderScrollBytesIntoViewer({ bytes, contentType, filename }, viewerCon
             doc.close();
             return { blob, url, filename: finalName, kind: "html" };
         }
+        
         const pre = document.createElement("pre");
         pre.textContent = text.length > 50000 ? text.substring(0, 50000) + "\n\n... (truncated)" : text;
-        pre.style.whiteSpace = "pre-wrap";
         viewerContentEl.appendChild(pre);
         return { blob, url, filename: finalName, kind: "text" };
     }
 
+    // Binary fallback
     const p = document.createElement("p");
-    p.textContent = `Binary content (${ct}). Use Download.`;
+    p.textContent = `Binary content (${ct}). Use Download button to save.`;
     viewerContentEl.appendChild(p);
     return { blob, url, filename: finalName, kind: "binary" };
 }
 
+// =============================================================================
+// Main Application Class
+// =============================================================================
 class LedgerScrollsApp {
     constructor() {
         // State
@@ -125,7 +133,8 @@ class LedgerScrollsApp {
         this.currentScroll = null;
         this.currentCategory = 'all';
         this.loadedContent = null;
-        this._currentBlobUrl = null;
+        this.hasError = false;
+        this.errorCount = 0;
 
         // Settings
         this.settings = this._loadSettings();
@@ -136,13 +145,12 @@ class LedgerScrollsApp {
         this._initParticles();
         this._applyTheme(this.settings.theme);
         this._renderScrollLibrary();
+        this._updateModeUI();
 
-        // Auto-connect if we have an API key
-        if (this.settings.apiKey || this.settings.mode === 'koios') {
-            this._connect();
-        }
+        // Auto-connect with Koios by default
+        this._connect();
 
-        this._log('info', 'Ledger Scrolls v2.0 initialized. Welcome to the eternal library.');
+        this._log('info', 'Ledger Scrolls v2.1 initialized');
     }
 
     // =========================================================================
@@ -153,21 +161,17 @@ class LedgerScrollsApp {
         try {
             const saved = localStorage.getItem('ledgerScrollsSettings');
             const fallback = {
-                mode: window.LS_DEFAULT_MODE || 'blockfrost',
+                mode: window.LS_DEFAULT_MODE || 'koios',
                 apiKey: '',
                 koiosProxy: '',
                 theme: 'dark'
             };
             const settings = saved ? JSON.parse(saved) : fallback;
-            if (typeof settings.koiosProxy === 'undefined') {
-                settings.koiosProxy = '';
-            }
-            if (window.LS_OVERRIDE_MODE) {
-                settings.mode = window.LS_OVERRIDE_MODE;
-            }
+            if (!settings.koiosProxy) settings.koiosProxy = '';
+            if (window.LS_OVERRIDE_MODE) settings.mode = window.LS_OVERRIDE_MODE;
             return settings;
         } catch {
-            return { mode: window.LS_DEFAULT_MODE || 'blockfrost', apiKey: '', koiosProxy: '', theme: 'dark' };
+            return { mode: 'koios', apiKey: '', koiosProxy: '', theme: 'dark' };
         }
     }
 
@@ -181,12 +185,19 @@ class LedgerScrollsApp {
 
     _initializeUI() {
         this.elements = {
+            // Status
             statusDot: document.querySelector('.status-dot'),
             statusText: document.querySelector('.status-text'),
-            connectBtn: document.getElementById('connectBtn'),
+            errorBanner: document.getElementById('errorBanner'),
+            errorMessage: document.getElementById('errorMessage'),
+            
+            // Library
             scrollGrid: document.getElementById('scrollGrid'),
             scrollCategories: document.getElementById('scrollCategories'),
             searchInput: document.getElementById('searchScrolls'),
+            libraryPanel: document.getElementById('libraryPanel'),
+            
+            // Viewer
             viewerPanel: document.getElementById('viewerPanel'),
             viewerTitle: document.getElementById('viewerTitle'),
             viewerLoading: document.getElementById('viewerLoading'),
@@ -197,45 +208,73 @@ class LedgerScrollsApp {
             scrollMetadata: document.getElementById('scrollMetadata'),
             downloadBtn: document.getElementById('downloadBtn'),
             verifyBtn: document.getElementById('verifyBtn'),
+            
+            // Activity Log
             logEntries: document.getElementById('logEntries'),
             activityLog: document.getElementById('activityLog'),
+            logBadge: document.getElementById('logBadge'),
+            
+            // Modals
             settingsModal: document.getElementById('settingsModal'),
             aboutModal: document.getElementById('aboutModal'),
             verifyModal: document.getElementById('verifyModal'),
             customScrollModal: document.getElementById('customScrollModal'),
+            troubleshootModal: document.getElementById('troubleshootModal'),
+            
+            // Settings inputs
             apiKeyInput: document.getElementById('apiKeyInput'),
             koiosProxyInput: document.getElementById('koiosProxyInput'),
             koiosProxyStatus: document.getElementById('koiosProxyStatus'),
             modeRadios: document.querySelectorAll('input[name="connectionMode"]'),
             themeBtns: document.querySelectorAll('.theme-btn'),
+            blockfrostSettings: document.getElementById('blockfrostSettings'),
+            blockfrostSection: document.getElementById('blockfrostSection'),
+            troubleshootStatus: document.getElementById('troubleshootStatus'),
+            troubleshootApiKey: document.getElementById('troubleshootApiKey'),
+            
             toastContainer: document.getElementById('toastContainer')
         };
 
-        if (this.settings.apiKey) {
+        // Load saved values into inputs
+        if (this.settings.apiKey && this.elements.apiKeyInput) {
             this.elements.apiKeyInput.value = this.settings.apiKey;
         }
         if (this.elements.koiosProxyInput) {
             this.elements.koiosProxyInput.value = this.settings.koiosProxy || '';
         }
         if (this.elements.koiosProxyStatus) {
-            this.elements.koiosProxyStatus.textContent = `Current: ${this.settings.koiosProxy || '(none)'}`;
+            this.elements.koiosProxyStatus.textContent = this.settings.koiosProxy 
+                ? `Using: ${this.settings.koiosProxy}` 
+                : 'Using default Koios endpoints';
         }
     }
 
     _bindEvents() {
-        document.getElementById('settingsBtn').addEventListener('click', () => this._openModal('settingsModal'));
-        document.getElementById('infoBtn').addEventListener('click', () => this._openModal('aboutModal'));
-        this.elements.connectBtn.addEventListener('click', () => this._connect());
-        this.elements.searchInput.addEventListener('input', (e) => this._onSearch(e.target.value));
-        document.getElementById('refreshLibrary').addEventListener('click', () => this._renderScrollLibrary());
-        this.elements.downloadBtn.addEventListener('click', () => this._downloadCurrentScroll());
-        this.elements.verifyBtn.addEventListener('click', () => this._verifyCurrentScroll());
-        document.getElementById('closeViewerBtn').addEventListener('click', () => this._closeViewer());
-        document.getElementById('logToggle').addEventListener('click', () => {
+        // Header buttons
+        document.getElementById('settingsBtn')?.addEventListener('click', () => this._openModal('settingsModal'));
+        document.getElementById('infoBtn')?.addEventListener('click', () => this._openModal('aboutModal'));
+        document.getElementById('troubleshootBtn')?.addEventListener('click', () => this._openTroubleshoot());
+        
+        // Search
+        this.elements.searchInput?.addEventListener('input', (e) => this._onSearch(e.target.value));
+        
+        // Viewer controls
+        this.elements.downloadBtn?.addEventListener('click', () => this._downloadCurrentScroll());
+        this.elements.verifyBtn?.addEventListener('click', () => this._verifyCurrentScroll());
+        document.getElementById('backToLibraryBtn')?.addEventListener('click', () => this._closeViewer());
+        
+        // Activity log
+        document.getElementById('logToggle')?.addEventListener('click', () => {
             this.elements.activityLog.classList.toggle('collapsed');
+            if (this.elements.logBadge) this.elements.logBadge.style.display = 'none';
         });
-        document.getElementById('clearLogBtn').addEventListener('click', () => this._clearLog());
-
+        document.getElementById('clearLogBtn')?.addEventListener('click', () => this._clearLog());
+        document.getElementById('copyLogBtn')?.addEventListener('click', () => this._copyLog());
+        
+        // Error banner
+        document.getElementById('showTroubleshootBtn')?.addEventListener('click', () => this._openTroubleshoot());
+        
+        // Modal close handlers
         document.querySelectorAll('.modal-backdrop, .modal-close').forEach(el => {
             el.addEventListener('click', (e) => {
                 const modal = e.target.closest('.modal');
@@ -243,14 +282,15 @@ class LedgerScrollsApp {
             });
         });
 
-        document.getElementById('saveApiKey').addEventListener('click', () => this._saveApiKey());
+        // Settings modal
+        document.getElementById('saveApiKey')?.addEventListener('click', () => this._saveApiKey());
         document.getElementById('saveKoiosProxy')?.addEventListener('click', () => this._saveKoiosProxy());
-
-        this.elements.modeRadios.forEach(radio => {
+        
+        this.elements.modeRadios?.forEach(radio => {
             radio.addEventListener('change', (e) => this._onModeChange(e.target.value));
         });
 
-        this.elements.themeBtns.forEach(btn => {
+        this.elements.themeBtns?.forEach(btn => {
             btn.addEventListener('click', () => {
                 const theme = btn.dataset.theme;
                 this._applyTheme(theme);
@@ -259,25 +299,60 @@ class LedgerScrollsApp {
             });
         });
 
+        // Troubleshoot modal
+        document.getElementById('retryConnectionBtn')?.addEventListener('click', () => {
+            this._closeModal('troubleshootModal');
+            this._connect();
+        });
+        document.getElementById('switchToKoiosBtn')?.addEventListener('click', () => this._switchMode('koios'));
+        document.getElementById('switchToBlockfrostBtn')?.addEventListener('click', () => {
+            if (this.elements.blockfrostSection) {
+                this.elements.blockfrostSection.style.display = 'block';
+            }
+        });
+        document.getElementById('saveTroubleshootApiKey')?.addEventListener('click', () => {
+            const key = this.elements.troubleshootApiKey?.value?.trim();
+            if (key) {
+                this.settings.apiKey = key;
+                this.settings.mode = 'blockfrost';
+                this._saveSettings();
+                this._updateModeUI();
+                this._closeModal('troubleshootModal');
+                this._connect();
+            }
+        });
+        document.getElementById('viewFullLogBtn')?.addEventListener('click', () => {
+            this._closeModal('troubleshootModal');
+            this.elements.activityLog.classList.remove('collapsed');
+            this.elements.activityLog.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Custom scroll modal
         document.querySelector('[data-tab="standard"]')?.addEventListener('click', () => this._switchTab('standard'));
         document.querySelector('[data-tab="legacy"]')?.addEventListener('click', () => this._switchTab('legacy'));
         document.getElementById('loadCustomScroll')?.addEventListener('click', () => this._loadCustomScroll());
 
+        // Keyboard
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal.active').forEach(m => this._closeModal(m.id));
+                if (this.elements.viewerPanel.classList.contains('active') && window.innerWidth < 768) {
+                    this._closeViewer();
+                }
             }
         });
     }
 
     _initParticles() {
         const container = document.getElementById('particles');
-        for (let i = 0; i < 30; i++) {
+        if (!container) return;
+        const count = window.innerWidth < 768 ? 15 : 25;
+        for (let i = 0; i < count; i++) {
             const particle = document.createElement('div');
             particle.className = 'particle';
             particle.style.left = `${Math.random() * 100}%`;
-            particle.style.animationDelay = `${Math.random() * 15}s`;
-            particle.style.animationDuration = `${15 + Math.random() * 10}s`;
+            particle.style.animationDelay = `${Math.random() * 20}s`;
+            particle.style.animationDuration = `${20 + Math.random() * 15}s`;
             container.appendChild(particle);
         }
     }
@@ -291,35 +366,38 @@ class LedgerScrollsApp {
         const apiKey = this.settings.apiKey;
 
         if (mode.startsWith('blockfrost') && !apiKey) {
-            this._toast('error', 'Please enter a Blockfrost API key in Settings');
-            this._openModal('settingsModal');
+            this._setConnectionStatus('disconnected', 'API key required');
+            this._showError('Blockfrost requires an API key. Tap Fix It to configure.');
+            this._log('warning', 'Blockfrost mode selected but no API key configured');
             return;
         }
 
         this._setConnectionStatus('connecting', 'Connecting...');
-        this._log('info', `Connecting to Cardano via ${mode}...`);
-        if (mode === 'koios') {
-            this._log('info', `Koios proxy: ${this.settings.koiosProxy || '(none)'}`);
-        }
+        this._hideError();
+        this._log('info', `Connecting via ${mode}...`);
 
         try {
             this.client = new BlockchainClient(mode, apiKey, this.settings.koiosProxy);
+            
             if (!window.ScrollReconstructor) {
                 await this._loadScript(`js/reconstruct.js?cb=${Date.now()}`);
             }
             if (!window.ScrollReconstructor) {
-                throw new Error('ScrollReconstructor missing (reconstruct.js failed to load)');
+                throw new Error('Failed to load scroll reconstructor');
             }
+            
             this.reconstructor = new ScrollReconstructor(this.client);
-
             const result = await this.client.testConnection();
             
             if (result.success) {
                 this.connected = true;
+                this.errorCount = 0;
                 this._setConnectionStatus('connected', `Connected (${mode})`);
-                this._log('success', `Successfully connected to Cardano blockchain`);
-                this._toast('success', 'Connected to Cardano blockchain!');
+                this._hideError();
+                this._log('success', 'Connected to Cardano blockchain');
+                this._toast('success', 'Connected!');
                 
+                // Get chain tip info
                 const tip = await this.client.getTip();
                 if (tip) {
                     const slot = tip.slot || tip.abs_slot;
@@ -331,16 +409,73 @@ class LedgerScrollsApp {
             }
         } catch (e) {
             this.connected = false;
+            this.errorCount++;
             this._setConnectionStatus('disconnected', 'Connection failed');
+            this._showError(`Connection failed: ${e.message}`);
             this._log('error', `Connection failed: ${e.message}`, this._formatErrorDetails(e));
-            this._toast('error', `Connection failed: ${e.message}`);
+            
+            // Auto-suggest troubleshooting after multiple failures
+            if (this.errorCount >= 2) {
+                this._toast('warning', 'Having trouble? Tap 🔧 for help');
+            }
+        }
+    }
+
+    _switchMode(mode) {
+        this.settings.mode = mode;
+        this._saveSettings();
+        this._updateModeUI();
+        this._closeModal('troubleshootModal');
+        this._connect();
+    }
+
+    _updateModeUI() {
+        const mode = this.settings.mode;
+        
+        // Update radio buttons
+        this.elements.modeRadios?.forEach(radio => {
+            radio.checked = radio.value === mode;
+        });
+        
+        // Show/hide Blockfrost settings
+        if (this.elements.blockfrostSettings) {
+            this.elements.blockfrostSettings.style.display = mode === 'blockfrost' ? 'block' : 'none';
         }
     }
 
     _setConnectionStatus(status, text) {
-        this.elements.statusDot.className = `status-dot ${status}`;
-        this.elements.statusText.textContent = text;
-        this.elements.connectBtn.textContent = status === 'connected' ? 'Reconnect' : 'Connect to Cardano';
+        if (this.elements.statusDot) {
+            this.elements.statusDot.className = `status-dot ${status}`;
+        }
+        if (this.elements.statusText) {
+            this.elements.statusText.textContent = text;
+        }
+        
+        // Update troubleshoot modal status
+        if (this.elements.troubleshootStatus) {
+            const icons = { connected: '✅', connecting: '⏳', disconnected: '❌' };
+            this.elements.troubleshootStatus.innerHTML = `
+                <span class="check-icon">${icons[status] || '❓'}</span>
+                <span class="check-text">${text}</span>
+            `;
+        }
+    }
+
+    _showError(message) {
+        this.hasError = true;
+        if (this.elements.errorBanner) {
+            this.elements.errorBanner.style.display = 'flex';
+        }
+        if (this.elements.errorMessage) {
+            this.elements.errorMessage.textContent = message;
+        }
+    }
+
+    _hideError() {
+        this.hasError = false;
+        if (this.elements.errorBanner) {
+            this.elements.errorBanner.style.display = 'none';
+        }
     }
 
     // =========================================================================
@@ -349,30 +484,37 @@ class LedgerScrollsApp {
 
     _renderScrollLibrary() {
         const categories = ScrollLibrary.getCategoriesWithCounts();
-        this.elements.scrollCategories.innerHTML = categories.map(cat => `
-            <button class="category-btn ${cat.id === this.currentCategory ? 'active' : ''}" 
-                    data-category="${cat.id}">
-                ${cat.icon} ${cat.name} (${cat.count})
-            </button>
-        `).join('');
+        
+        if (this.elements.scrollCategories) {
+            this.elements.scrollCategories.innerHTML = categories.map(cat => `
+                <button class="category-btn ${cat.id === this.currentCategory ? 'active' : ''}" 
+                        data-category="${cat.id}">
+                    ${cat.icon} ${cat.name} (${cat.count})
+                </button>
+            `).join('');
 
-        this.elements.scrollCategories.querySelectorAll('.category-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.currentCategory = btn.dataset.category;
-                this._renderScrollLibrary();
+            this.elements.scrollCategories.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    this.currentCategory = btn.dataset.category;
+                    this._renderScrollLibrary();
+                });
             });
-        });
+        }
 
         const scrolls = ScrollLibrary.getScrollsByCategory(this.currentCategory);
         this._renderScrollGrid(scrolls);
     }
 
     _renderScrollGrid(scrolls) {
+        if (!this.elements.scrollGrid) return;
+        
         this.elements.scrollGrid.innerHTML = scrolls.map(scroll => `
             <div class="scroll-card" data-scroll-id="${scroll.id}">
                 <div class="scroll-card-icon">${scroll.icon}</div>
-                <div class="scroll-card-title">${scroll.title}</div>
-                <div class="scroll-card-meta">${scroll.metadata?.size || 'Unknown'}</div>
+                <div class="scroll-card-info">
+                    <div class="scroll-card-title">${scroll.title}</div>
+                    <div class="scroll-card-meta">${scroll.metadata?.size || 'Unknown size'}</div>
+                </div>
                 <div class="scroll-card-type">${
                     scroll.type === ScrollLibrary.SCROLL_TYPES.STANDARD ? 'Standard' : 'Legacy'
                 }</div>
@@ -399,14 +541,17 @@ class LedgerScrollsApp {
 
     async _loadScroll(scroll) {
         if (!this.connected) {
-            this._toast('warning', 'Please connect to Cardano first');
+            this._toast('warning', 'Please wait for connection...');
+            if (!this.hasError) this._connect();
             return;
         }
 
         this.currentScroll = scroll;
         this.loadedContent = null;
 
-        this.elements.viewerTitle.textContent = `📖 ${scroll.title}`;
+        // Show viewer
+        this.elements.viewerPanel.classList.add('active');
+        this.elements.viewerTitle.textContent = scroll.title;
         this.elements.viewerContent.classList.remove('active');
         this.elements.viewerContent.innerHTML = '';
         this.elements.scrollMetadata.classList.remove('active');
@@ -416,7 +561,7 @@ class LedgerScrollsApp {
         this.elements.downloadBtn.disabled = true;
         this.elements.verifyBtn.disabled = true;
 
-        this._log('info', `Loading scroll: ${scroll.title}`);
+        this._log('info', `Loading: ${scroll.title}`);
 
         this.reconstructor.setProgressCallback((message, percent) => {
             this.elements.loadingText.textContent = message;
@@ -433,12 +578,13 @@ class LedgerScrollsApp {
             this._displayMetadata(result, scroll);
             this.elements.downloadBtn.disabled = false;
             this.elements.verifyBtn.disabled = false;
-            this._log('success', `Successfully loaded ${scroll.title} (${this._formatSize(result.size)})`);
-            this._toast('success', `${scroll.title} loaded successfully!`);
+            this._log('success', `Loaded ${scroll.title} (${this._formatSize(result.size)})`);
+            this._toast('success', 'Scroll loaded!');
         } catch (e) {
-            this._log('error', `Failed to load scroll: ${e.message}`, this._formatErrorDetails(e));
-            this._toast('error', `Failed to load: ${e.message}`);
+            this._log('error', `Failed: ${e.message}`, this._formatErrorDetails(e));
+            this._toast('error', `Failed: ${e.message}`);
             this.elements.loadingText.textContent = `❌ Error: ${e.message}`;
+            this._showLogBadge();
         } finally {
             this.elements.progressBar.classList.remove('active');
         }
@@ -446,38 +592,45 @@ class LedgerScrollsApp {
 
     _displayContent(result, scroll) {
         revokeActiveObjectUrl();
-
         this.elements.viewerLoading.classList.add('hidden');
         this.elements.viewerContent.classList.add('active');
 
-        const contentType = result.contentType.split(';')[0].trim();
-        const filename = scroll.file_name || scroll.id || scroll.title;
+        const rendered = renderScrollBytesIntoViewer({
+            bytes: result.bytes,
+            contentType: result.contentType,
+            filename: `${scroll.id}${this._getExtension(result.contentType)}`
+        }, this.elements.viewerContent);
 
-        window.__LS_OPEN = renderScrollBytesIntoViewer(
-            { bytes: result.data, contentType, filename },
-            this.elements.viewerContent
-        );
+        this.loadedContent = { ...result, ...rendered };
     }
 
     _displayMetadata(result, scroll) {
         this.elements.scrollMetadata.classList.add('active');
         
-        const metadata = {
-            'Content Type': result.contentType,
-            'Size': this._formatSize(result.size),
-            'SHA-256': result.hash,
-            'Method': result.method,
-            ...(result.pages && { 'Pages': result.pages }),
-            ...(scroll.pointer.lock_txin && { 'Lock TxIn': scroll.pointer.lock_txin }),
-            ...(scroll.pointer.policy_id && { 'Policy ID': scroll.pointer.policy_id })
-        };
+        const items = [
+            { label: 'Type', value: scroll.type === ScrollLibrary.SCROLL_TYPES.STANDARD ? 'Standard Scroll' : 'Legacy Scroll' },
+            { label: 'Size', value: this._formatSize(result.size) },
+            { label: 'Content', value: result.contentType }
+        ];
+
+        if (scroll.metadata?.pages) items.push({ label: 'Pages', value: scroll.metadata.pages });
+        if (scroll.metadata?.author) items.push({ label: 'Author', value: scroll.metadata.author });
+        if (scroll.metadata?.minted) items.push({ label: 'Minted', value: scroll.metadata.minted });
+
+        if (scroll.pointer?.sha256 || scroll.pointer?.sha256_original) {
+            items.push({ 
+                label: 'Hash', 
+                value: (scroll.pointer.sha256 || scroll.pointer.sha256_original).substring(0, 16) + '...', 
+                isHash: true 
+            });
+        }
 
         this.elements.scrollMetadata.innerHTML = `
             <div class="metadata-grid">
-                ${Object.entries(metadata).map(([label, value]) => `
+                ${items.map(item => `
                     <div class="metadata-item">
-                        <span class="metadata-label">${label}</span>
-                        <span class="metadata-value ${label === 'SHA-256' ? 'hash' : ''}">${value}</span>
+                        <span class="metadata-label">${item.label}</span>
+                        <span class="metadata-value ${item.isHash ? 'hash' : ''}">${item.value}</span>
                     </div>
                 `).join('')}
             </div>
@@ -485,109 +638,98 @@ class LedgerScrollsApp {
     }
 
     _closeViewer() {
+        this.elements.viewerPanel.classList.remove('active');
         revokeActiveObjectUrl();
-        window.__LS_OPEN = null;
-
-        this.currentScroll = null;
-        this.loadedContent = null;
-        this.elements.viewerTitle.textContent = '📖 Select a Scroll';
-        this.elements.viewerContent.classList.remove('active');
-        this.elements.viewerContent.innerHTML = '';
-        this.elements.scrollMetadata.classList.remove('active');
-        this.elements.viewerLoading.classList.remove('hidden');
-        this.elements.loadingText.textContent = 'Ready to explore the eternal library...';
-        this.elements.progressBar.classList.remove('active');
-        this.elements.downloadBtn.disabled = true;
-        this.elements.verifyBtn.disabled = true;
     }
-
-    // =========================================================================
-    // Download & Verification
-    // =========================================================================
 
     _downloadCurrentScroll() {
-        const open = window.__LS_OPEN;
-        if (open?.blob) {
-            downloadBlob(open.blob, open.filename);
-            this._log('info', `Downloaded: ${open.filename}`);
-            this._toast('success', `Downloaded ${open.filename}`);
+        if (!this.loadedContent?.blob) {
+            this._toast('error', 'No content to download');
             return;
         }
-        if (!this.loadedContent || !this.currentScroll) return;
-
-        const contentType = this.loadedContent.contentType.split(';')[0].trim();
-        const extension = this._getExtension(contentType);
-        const filename = `${this.currentScroll.title.replace(/[^a-z0-9]/gi, '_')}${extension}`;
-
-        const blob = new Blob([this.loadedContent.data], { type: contentType });
-        downloadBlob(blob, filename);
-        this._log('info', `Downloaded: ${filename}`);
-        this._toast('success', `Downloaded ${filename}`);
+        downloadBlob(this.loadedContent.blob, this.loadedContent.filename);
+        this._log('info', `Downloaded: ${this.loadedContent.filename}`);
+        this._toast('success', 'Download started!');
     }
 
-    _verifyCurrentScroll() {
-        if (!this.loadedContent || !this.currentScroll) return;
+    async _verifyCurrentScroll() {
+        if (!this.currentScroll || !this.loadedContent) {
+            this._toast('error', 'No scroll loaded');
+            return;
+        }
 
-        const expected = this.currentScroll.pointer?.sha256 || 
-                        this.currentScroll.pointer?.sha256_original;
-        const computed = this.loadedContent.hash;
-        const noHash = !expected;
-        const verified = !noHash && expected.toLowerCase() === computed.toLowerCase();
+        const pointer = this.currentScroll.pointer;
+        const expectedHash = pointer.sha256 || pointer.sha256_original;
+        
+        if (!expectedHash) {
+            this._toast('info', 'No hash to verify for this scroll');
+            return;
+        }
 
-        const resultDiv = document.getElementById('verificationResult');
-        resultDiv.innerHTML = `
-            <div class="verification-icon">${noHash ? '⚠️' : (verified ? '✅' : '❌')}</div>
-            <div class="verification-status ${noHash ? 'no-hash' : (verified ? 'verified' : 'failed')}">
-                ${noHash ? 'NO EXPECTED HASH' : (verified ? 'VERIFIED' : 'VERIFICATION FAILED')}
-            </div>
-            <div class="hash-comparison">
-                ${expected ? `
-                    <div class="hash-row">
-                        <span class="hash-label">Expected Hash</span>
-                        <span class="hash-value">${expected}</span>
-                    </div>
-                ` : ''}
-                <div class="hash-row">
-                    <span class="hash-label">Computed Hash</span>
-                    <span class="hash-value">${computed}</span>
+        this._log('info', 'Computing SHA256 hash...');
+        
+        try {
+            const hashBuffer = await crypto.subtle.digest('SHA-256', this.loadedContent.bytes);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const computedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            const verified = computedHash === expectedHash;
+            
+            this.elements.verifyModal.querySelector('#verificationResult').innerHTML = `
+                <div class="verification-icon">${verified ? '✅' : '❌'}</div>
+                <div class="verification-status ${verified ? 'verified' : 'failed'}">
+                    ${verified ? 'VERIFIED' : 'MISMATCH'}
                 </div>
-            </div>
-        `;
-
-        this._openModal('verifyModal');
-        this._log(verified ? 'success' : 'error', `Hash verification: ${verified ? 'PASSED' : 'FAILED'}`);
+                <div class="hash-comparison">
+                    <div class="hash-row">
+                        <div class="hash-label">Expected</div>
+                        <div class="hash-value">${expectedHash}</div>
+                    </div>
+                    <div class="hash-row">
+                        <div class="hash-label">Computed</div>
+                        <div class="hash-value">${computedHash}</div>
+                    </div>
+                </div>
+            `;
+            
+            this._openModal('verifyModal');
+            this._log(verified ? 'success' : 'error', `Hash ${verified ? 'verified' : 'mismatch'}`);
+        } catch (e) {
+            this._toast('error', 'Hash verification failed');
+            this._log('error', `Verification error: ${e.message}`);
+        }
     }
 
     // =========================================================================
     // Custom Scroll Loading
     // =========================================================================
 
-    _switchTab(tabId) {
+    _switchTab(tab) {
         document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabId);
+            btn.classList.toggle('active', btn.dataset.tab === tab);
         });
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.toggle('active', tab.id === `tab-${tabId}`);
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.toggle('active', content.id === `tab-${tab}`);
         });
     }
 
     async _loadCustomScroll() {
-        const activeTab = document.querySelector('.tab-content.active');
+        const activeTab = document.querySelector('.tab-content.active')?.id;
         
-        if (activeTab.id === 'tab-standard') {
+        if (activeTab === 'tab-standard') {
             const scroll = {
-                id: 'custom',
+                id: 'custom-standard',
                 title: 'Custom Scroll',
-                description: 'Custom scroll',
+                description: 'Custom standard scroll',
                 icon: '🔧',
                 category: 'all',
                 type: ScrollLibrary.SCROLL_TYPES.STANDARD,
                 pointer: {
-                    lock_address: document.getElementById('customLockAddr').value.trim(),
-                    lock_txin: document.getElementById('customTxIn').value.trim(),
-                    content_type: document.getElementById('customContentType').value,
-                    codec: document.getElementById('customCodec').value,
-                    sha256: document.getElementById('customSha256').value.trim() || null
+                    lock_address: document.getElementById('customLockAddr')?.value?.trim(),
+                    lock_txin: document.getElementById('customTxIn')?.value?.trim(),
+                    content_type: document.getElementById('customContentType')?.value,
+                    codec: document.getElementById('customCodec')?.value,
+                    sha256: document.getElementById('customSha256')?.value?.trim() || null
                 },
                 metadata: {}
             };
@@ -608,9 +750,9 @@ class LedgerScrollsApp {
                 category: 'all',
                 type: ScrollLibrary.SCROLL_TYPES.LEGACY,
                 pointer: {
-                    policy_id: document.getElementById('customPolicyId').value.trim(),
-                    content_type: document.getElementById('customLegacyContentType').value,
-                    codec: document.getElementById('customLegacyCodec').value
+                    policy_id: document.getElementById('customPolicyId')?.value?.trim(),
+                    content_type: document.getElementById('customLegacyContentType')?.value,
+                    codec: document.getElementById('customLegacyCodec')?.value
                 },
                 metadata: {}
             };
@@ -630,45 +772,55 @@ class LedgerScrollsApp {
     // =========================================================================
 
     _saveApiKey() {
-        const key = this.elements.apiKeyInput.value.trim();
+        const key = this.elements.apiKeyInput?.value?.trim();
         this.settings.apiKey = key;
         this._saveSettings();
         this._toast('success', 'API key saved');
         this._log('info', 'Blockfrost API key updated');
-        if (key) this._connect();
+        if (key && this.settings.mode === 'blockfrost') {
+            this._connect();
+        }
     }
 
     _saveKoiosProxy() {
         const value = this.elements.koiosProxyInput?.value?.trim() || '';
         this.settings.koiosProxy = value;
         this._saveSettings();
-        if (this.client && typeof this.client.setKoiosProxy === 'function') {
+        
+        if (this.client?.setKoiosProxy) {
             this.client.setKoiosProxy(value);
         }
+        
         if (this.elements.koiosProxyStatus) {
-            this.elements.koiosProxyStatus.textContent = `Current: ${value || '(none)'}`;
+            this.elements.koiosProxyStatus.textContent = value 
+                ? `Using: ${value}` 
+                : 'Using default Koios endpoints';
         }
-        this._log('info', value ? `Koios proxy updated: ${value}` : 'Koios proxy cleared');
-        this._toast('success', value ? 'Koios proxy saved' : 'Koios proxy cleared');
+        
+        this._log('info', value ? `Koios proxy: ${value}` : 'Koios proxy cleared');
+        this._toast('success', 'Proxy settings saved');
     }
 
     _onModeChange(mode) {
         this.settings.mode = mode;
         this._saveSettings();
-        const blockfrostSettings = document.getElementById('blockfrostSettings');
-        blockfrostSettings.style.display = mode.startsWith('blockfrost') ? 'block' : 'none';
-        this._log('info', `Connection mode changed to: ${mode}`);
+        this._updateModeUI();
+        this._log('info', `Mode changed to: ${mode}`);
+        
+        if (mode === 'koios' || (mode === 'blockfrost' && this.settings.apiKey)) {
+            this._connect();
+        }
     }
 
     _applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
-        this.elements.themeBtns.forEach(btn => {
+        this.elements.themeBtns?.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.theme === theme);
         });
     }
 
     // =========================================================================
-    // Modal Management
+    // Modal & Troubleshoot
     // =========================================================================
 
     _openModal(modalId) {
@@ -684,6 +836,29 @@ class LedgerScrollsApp {
         if (modal) modal.classList.remove('active');
     }
 
+    _openTroubleshoot() {
+        // Update status in troubleshoot modal
+        const status = this.connected ? 'connected' : 'disconnected';
+        const text = this.connected 
+            ? `Connected via ${this.settings.mode}` 
+            : 'Not connected';
+        
+        if (this.elements.troubleshootStatus) {
+            const icons = { connected: '✅', disconnected: '❌' };
+            this.elements.troubleshootStatus.innerHTML = `
+                <span class="check-icon">${icons[status]}</span>
+                <span class="check-text">${text}</span>
+            `;
+        }
+        
+        // Reset blockfrost section
+        if (this.elements.blockfrostSection) {
+            this.elements.blockfrostSection.style.display = 'none';
+        }
+        
+        this._openModal('troubleshootModal');
+    }
+
     // =========================================================================
     // Logging & Toasts
     // =========================================================================
@@ -692,25 +867,66 @@ class LedgerScrollsApp {
         const time = new Date().toLocaleTimeString();
         const entry = document.createElement('div');
         entry.className = `log-entry ${type}`;
+        
         const detailsHtml = details
             ? `<details class="log-details"><summary>Details</summary><pre>${this._escapeHtml(details)}</pre></details>`
             : '';
+            
         entry.innerHTML = `
             <span class="log-time">${time}</span>
             <span class="log-message">${this._escapeHtml(message)}</span>
             ${detailsHtml}
         `;
-        this.elements.logEntries.appendChild(entry);
-        this.elements.logEntries.scrollTop = this.elements.logEntries.scrollHeight;
-        while (this.elements.logEntries.children.length > 100) {
+        
+        this.elements.logEntries?.appendChild(entry);
+        if (this.elements.logEntries) {
+            this.elements.logEntries.scrollTop = this.elements.logEntries.scrollHeight;
+        }
+        
+        // Keep log size reasonable
+        while (this.elements.logEntries?.children?.length > 100) {
             this.elements.logEntries.removeChild(this.elements.logEntries.firstChild);
         }
+        
         console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        // Show badge for errors when log is collapsed
+        if (type === 'error' && this.elements.activityLog?.classList.contains('collapsed')) {
+            this._showLogBadge();
+        }
+    }
+
+    _showLogBadge() {
+        if (this.elements.logBadge) {
+            this.elements.logBadge.style.display = 'inline-flex';
+        }
     }
 
     _clearLog() {
-        this.elements.logEntries.innerHTML = '';
+        if (this.elements.logEntries) {
+            this.elements.logEntries.innerHTML = '';
+        }
         this._log('info', 'Log cleared');
+    }
+
+    _copyLog() {
+        const entries = this.elements.logEntries?.querySelectorAll('.log-entry');
+        if (!entries?.length) {
+            this._toast('info', 'Log is empty');
+            return;
+        }
+        
+        const text = Array.from(entries).map(entry => {
+            const time = entry.querySelector('.log-time')?.textContent || '';
+            const msg = entry.querySelector('.log-message')?.textContent || '';
+            return `[${time}] ${msg}`;
+        }).join('\n');
+        
+        navigator.clipboard.writeText(text).then(() => {
+            this._toast('success', 'Log copied to clipboard');
+        }).catch(() => {
+            this._toast('error', 'Failed to copy log');
+        });
     }
 
     _toast(type, message) {
@@ -721,11 +937,12 @@ class LedgerScrollsApp {
             <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
             <span class="toast-message">${this._escapeHtml(message)}</span>
         `;
-        this.elements.toastContainer.appendChild(toast);
+        this.elements.toastContainer?.appendChild(toast);
+        
         setTimeout(() => {
             toast.classList.add('toast-exit');
             setTimeout(() => toast.remove(), 300);
-        }, 5000);
+        }, 4000);
     }
 
     // =========================================================================
@@ -759,8 +976,6 @@ class LedgerScrollsApp {
         });
     }
 
-    // _loadScriptText removed
-
     _getExtension(contentType) {
         const map = {
             'image/png': '.png', 'image/jpeg': '.jpg', 'image/gif': '.gif',
@@ -780,8 +995,8 @@ class LedgerScrollsApp {
     }
 }
 
+// Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     if (window.app) return;
-    console.log('Init: ScrollReconstructor present?', !!window.ScrollReconstructor);
     window.app = new LedgerScrollsApp();
 });
