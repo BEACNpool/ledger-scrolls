@@ -2,13 +2,125 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ledger Scrolls — Preview Testnet Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0c10">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Ledger Scrolls — Preview Testnet</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=40ead0c1">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
+    <link rel="stylesheet" href="css/styles.css?v=preview-2">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+    <style>
+        /* Preview-specific overrides - Purple accent theme */
+        :root {
+            --color-accent-primary: #a855f7;
+            --color-accent-secondary: #7c3aed;
+            --color-accent-tertiary: #c084fc;
+            --color-accent-glow: rgba(168, 85, 247, 0.3);
+        }
+        
+        /* API Key Entry Card */
+        .api-card {
+            margin: var(--space-md);
+            padding: var(--space-lg);
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            text-align: center;
+        }
+        
+        .api-card-icon {
+            font-size: 3rem;
+            margin-bottom: var(--space-md);
+            filter: drop-shadow(0 0 12px var(--color-accent-glow));
+        }
+        
+        .api-card h2 {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .api-card p {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-lg);
+        }
+        
+        .api-input-group {
+            display: flex;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+        }
+        
+        .api-input-group input {
+            flex: 1;
+            padding: var(--space-sm) var(--space-md);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--color-text-primary);
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            outline: none;
+        }
+        
+        .api-input-group input:focus {
+            border-color: var(--color-accent-primary);
+        }
+        
+        .api-card .help-text {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
+        
+        .api-card .help-text a {
+            color: var(--color-accent-primary);
+        }
+        
+        /* Network Badge */
+        .network-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-xs) var(--space-sm);
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--color-accent-tertiary);
+            text-transform: uppercase;
+        }
+        
+        /* Override gradient overlay for purple theme */
+        .gradient-overlay {
+            background: 
+                radial-gradient(ellipse at 30% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(124, 58, 237, 0.06) 0%, transparent 50%);
+        }
+        
+        /* Scroll item type badge */
+        .scroll-item-type {
+            padding: 2px 6px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--color-accent-tertiary);
+            background: rgba(168, 85, 247, 0.15);
+            border-radius: var(--radius-sm);
+            margin-left: auto;
+        }
+        
+        /* Metadata pages count */
+        .scroll-item-pages {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+        }
+    </style>
 </head>
 <body>
     <!-- Animated Background -->
@@ -21,218 +133,195 @@
     <div class="app-container">
         <!-- Header -->
         <header class="header">
-            <div class="logo-section">
-                <div class="logo-icon">📜</div>
+            <div class="logo-section" id="logoSection">
+                <div class="logo-icon">🧪</div>
                 <div class="logo-text">
                     <h1>Ledger Scrolls</h1>
-                    <p class="tagline">Preview Testnet PoC (Blockfrost only)</p>
                 </div>
             </div>
-            <div class="header-actions">
-                <button class="btn btn-ghost" id="settingsBtn" title="Settings">
-                    <span class="icon">⚙️</span>
-                </button>
-                <button class="btn btn-ghost" id="infoBtn" title="About">
-                    <span class="icon">ℹ️</span>
-                </button>
+            <div class="connection-pill" id="connectionPill">
+                <span class="status-dot disconnected" id="statusDot"></span>
+                <span class="status-text" id="statusText">Offline</span>
             </div>
         </header>
 
-        <!-- Connection Status Bar -->
-        <div class="status-bar" id="statusBar">
-            <div class="status-indicator" id="connectionStatus">
-                <span class="status-dot disconnected"></span>
-                <span class="status-text">Not Connected</span>
+        <!-- API Key Entry (shown when not connected) -->
+        <div class="api-card" id="apiCard">
+            <div class="api-card-icon">🔑</div>
+            <h2>Preview Testnet</h2>
+            <p>Enter your Blockfrost Preview API key to connect.<br>
+            <span class="network-badge">🧪 Preview Network Only</span></p>
+            <div class="api-input-group">
+                <input type="password" id="apiKeyInput" placeholder="previewXXXXXXXXXX...">
+                <button class="btn btn-primary" id="connectBtn">Connect</button>
             </div>
-            <div class="status-actions">
-                <button class="btn btn-sm btn-primary" id="connectBtn">Connect to Preview Testnet</button>
-            </div>
+            <p class="help-text">Get a free key at <a href="https://blockfrost.io" target="_blank">blockfrost.io</a> → Create Project → Select "Preview"</p>
         </div>
 
-        <!-- Choose Your Viewer -->
-        <section class="viewer-choice" id="viewerChoice">
-            <div class="viewer-choice-header">
-                <h2>🧭 Preview Testnet Viewer</h2>
-                <p>This PoC viewer uses Blockfrost Preview only (no Koios or direct relay).</p>
-            </div>
-            <div class="viewer-choice-grid">
-                <div class="viewer-card">
-                    <div class="viewer-card-title">🌐 Web Viewer</div>
-                    <div class="viewer-card-text">Browse and download scrolls in your browser (Koios or Blockfrost).</div>
-                    <a class="btn btn-sm btn-primary" href="docs/VIEWERS.md" target="_blank" rel="noopener">View Docs</a>
-                </div>
-                <div class="viewer-card">
-                    <div class="viewer-card-title">⚡ Koios CLI</div>
-                    <div class="viewer-card-text">Disabled for Preview PoC (Blockfrost only).</div>
-                    <span class="btn btn-sm btn-ghost">Disabled</span>
-                </div>
-                <div class="viewer-card">
-                    <div class="viewer-card-title">🧬 P2P Viewer</div>
-                    <div class="viewer-card-text">Disabled for Preview PoC (Blockfrost only).</div>
-                    <span class="btn btn-sm btn-ghost">Disabled</span>
+        <!-- Main Viewer Area -->
+        <main class="viewer-area" id="viewerArea" style="display: none;">
+            <!-- Scroll Title Bar (when viewing) -->
+            <div class="scroll-title-bar" id="scrollTitleBar">
+                <button class="btn-back" id="backBtn">
+                    <span>←</span>
+                </button>
+                <h2 id="viewerTitle">Select a Scroll</h2>
+                <div class="title-actions">
+                    <button class="btn-icon" id="downloadBtn" title="Download" disabled>💾</button>
+                    <button class="btn-icon" id="verifyBtn" title="Verify" disabled>🔐</button>
                 </div>
             </div>
-        </section>
 
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- Scroll Library Panel -->
-            <section class="panel library-panel">
-                <div class="panel-header">
-                    <h2>📚 The Library</h2>
-                    <div class="panel-controls">
-                        <input type="text" class="search-input" id="searchScrolls" placeholder="Search scrolls...">
-                        <button class="btn btn-icon" id="refreshLibrary" title="Refresh">🔄</button>
-                    </div>
-                </div>
-                <div class="panel-content">
-                    <div class="scroll-categories" id="scrollCategories">
-                        <!-- Categories will be populated by JS -->
-                    </div>
-                    <div class="scroll-grid" id="scrollGrid">
-                        <!-- Scrolls will be populated by JS -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- Scroll Viewer Panel -->
-            <section class="panel viewer-panel" id="viewerPanel">
-                <div class="panel-header">
-                    <h2 id="viewerTitle">📖 Select a Scroll</h2>
-                    <div class="panel-controls">
-                        <button class="btn btn-icon" id="downloadBtn" title="Download" disabled>💾</button>
-                        <button class="btn btn-icon" id="verifyBtn" title="Verify Hash" disabled>🔐</button>
-                        <button class="btn btn-icon" id="closeViewerBtn" title="Close">✕</button>
-                    </div>
-                </div>
-                <div class="panel-content">
-                    <!-- Loading State -->
-                    <div class="viewer-loading" id="viewerLoading">
-                        <div class="loading-spinner"></div>
-                        <p class="loading-text" id="loadingText">Ready to explore the eternal library...</p>
-                        <div class="progress-bar" id="progressBar">
-                            <div class="progress-fill" id="progressFill"></div>
+            <!-- Loading State with Scroll Animation -->
+            <div class="viewer-loading" id="viewerLoading">
+                <div class="scroll-animation">
+                    <div class="scroll-paper">
+                        <div class="scroll-content-preview">
+                            <div class="scroll-line"></div>
+                            <div class="scroll-line"></div>
+                            <div class="scroll-line short"></div>
+                            <div class="scroll-line"></div>
+                            <div class="scroll-line short"></div>
                         </div>
                     </div>
-                    
-                    <!-- Content Display -->
-                    <div class="viewer-content" id="viewerContent">
-                        <!-- Content will be injected here -->
-                    </div>
-                    
-                    <!-- Scroll Metadata -->
-                    <div class="scroll-metadata" id="scrollMetadata">
-                        <!-- Metadata will be populated by JS -->
-                    </div>
+                    <div class="scroll-roller top"></div>
+                    <div class="scroll-roller bottom"></div>
                 </div>
-            </section>
+                <p class="loading-text" id="loadingText">Ready to explore...</p>
+                
+                <!-- Page Counter / Progress -->
+                <div class="scroll-progress" id="scrollProgress">
+                    <div class="progress-pages" id="progressPages">
+                        <span class="current-page">0</span>
+                        <span class="page-divider">/</span>
+                        <span class="total-pages">0</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-status" id="progressStatus">Waiting...</div>
+                </div>
+            </div>
+
+            <!-- Content Display -->
+            <div class="viewer-content" id="viewerContent">
+                <!-- Content will be injected here -->
+            </div>
+
+            <!-- Scroll Metadata (collapsible) -->
+            <div class="scroll-metadata" id="scrollMetadata">
+                <div class="metadata-toggle" id="metadataToggle">
+                    <span>Details</span>
+                    <span class="toggle-arrow">▼</span>
+                </div>
+                <div class="metadata-content" id="metadataContent">
+                    <!-- Metadata will be populated by JS -->
+                </div>
+            </div>
         </main>
 
-        <!-- Activity Log (Collapsible) -->
-        <aside class="activity-log" id="activityLog">
-            <div class="log-header" id="logToggle">
-                <span>📋 Activity Log</span>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="log-content" id="logContent">
-                <div class="log-entries" id="logEntries">
-                    <div class="log-entry info">
-                        <span class="log-time">--:--:--</span>
-                        <span class="log-message">Ledger Scrolls v2.0 initialized. Welcome to the eternal library.</span>
-                    </div>
-                </div>
-                <button class="btn btn-sm btn-ghost" id="clearLogBtn">Clear Log</button>
-            </div>
-        </aside>
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav" id="bottomNav" style="display: none;">
+            <button class="nav-btn nav-btn-secondary" id="aboutBtn" title="About">
+                <span class="nav-icon">ℹ️</span>
+            </button>
+            <button class="nav-btn nav-btn-primary" id="libraryBtn">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">The Library</span>
+            </button>
+            <button class="nav-btn nav-btn-secondary" id="mainnetBtn" title="Mainnet">
+                <span class="nav-icon">🌐</span>
+            </button>
+        </nav>
     </div>
 
-    <!-- Settings Modal -->
-    <div class="modal" id="settingsModal">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>⚙️ Settings</h3>
-                <button class="btn btn-icon modal-close" data-close="settingsModal">✕</button>
+    <!-- Library Drawer -->
+    <div class="drawer" id="libraryDrawer">
+        <div class="drawer-backdrop"></div>
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3>🧪 Preview Library</h3>
+                <button class="btn-icon drawer-close" data-close="libraryDrawer">✕</button>
             </div>
-            <div class="modal-body">
-                <div class="settings-section">
-                    <h4>🔗 Connection Mode</h4>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="connectionMode" value="blockfrost-preview" checked>
-                            <span class="radio-custom"></span>
-                            <span class="radio-text">
-                                <strong>Blockfrost Preview</strong>
-                                <small>Preview testnet (API key required)</small>
-                            </span>
-                        </label>
-                    </div>
+            <div class="drawer-body">
+                <!-- Search -->
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchScrolls" placeholder="Search scrolls...">
                 </div>
                 
-                <div class="settings-section" id="blockfrostSettings">
-                    <h4>🔑 Blockfrost API Key</h4>
-                    <div class="input-group">
-                        <input type="password" id="apiKeyInput" placeholder="previewXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
-                        <button class="btn btn-sm btn-primary" id="saveApiKey">Save</button>
-                    </div>
-                    <p class="help-text">Get a free key at <a href="https://blockfrost.io" target="_blank">blockfrost.io</a></p>
+                <!-- Categories -->
+                <div class="category-chips" id="scrollCategories">
+                    <!-- Categories will be populated by JS -->
                 </div>
-
-                <!-- Koios proxy disabled for preview PoC (Blockfrost only) -->
-
-                <div class="settings-section">
-                    <h4>🎨 Theme</h4>
-                    <div class="theme-selector">
-                        <button class="theme-btn active" data-theme="dark">🌙 Dark</button>
-                        <button class="theme-btn" data-theme="light">☀️ Light</button>
-                        <button class="theme-btn" data-theme="parchment">📜 Parchment</button>
-                    </div>
+                
+                <!-- Scroll List -->
+                <div class="scroll-list" id="scrollGrid">
+                    <!-- Scrolls will be populated by JS -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- About Modal -->
-    <div class="modal" id="aboutModal">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content modal-lg">
-            <div class="modal-header">
-                <h3>📜 About Ledger Scrolls</h3>
-                <button class="btn btn-icon modal-close" data-close="aboutModal">✕</button>
+    <!-- Settings Drawer (simplified for preview) -->
+    <div class="drawer" id="settingsDrawer">
+        <div class="drawer-backdrop"></div>
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3>⚙️ Settings</h3>
+                <button class="btn-icon drawer-close" data-close="settingsDrawer">✕</button>
             </div>
-            <div class="modal-body">
-                <div class="about-content">
-                    <blockquote class="philosophy-quote">
-                        "In the digital age, true knowledge must be unstoppable."
-                    </blockquote>
-                    
-                    <h4>What is Ledger Scrolls?</h4>
-                    <p>Ledger Scrolls is an open standard and viewer for <strong>permissionless, immutable data</strong> stored on the Cardano blockchain. Once a scroll is published, it exists forever—as long as Cardano exists.</p>
-                    
-                    <h4>Design Principles</h4>
-                    <ul class="principles-list">
-                        <li>✅ <strong>No chain indexing required</strong> — Direct pointer resolution</li>
-                        <li>✅ <strong>No centralized gatekeepers</strong> — Anyone can publish, anyone can read</li>
-                        <li>✅ <strong>No "download the whole chain" requirement</strong> — Minimal queries</li>
-                        <li>✅ <strong>Forever-readable by design</strong> — Locked UTxOs and deterministic pointers</li>
+            <div class="drawer-body">
+                <div class="settings-section">
+                    <h4>🔗 Connection</h4>
+                    <p style="color: var(--color-text-secondary); font-size: 0.9rem; margin-bottom: var(--space-md);">
+                        Preview Testnet uses Blockfrost Preview API only.<br>
+                        Koios does not support testnets.
+                    </p>
+                    <button class="btn btn-outline btn-block" id="changeKeyBtn">Change API Key</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Drawer -->
+    <div class="drawer" id="aboutDrawer">
+        <div class="drawer-backdrop"></div>
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3>🧪 About Preview</h3>
+                <button class="btn-icon drawer-close" data-close="aboutDrawer">✕</button>
+            </div>
+            <div class="drawer-body">
+                <div class="about-hero">
+                    <div class="about-icon">🧪</div>
+                    <h2>Preview Testnet</h2>
+                    <p class="about-tagline">Testing Ground for Scrolls</p>
+                </div>
+                
+                <div class="about-section">
+                    <h4>What is this?</h4>
+                    <p>A viewer for <strong>preview testnet scrolls</strong> on Cardano Preview network. These are proof-of-concept scrolls for testing before mainnet deployment.</p>
+                </div>
+                
+                <div class="about-section">
+                    <h4>Why Blockfrost Only?</h4>
+                    <p>Koios API only supports mainnet. For testnet access, we use Blockfrost Preview API which requires a free API key.</p>
+                </div>
+                
+                <div class="about-section">
+                    <h4>Available Scrolls</h4>
+                    <ul class="check-list">
+                        <li>🔊 Epic Audio Scroll</li>
+                        <li>🎬 Epic Video Scroll</li>
+                        <li>🌍 Apollo 8 Earthrise</li>
+                        <li>✨ The Signal</li>
+                        <li>🎬 Commercial Scroll</li>
                     </ul>
-                    
-                    <h4>Two Storage Standards</h4>
-                    <div class="standards-grid">
-                        <div class="standard-card">
-                            <h5>📄 Standard Scrolls</h5>
-                            <p>Small files (≤10KB) stored directly in a locked UTxO's inline datum. One fetch, one file.</p>
-                        </div>
-                        <div class="standard-card">
-                            <h5>📚 Legacy Scrolls</h5>
-                            <p>Large documents split into page NFTs with CIP-25 metadata. Supports compression and multi-MB files.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="credits">
-                        <p>Built with ❤️ by <a href="https://x.com/BEACNpool" target="_blank">@BEACNpool</a></p>
-                        <p><a href="https://github.com/BEACNpool/ledger-scrolls" target="_blank">GitHub</a> • MIT License</p>
-                    </div>
+                </div>
+                
+                <div class="about-footer">
+                    <p>Built with ❤️ by <a href="https://x.com/BEACNpool" target="_blank">@BEACNpool</a></p>
+                    <p><a href="index.html">Mainnet Viewer</a> • <a href="https://github.com/BEACNpool/ledger-scrolls" target="_blank">GitHub</a></p>
                 </div>
             </div>
         </div>
@@ -243,8 +332,8 @@
         <div class="modal-backdrop"></div>
         <div class="modal-content">
             <div class="modal-header">
-                <h3>🔐 Hash Verification</h3>
-                <button class="btn btn-icon modal-close" data-close="verifyModal">✕</button>
+                <h3>🔐 Verification</h3>
+                <button class="btn-icon modal-close" data-close="verifyModal">✕</button>
             </div>
             <div class="modal-body">
                 <div class="verification-result" id="verificationResult">
@@ -254,98 +343,495 @@
         </div>
     </div>
 
-    <!-- Custom Scroll Modal -->
-    <div class="modal" id="customScrollModal">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>🔧 Load Custom Scroll</h3>
-                <button class="btn btn-icon modal-close" data-close="customScrollModal">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="standard">Standard Scroll</button>
-                    <button class="tab-btn" data-tab="legacy">Legacy Scroll</button>
-                </div>
-                
-                <div class="tab-content active" id="tab-standard">
-                    <div class="form-group">
-                        <label>Lock Address</label>
-                        <input type="text" id="customLockAddr" placeholder="addr1...">
-                    </div>
-                    <div class="form-group">
-                        <label>Transaction Input (txhash#index)</label>
-                        <input type="text" id="customTxIn" placeholder="abc123...#0">
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Content Type</label>
-                            <select id="customContentType">
-                                <option value="image/png">Image (PNG)</option>
-                                <option value="image/jpeg">Image (JPEG)</option>
-                                <option value="text/html">HTML</option>
-                                <option value="text/plain">Plain Text</option>
-                                <option value="application/pdf">PDF</option>
-                                <option value="video/mp4">Video (MP4)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Codec</label>
-                            <select id="customCodec">
-                                <option value="none">None</option>
-                                <option value="gzip">Gzip</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Expected SHA256 (optional)</label>
-                        <input type="text" id="customSha256" placeholder="abc123...">
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="tab-legacy">
-                    <div class="form-group">
-                        <label>Policy ID</label>
-                        <input type="text" id="customPolicyId" placeholder="abc123...">
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Content Type</label>
-                            <select id="customLegacyContentType">
-                                <option value="text/html">HTML</option>
-                                <option value="text/plain">Plain Text</option>
-                                <option value="application/pdf">PDF</option>
-                                <option value="video/mp4">Video (MP4)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Codec</label>
-                            <select id="customLegacyCodec">
-                                <option value="gzip">Gzip</option>
-                                <option value="none">None</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                
-                <button class="btn btn-primary btn-block" id="loadCustomScroll">Load Scroll</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- Scripts -->
-    <script src="js/lib/pako.min.js?v=40ead0c1"></script>
-    <script src="js/lib/cbor.min.js?v=40ead0c1"></script>
+    <script src="js/lib/pako.min.js?v=preview-2"></script>
+    <script src="js/lib/cbor.min.js?v=preview-2"></script>
+    <script src="js/scrolls-preview.js?v=preview-2"></script>
+    <script src="js/blockchain.js?v=preview-2"></script>
+    <script src="js/reconstruct.js?v=preview-2"></script>
     <script>
-        window.LS_DEFAULT_MODE = 'blockfrost-preview';
-        window.LS_OVERRIDE_MODE = 'blockfrost-preview';
+        /**
+         * Ledger Scrolls - Preview Testnet Viewer
+         * Mobile-first, Blockfrost-only
+         */
+        class PreviewApp {
+            constructor() {
+                this.client = null;
+                this.reconstructor = null;
+                this.connected = false;
+                this.currentScroll = null;
+                this.currentCategory = 'all';
+                this.loadedContent = null;
+                this.apiKey = localStorage.getItem('ls_preview_api_key') || '';
+                
+                this._initUI();
+                this._bindEvents();
+                this._initParticles();
+                
+                // Auto-connect if we have a saved key
+                if (this.apiKey) {
+                    document.getElementById('apiKeyInput').value = this.apiKey;
+                    this._connect();
+                }
+            }
+            
+            _initUI() {
+                this.el = {
+                    apiCard: document.getElementById('apiCard'),
+                    apiKeyInput: document.getElementById('apiKeyInput'),
+                    viewerArea: document.getElementById('viewerArea'),
+                    bottomNav: document.getElementById('bottomNav'),
+                    statusDot: document.getElementById('statusDot'),
+                    statusText: document.getElementById('statusText'),
+                    connectionPill: document.getElementById('connectionPill'),
+                    scrollTitleBar: document.getElementById('scrollTitleBar'),
+                    viewerTitle: document.getElementById('viewerTitle'),
+                    viewerLoading: document.getElementById('viewerLoading'),
+                    viewerContent: document.getElementById('viewerContent'),
+                    loadingText: document.getElementById('loadingText'),
+                    scrollProgress: document.getElementById('scrollProgress'),
+                    progressPages: document.getElementById('progressPages'),
+                    progressFill: document.getElementById('progressFill'),
+                    progressStatus: document.getElementById('progressStatus'),
+                    scrollMetadata: document.getElementById('scrollMetadata'),
+                    metadataContent: document.getElementById('metadataContent'),
+                    scrollCategories: document.getElementById('scrollCategories'),
+                    scrollGrid: document.getElementById('scrollGrid'),
+                    downloadBtn: document.getElementById('downloadBtn'),
+                    verifyBtn: document.getElementById('verifyBtn'),
+                    toastContainer: document.getElementById('toastContainer')
+                };
+            }
+            
+            _bindEvents() {
+                // Connect button
+                document.getElementById('connectBtn')?.addEventListener('click', () => this._connect());
+                document.getElementById('apiKeyInput')?.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this._connect();
+                });
+                
+                // Connection pill opens settings
+                this.el.connectionPill?.addEventListener('click', () => this._openDrawer('settingsDrawer'));
+                
+                // Bottom nav
+                document.getElementById('libraryBtn')?.addEventListener('click', () => this._openDrawer('libraryDrawer'));
+                document.getElementById('aboutBtn')?.addEventListener('click', () => this._openDrawer('aboutDrawer'));
+                document.getElementById('mainnetBtn')?.addEventListener('click', () => window.location.href = 'index.html');
+                
+                // Change API key
+                document.getElementById('changeKeyBtn')?.addEventListener('click', () => {
+                    this._closeDrawer('settingsDrawer');
+                    this._showApiCard();
+                });
+                
+                // Back button
+                document.getElementById('backBtn')?.addEventListener('click', () => this._closeViewer());
+                
+                // Download and verify
+                this.el.downloadBtn?.addEventListener('click', () => this._downloadScroll());
+                this.el.verifyBtn?.addEventListener('click', () => this._verifyScroll());
+                
+                // Metadata toggle
+                document.getElementById('metadataToggle')?.addEventListener('click', () => {
+                    this.el.scrollMetadata.classList.toggle('expanded');
+                });
+                
+                // Search
+                document.getElementById('searchScrolls')?.addEventListener('input', (e) => {
+                    this._renderScrolls(ScrollLibrary.searchScrolls(e.target.value));
+                });
+                
+                // Drawer close buttons
+                document.querySelectorAll('.drawer-close').forEach(btn => {
+                    btn.addEventListener('click', () => this._closeDrawer(btn.dataset.close));
+                });
+                
+                // Drawer backdrops
+                document.querySelectorAll('.drawer-backdrop').forEach(backdrop => {
+                    backdrop.addEventListener('click', () => {
+                        const drawer = backdrop.closest('.drawer');
+                        if (drawer) this._closeDrawer(drawer.id);
+                    });
+                });
+                
+                // Modal close buttons
+                document.querySelectorAll('.modal-close').forEach(btn => {
+                    btn.addEventListener('click', () => this._closeModal(btn.dataset.close));
+                });
+                
+                // Modal backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                    backdrop.addEventListener('click', () => {
+                        const modal = backdrop.closest('.modal');
+                        if (modal) this._closeModal(modal.id);
+                    });
+                });
+                
+                // Logo goes home
+                document.getElementById('logoSection')?.addEventListener('click', () => this._closeViewer());
+            }
+            
+            _initParticles() {
+                const container = document.getElementById('particles');
+                if (!container) return;
+                
+                const count = window.innerWidth < 768 ? 15 : 25;
+                for (let i = 0; i < count; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = `${Math.random() * 100}%`;
+                    particle.style.animationDelay = `${Math.random() * 20}s`;
+                    particle.style.animationDuration = `${15 + Math.random() * 10}s`;
+                    container.appendChild(particle);
+                }
+            }
+            
+            async _connect() {
+                const key = this.el.apiKeyInput.value.trim();
+                if (!key) {
+                    this._toast('error', 'Please enter your Blockfrost Preview API key');
+                    return;
+                }
+                
+                this._setStatus('connecting', 'Connecting...');
+                
+                try {
+                    this.client = new BlockchainClient('blockfrost-preview', key);
+                    
+                    if (!window.ScrollReconstructor) {
+                        throw new Error('ScrollReconstructor not loaded');
+                    }
+                    this.reconstructor = new ScrollReconstructor(this.client);
+                    
+                    const result = await this.client.testConnection();
+                    if (!result.success) throw new Error(result.error || 'Connection failed');
+                    
+                    this.connected = true;
+                    this.apiKey = key;
+                    localStorage.setItem('ls_preview_api_key', key);
+                    
+                    this._setStatus('connected', 'Preview');
+                    this._showViewer();
+                    this._renderLibrary();
+                    this._toast('success', 'Connected to Preview Testnet!');
+                    
+                    // Get tip info
+                    const tip = await this.client.getTip();
+                    if (tip) {
+                        console.log(`Chain tip: Slot ${tip.slot}`);
+                    }
+                } catch (e) {
+                    this._setStatus('disconnected', 'Offline');
+                    this._toast('error', `Connection failed: ${e.message}`);
+                }
+            }
+            
+            _setStatus(status, text) {
+                this.el.statusDot.className = `status-dot ${status}`;
+                this.el.statusText.textContent = text;
+            }
+            
+            _showViewer() {
+                this.el.apiCard.style.display = 'none';
+                this.el.viewerArea.style.display = 'flex';
+                this.el.bottomNav.style.display = 'flex';
+            }
+            
+            _showApiCard() {
+                this.el.apiCard.style.display = 'block';
+                this.el.viewerArea.style.display = 'none';
+                this.el.bottomNav.style.display = 'none';
+                this.connected = false;
+                this._setStatus('disconnected', 'Offline');
+            }
+            
+            _renderLibrary() {
+                // Render categories
+                const categories = ScrollLibrary.getCategoriesWithCounts();
+                this.el.scrollCategories.innerHTML = categories.map(cat => `
+                    <button class="category-chip ${cat.id === this.currentCategory ? 'active' : ''}" 
+                            data-category="${cat.id}">
+                        ${cat.icon} ${cat.name}
+                        <span class="chip-count">${cat.count}</span>
+                    </button>
+                `).join('');
+                
+                // Bind category clicks
+                this.el.scrollCategories.querySelectorAll('.category-chip').forEach(chip => {
+                    chip.addEventListener('click', () => {
+                        this.currentCategory = chip.dataset.category;
+                        this._renderLibrary();
+                    });
+                });
+                
+                // Render scrolls
+                const scrolls = ScrollLibrary.getScrollsByCategory(this.currentCategory);
+                this._renderScrolls(scrolls);
+            }
+            
+            _renderScrolls(scrolls) {
+                this.el.scrollGrid.innerHTML = scrolls.map(s => `
+                    <div class="scroll-item" data-id="${s.id}">
+                        <div class="scroll-item-icon">${s.icon}</div>
+                        <div class="scroll-item-info">
+                            <div class="scroll-item-title">${s.title}</div>
+                            <div class="scroll-item-pages">${s.metadata?.pages || '?'} pages</div>
+                        </div>
+                        <div class="scroll-item-type">${s.pointer?.content_type?.split('/')[0] || 'media'}</div>
+                    </div>
+                `).join('');
+                
+                // Bind scroll clicks
+                this.el.scrollGrid.querySelectorAll('.scroll-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const scroll = ScrollLibrary.getScrollById(item.dataset.id);
+                        if (scroll) {
+                            this._closeDrawer('libraryDrawer');
+                            this._loadScroll(scroll);
+                        }
+                    });
+                });
+            }
+            
+            async _loadScroll(scroll) {
+                if (!this.connected) {
+                    this._toast('warning', 'Please connect first');
+                    return;
+                }
+                
+                this.currentScroll = scroll;
+                this.loadedContent = null;
+                
+                // Show title bar and loading
+                this.el.scrollTitleBar.classList.add('active');
+                this.el.viewerTitle.textContent = scroll.title;
+                this.el.viewerLoading.classList.add('active');
+                this.el.viewerContent.classList.remove('active');
+                this.el.scrollMetadata.classList.remove('expanded');
+                this.el.downloadBtn.disabled = true;
+                this.el.verifyBtn.disabled = true;
+                
+                // Reset progress
+                this.el.scrollProgress.classList.add('active');
+                this._updateProgress(0, scroll.metadata?.pages || 0, 'Starting...');
+                
+                // Set up progress callback
+                this.reconstructor.setProgressCallback((msg, pct) => {
+                    const match = msg.match(/(\d+)\/(\d+)/);
+                    if (match) {
+                        this._updateProgress(parseInt(match[1]), parseInt(match[2]), msg);
+                    } else {
+                        this.el.progressStatus.textContent = msg;
+                    }
+                    if (pct !== null) {
+                        this.el.progressFill.style.width = `${pct}%`;
+                    }
+                });
+                
+                try {
+                    const result = await this.reconstructor.reconstruct(scroll);
+                    this.loadedContent = result;
+                    this._displayContent(result, scroll);
+                    this._displayMetadata(result, scroll);
+                    this.el.downloadBtn.disabled = false;
+                    this.el.verifyBtn.disabled = !scroll.pointer?.sha256;
+                    this._toast('success', 'Scroll loaded!');
+                } catch (e) {
+                    this._toast('error', `Failed: ${e.message}`);
+                    this.el.loadingText.textContent = `❌ ${e.message}`;
+                }
+            }
+            
+            _updateProgress(current, total, status) {
+                this.el.progressPages.querySelector('.current-page').textContent = current;
+                this.el.progressPages.querySelector('.total-pages').textContent = total;
+                this.el.progressStatus.textContent = status;
+                if (total > 0) {
+                    this.el.progressFill.style.width = `${(current / total) * 100}%`;
+                }
+            }
+            
+            _displayContent(result, scroll) {
+                this.el.viewerLoading.classList.remove('active');
+                this.el.viewerContent.classList.add('active');
+                this.el.viewerContent.innerHTML = '';
+                
+                const ct = (result.contentType || '').toLowerCase();
+                const blob = new Blob([result.bytes], { type: ct });
+                const url = URL.createObjectURL(blob);
+                this.loadedContent.blob = blob;
+                this.loadedContent.url = url;
+                
+                if (ct.startsWith('video/')) {
+                    const vid = document.createElement('video');
+                    vid.controls = true;
+                    vid.playsInline = true;
+                    vid.src = url;
+                    this.el.viewerContent.appendChild(vid);
+                } else if (ct.startsWith('audio/')) {
+                    const aud = document.createElement('audio');
+                    aud.controls = true;
+                    aud.src = url;
+                    this.el.viewerContent.appendChild(aud);
+                } else if (ct.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    this.el.viewerContent.appendChild(img);
+                } else if (ct.includes('html')) {
+                    const iframe = document.createElement('iframe');
+                    iframe.sandbox = 'allow-same-origin';
+                    iframe.src = url;
+                    this.el.viewerContent.appendChild(iframe);
+                } else {
+                    const text = new TextDecoder().decode(result.bytes);
+                    const pre = document.createElement('pre');
+                    pre.textContent = text.substring(0, 50000);
+                    this.el.viewerContent.appendChild(pre);
+                }
+            }
+            
+            _displayMetadata(result, scroll) {
+                const items = [
+                    { label: 'Network', value: 'Preview Testnet' },
+                    { label: 'Size', value: this._formatSize(result.size) },
+                    { label: 'Type', value: result.contentType },
+                    { label: 'Pages', value: scroll.metadata?.pages || '?' },
+                    { label: 'Policy', value: scroll.pointer?.policy_id?.substring(0, 16) + '...' || 'N/A' }
+                ];
+                
+                if (scroll.pointer?.sha256) {
+                    items.push({ label: 'SHA256', value: scroll.pointer.sha256.substring(0, 24) + '...' });
+                }
+                
+                this.el.metadataContent.innerHTML = `
+                    <div class="metadata-grid">
+                        ${items.map(i => `
+                            <div class="metadata-item">
+                                <span class="metadata-label">${i.label}</span>
+                                <span class="metadata-value">${i.value}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            _closeViewer() {
+                this.el.scrollTitleBar.classList.remove('active');
+                this.el.viewerLoading.classList.remove('active');
+                this.el.viewerContent.classList.remove('active');
+                this.el.viewerContent.innerHTML = '';
+                this.el.scrollMetadata.classList.remove('expanded');
+                this.el.loadingText.textContent = 'Ready to explore...';
+                this.el.scrollProgress.classList.remove('active');
+                this.currentScroll = null;
+                
+                // Revoke blob URL
+                if (this.loadedContent?.url) {
+                    URL.revokeObjectURL(this.loadedContent.url);
+                    this.loadedContent = null;
+                }
+            }
+            
+            _downloadScroll() {
+                if (!this.loadedContent?.blob || !this.currentScroll) return;
+                
+                const ct = this.loadedContent.contentType || '';
+                let ext = '.bin';
+                if (ct.includes('video')) ext = '.mp4';
+                else if (ct.includes('audio')) ext = '.opus';
+                else if (ct.includes('image/png')) ext = '.png';
+                else if (ct.includes('image')) ext = '.jpg';
+                else if (ct.includes('html')) ext = '.html';
+                else if (ct.includes('text')) ext = '.txt';
+                
+                const a = document.createElement('a');
+                a.href = this.loadedContent.url;
+                a.download = `${this.currentScroll.id}${ext}`;
+                a.click();
+                this._toast('success', 'Download started!');
+            }
+            
+            async _verifyScroll() {
+                if (!this.loadedContent?.bytes || !this.currentScroll?.pointer?.sha256) return;
+                
+                const hashBuffer = await crypto.subtle.digest('SHA-256', this.loadedContent.bytes);
+                const computed = Array.from(new Uint8Array(hashBuffer))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+                const expected = this.currentScroll.pointer.sha256;
+                const ok = computed === expected;
+                
+                const result = document.getElementById('verificationResult');
+                result.innerHTML = `
+                    <div class="verification-icon">${ok ? '✅' : '❌'}</div>
+                    <div class="verification-status ${ok ? 'verified' : 'failed'}">
+                        ${ok ? 'Hash Verified!' : 'Hash Mismatch!'}
+                    </div>
+                    <div class="hash-comparison">
+                        <div class="hash-row">
+                            <div class="hash-label">Expected</div>
+                            <div class="hash-value">${expected}</div>
+                        </div>
+                        <div class="hash-row">
+                            <div class="hash-label">Computed</div>
+                            <div class="hash-value">${computed}</div>
+                        </div>
+                    </div>
+                `;
+                
+                this._openModal('verifyModal');
+            }
+            
+            _openDrawer(id) {
+                const drawer = document.getElementById(id);
+                if (drawer) drawer.classList.add('open');
+            }
+            
+            _closeDrawer(id) {
+                const drawer = document.getElementById(id);
+                if (drawer) drawer.classList.remove('open');
+            }
+            
+            _openModal(id) {
+                const modal = document.getElementById(id);
+                if (modal) modal.classList.add('open');
+            }
+            
+            _closeModal(id) {
+                const modal = document.getElementById(id);
+                if (modal) modal.classList.remove('open');
+            }
+            
+            _toast(type, msg) {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+                toast.innerHTML = `
+                    <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
+                    <span class="toast-message">${msg}</span>
+                `;
+                this.el.toastContainer.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.classList.add('toast-exit');
+                    setTimeout(() => toast.remove(), 300);
+                }, 4000);
+            }
+            
+            _formatSize(bytes) {
+                if (bytes < 1024) return `${bytes} B`;
+                if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+                return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+            }
+        }
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            window.app = new PreviewApp();
+        });
     </script>
-    <script src="js/scrolls-preview.js?v=preview1"></script>
-    <script src="js/blockchain.js?v=preview1"></script>
-    <script src="js/reconstruct.js?v=preview1"></script>
-    <script src="js/app.js?v=preview1"></script>
 </body>
 </html>
