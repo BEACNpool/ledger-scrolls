@@ -794,22 +794,22 @@
             
             _openDrawer(id) {
                 const drawer = document.getElementById(id);
-                if (drawer) drawer.classList.add('open');
+                if (drawer) drawer.classList.add('active');
             }
             
             _closeDrawer(id) {
                 const drawer = document.getElementById(id);
-                if (drawer) drawer.classList.remove('open');
+                if (drawer) drawer.classList.remove('active');
             }
             
             _openModal(id) {
                 const modal = document.getElementById(id);
-                if (modal) modal.classList.add('open');
+                if (modal) modal.classList.add('active');
             }
             
             _closeModal(id) {
                 const modal = document.getElementById(id);
-                if (modal) modal.classList.remove('open');
+                if (modal) modal.classList.remove('active');
             }
             
             _toast(type, msg) {

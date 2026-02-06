@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0804">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>The Cardano Constitution — Ledger Scrolls</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+    <style>
+        /* ================================================================
+           THE CARDANO CONSTITUTION VIEWER
+           "The founding words we obey."
+           
+           Design: Sacred Document — National Archives meets Blockchain.
+           Dark chamber, warm parchment, gold leaf, wax seals.
+           ================================================================ */
+
+        :root {
+            /* The Chamber */
+            --chamber-bg: #06080a;
+            --chamber-vignette: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%);
+            
+            /* Parchment */
+            --parchment-bg: #f5edd6;
+            --parchment-aged: #e8dbb8;
+            --parchment-dark: #d4c49a;
+            --parchment-shadow: rgba(30, 20, 10, 0.3);
+            --parchment-text: #2c1810;
+            --parchment-heading: #1a0f08;
+            
+            /* Gold Leaf */
+            --gold-bright: #d4a855;
+            --gold-deep: #b8860b;
+            --gold-pale: #e8d5a3;
+            --gold-glow: rgba(212, 168, 85, 0.25);
+            --gold-shimmer: linear-gradient(135deg, #d4a855 0%, #f0d890 30%, #b8860b 60%, #d4a855 100%);
+            
+            /* Wax Seal */
+            --seal-red: #8b1a1a;
+            --seal-dark: #5c0e0e;
+            
+            /* Verification */
+            --verify-green: #2d6a2e;
+            --verify-glow: rgba(45, 106, 46, 0.3);
+            
+            /* Typography */
+            --font-display: 'Cinzel Decorative', 'Cinzel', serif;
+            --font-heading: 'Cinzel', serif;
+            --font-body: 'Cormorant Garamond', 'Georgia', serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 40px;
+            --space-2xl: 64px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            background: var(--chamber-bg);
+            color: var(--parchment-text);
+            font-family: var(--font-body);
+            font-size: 18px;
+            line-height: 1.7;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ==========================================================
+           CHAMBER ATMOSPHERE — dark room with ambient glow
+           ========================================================== */
+        
+        .chamber {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .chamber-vignette {
+            position: absolute;
+            inset: 0;
+            background: var(--chamber-vignette);
+        }
+
+        .chamber-light {
+            position: absolute;
+            top: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70vw;
+            height: 50vh;
+            background: radial-gradient(ellipse, rgba(212, 168, 85, 0.06) 0%, transparent 70%);
+            animation: light-breathe 8s ease-in-out infinite;
+        }
+
+        @keyframes light-breathe {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .chamber-dust {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .dust-mote {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(212, 168, 85, 0.3);
+            border-radius: 50%;
+            animation: dust-float linear infinite;
+        }
+
+        @keyframes dust-float {
+            0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) translateX(30px); opacity: 0; }
+        }
+
+        /* ==========================================================
+           HEADER BAR — minimal, reverent
+           ========================================================== */
+
+        .site-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: var(--space-md) var(--space-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(to bottom, rgba(6, 8, 10, 0.95) 0%, rgba(6, 8, 10, 0.7) 70%, transparent 100%);
+            backdrop-filter: blur(8px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .header-back {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            color: var(--gold-pale);
+            text-decoration: none;
+            font-family: var(--font-heading);
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+
+        .header-back:hover { opacity: 1; }
+
+        .header-back svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .header-title {
+            font-family: var(--font-heading);
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--gold-bright);
+            opacity: 0.5;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .version-selector {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .version-btn {
+            padding: 5px 14px;
+            font-family: var(--font-heading);
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--gold-pale);
+            background: transparent;
+            border: 1px solid rgba(212, 168, 85, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            opacity: 0.5;
+        }
+
+        .version-btn:hover { opacity: 0.8; border-color: rgba(212, 168, 85, 0.4); }
+        .version-btn.active {
+            opacity: 1;
+            background: rgba(212, 168, 85, 0.1);
+            border-color: var(--gold-bright);
+            color: var(--gold-bright);
+        }
+
+        /* ==========================================================
+           HERO — The Grand Opening
+           ========================================================== */
+
+        .hero {
+            position: relative;
+            z-index: 1;
+            padding: 120px var(--space-lg) var(--space-2xl);
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero-seal {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto var(--space-lg);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .seal-ring {
+            position: absolute;
+            inset: 0;
+            border: 2px solid var(--gold-bright);
+            border-radius: 50%;
+            animation: seal-rotate 30s linear infinite;
+        }
+
+        .seal-ring::before {
+            content: '';
+            position: absolute;
+            inset: 4px;
+            border: 1px solid rgba(212, 168, 85, 0.4);
+            border-radius: 50%;
+        }
+
+        @keyframes seal-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .seal-icon {
+            font-size: 2.5rem;
+            filter: drop-shadow(0 0 20px var(--gold-glow));
+            z-index: 1;
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 5vw, 3.2rem);
+            font-weight: 700;
+            color: var(--gold-bright);
+            letter-spacing: 0.08em;
+            line-height: 1.2;
+            margin-bottom: var(--space-md);
+            text-shadow: 0 0 40px rgba(212, 168, 85, 0.15);
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-body);
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            font-weight: 300;
+            font-style: italic;
+            color: var(--gold-pale);
+            opacity: 0.6;
+            max-width: 600px;
+            margin: 0 auto var(--space-xl);
+            letter-spacing: 0.03em;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: var(--space-lg);
+            margin-bottom: var(--space-lg);
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--gold-bright);
+            letter-spacing: 0.05em;
+        }
+
+        .hero-stat-label {
+            font-family: var(--font-heading);
+            font-size: 0.6rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--gold-pale);
+            opacity: 0.5;
+            margin-top: 2px;
+        }
+
+        .hero-divider {
+            width: 120px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold-bright), transparent);
+            margin: var(--space-lg) auto;
+            opacity: 0.4;
+        }
+
+        .hero-quote {
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            font-style: italic;
+            color: var(--gold-pale);
+            opacity: 0.45;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* ==========================================================
+           VERIFICATION BANNER — The Wax Seal
+           ========================================================== */
+
+        .verification-banner {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto var(--space-xl);
+            padding: 0 var(--space-lg);
+        }
+
+        .verify-card {
+            background: rgba(45, 106, 46, 0.06);
+            border: 1px solid rgba(45, 106, 46, 0.25);
+            border-radius: 8px;
+            padding: var(--space-lg);
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-lg);
+        }
+
+        .verify-card.pending {
+            background: rgba(212, 168, 85, 0.04);
+            border-color: rgba(212, 168, 85, 0.15);
+        }
+
+        .verify-card.failed {
+            background: rgba(139, 26, 26, 0.06);
+            border-color: rgba(139, 26, 26, 0.25);
+        }
+
+        .verify-seal {
+            flex-shrink: 0;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .verify-seal.verified {
+            background: rgba(45, 106, 46, 0.15);
+            border: 2px solid var(--verify-green);
+            box-shadow: 0 0 20px var(--verify-glow);
+        }
+
+        .verify-seal.pending {
+            background: rgba(212, 168, 85, 0.1);
+            border: 2px solid rgba(212, 168, 85, 0.3);
+            animation: pulse-seal 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-seal {
+            0%, 100% { box-shadow: 0 0 10px rgba(212, 168, 85, 0.1); }
+            50% { box-shadow: 0 0 25px rgba(212, 168, 85, 0.25); }
+        }
+
+        .verify-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .verify-title {
+            font-family: var(--font-heading);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: var(--space-xs);
+        }
+
+        .verify-title.verified { color: #5cb85c; }
+        .verify-title.pending { color: var(--gold-bright); }
+        .verify-title.failed { color: #d9534f; }
+
+        .verify-detail {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            color: var(--gold-pale);
+            opacity: 0.6;
+            margin-bottom: var(--space-sm);
+        }
+
+        .verify-hash {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--gold-pale);
+            opacity: 0.45;
+            word-break: break-all;
+            line-height: 1.6;
+            padding: var(--space-sm);
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            border: 1px solid rgba(212, 168, 85, 0.08);
+        }
+
+        .verify-hash strong {
+            color: var(--gold-bright);
+            opacity: 0.8;
+            font-weight: 500;
+        }
+
+        /* ==========================================================
+           AMENDMENT NOTES SIDEBAR
+           ========================================================== */
+
+        .content-layout {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-lg);
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: var(--space-xl);
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 80px;
+            align-self: start;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 3px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(212, 168, 85, 0.2); border-radius: 2px; }
+
+        .sidebar-section {
+            margin-bottom: var(--space-xl);
+        }
+
+        .sidebar-title {
+            font-family: var(--font-heading);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold-bright);
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid rgba(212, 168, 85, 0.15);
+        }
+
+        .amendment-note {
+            padding: var(--space-md);
+            margin-bottom: var(--space-md);
+            background: rgba(212, 168, 85, 0.04);
+            border-left: 3px solid var(--gold-deep);
+            border-radius: 0 6px 6px 0;
+            transition: background 0.3s;
+        }
+
+        .amendment-note:hover {
+            background: rgba(212, 168, 85, 0.08);
+        }
+
+        .amendment-note-tag {
+            font-family: var(--font-heading);
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gold-bright);
+            margin-bottom: var(--space-xs);
+        }
+
+        .amendment-note-text {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            color: var(--gold-pale);
+            opacity: 0.7;
+            line-height: 1.5;
+        }
+
+        .provenance-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: var(--space-sm) 0;
+            border-bottom: 1px solid rgba(212, 168, 85, 0.06);
+            font-size: 0.8rem;
+        }
+
+        .provenance-label {
+            color: var(--gold-pale);
+            opacity: 0.5;
+            font-size: 0.75rem;
+        }
+
+        .provenance-value {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--gold-bright);
+            opacity: 0.7;
+            text-align: right;
+            word-break: break-all;
+            max-width: 160px;
+        }
+
+        .sidebar-beacn {
+            padding: var(--space-md);
+            background: rgba(212, 168, 85, 0.03);
+            border: 1px solid rgba(212, 168, 85, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .sidebar-beacn-icon {
+            font-size: 1.5rem;
+            margin-bottom: var(--space-xs);
+        }
+
+        .sidebar-beacn-title {
+            font-family: var(--font-heading);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gold-bright);
+            margin-bottom: var(--space-xs);
+        }
+
+        .sidebar-beacn-text {
+            font-family: var(--font-body);
+            font-size: 0.78rem;
+            color: var(--gold-pale);
+            opacity: 0.5;
+            line-height: 1.4;
+        }
+
+        /* ==========================================================
+           THE SCROLL — Parchment Document
+           ========================================================== */
+
+        .scroll-container {
+            min-width: 0;
+        }
+
+        .scroll-parchment {
+            position: relative;
+            background: var(--parchment-bg);
+            border-radius: 4px;
+            padding: var(--space-2xl) clamp(var(--space-lg), 5vw, var(--space-2xl));
+            box-shadow:
+                0 4px 30px rgba(0, 0, 0, 0.4),
+                0 1px 3px rgba(0, 0, 0, 0.2),
+                inset 0 0 80px rgba(180, 160, 120, 0.15);
+            margin-bottom: var(--space-2xl);
+        }
+
+        /* Aged edges */
+        .scroll-parchment::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 4px;
+            background: 
+                radial-gradient(ellipse at top left, rgba(160, 140, 100, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(160, 140, 100, 0.2) 0%, transparent 50%),
+                radial-gradient(ellipse at top right, rgba(140, 120, 80, 0.1) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        /* Gold top border decoration */
+        .scroll-parchment::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 3px;
+            background: var(--gold-shimmer);
+            border-radius: 0 0 2px 2px;
+            opacity: 0.6;
+        }
+
+        /* Roller ornaments */
+        .scroll-roller-top,
+        .scroll-roller-bottom {
+            position: relative;
+            height: 12px;
+            background: linear-gradient(to bottom, var(--parchment-dark), var(--parchment-aged), var(--parchment-dark));
+            border-radius: 6px;
+            margin: 0 -8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .scroll-roller-top {
+            margin-bottom: var(--space-xl);
+        }
+
+        .scroll-roller-bottom {
+            margin-top: var(--space-xl);
+        }
+
+        .scroll-roller-top::before,
+        .scroll-roller-top::after,
+        .scroll-roller-bottom::before,
+        .scroll-roller-bottom::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            background: var(--gold-shimmer);
+            border-radius: 50%;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .scroll-roller-top::before,
+        .scroll-roller-bottom::before {
+            left: -5px;
+        }
+
+        .scroll-roller-top::after,
+        .scroll-roller-bottom::after {
+            right: -5px;
+        }
+
+        /* Document content */
+        .constitution-header {
+            text-align: center;
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-lg);
+            border-bottom: 1px solid var(--parchment-dark);
+        }
+
+        .constitution-header h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.3rem, 3.5vw, 2rem);
+            font-weight: 700;
+            color: var(--parchment-heading);
+            letter-spacing: 0.06em;
+            margin-bottom: var(--space-sm);
+        }
+
+        .constitution-header .epoch-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: 4px 16px;
+            font-family: var(--font-heading);
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--seal-red);
+            border: 1px solid rgba(139, 26, 26, 0.3);
+            border-radius: 3px;
+            background: rgba(139, 26, 26, 0.05);
+        }
+
+        .constitution-body {
+            color: var(--parchment-text);
+            font-family: var(--font-body);
+            font-size: clamp(1rem, 2.2vw, 1.15rem);
+            line-height: 1.85;
+        }
+
+        .constitution-body h2 {
+            font-family: var(--font-heading);
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--parchment-heading);
+            margin: var(--space-xl) 0 var(--space-md);
+            letter-spacing: 0.04em;
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid var(--parchment-dark);
+        }
+
+        .constitution-body h3 {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--parchment-heading);
+            margin: var(--space-lg) 0 var(--space-sm);
+        }
+
+        .constitution-body p {
+            margin-bottom: var(--space-md);
+            text-align: justify;
+            hyphens: auto;
+        }
+
+        .constitution-body ul, .constitution-body ol {
+            margin-bottom: var(--space-md);
+            padding-left: var(--space-lg);
+        }
+
+        .constitution-body li {
+            margin-bottom: var(--space-sm);
+        }
+
+        /* ==========================================================
+           LOADING STATE — Fetching from chain
+           ========================================================== */
+
+        .loading-state {
+            text-align: center;
+            padding: var(--space-2xl) var(--space-lg);
+        }
+
+        .loading-scroll-icon {
+            font-size: 3rem;
+            margin-bottom: var(--space-lg);
+            animation: scroll-unfurl 2s ease-in-out infinite;
+        }
+
+        @keyframes scroll-unfurl {
+            0%, 100% { transform: scale(1) rotate(0); }
+            25% { transform: scale(1.05) rotate(-2deg); }
+            75% { transform: scale(1.05) rotate(2deg); }
+        }
+
+        .loading-title {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            color: var(--parchment-heading);
+            letter-spacing: 0.08em;
+            margin-bottom: var(--space-sm);
+        }
+
+        .loading-text {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--parchment-text);
+            opacity: 0.6;
+            margin-bottom: var(--space-lg);
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 3px;
+            background: var(--parchment-dark);
+            border-radius: 2px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .loading-bar-fill {
+            height: 100%;
+            width: 30%;
+            background: var(--gold-shimmer);
+            border-radius: 2px;
+            animation: loading-slide 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loading-slide {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+        }
+
+        /* ==========================================================
+           CONTEXT SECTION — Below the scroll
+           ========================================================== */
+
+        .context-section {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: var(--space-2xl) auto;
+            padding: 0 var(--space-lg);
+        }
+
+        .context-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--space-lg);
+            margin-bottom: var(--space-2xl);
+        }
+
+        .context-card {
+            padding: var(--space-lg);
+            background: rgba(212, 168, 85, 0.03);
+            border: 1px solid rgba(212, 168, 85, 0.08);
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+
+        .context-card:hover {
+            border-color: rgba(212, 168, 85, 0.2);
+        }
+
+        .context-card-icon {
+            font-size: 1.5rem;
+            margin-bottom: var(--space-sm);
+        }
+
+        .context-card-title {
+            font-family: var(--font-heading);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gold-bright);
+            margin-bottom: var(--space-sm);
+        }
+
+        .context-card-text {
+            font-family: var(--font-body);
+            font-size: 0.88rem;
+            color: var(--gold-pale);
+            opacity: 0.55;
+            line-height: 1.5;
+        }
+
+        /* ==========================================================
+           FOOTER
+           ========================================================== */
+
+        .constitution-footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: var(--space-2xl) var(--space-lg);
+            border-top: 1px solid rgba(212, 168, 85, 0.08);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .footer-seal {
+            font-size: 2rem;
+            margin-bottom: var(--space-md);
+            opacity: 0.5;
+        }
+
+        .footer-text {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-style: italic;
+            color: var(--gold-pale);
+            opacity: 0.35;
+            margin-bottom: var(--space-md);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-lg);
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            font-family: var(--font-heading);
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gold-pale);
+            text-decoration: none;
+            opacity: 0.35;
+            transition: opacity 0.3s;
+        }
+
+        .footer-links a:hover { opacity: 0.7; }
+
+        /* ==========================================================
+           ERROR STATE
+           ========================================================== */
+
+        .error-state {
+            text-align: center;
+            padding: var(--space-xl);
+        }
+
+        .error-icon {
+            font-size: 2.5rem;
+            margin-bottom: var(--space-md);
+            opacity: 0.5;
+        }
+
+        .error-title {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            color: var(--parchment-heading);
+            margin-bottom: var(--space-sm);
+        }
+
+        .error-text {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--parchment-text);
+            opacity: 0.6;
+            margin-bottom: var(--space-lg);
+        }
+
+        .retry-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-lg);
+            font-family: var(--font-heading);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--parchment-heading);
+            background: transparent;
+            border: 1px solid var(--parchment-dark);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .retry-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: var(--parchment-text);
+        }
+
+        /* ==========================================================
+           RESPONSIVE
+           ========================================================== */
+
+        @media (max-width: 900px) {
+            .content-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+                max-height: none;
+                order: -1;
+            }
+
+            .sidebar-inner {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: var(--space-md);
+            }
+
+            .sidebar-section:last-child {
+                grid-column: 1 / -1;
+            }
+
+            .hero { padding: 100px var(--space-md) var(--space-xl); }
+            .hero-meta { gap: var(--space-md); }
+        }
+
+        @media (max-width: 600px) {
+            .site-header { padding: var(--space-sm) var(--space-md); }
+            .header-title { display: none; }
+            .version-btn { font-size: 0.6rem; padding: 4px 10px; }
+            .scroll-parchment { padding: var(--space-lg) var(--space-md); }
+            .sidebar-inner { grid-template-columns: 1fr; }
+            .verify-card { flex-direction: column; align-items: center; text-align: center; }
+            .verify-hash { text-align: left; }
+            .provenance-value { max-width: 120px; }
+        }
+
+        /* ==========================================================
+           SCROLL ANIMATIONS
+           ========================================================== */
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(16px);
+            animation: appear 0.6s ease forwards;
+        }
+
+        .fade-in-delay-1 { animation-delay: 0.15s; }
+        .fade-in-delay-2 { animation-delay: 0.3s; }
+        .fade-in-delay-3 { animation-delay: 0.45s; }
+        .fade-in-delay-4 { animation-delay: 0.6s; }
+
+        @keyframes appear {
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Chamber Atmosphere -->
+    <div class="chamber" aria-hidden="true">
+        <div class="chamber-vignette"></div>
+        <div class="chamber-light"></div>
+        <div class="chamber-dust" id="dustContainer"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-left">
+            <a href="index.html" class="header-back">
+                <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                Ledger Scrolls
+            </a>
+            <span class="header-title">Constitution Chamber</span>
+        </div>
+        <div class="header-right">
+            <div class="version-selector">
+                <button class="version-btn" data-epoch="541" id="btnEpoch541">Epoch 541</button>
+                <button class="version-btn active" data-epoch="608" id="btnEpoch608">Epoch 608</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero fade-in">
+        <div class="hero-seal">
+            <div class="seal-ring"></div>
+            <span class="seal-icon">⚖️</span>
+        </div>
+        <h1 class="hero-title">The Cardano Constitution</h1>
+        <p class="hero-subtitle" id="heroSubtitle">
+            The immutable governance framework of the Cardano blockchain — 
+            ratified by its people, preserved forever on-chain.
+        </p>
+        <div class="hero-meta" id="heroMeta">
+            <div class="hero-stat">
+                <div class="hero-stat-value" id="statEpoch">608</div>
+                <div class="hero-stat-label">Ratified Epoch</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value" id="statApproval">85%</div>
+                <div class="hero-stat-label">DRep Approval</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value" id="statWorkshops">63</div>
+                <div class="hero-stat-label">Workshops Worldwide</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value" id="statCountries">52</div>
+                <div class="hero-stat-label">Countries</div>
+            </div>
+        </div>
+        <div class="hero-divider"></div>
+        <p class="hero-quote">
+            "The first truly distributed and community-run blockchain network."
+        </p>
+    </section>
+
+    <!-- Verification Banner -->
+    <div class="verification-banner fade-in fade-in-delay-1">
+        <div class="verify-card pending" id="verifyCard">
+            <div class="verify-seal pending" id="verifySealIcon">🔐</div>
+            <div class="verify-info">
+                <div class="verify-title pending" id="verifyTitle">Verifying Integrity…</div>
+                <div class="verify-detail" id="verifyDetail">
+                    Fetching constitution from on-chain storage and computing SHA-256 hash.
+                </div>
+                <div class="verify-hash" id="verifyHash">
+                    <strong>Expected:</strong> <span id="expectedHash">—</span><br>
+                    <strong>Computed:</strong> <span id="computedHash">Calculating…</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content: Scroll + Sidebar -->
+    <div class="content-layout fade-in fade-in-delay-2">
+        <!-- The Scroll -->
+        <div class="scroll-container">
+            <div class="scroll-parchment">
+                <div class="scroll-roller-top"></div>
+                <div id="constitutionContent">
+                    <div class="loading-state" id="loadingState">
+                        <div class="loading-scroll-icon">📜</div>
+                        <div class="loading-title">Reconstructing from Blockchain</div>
+                        <div class="loading-text" id="loadingMsg">Connecting to Cardano mainnet via Koios API…</div>
+                        <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+                    </div>
+                </div>
+                <div class="scroll-roller-bottom"></div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-inner">
+                <!-- Amendment Notes -->
+                <div class="sidebar-section" id="amendmentNotes">
+                    <div class="sidebar-title">Amendment Notes</div>
+                    <div id="amendmentList">
+                        <!-- Populated by JS based on version -->
+                    </div>
+                </div>
+
+                <!-- Chain Provenance -->
+                <div class="sidebar-section">
+                    <div class="sidebar-title">On-Chain Provenance</div>
+                    <div id="provenanceList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- BEACN Pool -->
+                <div class="sidebar-section">
+                    <div class="sidebar-beacn">
+                        <div class="sidebar-beacn-icon">🔥</div>
+                        <div class="sidebar-beacn-title">Preserved by BEACN Pool</div>
+                        <div class="sidebar-beacn-text">
+                            Part of the Ledger Scrolls project — immutable documents 
+                            on Cardano. A library that cannot burn.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Context Cards -->
+    <section class="context-section fade-in fade-in-delay-3">
+        <div class="context-grid">
+            <div class="context-card">
+                <div class="context-card-icon">🗳️</div>
+                <div class="context-card-title">Community Ratified</div>
+                <div class="context-card-text">
+                    Approved through on-chain voting by DReps and the Constitutional Committee.  
+                    63 workshops across 52 countries with 1,400+ participants shaped this document.
+                </div>
+            </div>
+            <div class="context-card">
+                <div class="context-card-icon">🔗</div>
+                <div class="context-card-title">On-Chain Immutable</div>
+                <div class="context-card-text">
+                    Stored as CIP-721 NFT page payloads under a dedicated minting policy.  
+                    No server, no company, no single point of failure can alter or remove it.
+                </div>
+            </div>
+            <div class="context-card">
+                <div class="context-card-icon">🔐</div>
+                <div class="context-card-title">Cryptographically Verified</div>
+                <div class="context-card-text">
+                    SHA-256 hash comparison ensures every byte you read is identical to what 
+                    was ratified. Tamper-proof by mathematics, not by trust.
+                </div>
+            </div>
+            <div class="context-card">
+                <div class="context-card-icon">⚖️</div>
+                <div class="context-card-title">The Voltaire Era</div>
+                <div class="context-card-text">
+                    The Constitution is the culmination of Cardano's final roadmap phase — 
+                    making it the first truly self-governing blockchain in history.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="constitution-footer fade-in fade-in-delay-4">
+        <div class="footer-seal">⚖️</div>
+        <div class="footer-text">
+            "The chain is the record. The Constitution is eternal."
+        </div>
+        <div class="footer-links">
+            <a href="index.html">Ledger Scrolls</a>
+            <a href="https://x.com/BEACNpool" target="_blank">@BEACNpool</a>
+            <a href="https://github.com/BEACNpool/ledger-scrolls" target="_blank">GitHub</a>
+            <a href="https://cardano.org/constitution/" target="_blank">Cardano.org</a>
+        </div>
+    </footer>
+
+    <script>
+    /* ================================================================
+       CONSTITUTION VIEWER ENGINE
+       Fetches the Cardano Constitution from on-chain storage via 
+       Koios REST API (free, no API key required), reconstructs 
+       the document, verifies SHA-256 integrity, and renders it 
+       as a styled parchment scroll.
+       ================================================================ */
+
+    const CONSTITUTIONS = {
+        "608": {
+            epoch: "608",
+            name: "Cardano Constitution — Epoch 608 (Current)",
+            policy_id: "ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750",
+            expected_sha256: "98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1",
+            ratified_epoch: 608,
+            enacted_epoch: 609,
+            voting_period: "Epochs 603–607",
+            approval: "85%",
+            status: "Current",
+            amendments: [
+                {
+                    tag: "Amended — Parameter Guardrails",
+                    text: "Updated protocol parameter guardrails with refined thresholds and clearer boundaries for community governance actions. Strengthens safeguards against destabilizing parameter changes."
+                },
+                {
+                    tag: "Amended — Treasury Procedures",
+                    text: "Clarified treasury withdrawal procedures including proposal requirements, voting thresholds, and disbursement mechanisms. Ensures transparent, accountable use of community funds."
+                },
+                {
+                    tag: "Amended — Constitutional Committee",
+                    text: "Enhanced Constitutional Committee provisions: defined terms, election processes, expanded membership beyond interim seven, and structured veto power on unconstitutional governance actions."
+                },
+                {
+                    tag: "Context — Post-Plomin",
+                    text: "This version was ratified after the Plomin Hard Fork (Jan 29, 2025) enabled full on-chain governance. It replaces the interim constitution from June 2024."
+                }
+            ],
+            provenance: {
+                "Policy ID": "ef91a425...03f9750",
+                "Ratified": "Epoch 608",
+                "Enacted": "Epoch 609 (Feb 23, 2025)",
+                "Voting": "Epochs 603–607",
+                "Storage": "CIP-721 NFT Pages",
+                "Compression": "gzip",
+                "Pages": "11 NFTs",
+                "Network": "Cardano Mainnet"
+            },
+            heroStats: { epoch: "608", approval: "85%", workshops: "63", countries: "52" }
+        },
+        "541": {
+            epoch: "541",
+            name: "Cardano Constitution — Epoch 541 (Historical)",
+            policy_id: "d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d",
+            expected_sha256: "1939c1627e49b5267114cbdb195d4ac417e545544ba6dcb47e03c679439e9566",
+            ratified_epoch: 541,
+            enacted_epoch: 542,
+            voting_period: "Epochs 536–540",
+            approval: "95%*",
+            status: "Historical (Baseline)",
+            amendments: [
+                {
+                    tag: "Baseline — Founding Document",
+                    text: "The first ratified Cardano Constitution. Established foundational governance structure, rights, and responsibilities for all ecosystem participants."
+                },
+                {
+                    tag: "Established — Constitutional Committee",
+                    text: "Defined the role of an interim Constitutional Committee (ICC) with seven members including IOG, EMURGO, and Cardano Foundation. Set initial veto powers."
+                },
+                {
+                    tag: "Established — Governance Framework",
+                    text: "Set initial parameter guardrails, defined governance action types (parameter changes, hard forks, treasury withdrawals, info actions), and voting thresholds."
+                },
+                {
+                    tag: "Context — Constitutional Convention",
+                    text: "Approved by 95% of elected delegates at the historic dual-city Constitutional Convention held Dec 4–6, 2024 in Buenos Aires and Nairobi."
+                }
+            ],
+            provenance: {
+                "Policy ID": "d7559bbf...48a31d",
+                "Ratified": "Epoch 541",
+                "Enacted": "Epoch 542",
+                "Voting": "Epochs 536–540",
+                "Storage": "CIP-721 NFT Pages",
+                "Compression": "gzip",
+                "Pages": "7 NFTs",
+                "Network": "Cardano Mainnet"
+            },
+            heroStats: { epoch: "541", approval: "95%*", workshops: "63", countries: "51" }
+        }
+    };
+
+    // Koios API endpoints (free, no key required)
+    const KOIOS_BASE = 'https://api.koios.rest/api/v1';
+
+    let currentEpoch = "608";
+    let fetchedText = {};
+
+    // ── Initialization ──────────────────────────────────────────
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initDust();
+        initVersionButtons();
+        renderSidebar(currentEpoch);
+        renderHeroStats(currentEpoch);
+        fetchConstitution(currentEpoch);
+    });
+
+    function initDust() {
+        const container = document.getElementById('dustContainer');
+        const count = window.innerWidth < 768 ? 12 : 20;
+        for (let i = 0; i < count; i++) {
+            const mote = document.createElement('div');
+            mote.className = 'dust-mote';
+            mote.style.left = `${Math.random() * 100}%`;
+            mote.style.animationDuration = `${12 + Math.random() * 18}s`;
+            mote.style.animationDelay = `${Math.random() * 20}s`;
+            mote.style.width = mote.style.height = `${1 + Math.random() * 2}px`;
+            container.appendChild(mote);
+        }
+    }
+
+    function initVersionButtons() {
+        document.getElementById('btnEpoch541').addEventListener('click', () => switchVersion('541'));
+        document.getElementById('btnEpoch608').addEventListener('click', () => switchVersion('608'));
+    }
+
+    function switchVersion(epoch) {
+        if (epoch === currentEpoch) return;
+        currentEpoch = epoch;
+
+        // Update active button
+        document.querySelectorAll('.version-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(epoch === '608' ? 'btnEpoch608' : 'btnEpoch541').classList.add('active');
+
+        renderSidebar(epoch);
+        renderHeroStats(epoch);
+        resetVerification(epoch);
+
+        if (fetchedText[epoch]) {
+            renderConstitution(fetchedText[epoch], epoch);
+            verifyAndUpdate(fetchedText[epoch], epoch);
+        } else {
+            showLoading();
+            fetchConstitution(epoch);
+        }
+    }
+
+    // ── Hero Stats ──────────────────────────────────────────────
+
+    function renderHeroStats(epoch) {
+        const c = CONSTITUTIONS[epoch];
+        document.getElementById('statEpoch').textContent = c.heroStats.epoch;
+        document.getElementById('statApproval').textContent = c.heroStats.approval;
+        document.getElementById('statWorkshops').textContent = c.heroStats.workshops;
+        document.getElementById('statCountries').textContent = c.heroStats.countries;
+
+        const subtitle = epoch === '608'
+            ? 'The immutable governance framework of the Cardano blockchain — ratified by its people, preserved forever on-chain.'
+            : 'The first ratified governance framework — the baseline Constitution that launched Cardano\'s self-governing era.';
+        document.getElementById('heroSubtitle').textContent = subtitle;
+    }
+
+    // ── Sidebar ─────────────────────────────────────────────────
+
+    function renderSidebar(epoch) {
+        const c = CONSTITUTIONS[epoch];
+
+        // Amendment notes
+        document.getElementById('amendmentList').innerHTML = c.amendments.map(a => `
+            <div class="amendment-note">
+                <div class="amendment-note-tag">${a.tag}</div>
+                <div class="amendment-note-text">${a.text}</div>
+            </div>
+        `).join('');
+
+        // Provenance
+        document.getElementById('provenanceList').innerHTML = Object.entries(c.provenance).map(([k, v]) => `
+            <div class="provenance-item">
+                <span class="provenance-label">${k}</span>
+                <span class="provenance-value">${v}</span>
+            </div>
+        `).join('');
+    }
+
+    // ── Verification ────────────────────────────────────────────
+
+    function resetVerification(epoch) {
+        const c = CONSTITUTIONS[epoch];
+        const card = document.getElementById('verifyCard');
+        const sealIcon = document.getElementById('verifySealIcon');
+        const title = document.getElementById('verifyTitle');
+        const detail = document.getElementById('verifyDetail');
+
+        card.className = 'verify-card pending';
+        sealIcon.className = 'verify-seal pending';
+        sealIcon.textContent = '🔐';
+        title.className = 'verify-title pending';
+        title.textContent = 'Verifying Integrity…';
+        detail.textContent = 'Fetching constitution from on-chain storage and computing SHA-256 hash.';
+        document.getElementById('expectedHash').textContent = c.expected_sha256;
+        document.getElementById('computedHash').textContent = 'Calculating…';
+    }
+
+    async function verifyAndUpdate(text, epoch) {
+        const c = CONSTITUTIONS[epoch];
+        const encoder = new TextEncoder();
+        const data = encoder.encode(text);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const computed = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        document.getElementById('computedHash').textContent = computed;
+
+        const card = document.getElementById('verifyCard');
+        const sealIcon = document.getElementById('verifySealIcon');
+        const title = document.getElementById('verifyTitle');
+        const detail = document.getElementById('verifyDetail');
+
+        if (computed === c.expected_sha256) {
+            card.className = 'verify-card';
+            sealIcon.className = 'verify-seal verified';
+            sealIcon.textContent = '✅';
+            title.className = 'verify-title verified';
+            title.textContent = 'Integrity Verified ✓';
+            detail.textContent = `SHA-256 hash matches the on-chain governance record. Every byte is authentic.`;
+        } else {
+            card.className = 'verify-card failed';
+            sealIcon.className = 'verify-seal';
+            sealIcon.textContent = '⚠️';
+            title.className = 'verify-title failed';
+            title.textContent = 'Hash Mismatch';
+            detail.textContent = 'The computed hash does not match the expected governance hash. This may be a text encoding difference — the on-chain bytes are gzip-compressed NFT payloads. See the Ledger Scrolls CLI tool for byte-level verification.';
+        }
+    }
+
+    // ── Fetch Constitution ──────────────────────────────────────
+
+    async function fetchConstitution(epoch) {
+        const c = CONSTITUTIONS[epoch];
+        resetVerification(epoch);
+        showLoading();
+        setLoadingMsg('Querying Koios API for policy assets…');
+
+        try {
+            // Step 1: Get all assets under the policy
+            setLoadingMsg('Fetching asset list under policy…');
+            const assetsResp = await fetch(`${KOIOS_BASE}/policy_asset_list`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ _policy_id: c.policy_id })
+            });
+
+            if (!assetsResp.ok) throw new Error(`Koios API error: ${assetsResp.status}`);
+            const assets = await assetsResp.json();
+            
+            if (!assets || assets.length === 0) throw new Error('No assets found under policy');
+
+            // Step 2: Get minting transactions for each asset to find metadata
+            setLoadingMsg(`Found ${assets.length} assets. Fetching page metadata…`);
+
+            // Collect asset names
+            const assetNames = assets.map(a => a.asset_name || a.asset_name_ascii).filter(Boolean);
+            
+            // Fetch asset info to get minting tx hashes
+            const assetList = assets.map(a => {
+                const pid = a.policy_id || c.policy_id;
+                const name = a.asset_name || '';
+                return pid + name;
+            });
+
+            // Use asset_info endpoint  
+            const infoResp = await fetch(`${KOIOS_BASE}/asset_info`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ _asset_list: assetList.map(a => [c.policy_id, assets[assetList.indexOf(a)]?.asset_name || '']) })
+            });
+
+            // If the structured approach fails, fallback to fetching minting txs
+            let pages = [];
+
+            // Approach: Get policy asset minting txs
+            setLoadingMsg('Fetching minting transaction metadata…');
+            const mintResp = await fetch(`${KOIOS_BASE}/policy_asset_mints`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ _policy_id: c.policy_id })
+            });
+
+            if (!mintResp.ok) throw new Error(`Minting query failed: ${mintResp.status}`);
+            const mints = await mintResp.json();
+
+            // Get unique tx hashes
+            const txHashes = [...new Set(mints.map(m => m.minting_tx_hash).filter(Boolean))];
+            setLoadingMsg(`Found ${txHashes.length} minting transactions. Fetching metadata…`);
+
+            // Fetch tx metadata in batches
+            const batchSize = 20;
+            let allMetadata = [];
+            for (let i = 0; i < txHashes.length; i += batchSize) {
+                const batch = txHashes.slice(i, i + batchSize);
+                const metaResp = await fetch(`${KOIOS_BASE}/tx_metadata`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ _tx_hashes: batch })
+                });
+                if (metaResp.ok) {
+                    const meta = await metaResp.json();
+                    allMetadata = allMetadata.concat(meta);
+                }
+                setLoadingMsg(`Processing metadata batch ${Math.min(i + batchSize, txHashes.length)} / ${txHashes.length}…`);
+            }
+
+            // Parse CIP-721 metadata: look for pages with 'i' and 'payload'
+            for (const txMeta of allMetadata) {
+                if (!txMeta.metadata) continue;
+                // Metadata key 721 for CIP-721
+                const m721 = txMeta.metadata['721'] || txMeta.metadata;
+                if (!m721) continue;
+
+                // Navigate into policy
+                const policyData = m721[c.policy_id] || m721;
+                if (!policyData || typeof policyData !== 'object') continue;
+
+                for (const [assetName, assetData] of Object.entries(policyData)) {
+                    if (assetData && typeof assetData === 'object' && 'i' in assetData && 'payload' in assetData) {
+                        const idx = parseInt(assetData.i);
+                        let payload = '';
+                        if (Array.isArray(assetData.payload)) {
+                            // payload is array of hex strings or objects with 'bytes' key
+                            for (const item of assetData.payload) {
+                                if (typeof item === 'string') {
+                                    payload += item;
+                                } else if (item && item.bytes) {
+                                    payload += item.bytes;
+                                }
+                            }
+                        } else if (typeof assetData.payload === 'string') {
+                            payload = assetData.payload;
+                        }
+                        if (payload) {
+                            pages.push({ index: idx, hex: payload });
+                        }
+                    }
+                }
+            }
+
+            if (pages.length === 0) throw new Error('No page payloads found in metadata');
+
+            // Sort by index and concatenate
+            pages.sort((a, b) => a.index - b.index);
+            setLoadingMsg(`Reconstructing ${pages.length} pages…`);
+
+            const fullHex = pages.map(p => p.hex).join('');
+            const bytes = hexToBytes(fullHex);
+
+            // Try gzip decompression
+            let textContent;
+            try {
+                textContent = decompressGzip(bytes);
+            } catch (e) {
+                // Try raw text
+                textContent = new TextDecoder('utf-8').decode(bytes);
+            }
+
+            // Cache and render
+            fetchedText[epoch] = textContent;
+            renderConstitution(textContent, epoch);
+            verifyAndUpdate(textContent, epoch);
+
+        } catch (err) {
+            console.error('Fetch failed:', err);
+            showError(err.message, epoch);
+        }
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────
+
+    function hexToBytes(hex) {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) {
+            bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+        }
+        return bytes;
+    }
+
+    function decompressGzip(bytes) {
+        // Check gzip magic number
+        if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
+            // Use DecompressionStream API if available
+            if (typeof DecompressionStream !== 'undefined') {
+                return decompressWithStream(bytes);
+            }
+            // Fallback: try raw inflate (skip gzip header)
+            throw new Error('No decompression available');
+        }
+        return new TextDecoder('utf-8').decode(bytes);
+    }
+
+    async function decompressWithStream(bytes) {
+        const ds = new DecompressionStream('gzip');
+        const writer = ds.writable.getWriter();
+        writer.write(bytes);
+        writer.close();
+
+        const reader = ds.readable.getReader();
+        const chunks = [];
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+        }
+
+        const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
+        const result = new Uint8Array(totalLength);
+        let offset = 0;
+        for (const chunk of chunks) {
+            result.set(chunk, offset);
+            offset += chunk.length;
+        }
+        return new TextDecoder('utf-8').decode(result);
+    }
+
+    // ── Rendering ───────────────────────────────────────────────
+
+    function showLoading() {
+        document.getElementById('constitutionContent').innerHTML = `
+            <div class="loading-state" id="loadingState">
+                <div class="loading-scroll-icon">📜</div>
+                <div class="loading-title">Reconstructing from Blockchain</div>
+                <div class="loading-text" id="loadingMsg">Connecting to Cardano mainnet via Koios API…</div>
+                <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+            </div>
+        `;
+    }
+
+    function setLoadingMsg(msg) {
+        const el = document.getElementById('loadingMsg');
+        if (el) el.textContent = msg;
+    }
+
+    function showError(message, epoch) {
+        document.getElementById('constitutionContent').innerHTML = `
+            <div class="error-state">
+                <div class="error-icon">📜</div>
+                <div class="error-title">Could Not Reconstruct</div>
+                <div class="error-text">${message}<br><br>
+                    The Constitution lives on-chain forever. This viewer fetches it via the free Koios API. 
+                    If the API is temporarily unavailable, try again shortly, or use the 
+                    <a href="https://github.com/BEACNpool/ledger-scrolls" target="_blank" style="color: var(--seal-red);">
+                    Ledger Scrolls CLI tool</a> for direct blockchain access.
+                </div>
+                <button class="retry-btn" onclick="fetchConstitution('${epoch}')">↻ Retry</button>
+            </div>
+        `;
+    }
+
+    function renderConstitution(text, epoch) {
+        const c = CONSTITUTIONS[epoch];
+
+        // Convert plain text to structured HTML
+        const html = formatConstitutionText(text);
+
+        document.getElementById('constitutionContent').innerHTML = `
+            <div class="constitution-header">
+                <h1>${c.name}</h1>
+                <span class="epoch-badge">⚖️ ${c.status} — Enacted Epoch ${c.enacted_epoch}</span>
+            </div>
+            <div class="constitution-body">${html}</div>
+        `;
+    }
+
+    function formatConstitutionText(text) {
+        // Split into lines and format
+        const lines = text.split('\n');
+        let html = '';
+        let inList = false;
+
+        for (let line of lines) {
+            line = line.trimEnd();
+
+            // Skip empty lines but close lists
+            if (!line.trim()) {
+                if (inList) { html += '</ul>'; inList = false; }
+                continue;
+            }
+
+            // Headings: lines in ALL CAPS or starting with # or "Article" / "Section" / "PREAMBLE"
+            if (/^#{1,3}\s+/.test(line)) {
+                if (inList) { html += '</ul>'; inList = false; }
+                const level = line.match(/^(#{1,3})/)[1].length;
+                const text = line.replace(/^#{1,3}\s+/, '').trim();
+                html += level <= 2 ? `<h2>${escapeHtml(text)}</h2>` : `<h3>${escapeHtml(text)}</h3>`;
+            } else if (/^(PREAMBLE|ARTICLE\s+\w|SECTION\s+\d|APPENDIX)/i.test(line.trim())) {
+                if (inList) { html += '</ul>'; inList = false; }
+                html += `<h2>${escapeHtml(line.trim())}</h2>`;
+            } else if (/^[A-Z][A-Z\s:]{10,}$/.test(line.trim()) && line.trim().length < 80) {
+                if (inList) { html += '</ul>'; inList = false; }
+                html += `<h2>${escapeHtml(line.trim())}</h2>`;
+            } else if (/^\s*[-•*]\s+/.test(line)) {
+                // List item
+                if (!inList) { html += '<ul>'; inList = true; }
+                html += `<li>${escapeHtml(line.replace(/^\s*[-•*]\s+/, ''))}</li>`;
+            } else if (/^\s*\d+[.)]\s+/.test(line)) {
+                // Numbered item
+                if (!inList) { html += '<ul>'; inList = true; }
+                html += `<li>${escapeHtml(line.replace(/^\s*\d+[.)]\s+/, ''))}</li>`;
+            } else {
+                if (inList) { html += '</ul>'; inList = false; }
+                html += `<p>${escapeHtml(line)}</p>`;
+            }
+        }
+
+        if (inList) html += '</ul>';
+        return html;
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+    </script>
+</body>
+</html>
