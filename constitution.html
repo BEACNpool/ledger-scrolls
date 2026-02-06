@@ -453,7 +453,7 @@
         }
 
         /* ==========================================================
-           AMENDMENT NOTES SIDEBAR
+           READER'S GUIDE SIDEBAR
            ========================================================== */
 
         .content-layout {
@@ -463,7 +463,7 @@
             margin: 0 auto;
             padding: 0 var(--space-lg);
             display: grid;
-            grid-template-columns: 1fr 280px;
+            grid-template-columns: 1fr 300px;
             gap: var(--space-xl);
         }
 
@@ -495,35 +495,127 @@
             border-bottom: 1px solid rgba(212, 168, 85, 0.15);
         }
 
-        .amendment-note {
-            padding: var(--space-md);
-            margin-bottom: var(--space-md);
-            background: rgba(212, 168, 85, 0.04);
-            border-left: 3px solid var(--gold-deep);
-            border-radius: 0 6px 6px 0;
-            transition: background 0.3s;
-        }
-
-        .amendment-note:hover {
-            background: rgba(212, 168, 85, 0.08);
-        }
-
-        .amendment-note-tag {
-            font-family: var(--font-heading);
-            font-size: 0.6rem;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--gold-bright);
-            margin-bottom: var(--space-xs);
-        }
-
-        .amendment-note-text {
+        .guide-subtitle {
             font-family: var(--font-body);
-            font-size: 0.85rem;
+            font-size: 0.78rem;
+            font-style: italic;
             color: var(--gold-pale);
-            opacity: 0.7;
-            line-height: 1.5;
+            opacity: 0.45;
+            margin-top: -10px;
+            margin-bottom: var(--space-md);
+            line-height: 1.4;
+        }
+
+        /* Guide items */
+        .guide-item {
+            position: relative;
+            padding: 10px 12px 10px 16px;
+            margin-bottom: 2px;
+            border-left: 2px solid rgba(212, 168, 85, 0.08);
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .guide-item:hover {
+            background: rgba(212, 168, 85, 0.06);
+            border-left-color: rgba(212, 168, 85, 0.3);
+        }
+
+        .guide-item.active {
+            background: rgba(212, 168, 85, 0.08);
+            border-left-color: var(--gold-bright);
+        }
+
+        .guide-item.active .guide-heading {
+            color: var(--gold-bright);
+            opacity: 1;
+        }
+
+        .guide-heading {
+            font-family: var(--font-heading);
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--gold-pale);
+            opacity: 0.6;
+            transition: all 0.25s;
+            line-height: 1.3;
+        }
+
+        .guide-hook {
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            font-style: italic;
+            font-weight: 500;
+            color: var(--gold-bright);
+            opacity: 0.75;
+            margin-top: 4px;
+            line-height: 1.35;
+            transition: opacity 0.25s;
+        }
+
+        .guide-item.active .guide-hook {
+            opacity: 1;
+        }
+
+        .guide-detail {
+            font-family: var(--font-body);
+            font-size: 0.78rem;
+            color: var(--gold-pale);
+            opacity: 0;
+            line-height: 1.45;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.35s ease;
+            margin-top: 0;
+        }
+
+        .guide-item.active .guide-detail {
+            opacity: 0.55;
+            max-height: 200px;
+            margin-top: 6px;
+        }
+
+        /* Loading state for guide */
+        .guide-loading {
+            text-align: center;
+            padding: var(--space-lg) var(--space-md);
+        }
+
+        .guide-loading-icon {
+            font-size: 1.2rem;
+            margin-bottom: var(--space-sm);
+            opacity: 0.4;
+            animation: pulse-guide 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-guide {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        .guide-loading-text {
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            font-style: italic;
+            color: var(--gold-pale);
+            opacity: 0.35;
+        }
+
+        /* Reading progress pip on active item */
+        .guide-item.active::before {
+            content: '';
+            position: absolute;
+            left: -2px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            background: var(--gold-bright);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--gold-glow);
         }
 
         .provenance-item {
@@ -722,6 +814,10 @@
             letter-spacing: 0.04em;
             padding-bottom: var(--space-sm);
             border-bottom: 1px solid var(--parchment-dark);
+            scroll-margin-top: 100px;
+            border-radius: 4px;
+            padding: var(--space-sm) var(--space-sm) var(--space-sm) var(--space-sm);
+            transition: background 0.5s ease;
         }
 
         .constitution-body h3 {
@@ -966,7 +1062,7 @@
            RESPONSIVE
            ========================================================== */
 
-        @media (max-width: 900px) {
+        @media (max-width: 960px) {
             .content-layout {
                 grid-template-columns: 1fr;
             }
@@ -977,10 +1073,20 @@
                 order: -1;
             }
 
+            .guide-detail {
+                opacity: 0.5 !important;
+                max-height: 200px !important;
+                margin-top: 6px !important;
+            }
+
             .sidebar-inner {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: var(--space-md);
+            }
+
+            #readersGuide {
+                grid-column: 1 / -1;
             }
 
             .sidebar-section:last-child {
@@ -1120,11 +1226,15 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-inner">
-                <!-- Amendment Notes -->
-                <div class="sidebar-section" id="amendmentNotes">
-                    <div class="sidebar-title">Amendment Notes</div>
-                    <div id="amendmentList">
-                        <!-- Populated by JS based on version -->
+                <!-- Reader's Guide -->
+                <div class="sidebar-section" id="readersGuide">
+                    <div class="sidebar-title">Reader's Guide</div>
+                    <div class="guide-subtitle">Navigate the Constitution — what each section means for you</div>
+                    <div id="guideList">
+                        <div class="guide-loading">
+                            <div class="guide-loading-icon">📜</div>
+                            <div class="guide-loading-text">Loading document structure…</div>
+                        </div>
                     </div>
                 </div>
 
@@ -1223,24 +1333,6 @@
             voting_period: "Epochs 603–607",
             approval: "85%",
             status: "Current",
-            amendments: [
-                {
-                    tag: "Amended — Parameter Guardrails",
-                    text: "Updated protocol parameter guardrails with refined thresholds and clearer boundaries for community governance actions. Strengthens safeguards against destabilizing parameter changes."
-                },
-                {
-                    tag: "Amended — Treasury Procedures",
-                    text: "Clarified treasury withdrawal procedures including proposal requirements, voting thresholds, and disbursement mechanisms. Ensures transparent, accountable use of community funds."
-                },
-                {
-                    tag: "Amended — Constitutional Committee",
-                    text: "Enhanced Constitutional Committee provisions: defined terms, election processes, expanded membership beyond interim seven, and structured veto power on unconstitutional governance actions."
-                },
-                {
-                    tag: "Context — Post-Plomin",
-                    text: "This version was ratified after the Plomin Hard Fork (Jan 29, 2025) enabled full on-chain governance. It replaces the interim constitution from June 2024."
-                }
-            ],
             provenance: {
                 "Policy ID": "ef91a425...03f9750",
                 "Ratified": "Epoch 608",
@@ -1263,24 +1355,6 @@
             voting_period: "Epochs 536–540",
             approval: "95%*",
             status: "Historical (Baseline)",
-            amendments: [
-                {
-                    tag: "Baseline — Founding Document",
-                    text: "The first ratified Cardano Constitution. Established foundational governance structure, rights, and responsibilities for all ecosystem participants."
-                },
-                {
-                    tag: "Established — Constitutional Committee",
-                    text: "Defined the role of an interim Constitutional Committee (ICC) with seven members including IOG, EMURGO, and Cardano Foundation. Set initial veto powers."
-                },
-                {
-                    tag: "Established — Governance Framework",
-                    text: "Set initial parameter guardrails, defined governance action types (parameter changes, hard forks, treasury withdrawals, info actions), and voting thresholds."
-                },
-                {
-                    tag: "Context — Constitutional Convention",
-                    text: "Approved by 95% of elected delegates at the historic dual-city Constitutional Convention held Dec 4–6, 2024 in Buenos Aires and Nairobi."
-                }
-            ],
             provenance: {
                 "Policy ID": "d7559bbf...48a31d",
                 "Ratified": "Epoch 541",
@@ -1398,24 +1472,217 @@
 
     // ── Sidebar ─────────────────────────────────────────────────
 
+    // ── Curated Reader's Guide ─────────────────────────────────
+    // Each entry: empowering hook (italic) + neutral detail (expanded on active)
+    // Keys are matched against normalized heading text from the rendered document
+    
+    const READERS_GUIDE = {
+        'PREAMBLE': {
+            hook: "Why this document exists — and why it belongs to you",
+            detail: "Declares Cardano as a self-governing ecosystem committed to improving systems for everyone, everywhere. Establishes that this Constitution governs through community consensus, not corporate authority."
+        },
+        'ARTICLE I': {
+            hook: "The 10 promises the blockchain makes to every ada holder",
+            detail: "Defines the Tenets — non-negotiable principles including censorship resistance, predictable costs, fair rewards, data sovereignty, the 45 billion ada supply cap, and technical guardrails that protect the chain."
+        },
+        'ARTICLE II': {
+            hook: "You belong here — no membership required",
+            detail: "Declares that anyone who holds ada, builds on, or supports Cardano is a community member. No gatekeepers, no formal applications. Everyone is a beneficiary with rights, privileges, and a responsibility to uphold the Constitution."
+        },
+        'ARTICLE III': {
+            hook: "Your vote is your voice — how decisions actually get made",
+            detail: "Establishes on-chain governance with three independent bodies: DReps, SPOs, and the Constitutional Committee. Defines voting rights, proposal transparency requirements, Info actions, and protections against undue influence."
+        },
+        'ARTICLE IV': {
+            hook: "The community treasury — your money, your oversight",
+            detail: "Creates the framework for ecosystem budgets funded by the Cardano treasury. Requires independent audits, designated administrators, net change limits, and public accounts. Treasury funds cannot be delegated to any SPO."
+        },
+        'ARTICLE V': {
+            hook: "DReps — your elected voice in on-chain governance",
+            detail: "Defines Delegated Representatives as the liquid democracy layer. Any ada holder can become a DRep or delegate to one, change delegation at any time. Requires codes of conduct, compensation disclosure, and prohibits vote-buying."
+        },
+        'ARTICLE VI': {
+            hook: "Stake Pool Operators — the guardians of the network",
+            detail: "Gives SPOs a specific governance role beyond block production: voting on security-critical parameter changes, hard fork initiations, and motions of no confidence. SPOs serve as an independent check on the Constitutional Committee."
+        },
+        'ARTICLE VII': {
+            hook: "The Constitutional Committee — ensuring every action follows the rules",
+            detail: "Establishes the body that reviews all governance actions for constitutional compliance. Defines membership, staggered terms, election processes, no-confidence mechanisms, transparency requirements, and the power to declare proposals unconstitutional."
+        },
+        'ARTICLE VIII': {
+            hook: "Nothing is set in stone — how this Constitution evolves",
+            detail: "Defines how the community can amend the Constitution itself. The governance framework is designed to grow with the ecosystem, ensuring the rules can adapt while maintaining stability and community consent."
+        },
+        'APPENDIX I': {
+            hook: "The technical guardrails — hard limits that keep the chain safe",
+            detail: "Contains the specific parameter boundaries, thresholds, and technical constraints referenced throughout the Constitution. Guardrails can be codified on-chain as scripts. Where on-chain and written guardrails conflict, the on-chain version prevails."
+        },
+        'APPENDIX II': {
+            hook: "Definitions — the precise meaning of every key term",
+            detail: "Formal definitions of terms used throughout the Constitution including ada, DRep, SPO, governance action, hard fork, treasury withdrawal, and other governance vocabulary."
+        },
+        // Tenet-level entries for when individual tenets appear as headings
+        'TENET 1': {
+            hook: "Your transactions will not be censored or delayed",
+            detail: "Guarantees that the blockchain processes all valid transactions without discrimination."
+        },
+        'TENET 2': {
+            hook: "Transaction costs will stay predictable and fair",
+            detail: "Prevents arbitrary fee increases that could price out community members."
+        },
+        'TENET 3': {
+            hook: "Anyone can build here — development access is open",
+            detail: "Protects the right of developers to deploy applications without unreasonable barriers."
+        },
+        'TENET 4': {
+            hook: "Your contributions will be fairly recognized and rewarded",
+            detail: "Ensures fair reward sharing for SPOs, potential compensation for DReps and CC members."
+        },
+        'TENET 5': {
+            hook: "Your ada and data remain under your control",
+            detail: "Prevents the blockchain from locking in value or data without the owner's explicit consent."
+        },
+        'TENET 6': {
+            hook: "Cardano will play well with other systems",
+            detail: "Commits to not unreasonably impeding interoperability with other blockchains and systems."
+        },
+        'TENET 7': {
+            hook: "What you store on-chain stays safe — forever",
+            detail: "Guarantees that value and information on the blockchain will be preserved securely."
+        },
+        'TENET 8': {
+            hook: "Resources will not be wasted",
+            detail: "Ensures the blockchain does not unreasonably consume computational or financial resources."
+        },
+        'TENET 9': {
+            hook: "All users will be treated fairly and equally",
+            detail: "Guarantees impartial treatment considering the community's collective desires and long-term viability."
+        },
+        'TENET 10': {
+            hook: "The 45 billion ada cap is absolute",
+            detail: "Hard limit: total supply shall never exceed 45,000,000,000 ada. Financial stability is constitutional."
+        }
+    };
+
+    // Track the observer so we can disconnect on version switch
+    let guideObserver = null;
+
     function renderSidebar(epoch) {
         const c = CONSTITUTIONS[epoch];
 
-        // Amendment notes
-        document.getElementById('amendmentList').innerHTML = c.amendments.map(a => `
-            <div class="amendment-note">
-                <div class="amendment-note-tag">${a.tag}</div>
-                <div class="amendment-note-text">${a.text}</div>
-            </div>
-        `).join('');
-
-        // Provenance
+        // Provenance only (guide is built after document renders)
         document.getElementById('provenanceList').innerHTML = Object.entries(c.provenance).map(([k, v]) => `
             <div class="provenance-item">
                 <span class="provenance-label">${k}</span>
                 <span class="provenance-value">${v}</span>
             </div>
         `).join('');
+    }
+
+    // ── Reader's Guide Builder ───────────────────────────────────
+    // Called AFTER the constitution text is rendered into the parchment.
+    // Scans for h2 headings, matches them to curated summaries,
+    // builds clickable guide items, and sets up scroll tracking.
+
+    function buildReadersGuide() {
+        // Disconnect any existing observer
+        if (guideObserver) { guideObserver.disconnect(); guideObserver = null; }
+
+        const body = document.querySelector('.constitution-body');
+        if (!body) return;
+
+        // Find all h2 headings in the rendered document
+        const headings = body.querySelectorAll('h2');
+        if (!headings.length) {
+            document.getElementById('guideList').innerHTML = `
+                <div class="guide-loading">
+                    <div class="guide-loading-text">No sections detected in document.</div>
+                </div>`;
+            return;
+        }
+
+        // Assign IDs to each heading and build guide entries
+        const guideEntries = [];
+        headings.forEach((h, i) => {
+            const id = 'section-' + i;
+            h.id = id;
+
+            // Normalize heading text for matching
+            const rawText = h.textContent.trim().toUpperCase();
+
+            // Try matching against curated guide keys
+            let matched = null;
+            for (const [key, data] of Object.entries(READERS_GUIDE)) {
+                if (rawText.includes(key)) {
+                    matched = data;
+                    break;
+                }
+            }
+
+            guideEntries.push({
+                id: id,
+                heading: h.textContent.trim(),
+                hook: matched ? matched.hook : null,
+                detail: matched ? matched.detail : null,
+                el: h
+            });
+        });
+
+        // Render guide HTML
+        document.getElementById('guideList').innerHTML = guideEntries.map(e => `
+            <div class="guide-item" data-target="${e.id}">
+                <div class="guide-heading">${escapeHtml(e.heading)}</div>
+                ${e.hook ? `<div class="guide-hook">${e.hook}</div>` : ''}
+                ${e.detail ? `<div class="guide-detail">${e.detail}</div>` : ''}
+            </div>
+        `).join('');
+
+        // Click handlers — smooth scroll to section
+        document.querySelectorAll('.guide-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const targetId = item.dataset.target;
+                const target = document.getElementById(targetId);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Brief highlight pulse
+                    target.style.transition = 'background 0.5s';
+                    target.style.background = 'rgba(212, 168, 85, 0.15)';
+                    setTimeout(() => { target.style.background = ''; }, 1200);
+                }
+            });
+        });
+
+        // IntersectionObserver — track which section is currently visible
+        const guideItems = document.querySelectorAll('.guide-item');
+        
+        guideObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const activeId = entry.target.id;
+                    guideItems.forEach(gi => {
+                        gi.classList.toggle('active', gi.dataset.target === activeId);
+                    });
+
+                    // Scroll the sidebar to keep active item visible
+                    const activeItem = document.querySelector('.guide-item.active');
+                    if (activeItem) {
+                        activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+            });
+        }, {
+            root: null,
+            rootMargin: '-80px 0px -60% 0px',
+            threshold: 0.1
+        });
+
+        // Observe all heading elements
+        guideEntries.forEach(e => guideObserver.observe(e.el));
+
+        // Activate the first item by default
+        if (guideItems.length > 0) {
+            guideItems[0].classList.add('active');
+        }
     }
 
     // ── Verification ────────────────────────────────────────────
@@ -1664,6 +1931,9 @@
             </div>
             <div class="constitution-body">${html}</div>
         `;
+
+        // Build the Reader's Guide from the rendered headings
+        requestAnimationFrame(() => buildReadersGuide());
     }
 
     function formatConstitutionText(text) {
