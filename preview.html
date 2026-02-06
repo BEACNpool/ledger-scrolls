@@ -660,10 +660,17 @@
                 this.el.viewerContent.innerHTML = '';
                 
                 const ct = (result.contentType || '').toLowerCase();
-                const blob = new Blob([result.bytes], { type: ct });
+                const blob = new Blob([result.data], { type: ct });
                 const url = URL.createObjectURL(blob);
-                this.loadedContent.blob = blob;
-                this.loadedContent.url = url;
+                
+                // Store blob, url, and raw bytes on loadedContent for download/verify
+                this.loadedContent = {
+                    ...result,
+                    blob: blob,
+                    url: url,
+                    bytes: result.data,
+                    contentType: ct
+                };
                 
                 if (ct.startsWith('video/')) {
                     const vid = document.createElement('video');
@@ -686,7 +693,7 @@
                     iframe.src = url;
                     this.el.viewerContent.appendChild(iframe);
                 } else {
-                    const text = new TextDecoder().decode(result.bytes);
+                    const text = new TextDecoder().decode(result.data);
                     const pre = document.createElement('pre');
                     pre.textContent = text.substring(0, 50000);
                     this.el.viewerContent.appendChild(pre);
