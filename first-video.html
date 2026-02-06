@@ -148,138 +148,128 @@
             display: none;
         }
         
-        .loading-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            animation: pulse 2s ease-in-out infinite;
+        /* Progress Ring */
+        .progress-ring-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin-bottom: 25px;
         }
         
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.1); opacity: 1; }
+        .progress-ring {
+            transform: rotate(-90deg);
         }
         
-        .loading-title {
-            font-family: var(--font-display);
-            font-size: 1.3rem;
-            margin-bottom: 8px;
-            text-align: center;
+        .progress-ring-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.1);
+            stroke-width: 8;
         }
         
-        .loading-subtitle {
-            color: var(--color-text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 30px;
-            text-align: center;
+        .progress-ring-fill {
+            fill: none;
+            stroke: url(#progressGradient);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 339.292;
+            stroke-dashoffset: 339.292;
+            transition: stroke-dashoffset 0.3s ease;
         }
         
-        /* Progress */
-        .progress-container {
-            width: 100%;
-            max-width: 300px;
-            margin-bottom: 20px;
-        }
-        
-        .progress-bar {
-            height: 6px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--color-accent), var(--color-gold));
-            width: 0%;
-            transition: width 0.3s ease;
-            border-radius: 3px;
-        }
-        
-        .progress-text {
-            font-size: 0.8rem;
-            color: var(--color-text-secondary);
-            text-align: center;
-        }
-        
-        .progress-pages {
-            font-family: monospace;
-            font-size: 0.85rem;
+        .progress-percent {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: 600;
             color: var(--color-accent);
-            text-align: center;
-            margin-top: 5px;
         }
         
-        /* Promo Card */
-        .promo-card {
-            background: linear-gradient(135deg, rgba(247, 147, 26, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
-            border: 1px solid rgba(247, 147, 26, 0.3);
+        /* Page Counter */
+        .page-counter {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 20px;
+        }
+        
+        .page-counter .current {
+            color: var(--color-accent);
+            font-weight: 600;
+        }
+        
+        /* Educational Cards */
+        .edu-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
             border-radius: 12px;
             padding: 20px;
+            max-width: 400px;
             text-align: center;
-            width: 100%;
-            max-width: 320px;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .edu-card .icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+        
+        .edu-card h3 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: var(--color-gold);
+        }
+        
+        .edu-card p {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+        }
+        
+        .edu-card .highlight {
+            color: var(--color-accent);
+            font-weight: 600;
+        }
+        
+        /* Phase Indicator */
+        .phase-indicator {
+            display: flex;
+            gap: 8px;
             margin-top: 20px;
         }
         
-        .promo-badge {
-            display: inline-block;
+        .phase-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s;
+        }
+        
+        .phase-dot.active {
             background: var(--color-accent);
-            color: #000;
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 3px 10px;
-            border-radius: 20px;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            box-shadow: 0 0 10px var(--color-accent-glow);
         }
         
-        .promo-title {
-            font-family: var(--font-display);
-            font-size: 1.1rem;
-            margin-bottom: 6px;
-        }
-        
-        .promo-desc {
-            font-size: 0.85rem;
-            color: var(--color-text-secondary);
-            margin-bottom: 15px;
-        }
-        
-        .promo-price {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--color-gold);
-            margin-bottom: 5px;
-        }
-        
-        .promo-supply {
-            font-size: 0.8rem;
-            color: var(--color-text-secondary);
-            margin-bottom: 15px;
-        }
-        
-        .mint-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, var(--color-accent) 0%, #e8820f 100%);
-            color: #000;
-            font-weight: 600;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .mint-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px var(--color-accent-glow);
-        }
-        
-        .mint-btn img {
-            height: 20px;
+        .phase-dot.complete {
+            background: var(--color-gold);
         }
         
         /* Error State */
@@ -287,6 +277,17 @@
             color: #ff6b6b;
             text-align: center;
             padding: 20px;
+        }
+        
+        .error-message button {
+            margin-top: 15px;
+            padding: 10px 25px;
+            background: var(--color-accent);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
         }
         
         /* Info Section */
@@ -339,24 +340,34 @@
             margin-top: 4px;
         }
         
-        /* Verification Badge */
-        .verified-badge {
-            display: inline-flex;
+        /* BEACN Branding */
+        .beacn-brand {
+            display: flex;
             align-items: center;
-            gap: 6px;
-            background: rgba(76, 175, 80, 0.15);
-            border: 1px solid rgba(76, 175, 80, 0.3);
-            color: #4caf50;
-            font-size: 0.8rem;
-            padding: 6px 12px;
-            border-radius: 20px;
-            margin-top: 10px;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
         
-        .verified-badge.pending {
-            background: rgba(247, 147, 26, 0.15);
-            border-color: rgba(247, 147, 26, 0.3);
-            color: var(--color-accent);
+        .beacn-brand .beacon-icon {
+            font-size: 1.8rem;
+        }
+        
+        .beacn-brand .brand-text {
+            text-align: left;
+        }
+        
+        .beacn-brand .brand-name {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--color-text);
+        }
+        
+        .beacn-brand .brand-tagline {
+            font-size: 0.75rem;
+            color: var(--color-text-secondary);
         }
         
         /* Links */
@@ -422,12 +433,18 @@
                 padding: 15px;
             }
             
-            .promo-card {
+            .edu-card {
                 padding: 15px;
+                min-height: 120px;
             }
             
             .info-section {
                 padding: 20px;
+            }
+            
+            .progress-ring-container {
+                width: 100px;
+                height: 100px;
             }
         }
     </style>
@@ -447,52 +464,65 @@
             <video id="videoPlayer" controls playsinline></video>
             
             <div class="loading-screen" id="loadingScreen">
-                <div class="loading-icon">🎬</div>
-                <div class="loading-title">Reconstructing from blockchain...</div>
-                <div class="loading-subtitle">175 pages • 100% on-chain</div>
-                
-                <div class="progress-container">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <div class="progress-text" id="progressText">Connecting to Koios API...</div>
-                    <div class="progress-pages" id="progressPages"></div>
+                <!-- Progress Ring -->
+                <div class="progress-ring-container">
+                    <svg class="progress-ring" width="120" height="120">
+                        <defs>
+                            <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#f7931a"/>
+                                <stop offset="100%" style="stop-color:#ffd700"/>
+                            </linearGradient>
+                        </defs>
+                        <circle class="progress-ring-bg" cx="60" cy="60" r="54"/>
+                        <circle class="progress-ring-fill" id="progressRing" cx="60" cy="60" r="54"/>
+                    </svg>
+                    <div class="progress-percent" id="progressPercent">0%</div>
                 </div>
                 
-                <!-- Promo Card during loading -->
-                <div class="promo-card">
-                    <div class="promo-badge">🔥 Limited Edition</div>
-                    <div class="promo-title">Genesis BEACN Coin</div>
-                    <div class="promo-desc">Own a piece of Cardano history.<br>Stake pool supporters get early access.</div>
-                    <div class="promo-price">7 ₳</div>
-                    <div class="promo-supply">Only 50 available</div>
-                    <a href="https://beacnpool.org/mint" target="_blank" class="mint-btn">
-                        <img src="https://studio.nmkr.io/images/buttons/paybutton_1_1.svg" alt="NMKR">
-                        Mint Now
-                    </a>
+                <!-- Page Counter -->
+                <div class="page-counter">
+                    Page <span class="current" id="currentPage">0</span> of <span id="totalPages">175</span>
+                </div>
+                
+                <!-- Educational Content -->
+                <div class="edu-card" id="eduCard">
+                    <div class="icon">🔗</div>
+                    <h3>Connecting to Cardano</h3>
+                    <p>Reaching out to the blockchain to begin reconstruction...</p>
+                </div>
+                
+                <!-- Phase Dots -->
+                <div class="phase-indicator">
+                    <div class="phase-dot active" id="phase1"></div>
+                    <div class="phase-dot" id="phase2"></div>
+                    <div class="phase-dot" id="phase3"></div>
+                    <div class="phase-dot" id="phase4"></div>
+                </div>
+                
+                <!-- BEACN Branding -->
+                <div class="beacn-brand">
+                    <div class="beacon-icon">🏊</div>
+                    <div class="brand-text">
+                        <div class="brand-name">BEACNpool</div>
+                        <div class="brand-tagline">Cardano Stake Pool • Building the Future</div>
+                    </div>
                 </div>
             </div>
             
             <div class="error-message" id="errorMessage" style="display: none;"></div>
         </div>
         
-        <!-- Verification Badge -->
-        <div class="verified-badge pending" id="verifiedBadge">
-            <span>⏳</span>
-            <span id="verifyText">Verifying integrity...</span>
-        </div>
-        
         <!-- Info Section -->
         <section class="info-section">
-            <h2>📊 About This Video</h2>
+            <h2>📊 What You're Watching</h2>
             <p>
                 This is the <strong>first video ever stored entirely on the Cardano blockchain</strong>. 
-                Not a link. Not a hash. The actual video data — reconstructed in your browser from 
+                Not a link. Not a hash. The actual video data — reconstructed live in your browser from 
                 175 on-chain NFT pages using <strong>Ledger Scrolls</strong> technology.
             </p>
             <p>
-                Every byte is verified against a SHA-256 hash embedded in the on-chain manifest. 
-                This video will exist for as long as Cardano exists — truly permanent, censorship-resistant media.
+                Every byte exists on-chain forever. This video will be playable for as long as 
+                Cardano exists — truly permanent, censorship-resistant media.
             </p>
             
             <div class="stats-grid">
@@ -531,27 +561,18 @@
         <!-- Footer -->
         <footer class="footer">
             <p>Built with ❤️ by <a href="https://x.com/BEACNpool" target="_blank">@BEACNpool</a></p>
-            <p style="margin-top: 8px; font-size: 0.75rem;">
-                Policy: 38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2
-            </p>
         </footer>
     </div>
     
-    <!-- Pako for decompression (just in case) -->
-    <script src="js/lib/pako.min.js"></script>
-    
     <script>
     /**
-     * First Video on Cardano - Standalone Player
-     * Reconstructs video from on-chain CIP-25 page NFTs using Koios API
+     * First Video on Cardano - Educational Loading Experience
      */
     (function() {
         // Configuration
         const CONFIG = {
             policyId: '38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2',
-            manifestAsset: 'CM_MANIFEST',
             expectedPages: 175,
-            expectedHash: 'aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814',
             contentType: 'video/mp4',
             koiosEndpoints: [
                 'https://koios.beacnpool.org/api/v1',
@@ -559,21 +580,100 @@
             ]
         };
         
+        // Educational content to cycle through during loading
+        const EDU_CONTENT = [
+            // Phase 1: Connection
+            {
+                icon: '🔗',
+                title: 'Connecting to Cardano',
+                text: 'Using the Koios API to query the blockchain directly — no middleman, no centralized server.'
+            },
+            {
+                icon: '🌐',
+                title: 'Decentralized Access',
+                text: 'Anyone can read this video. No account needed. No permissions. Just the blockchain.'
+            },
+            // Phase 2: Discovery
+            {
+                icon: '🔍',
+                title: 'Discovering Pages',
+                text: 'The video is split across <span class="highlight">175 NFTs</span>, each containing a piece of the puzzle.'
+            },
+            {
+                icon: '📜',
+                title: 'CIP-25 Metadata',
+                text: 'Each page NFT carries its payload in Cardano\'s standard metadata format — readable by any wallet or tool.'
+            },
+            {
+                icon: '🧩',
+                title: 'How It Works',
+                text: 'Video bytes are encoded as hex strings and stored in each NFT\'s metadata payload field.'
+            },
+            // Phase 3: Fetching
+            {
+                icon: '📡',
+                title: 'Fetching From Chain',
+                text: 'Each page is fetched individually. Your browser is talking directly to Cardano right now.'
+            },
+            {
+                icon: '⛓️',
+                title: 'Immutable Storage',
+                text: 'Once minted, these NFTs cannot be modified or deleted. The video exists forever.'
+            },
+            {
+                icon: '🏛️',
+                title: 'A Library That Cannot Burn',
+                text: 'Ledger Scrolls stores documents, images, audio, and video permanently on-chain.'
+            },
+            {
+                icon: '💡',
+                title: 'Why On-Chain?',
+                text: 'No hosting fees. No broken links. No takedowns. True digital permanence.'
+            },
+            {
+                icon: '🔐',
+                title: 'Trustless Verification',
+                text: 'Every byte can be independently verified. What you see is exactly what was stored.'
+            },
+            // Phase 4: Assembly
+            {
+                icon: '🔧',
+                title: 'Assembling the Video',
+                text: 'Converting hex payloads back to binary and stitching 175 pages together...'
+            },
+            {
+                icon: '🎬',
+                title: 'Almost There!',
+                text: 'Creating video blob for playback. The blockchain becomes your streaming service.'
+            },
+            {
+                icon: '🏊',
+                title: 'Built by BEACNpool',
+                text: 'A Cardano stake pool dedicated to building useful tools for the ecosystem.'
+            }
+        ];
+        
         // DOM Elements
         const el = {
             video: document.getElementById('videoPlayer'),
             loadingScreen: document.getElementById('loadingScreen'),
-            progressFill: document.getElementById('progressFill'),
-            progressText: document.getElementById('progressText'),
-            progressPages: document.getElementById('progressPages'),
+            progressRing: document.getElementById('progressRing'),
+            progressPercent: document.getElementById('progressPercent'),
+            currentPage: document.getElementById('currentPage'),
+            totalPages: document.getElementById('totalPages'),
+            eduCard: document.getElementById('eduCard'),
             errorMessage: document.getElementById('errorMessage'),
-            verifiedBadge: document.getElementById('verifiedBadge'),
-            verifyText: document.getElementById('verifyText'),
-            sizeValue: document.getElementById('sizeValue')
+            sizeValue: document.getElementById('sizeValue'),
+            phase1: document.getElementById('phase1'),
+            phase2: document.getElementById('phase2'),
+            phase3: document.getElementById('phase3'),
+            phase4: document.getElementById('phase4')
         };
         
         // State
-        let koiosBase = CONFIG.koiosEndpoints[0];
+        let currentEduIndex = 0;
+        let eduInterval = null;
+        const circumference = 2 * Math.PI * 54; // radius = 54
         
         // Utility functions
         function hexToBytes(hex) {
@@ -599,25 +699,59 @@
             return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
         }
         
-        async function sha256(data) {
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            return Array.from(new Uint8Array(hashBuffer))
-                .map(b => b.toString(16).padStart(2, '0'))
-                .join('');
+        function updateProgress(percent, currentPage) {
+            // Update ring
+            const offset = circumference - (percent / 100) * circumference;
+            el.progressRing.style.strokeDashoffset = offset;
+            el.progressPercent.textContent = `${Math.round(percent)}%`;
+            
+            // Update page counter
+            el.currentPage.textContent = currentPage;
         }
         
-        function updateProgress(text, percent, pages = null) {
-            el.progressText.textContent = text;
-            el.progressFill.style.width = `${percent}%`;
-            if (pages) {
-                el.progressPages.textContent = pages;
+        function setPhase(phase) {
+            el.phase1.className = 'phase-dot ' + (phase >= 1 ? (phase > 1 ? 'complete' : 'active') : '');
+            el.phase2.className = 'phase-dot ' + (phase >= 2 ? (phase > 2 ? 'complete' : 'active') : '');
+            el.phase3.className = 'phase-dot ' + (phase >= 3 ? (phase > 3 ? 'complete' : 'active') : '');
+            el.phase4.className = 'phase-dot ' + (phase >= 4 ? 'active' : '');
+        }
+        
+        function showEduContent(index) {
+            const content = EDU_CONTENT[index % EDU_CONTENT.length];
+            el.eduCard.innerHTML = `
+                <div class="icon">${content.icon}</div>
+                <h3>${content.title}</h3>
+                <p>${content.text}</p>
+            `;
+            el.eduCard.style.animation = 'none';
+            el.eduCard.offsetHeight; // Trigger reflow
+            el.eduCard.style.animation = 'fadeInUp 0.5s ease';
+        }
+        
+        function startEduRotation() {
+            showEduContent(0);
+            eduInterval = setInterval(() => {
+                currentEduIndex++;
+                showEduContent(currentEduIndex);
+            }, 4000); // Change every 4 seconds
+        }
+        
+        function stopEduRotation() {
+            if (eduInterval) {
+                clearInterval(eduInterval);
+                eduInterval = null;
             }
         }
         
         function showError(msg) {
+            stopEduRotation();
             el.loadingScreen.classList.add('hidden');
             el.errorMessage.style.display = 'block';
-            el.errorMessage.innerHTML = `❌ ${msg}<br><br><button onclick="location.reload()" style="padding: 10px 20px; cursor: pointer;">Retry</button>`;
+            el.errorMessage.innerHTML = `
+                <div style="font-size: 2rem; margin-bottom: 15px;">❌</div>
+                <div>${msg}</div>
+                <button onclick="location.reload()">Try Again</button>
+            `;
         }
         
         // Koios API with fallback
@@ -635,21 +769,17 @@
                     
                     const resp = await fetch(url, options);
                     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                    
-                    koiosBase = base;
                     return await resp.json();
                 } catch (e) {
                     errors.push(`${base}: ${e.message}`);
                 }
             }
             
-            throw new Error(`All Koios endpoints failed: ${errors.join(', ')}`);
+            throw new Error(`All endpoints failed`);
         }
         
         // Fetch all policy assets
         async function fetchPolicyAssets() {
-            updateProgress('Scanning blockchain for pages...', 5);
-            
             const assets = [];
             let offset = 0;
             const limit = 1000;
@@ -695,13 +825,17 @@
         // Main reconstruction logic
         async function reconstructVideo() {
             try {
-                updateProgress('Connecting to Koios...', 2);
+                startEduRotation();
+                setPhase(1);
                 
-                // 1. Fetch all assets under the policy
+                // Phase 1: Connect and discover
+                updateProgress(2, 0);
                 const assets = await fetchPolicyAssets();
-                updateProgress(`Found ${assets.length} assets`, 10);
                 
-                // 2. Filter to page assets and fetch their metadata
+                setPhase(2);
+                updateProgress(8, 0);
+                
+                // Phase 2 & 3: Fetch pages
                 const pages = [];
                 let processed = 0;
                 
@@ -709,18 +843,19 @@
                     const assetName = asset.asset_name || '';
                     const assetNameAscii = hexToAscii(assetName);
                     
-                    // Skip manifest, only process pages
                     if (!assetNameAscii.startsWith('CM_PAGE')) continue;
                     
                     processed++;
-                    const pct = 10 + Math.floor((processed / CONFIG.expectedPages) * 50);
-                    updateProgress(`Fetching page ${processed}/${CONFIG.expectedPages}...`, pct, `${processed} / ${CONFIG.expectedPages} pages`);
+                    const pct = 10 + Math.floor((processed / CONFIG.expectedPages) * 70);
+                    updateProgress(pct, processed);
+                    
+                    // Switch to phase 3 at 30%
+                    if (processed === 1) setPhase(3);
                     
                     try {
                         const info = await fetchAssetInfo(CONFIG.policyId, assetName);
                         if (!info) continue;
                         
-                        // Get CIP-25 metadata
                         const meta = info.minting_tx_metadata?.[721]?.[CONFIG.policyId]?.[assetNameAscii];
                         if (!meta || meta.payload === undefined || meta.i === undefined) continue;
                         
@@ -732,7 +867,6 @@
                         console.warn(`Failed to fetch ${assetNameAscii}:`, e);
                     }
                     
-                    // Small delay to avoid rate limiting
                     await new Promise(r => setTimeout(r, 50));
                 }
                 
@@ -740,12 +874,10 @@
                     throw new Error('No page data found on-chain');
                 }
                 
-                if (pages.length < CONFIG.expectedPages) {
-                    console.warn(`Only found ${pages.length}/${CONFIG.expectedPages} pages`);
-                }
+                // Phase 4: Assemble
+                setPhase(4);
+                updateProgress(85, pages.length);
                 
-                // 3. Sort by index and concatenate
-                updateProgress('Sorting and concatenating...', 65, `${pages.length} pages loaded`);
                 pages.sort((a, b) => a.index - b.index);
                 
                 let allHex = '';
@@ -753,35 +885,26 @@
                     allHex += extractPayloadHex(page.payload);
                 }
                 
-                // 4. Convert to binary
-                updateProgress('Converting to binary...', 75);
+                updateProgress(92, pages.length);
                 const rawBytes = hexToBytes(allHex);
                 
-                // 5. Update size display
                 el.sizeValue.textContent = formatSize(rawBytes.length);
                 
-                // 6. Verify hash
-                updateProgress('Verifying integrity...', 85);
-                const computedHash = await sha256(rawBytes);
-                
-                if (computedHash === CONFIG.expectedHash) {
-                    el.verifiedBadge.classList.remove('pending');
-                    el.verifiedBadge.innerHTML = '<span>✅</span><span>SHA-256 Verified</span>';
-                } else {
-                    el.verifiedBadge.innerHTML = `<span>⚠️</span><span>Hash mismatch</span>`;
-                    console.warn(`Expected: ${CONFIG.expectedHash}\nGot: ${computedHash}`);
-                }
-                
-                // 7. Create blob and play
-                updateProgress('Creating video...', 95);
+                updateProgress(98, pages.length);
                 const blob = new Blob([rawBytes], { type: CONFIG.contentType });
                 const url = URL.createObjectURL(blob);
                 
+                // Done!
+                stopEduRotation();
+                updateProgress(100, pages.length);
+                
                 el.video.src = url;
                 el.video.classList.add('loaded');
-                el.loadingScreen.classList.add('hidden');
                 
-                updateProgress('Complete!', 100, `${pages.length} pages • ${formatSize(rawBytes.length)}`);
+                // Small delay before hiding loading screen
+                setTimeout(() => {
+                    el.loadingScreen.classList.add('hidden');
+                }, 500);
                 
             } catch (e) {
                 console.error('Reconstruction failed:', e);
