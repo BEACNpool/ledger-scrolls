@@ -1295,11 +1295,41 @@
         }
     };
 
-    // Koios API endpoints (free, no key required)
-    const KOIOS_BASE = 'https://api.koios.rest/api/v1';
+    // Koios API gateways (same fallback chain as blockchain.js)
+    const KOIOS_GATEWAYS = [
+        'https://api.koios.rest/api/v1',
+        'https://koios.beacnpool.org/api/v1',
+        'https://corsproxy.io/?https://api.koios.rest/api/v1',
+        'https://cors.isomorphic-git.org/https://api.koios.rest/api/v1'
+    ];
 
+    let activeGateway = null;
     let currentEpoch = "608";
     let fetchedText = {};
+
+    // ── Koios with Gateway Fallback ─────────────────────────────
+
+    async function koiosRequest(endpoint, options = {}) {
+        const gateways = activeGateway ? [activeGateway, ...KOIOS_GATEWAYS.filter(g => g !== activeGateway)] : [...KOIOS_GATEWAYS];
+        const errors = [];
+
+        for (const base of gateways) {
+            try {
+                const url = `${base}${endpoint}`;
+                const resp = await fetch(url, {
+                    ...options,
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                activeGateway = base;
+                return await resp.json();
+            } catch (e) {
+                errors.push(`${base} → ${e.message}`);
+            }
+        }
+        throw new Error(`All Koios gateways failed:\n${errors.join('\n')}`);
+    }
 
     // ── Initialization ──────────────────────────────────────────
 
@@ -1445,130 +1475,91 @@
         const c = CONSTITUTIONS[epoch];
         resetVerification(epoch);
         showLoading();
-        setLoadingMsg('Querying Koios API for policy assets…');
+        setLoadingMsg('Connecting to Cardano mainnet via Koios API…');
 
         try {
-            // Step 1: Get all assets under the policy
-            setLoadingMsg('Fetching asset list under policy…');
-            const assetsResp = await fetch(`${KOIOS_BASE}/policy_asset_list`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ _policy_id: c.policy_id })
-            });
+            // Step 1: Get all assets under the policy (GET with query params, like blockchain.js)
+            setLoadingMsg('Querying policy assets…');
+            const assets = await koiosRequest(`/asset_list?policy_id=eq.${c.policy_id}&limit=1000`);
 
-            if (!assetsResp.ok) throw new Error(`Koios API error: ${assetsResp.status}`);
-            const assets = await assetsResp.json();
-            
             if (!assets || assets.length === 0) throw new Error('No assets found under policy');
+            setLoadingMsg(`Found ${assets.length} assets. Fetching metadata…`);
 
-            // Step 2: Get minting transactions for each asset to find metadata
-            setLoadingMsg(`Found ${assets.length} assets. Fetching page metadata…`);
-
-            // Collect asset names
-            const assetNames = assets.map(a => a.asset_name || a.asset_name_ascii).filter(Boolean);
+            // Step 2: For each asset, get its minting tx metadata via asset_info POST
+            const assetList = assets.map(a => [c.policy_id, a.asset_name || '']);
             
-            // Fetch asset info to get minting tx hashes
-            const assetList = assets.map(a => {
-                const pid = a.policy_id || c.policy_id;
-                const name = a.asset_name || '';
-                return pid + name;
-            });
-
-            // Use asset_info endpoint  
-            const infoResp = await fetch(`${KOIOS_BASE}/asset_info`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ _asset_list: assetList.map(a => [c.policy_id, assets[assetList.indexOf(a)]?.asset_name || '']) })
-            });
-
-            // If the structured approach fails, fallback to fetching minting txs
+            // Batch asset_info requests
+            const batchSize = 15;
             let pages = [];
 
-            // Approach: Get policy asset minting txs
-            setLoadingMsg('Fetching minting transaction metadata…');
-            const mintResp = await fetch(`${KOIOS_BASE}/policy_asset_mints`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ _policy_id: c.policy_id })
-            });
+            for (let i = 0; i < assetList.length; i += batchSize) {
+                const batch = assetList.slice(i, i + batchSize);
+                setLoadingMsg(`Fetching asset info ${Math.min(i + batchSize, assetList.length)} / ${assetList.length}…`);
 
-            if (!mintResp.ok) throw new Error(`Minting query failed: ${mintResp.status}`);
-            const mints = await mintResp.json();
+                try {
+                    const infoResp = await koiosRequest('/asset_info', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ _asset_list: batch })
+                    });
 
-            // Get unique tx hashes
-            const txHashes = [...new Set(mints.map(m => m.minting_tx_hash).filter(Boolean))];
-            setLoadingMsg(`Found ${txHashes.length} minting transactions. Fetching metadata…`);
+                    if (!infoResp || !Array.isArray(infoResp)) continue;
 
-            // Fetch tx metadata in batches
-            const batchSize = 20;
-            let allMetadata = [];
-            for (let i = 0; i < txHashes.length; i += batchSize) {
-                const batch = txHashes.slice(i, i + batchSize);
-                const metaResp = await fetch(`${KOIOS_BASE}/tx_metadata`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ _tx_hashes: batch })
-                });
-                if (metaResp.ok) {
-                    const meta = await metaResp.json();
-                    allMetadata = allMetadata.concat(meta);
-                }
-                setLoadingMsg(`Processing metadata batch ${Math.min(i + batchSize, txHashes.length)} / ${txHashes.length}…`);
-            }
+                    for (const asset of infoResp) {
+                        const m721 = asset.minting_tx_metadata?.['721'];
+                        if (!m721) continue;
 
-            // Parse CIP-721 metadata: look for pages with 'i' and 'payload'
-            for (const txMeta of allMetadata) {
-                if (!txMeta.metadata) continue;
-                // Metadata key 721 for CIP-721
-                const m721 = txMeta.metadata['721'] || txMeta.metadata;
-                if (!m721) continue;
+                        const policyData = m721[c.policy_id];
+                        if (!policyData || typeof policyData !== 'object') continue;
 
-                // Navigate into policy
-                const policyData = m721[c.policy_id] || m721;
-                if (!policyData || typeof policyData !== 'object') continue;
-
-                for (const [assetName, assetData] of Object.entries(policyData)) {
-                    if (assetData && typeof assetData === 'object' && 'i' in assetData && 'payload' in assetData) {
-                        const idx = parseInt(assetData.i);
-                        let payload = '';
-                        if (Array.isArray(assetData.payload)) {
-                            // payload is array of hex strings or objects with 'bytes' key
-                            for (const item of assetData.payload) {
-                                if (typeof item === 'string') {
-                                    payload += item;
-                                } else if (item && item.bytes) {
-                                    payload += item.bytes;
+                        for (const [assetName, assetData] of Object.entries(policyData)) {
+                            if (assetData && typeof assetData === 'object' && 'i' in assetData && 'payload' in assetData) {
+                                const idx = parseInt(assetData.i);
+                                let payload = '';
+                                if (Array.isArray(assetData.payload)) {
+                                    for (const item of assetData.payload) {
+                                        if (typeof item === 'string') {
+                                            payload += item;
+                                        } else if (item && item.bytes) {
+                                            payload += item.bytes;
+                                        }
+                                    }
+                                } else if (typeof assetData.payload === 'string') {
+                                    payload = assetData.payload;
+                                }
+                                if (payload) {
+                                    pages.push({ index: idx, hex: payload });
                                 }
                             }
-                        } else if (typeof assetData.payload === 'string') {
-                            payload = assetData.payload;
-                        }
-                        if (payload) {
-                            pages.push({ index: idx, hex: payload });
                         }
                     }
+                } catch (batchErr) {
+                    console.warn(`Batch ${i} failed:`, batchErr.message);
                 }
+
+                // Rate limit courtesy
+                await new Promise(r => setTimeout(r, 120));
             }
 
-            if (pages.length === 0) throw new Error('No page payloads found in metadata');
+            if (pages.length === 0) throw new Error('No page payloads found in CIP-721 metadata');
 
-            // Sort by index and concatenate
+            // Step 3: Sort by index, concatenate hex, decode
             pages.sort((a, b) => a.index - b.index);
             setLoadingMsg(`Reconstructing ${pages.length} pages…`);
 
             const fullHex = pages.map(p => p.hex).join('');
             const bytes = hexToBytes(fullHex);
 
-            // Try gzip decompression
+            // Step 4: Decompress gzip if detected
             let textContent;
-            try {
-                textContent = decompressGzip(bytes);
-            } catch (e) {
-                // Try raw text
+            if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
+                setLoadingMsg('Decompressing gzip…');
+                textContent = await decompressWithStream(bytes);
+            } else {
                 textContent = new TextDecoder('utf-8').decode(bytes);
             }
 
-            // Cache and render
+            // Step 5: Cache, render, verify
             fetchedText[epoch] = textContent;
             renderConstitution(textContent, epoch);
             verifyAndUpdate(textContent, epoch);
