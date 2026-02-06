@@ -453,60 +453,61 @@
         }
 
         /* ==========================================================
-           READER'S GUIDE SIDEBAR
+           AI SUMMARY INDEX + PROVENANCE
            ========================================================== */
 
         .content-layout {
             position: relative;
             z-index: 1;
-            max-width: 1200px;
+            max-width: 1100px;
             margin: 0 auto;
             padding: 0 var(--space-lg);
             display: grid;
-            grid-template-columns: 1fr 300px;
+            grid-template-columns: 1fr;
             gap: var(--space-xl);
         }
 
-        .sidebar {
-            position: sticky;
-            top: 80px;
-            align-self: start;
-            max-height: calc(100vh - 100px);
-            overflow-y: auto;
+        .index-section {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto var(--space-xl);
+            padding: 0 var(--space-lg);
         }
 
-        .sidebar::-webkit-scrollbar { width: 3px; }
-        .sidebar::-webkit-scrollbar-track { background: transparent; }
-        .sidebar::-webkit-scrollbar-thumb { background: rgba(212, 168, 85, 0.2); border-radius: 2px; }
+        .index-section.hidden { display: none; }
 
-        .sidebar-section {
-            margin-bottom: var(--space-xl);
+        .index-card {
+            background: rgba(212, 168, 85, 0.04);
+            border: 1px solid rgba(212, 168, 85, 0.15);
+            border-radius: 10px;
+            padding: var(--space-lg);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
-        .sidebar-title {
+        .index-card.pending { opacity: 0.6; }
+
+        .index-title {
             font-family: var(--font-heading);
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             font-weight: 700;
-            letter-spacing: 0.18em;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
             color: var(--gold-bright);
-            margin-bottom: var(--space-md);
-            padding-bottom: var(--space-sm);
-            border-bottom: 1px solid rgba(212, 168, 85, 0.15);
+            margin-bottom: var(--space-sm);
         }
 
-        .guide-subtitle {
+        .index-subtitle {
             font-family: var(--font-body);
-            font-size: 0.78rem;
+            font-size: 0.82rem;
             font-style: italic;
             color: var(--gold-pale);
-            opacity: 0.45;
-            margin-top: -10px;
+            opacity: 0.55;
             margin-bottom: var(--space-md);
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
-        /* Guide items */
+        /* Index items (reuse guide styles for navigation) */
         .guide-item {
             position: relative;
             padding: 10px 12px 10px 16px;
@@ -578,7 +579,7 @@
             margin-top: 6px;
         }
 
-        /* Loading state for guide */
+        /* Loading state for index */
         .guide-loading {
             text-align: center;
             padding: var(--space-lg) var(--space-md);
@@ -618,6 +619,36 @@
             box-shadow: 0 0 8px var(--gold-glow);
         }
 
+        .provenance-section {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto var(--space-xl);
+            padding: 0 var(--space-lg);
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: var(--space-lg);
+        }
+
+        .provenance-card {
+            background: rgba(212, 168, 85, 0.03);
+            border: 1px solid rgba(212, 168, 85, 0.12);
+            border-radius: 10px;
+            padding: var(--space-lg);
+        }
+
+        .provenance-title {
+            font-family: var(--font-heading);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold-bright);
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid rgba(212, 168, 85, 0.15);
+        }
+
         .provenance-item {
             display: flex;
             justify-content: space-between;
@@ -640,7 +671,7 @@
             opacity: 0.7;
             text-align: right;
             word-break: break-all;
-            max-width: 160px;
+            max-width: 200px;
         }
 
         .sidebar-beacn {
@@ -1067,30 +1098,14 @@
                 grid-template-columns: 1fr;
             }
 
-            .sidebar {
-                position: static;
-                max-height: none;
-                order: -1;
+            .provenance-section {
+                grid-template-columns: 1fr;
             }
 
             .guide-detail {
                 opacity: 0.5 !important;
                 max-height: 200px !important;
                 margin-top: 6px !important;
-            }
-
-            .sidebar-inner {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: var(--space-md);
-            }
-
-            #readersGuide {
-                grid-column: 1 / -1;
-            }
-
-            .sidebar-section:last-child {
-                grid-column: 1 / -1;
             }
 
             .hero { padding: 100px var(--space-md) var(--space-xl); }
@@ -1102,7 +1117,6 @@
             .header-title { display: none; }
             .version-btn { font-size: 0.6rem; padding: 4px 10px; }
             .scroll-parchment { padding: var(--space-lg) var(--space-md); }
-            .sidebar-inner { grid-template-columns: 1fr; }
             .verify-card { flex-direction: column; align-items: center; text-align: center; }
             .verify-hash { text-align: left; }
             .provenance-value { max-width: 120px; }
@@ -1205,9 +1219,41 @@
         </div>
     </div>
 
-    <!-- Main Content: Scroll + Sidebar -->
+    <!-- AI Summary Index (reveals after verification) -->
+    <section class="index-section fade-in fade-in-delay-2 hidden" id="aiIndexSection">
+        <div class="index-card pending" id="aiIndexCard">
+            <div class="index-title">AI Summary Index</div>
+            <div class="index-subtitle">Generated after integrity verification. Neutral, section-level summaries to help you navigate the Constitution.</div>
+            <div id="aiIndexList">
+                <div class="guide-loading">
+                    <div class="guide-loading-icon">📜</div>
+                    <div class="guide-loading-text">Awaiting verified document…</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="provenance-section fade-in fade-in-delay-2" id="provenanceSection">
+        <div class="provenance-card">
+            <div class="provenance-title">On-Chain Provenance</div>
+            <div id="provenanceList">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+        <div class="provenance-card">
+            <div class="sidebar-beacn">
+                <div class="sidebar-beacn-icon">🔥</div>
+                <div class="sidebar-beacn-title">Preserved by BEACN Pool</div>
+                <div class="sidebar-beacn-text">
+                    Part of the Ledger Scrolls project — immutable documents 
+                    on Cardano. A library that cannot burn.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content: Scroll -->
     <div class="content-layout fade-in fade-in-delay-2">
-        <!-- The Scroll -->
         <div class="scroll-container">
             <div class="scroll-parchment">
                 <div class="scroll-roller-top"></div>
@@ -1222,43 +1268,6 @@
                 <div class="scroll-roller-bottom"></div>
             </div>
         </div>
-
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-inner">
-                <!-- Reader's Guide -->
-                <div class="sidebar-section" id="readersGuide">
-                    <div class="sidebar-title">Reader's Guide</div>
-                    <div class="guide-subtitle">Navigate the Constitution — what each section means for you</div>
-                    <div id="guideList">
-                        <div class="guide-loading">
-                            <div class="guide-loading-icon">📜</div>
-                            <div class="guide-loading-text">Loading document structure…</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chain Provenance -->
-                <div class="sidebar-section">
-                    <div class="sidebar-title">On-Chain Provenance</div>
-                    <div id="provenanceList">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-
-                <!-- BEACN Pool -->
-                <div class="sidebar-section">
-                    <div class="sidebar-beacn">
-                        <div class="sidebar-beacn-icon">🔥</div>
-                        <div class="sidebar-beacn-title">Preserved by BEACN Pool</div>
-                        <div class="sidebar-beacn-text">
-                            Part of the Ledger Scrolls project — immutable documents 
-                            on Cardano. A library that cannot burn.
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </aside>
     </div>
 
     <!-- Context Cards -->
@@ -1380,6 +1389,7 @@
     let activeGateway = null;
     let currentEpoch = "608";
     let fetchedText = {};
+    let isVerified = false;
 
     // ── Koios with Gateway Fallback ─────────────────────────────
 
@@ -1410,8 +1420,9 @@
     document.addEventListener('DOMContentLoaded', () => {
         initDust();
         initVersionButtons();
-        renderSidebar(currentEpoch);
+        renderProvenance(currentEpoch);
         renderHeroStats(currentEpoch);
+        resetAiIndex();
         fetchConstitution(currentEpoch);
     });
 
@@ -1442,9 +1453,10 @@
         document.querySelectorAll('.version-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(epoch === '608' ? 'btnEpoch608' : 'btnEpoch541').classList.add('active');
 
-        renderSidebar(epoch);
+        renderProvenance(epoch);
         renderHeroStats(epoch);
         resetVerification(epoch);
+        resetAiIndex();
 
         if (fetchedText[epoch]) {
             renderConstitution(fetchedText[epoch], epoch);
@@ -1470,13 +1482,11 @@
         document.getElementById('heroSubtitle').textContent = subtitle;
     }
 
-    // ── Sidebar ─────────────────────────────────────────────────
-
-    // ── Curated Reader's Guide ─────────────────────────────────
+    // ── AI Summary Index ───────────────────────────────────────
     // Each entry: empowering hook (italic) + neutral detail (expanded on active)
     // Keys are matched against normalized heading text from the rendered document
     
-    const READERS_GUIDE = {
+    const AI_SUMMARY_INDEX = {
         'PREAMBLE': {
             hook: "Why this document exists — and why it belongs to you",
             detail: "Declares Cardano as a self-governing ecosystem committed to improving systems for everyone, everywhere. Establishes that this Constitution governs through community consensus, not corporate authority."
@@ -1567,10 +1577,10 @@
     // Track the observer so we can disconnect on version switch
     let guideObserver = null;
 
-    function renderSidebar(epoch) {
+    function renderProvenance(epoch) {
         const c = CONSTITUTIONS[epoch];
 
-        // Provenance only (guide is built after document renders)
+        // Provenance only (index is built after document renders)
         document.getElementById('provenanceList').innerHTML = Object.entries(c.provenance).map(([k, v]) => `
             <div class="provenance-item">
                 <span class="provenance-label">${k}</span>
@@ -1579,12 +1589,35 @@
         `).join('');
     }
 
-    // ── Reader's Guide Builder ───────────────────────────────────
+    function resetAiIndex() {
+        isVerified = false;
+        const section = document.getElementById('aiIndexSection');
+        const card = document.getElementById('aiIndexCard');
+        const list = document.getElementById('aiIndexList');
+        if (section) section.classList.add('hidden');
+        if (card) card.classList.add('pending');
+        if (list) {
+            list.innerHTML = `
+                <div class="guide-loading">
+                    <div class="guide-loading-icon">📜</div>
+                    <div class="guide-loading-text">Awaiting verified document…</div>
+                </div>`;
+        }
+    }
+
+    function showAiIndex() {
+        const section = document.getElementById('aiIndexSection');
+        const card = document.getElementById('aiIndexCard');
+        if (section) section.classList.remove('hidden');
+        if (card) card.classList.remove('pending');
+    }
+
+    // ── AI Summary Index Builder ────────────────────────────────
     // Called AFTER the constitution text is rendered into the parchment.
     // Scans for h2 headings, matches them to curated summaries,
-    // builds clickable guide items, and sets up scroll tracking.
+    // builds clickable index items, and sets up scroll tracking.
 
-    function buildReadersGuide() {
+    function buildAiIndex() {
         // Disconnect any existing observer
         if (guideObserver) { guideObserver.disconnect(); guideObserver = null; }
 
@@ -1594,7 +1627,7 @@
         // Find all h2 headings in the rendered document
         const headings = body.querySelectorAll('h2');
         if (!headings.length) {
-            document.getElementById('guideList').innerHTML = `
+            document.getElementById('aiIndexList').innerHTML = `
                 <div class="guide-loading">
                     <div class="guide-loading-text">No sections detected in document.</div>
                 </div>`;
@@ -1612,7 +1645,7 @@
 
             // Try matching against curated guide keys
             let matched = null;
-            for (const [key, data] of Object.entries(READERS_GUIDE)) {
+            for (const [key, data] of Object.entries(AI_SUMMARY_INDEX)) {
                 if (rawText.includes(key)) {
                     matched = data;
                     break;
@@ -1629,7 +1662,7 @@
         });
 
         // Render guide HTML
-        document.getElementById('guideList').innerHTML = guideEntries.map(e => `
+        document.getElementById('aiIndexList').innerHTML = guideEntries.map(e => `
             <div class="guide-item" data-target="${e.id}">
                 <div class="guide-heading">${escapeHtml(e.heading)}</div>
                 ${e.hook ? `<div class="guide-hook">${e.hook}</div>` : ''}
@@ -1683,12 +1716,17 @@
         if (guideItems.length > 0) {
             guideItems[0].classList.add('active');
         }
+
+        if (isVerified) {
+            showAiIndex();
+        }
     }
 
     // ── Verification ────────────────────────────────────────────
 
     function resetVerification(epoch) {
         const c = CONSTITUTIONS[epoch];
+        isVerified = false;
         const card = document.getElementById('verifyCard');
         const sealIcon = document.getElementById('verifySealIcon');
         const title = document.getElementById('verifyTitle');
@@ -1720,6 +1758,8 @@
         const detail = document.getElementById('verifyDetail');
 
         if (computed === c.expected_sha256) {
+            isVerified = true;
+            showAiIndex();
             card.className = 'verify-card';
             sealIcon.className = 'verify-seal verified';
             sealIcon.textContent = '✅';
@@ -1932,8 +1972,8 @@
             <div class="constitution-body">${html}</div>
         `;
 
-        // Build the Reader's Guide from the rendered headings
-        requestAnimationFrame(() => buildReadersGuide());
+        // Build the AI Summary Index from the rendered headings
+        requestAnimationFrame(() => buildAiIndex());
     }
 
     function formatConstitutionText(text) {
