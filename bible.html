@@ -1,0 +1,2103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0804">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>The Holy Bible — Ledger Scrolls</title>
+    <meta name="description" content="The complete World English Bible, preserved forever on the Cardano blockchain. 66 books, 1,189 chapters — an eternal digital manuscript.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+    <style>
+        /* ================================================================
+           THE HOLY BIBLE VIEWER — Ledger Scrolls
+           
+           "In the beginning was the Word..."
+           
+           Design Philosophy:
+           These words have endured for millennia — passed through scrolls, 
+           codices, illuminated manuscripts, printed books, and now... 
+           the eternal blockchain. This viewer honors that journey.
+           
+           Visual Language:
+           - Scriptorum atmosphere (medieval manuscript chamber)
+           - Illuminated manuscript aesthetics
+           - Gold leaf, deep burgundy, aged vellum
+           - Reverent, unhurried, contemplative
+           ================================================================ */
+
+        :root {
+            /* The Scriptorum (Writing Chamber) */
+            --chamber-bg: #08060a;
+            --chamber-warm: #0d0a08;
+            --chamber-vignette: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7) 100%);
+            
+            /* Sacred Parchment / Vellum */
+            --vellum-bg: #f7f0de;
+            --vellum-aged: #ece3c8;
+            --vellum-dark: #d8cba8;
+            --vellum-shadow: rgba(45, 30, 15, 0.25);
+            --vellum-text: #2a1f12;
+            --vellum-heading: #1a1108;
+            
+            /* Illumination Gold */
+            --gold-bright: #c9a227;
+            --gold-deep: #9a7b1a;
+            --gold-pale: #e8d5a3;
+            --gold-glow: rgba(201, 162, 39, 0.2);
+            --gold-shimmer: linear-gradient(135deg, #c9a227 0%, #e8d070 30%, #9a7b1a 60%, #c9a227 100%);
+            
+            /* Sacred Colors */
+            --burgundy: #722F37;
+            --burgundy-deep: #4a1f24;
+            --burgundy-light: rgba(114, 47, 55, 0.15);
+            --royal-blue: #1e3a5f;
+            --forest-green: #2d4a3e;
+            
+            /* Testament Indicators */
+            --old-testament: #8b7355;
+            --new-testament: #5c4a6e;
+            
+            /* Typography */
+            --font-display: 'Cinzel Decorative', 'Cinzel', serif;
+            --font-heading: 'Cinzel', serif;
+            --font-scripture: 'EB Garamond', 'Cormorant Garamond', 'Georgia', serif;
+            --font-body: 'Cormorant Garamond', 'Georgia', serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 40px;
+            --space-2xl: 64px;
+            
+            /* Reading */
+            --scripture-line-height: 1.95;
+            --scripture-font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            background: var(--chamber-bg);
+            color: var(--vellum-text);
+            font-family: var(--font-scripture);
+            font-size: 18px;
+            line-height: 1.7;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ==========================================================
+           SCRIPTORUM ATMOSPHERE — The writing chamber
+           ========================================================== */
+        
+        .scriptorum {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: var(--chamber-warm);
+        }
+
+        .scriptorum-vignette {
+            position: absolute;
+            inset: 0;
+            background: var(--chamber-vignette);
+        }
+
+        .scriptorum-light {
+            position: absolute;
+            top: -15%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60vw;
+            height: 45vh;
+            background: radial-gradient(ellipse, rgba(201, 162, 39, 0.04) 0%, transparent 60%);
+            animation: candlelight 6s ease-in-out infinite;
+        }
+
+        @keyframes candlelight {
+            0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(1); }
+            33% { opacity: 0.8; transform: translateX(-50%) scale(1.02); }
+            66% { opacity: 0.7; transform: translateX(-50%) scale(0.98); }
+        }
+
+        .dust-motes {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .dust-mote {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(201, 162, 39, 0.25);
+            border-radius: 50%;
+            animation: mote-float linear infinite;
+        }
+
+        @keyframes mote-float {
+            0% { transform: translateY(100vh) translateX(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(-10vh) translateX(40px) rotate(180deg); opacity: 0; }
+        }
+
+        /* ==========================================================
+           HEADER — Simple, reverent
+           ========================================================== */
+
+        .site-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: var(--space-md) var(--space-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(to bottom, rgba(8, 6, 10, 0.98) 0%, rgba(8, 6, 10, 0.85) 70%, transparent 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .header-back {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            color: var(--gold-pale);
+            text-decoration: none;
+            font-family: var(--font-heading);
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+
+        .header-back:hover { opacity: 0.9; }
+
+        .header-back svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .header-title {
+            font-family: var(--font-heading);
+            font-size: 0.65rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold-bright);
+            opacity: 0.4;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            background: transparent;
+            border: 1px solid rgba(201, 162, 39, 0.15);
+            color: var(--gold-pale);
+            cursor: pointer;
+            transition: all 0.3s;
+            opacity: 0.5;
+        }
+
+        .nav-btn:hover { 
+            opacity: 1; 
+            background: rgba(201, 162, 39, 0.08);
+            border-color: rgba(201, 162, 39, 0.3);
+        }
+
+        .nav-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        /* ==========================================================
+           HERO — The Grand Opening
+           ========================================================== */
+
+        .hero {
+            position: relative;
+            z-index: 1;
+            padding: 130px var(--space-lg) var(--space-xl);
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero-cross {
+            font-size: 2rem;
+            margin-bottom: var(--space-md);
+            opacity: 0.6;
+            color: var(--gold-bright);
+            text-shadow: 0 0 30px var(--gold-glow);
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            font-weight: 700;
+            color: var(--gold-bright);
+            letter-spacing: 0.1em;
+            line-height: 1.15;
+            margin-bottom: var(--space-sm);
+            text-shadow: 0 0 50px rgba(201, 162, 39, 0.15);
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-scripture);
+            font-size: clamp(1.1rem, 3vw, 1.5rem);
+            font-weight: 400;
+            font-style: italic;
+            color: var(--gold-pale);
+            opacity: 0.55;
+            max-width: 650px;
+            margin: 0 auto var(--space-lg);
+            letter-spacing: 0.02em;
+        }
+
+        .hero-verse {
+            font-family: var(--font-scripture);
+            font-size: 1rem;
+            font-style: italic;
+            color: var(--gold-pale);
+            opacity: 0.4;
+            max-width: 500px;
+            margin: 0 auto var(--space-xl);
+            line-height: 1.7;
+        }
+
+        .hero-verse cite {
+            display: block;
+            margin-top: var(--space-xs);
+            font-style: normal;
+            font-size: 0.85rem;
+            opacity: 0.7;
+            letter-spacing: 0.05em;
+        }
+
+        .hero-stats {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: var(--space-xl);
+            margin-bottom: var(--space-lg);
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--gold-bright);
+            letter-spacing: 0.03em;
+        }
+
+        .hero-stat-label {
+            font-family: var(--font-heading);
+            font-size: 0.55rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold-pale);
+            opacity: 0.45;
+            margin-top: 4px;
+        }
+
+        .hero-divider {
+            width: 100px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold-deep), transparent);
+            margin: var(--space-lg) auto;
+            opacity: 0.5;
+        }
+
+        .hero-testament-note {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            color: var(--gold-pale);
+            opacity: 0.35;
+            display: flex;
+            justify-content: center;
+            gap: var(--space-xl);
+            flex-wrap: wrap;
+        }
+
+        .testament-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .testament-indicator::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .testament-indicator.old::before {
+            background: var(--old-testament);
+        }
+
+        .testament-indicator.new::before {
+            background: var(--new-testament);
+        }
+
+        /* ==========================================================
+           VERIFICATION & PROVENANCE
+           ========================================================== */
+
+        .verification-section {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto var(--space-xl);
+            padding: 0 var(--space-lg);
+        }
+
+        .verify-card {
+            background: rgba(45, 106, 46, 0.05);
+            border: 1px solid rgba(45, 106, 46, 0.2);
+            border-radius: 10px;
+            padding: var(--space-lg);
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-lg);
+        }
+
+        .verify-card.pending {
+            background: rgba(201, 162, 39, 0.03);
+            border-color: rgba(201, 162, 39, 0.12);
+        }
+
+        .verify-card.failed {
+            background: rgba(114, 47, 55, 0.05);
+            border-color: rgba(114, 47, 55, 0.2);
+        }
+
+        .verify-seal {
+            flex-shrink: 0;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .verify-seal.verified {
+            background: rgba(45, 106, 46, 0.12);
+            border: 2px solid #2d6a2e;
+            box-shadow: 0 0 25px rgba(45, 106, 46, 0.25);
+        }
+
+        .verify-seal.pending {
+            background: rgba(201, 162, 39, 0.08);
+            border: 2px solid rgba(201, 162, 39, 0.25);
+            animation: pulse-seal 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-seal {
+            0%, 100% { box-shadow: 0 0 10px rgba(201, 162, 39, 0.1); }
+            50% { box-shadow: 0 0 25px rgba(201, 162, 39, 0.2); }
+        }
+
+        .verify-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .verify-title {
+            font-family: var(--font-heading);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: var(--space-xs);
+        }
+
+        .verify-title.verified { color: #5cb85c; }
+        .verify-title.pending { color: var(--gold-bright); }
+        .verify-title.failed { color: #d9534f; }
+
+        .verify-detail {
+            font-family: var(--font-body);
+            font-size: 0.88rem;
+            color: var(--gold-pale);
+            opacity: 0.55;
+            margin-bottom: var(--space-sm);
+            line-height: 1.5;
+        }
+
+        .verify-hash {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--gold-pale);
+            opacity: 0.4;
+            word-break: break-all;
+            line-height: 1.7;
+            padding: var(--space-sm);
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 4px;
+            border: 1px solid rgba(201, 162, 39, 0.06);
+        }
+
+        .verify-hash strong {
+            color: var(--gold-bright);
+            opacity: 0.75;
+            font-weight: 500;
+        }
+
+        /* Provenance Grid */
+        .provenance-section {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto var(--space-xl);
+            padding: 0 var(--space-lg);
+        }
+
+        .provenance-card {
+            background: rgba(201, 162, 39, 0.02);
+            border: 1px solid rgba(201, 162, 39, 0.1);
+            border-radius: 10px;
+            padding: var(--space-lg);
+        }
+
+        .provenance-title {
+            font-family: var(--font-heading);
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold-bright);
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid rgba(201, 162, 39, 0.12);
+        }
+
+        .provenance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--space-sm) var(--space-lg);
+        }
+
+        .provenance-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .provenance-label {
+            font-family: var(--font-heading);
+            font-size: 0.55rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--gold-pale);
+            opacity: 0.4;
+        }
+
+        .provenance-value {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--gold-bright);
+            opacity: 0.7;
+            word-break: break-all;
+        }
+
+        .provenance-value.text {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+        }
+
+        /* ==========================================================
+           NAVIGATION PANEL (Table of Contents)
+           ========================================================== */
+
+        .nav-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .nav-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .nav-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(420px, 90vw);
+            background: var(--chamber-warm);
+            border-left: 1px solid rgba(201, 162, 39, 0.15);
+            z-index: 201;
+            transform: translateX(100%);
+            transition: transform 0.35s ease;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .nav-panel.open {
+            transform: translateX(0);
+        }
+
+        .nav-panel-header {
+            padding: var(--space-lg);
+            border-bottom: 1px solid rgba(201, 162, 39, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .nav-panel-title {
+            font-family: var(--font-heading);
+            font-size: 0.7rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold-bright);
+        }
+
+        .nav-panel-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 1px solid rgba(201, 162, 39, 0.15);
+            border-radius: 6px;
+            color: var(--gold-pale);
+            cursor: pointer;
+            opacity: 0.5;
+            transition: all 0.2s;
+        }
+
+        .nav-panel-close:hover {
+            opacity: 1;
+            background: rgba(201, 162, 39, 0.1);
+        }
+
+        .nav-search {
+            padding: var(--space-md) var(--space-lg);
+            border-bottom: 1px solid rgba(201, 162, 39, 0.08);
+            flex-shrink: 0;
+        }
+
+        .nav-search-input {
+            width: 100%;
+            padding: var(--space-sm) var(--space-md);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--gold-pale);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(201, 162, 39, 0.15);
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .nav-search-input::placeholder {
+            color: var(--gold-pale);
+            opacity: 0.3;
+        }
+
+        .nav-search-input:focus {
+            border-color: rgba(201, 162, 39, 0.4);
+        }
+
+        .nav-testament-tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(201, 162, 39, 0.08);
+            flex-shrink: 0;
+        }
+
+        .testament-tab {
+            flex: 1;
+            padding: var(--space-sm) var(--space-md);
+            font-family: var(--font-heading);
+            font-size: 0.65rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--gold-pale);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            opacity: 0.4;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .testament-tab:hover {
+            opacity: 0.7;
+        }
+
+        .testament-tab.active {
+            opacity: 1;
+            border-bottom-color: var(--gold-bright);
+        }
+
+        .testament-tab.old.active {
+            border-bottom-color: var(--old-testament);
+        }
+
+        .testament-tab.new.active {
+            border-bottom-color: var(--new-testament);
+        }
+
+        .nav-books-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-md);
+        }
+
+        .nav-book-item {
+            margin-bottom: var(--space-xs);
+        }
+
+        .nav-book-btn {
+            width: 100%;
+            padding: var(--space-sm) var(--space-md);
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            color: var(--gold-pale);
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            text-align: left;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-book-btn:hover {
+            opacity: 1;
+            background: rgba(201, 162, 39, 0.06);
+        }
+
+        .nav-book-btn.expanded {
+            opacity: 1;
+            background: rgba(201, 162, 39, 0.08);
+        }
+
+        .nav-book-chapters {
+            display: none;
+            padding: var(--space-sm) 0 var(--space-sm) var(--space-lg);
+        }
+
+        .nav-book-chapters.open {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+            gap: var(--space-xs);
+        }
+
+        .nav-chapter-btn {
+            padding: var(--space-xs);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--gold-pale);
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(201, 162, 39, 0.1);
+            border-radius: 4px;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: all 0.15s;
+            text-align: center;
+        }
+
+        .nav-chapter-btn:hover {
+            opacity: 1;
+            background: rgba(201, 162, 39, 0.1);
+            border-color: rgba(201, 162, 39, 0.3);
+        }
+
+        .nav-book-badge {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--gold-pale);
+            opacity: 0.4;
+        }
+
+        /* ==========================================================
+           THE MANUSCRIPT — Main content area
+           ========================================================== */
+
+        .manuscript-container {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 var(--space-lg) var(--space-2xl);
+        }
+
+        .manuscript {
+            position: relative;
+            background: var(--vellum-bg);
+            border-radius: 4px;
+            padding: var(--space-2xl) clamp(var(--space-lg), 6vw, var(--space-2xl));
+            box-shadow:
+                0 8px 40px rgba(0, 0, 0, 0.5),
+                0 2px 6px rgba(0, 0, 0, 0.25),
+                inset 0 0 100px rgba(180, 155, 100, 0.12);
+            min-height: 60vh;
+        }
+
+        /* Aged vellum texture */
+        .manuscript::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 4px;
+            background: 
+                radial-gradient(ellipse at 15% 15%, rgba(170, 145, 100, 0.12) 0%, transparent 45%),
+                radial-gradient(ellipse at 85% 85%, rgba(170, 145, 100, 0.15) 0%, transparent 45%),
+                radial-gradient(ellipse at 80% 20%, rgba(150, 125, 80, 0.08) 0%, transparent 35%);
+            pointer-events: none;
+        }
+
+        /* Gold leaf top accent */
+        .manuscript::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50%;
+            height: 4px;
+            background: var(--gold-shimmer);
+            border-radius: 0 0 4px 4px;
+            opacity: 0.5;
+        }
+
+        /* Illuminated border */
+        .manuscript-border-top,
+        .manuscript-border-bottom {
+            position: relative;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.35;
+        }
+
+        .manuscript-border-top {
+            margin-bottom: var(--space-xl);
+        }
+
+        .manuscript-border-bottom {
+            margin-top: var(--space-xl);
+        }
+
+        .border-ornament {
+            font-size: 1rem;
+            color: var(--gold-deep);
+            letter-spacing: 1.5rem;
+        }
+
+        /* Loading State */
+        .loading-state {
+            text-align: center;
+            padding: var(--space-2xl) var(--space-lg);
+        }
+
+        .loading-icon {
+            font-size: 3rem;
+            margin-bottom: var(--space-lg);
+            animation: book-open 2.5s ease-in-out infinite;
+        }
+
+        @keyframes book-open {
+            0%, 100% { transform: scale(1) rotateY(0deg); }
+            25% { transform: scale(1.03) rotateY(-5deg); }
+            75% { transform: scale(1.03) rotateY(5deg); }
+        }
+
+        .loading-title {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            color: var(--vellum-heading);
+            letter-spacing: 0.1em;
+            margin-bottom: var(--space-sm);
+        }
+
+        .loading-text {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--vellum-text);
+            opacity: 0.55;
+            margin-bottom: var(--space-lg);
+        }
+
+        .loading-progress {
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        .loading-bar {
+            height: 3px;
+            background: var(--vellum-dark);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: var(--space-sm);
+        }
+
+        .loading-bar-fill {
+            height: 100%;
+            background: var(--gold-shimmer);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .loading-status {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--vellum-text);
+            opacity: 0.4;
+        }
+
+        /* Error State */
+        .error-state {
+            text-align: center;
+            padding: var(--space-xl);
+        }
+
+        .error-icon {
+            font-size: 2.5rem;
+            margin-bottom: var(--space-md);
+            opacity: 0.5;
+        }
+
+        .error-title {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            color: var(--vellum-heading);
+            margin-bottom: var(--space-sm);
+        }
+
+        .error-text {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--vellum-text);
+            opacity: 0.6;
+            margin-bottom: var(--space-lg);
+        }
+
+        .retry-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-lg);
+            font-family: var(--font-heading);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--vellum-heading);
+            background: transparent;
+            border: 1px solid var(--vellum-dark);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .retry-btn:hover {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: var(--vellum-text);
+        }
+
+        /* ==========================================================
+           SCRIPTURE CONTENT STYLING
+           ========================================================== */
+
+        .scripture-content {
+            color: var(--vellum-text);
+            font-family: var(--font-scripture);
+            font-size: var(--scripture-font-size);
+            line-height: var(--scripture-line-height);
+        }
+
+        /* Table of Contents */
+        .scripture-content nav#toc {
+            background: rgba(201, 162, 39, 0.04);
+            border: 1px solid var(--vellum-dark);
+            border-radius: 8px;
+            padding: var(--space-lg);
+            margin-bottom: var(--space-xl);
+        }
+
+        .scripture-content nav#toc h2 {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--vellum-heading);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid var(--vellum-dark);
+        }
+
+        .scripture-content nav#toc ul.toc {
+            columns: 2;
+            column-gap: var(--space-xl);
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        @media (max-width: 600px) {
+            .scripture-content nav#toc ul.toc {
+                columns: 1;
+            }
+        }
+
+        .scripture-content nav#toc li {
+            break-inside: avoid;
+            margin-bottom: var(--space-xs);
+        }
+
+        .scripture-content nav#toc a {
+            color: var(--burgundy);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+            display: block;
+            padding: 3px 0;
+        }
+
+        .scripture-content nav#toc a:hover {
+            color: var(--gold-deep);
+        }
+
+        /* Book Headings */
+        .scripture-content h2[id^="book-"] {
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 700;
+            color: var(--vellum-heading);
+            letter-spacing: 0.06em;
+            margin: var(--space-2xl) 0 var(--space-md);
+            padding: var(--space-md) 0;
+            border-top: 2px solid var(--burgundy);
+            border-bottom: 1px solid var(--vellum-dark);
+            text-align: center;
+            scroll-margin-top: 100px;
+        }
+
+        .scripture-content h2[id^="book-"]::before {
+            content: '✦';
+            display: block;
+            font-size: 0.8rem;
+            color: var(--gold-deep);
+            margin-bottom: var(--space-sm);
+            opacity: 0.6;
+        }
+
+        /* Chapter Headings */
+        .scripture-content h3[id*="-ch"] {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--burgundy);
+            letter-spacing: 0.06em;
+            margin: var(--space-xl) 0 var(--space-md);
+            padding-top: var(--space-md);
+            border-top: 1px solid rgba(114, 47, 55, 0.2);
+            scroll-margin-top: 90px;
+        }
+
+        /* Back to TOC link */
+        .scripture-content .backtoc {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-family: var(--font-heading);
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gold-deep);
+            text-decoration: none;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+            margin-bottom: var(--space-md);
+        }
+
+        .scripture-content .backtoc:hover {
+            opacity: 0.9;
+        }
+
+        /* Paragraphs */
+        .scripture-content p {
+            margin-bottom: var(--space-md);
+            text-align: justify;
+            hyphens: auto;
+            text-indent: 1.5em;
+        }
+
+        .scripture-content p:first-of-type {
+            text-indent: 0;
+        }
+
+        /* Verse numbers (superscript) */
+        .scripture-content sup {
+            font-family: var(--font-mono);
+            font-size: 0.6em;
+            color: var(--burgundy);
+            opacity: 0.6;
+            vertical-align: super;
+            margin-right: 0.15em;
+            font-weight: 500;
+        }
+
+        /* Stanzas (poetry) - special treatment */
+        .scripture-content .stanza {
+            margin: var(--space-lg) 0;
+            padding: var(--space-md) var(--space-lg);
+            border-left: 3px solid var(--burgundy);
+            background: rgba(114, 47, 55, 0.03);
+            border-radius: 0 6px 6px 0;
+        }
+
+        .scripture-content .stanza p {
+            text-indent: 0;
+            margin-bottom: var(--space-sm);
+            text-align: left;
+            font-style: italic;
+        }
+
+        .scripture-content .stanza p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Links within scripture */
+        .scripture-content a {
+            color: var(--burgundy);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(114, 47, 55, 0.3);
+            transition: all 0.2s;
+        }
+
+        .scripture-content a:hover {
+            color: var(--gold-deep);
+            border-bottom-color: var(--gold-deep);
+        }
+
+        /* ==========================================================
+           CONTEXT SECTION
+           ========================================================== */
+
+        .context-section {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: var(--space-2xl) auto;
+            padding: 0 var(--space-lg);
+        }
+
+        .context-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: var(--space-lg);
+        }
+
+        .context-card {
+            padding: var(--space-lg);
+            background: rgba(201, 162, 39, 0.025);
+            border: 1px solid rgba(201, 162, 39, 0.08);
+            border-radius: 10px;
+            transition: border-color 0.3s;
+        }
+
+        .context-card:hover {
+            border-color: rgba(201, 162, 39, 0.18);
+        }
+
+        .context-card-icon {
+            font-size: 1.8rem;
+            margin-bottom: var(--space-sm);
+        }
+
+        .context-card-title {
+            font-family: var(--font-heading);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--gold-bright);
+            margin-bottom: var(--space-sm);
+        }
+
+        .context-card-text {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--gold-pale);
+            opacity: 0.5;
+            line-height: 1.55;
+        }
+
+        /* ==========================================================
+           FOOTER
+           ========================================================== */
+
+        .bible-footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: var(--space-2xl) var(--space-lg);
+            border-top: 1px solid rgba(201, 162, 39, 0.06);
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .footer-cross {
+            font-size: 1.8rem;
+            margin-bottom: var(--space-md);
+            opacity: 0.4;
+            color: var(--gold-bright);
+        }
+
+        .footer-verse {
+            font-family: var(--font-scripture);
+            font-size: 0.95rem;
+            font-style: italic;
+            color: var(--gold-pale);
+            opacity: 0.35;
+            margin-bottom: var(--space-xs);
+            line-height: 1.6;
+        }
+
+        .footer-cite {
+            font-family: var(--font-heading);
+            font-size: 0.65rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--gold-pale);
+            opacity: 0.25;
+            margin-bottom: var(--space-lg);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-lg);
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            font-family: var(--font-heading);
+            font-size: 0.6rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--gold-pale);
+            text-decoration: none;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+
+        .footer-links a:hover { opacity: 0.65; }
+
+        /* ==========================================================
+           READING PROGRESS INDICATOR
+           ========================================================== */
+
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background: var(--gold-shimmer);
+            z-index: 300;
+            transition: width 0.1s ease;
+        }
+
+        /* ==========================================================
+           SCROLL TO TOP
+           ========================================================== */
+
+        .scroll-top-btn {
+            position: fixed;
+            bottom: var(--space-lg);
+            right: var(--space-lg);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--chamber-warm);
+            border: 1px solid rgba(201, 162, 39, 0.25);
+            color: var(--gold-pale);
+            cursor: pointer;
+            z-index: 150;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .scroll-top-btn.visible {
+            opacity: 0.7;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .scroll-top-btn:hover {
+            opacity: 1;
+            background: rgba(201, 162, 39, 0.15);
+        }
+
+        .scroll-top-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* ==========================================================
+           ANIMATIONS
+           ========================================================== */
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: appear 0.7s ease forwards;
+        }
+
+        .fade-in-delay-1 { animation-delay: 0.15s; }
+        .fade-in-delay-2 { animation-delay: 0.3s; }
+        .fade-in-delay-3 { animation-delay: 0.45s; }
+        .fade-in-delay-4 { animation-delay: 0.6s; }
+
+        @keyframes appear {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==========================================================
+           RESPONSIVE
+           ========================================================== */
+
+        @media (max-width: 768px) {
+            .hero { padding: 110px var(--space-md) var(--space-lg); }
+            .hero-stats { gap: var(--space-lg); }
+            .manuscript { padding: var(--space-xl) var(--space-md); }
+            .verify-card { flex-direction: column; align-items: center; text-align: center; }
+            .verify-hash { text-align: left; }
+            .provenance-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .site-header { padding: var(--space-sm) var(--space-md); }
+            .header-title { display: none; }
+            .hero-stat-value { font-size: 1.1rem; }
+            .provenance-grid { grid-template-columns: 1fr; }
+            .context-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Reading Progress -->
+    <div class="reading-progress" id="readingProgress"></div>
+
+    <!-- Scriptorum Atmosphere -->
+    <div class="scriptorum" aria-hidden="true">
+        <div class="scriptorum-vignette"></div>
+        <div class="scriptorum-light"></div>
+        <div class="dust-motes" id="dustMotes"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-left">
+            <a href="index.html" class="header-back">
+                <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                Ledger Scrolls
+            </a>
+            <span class="header-title">Scripture Chamber</span>
+        </div>
+        <div class="header-right">
+            <button class="nav-btn" id="navToggle" aria-label="Open book navigation" title="Books & Chapters">
+                <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Navigation Panel -->
+    <div class="nav-overlay" id="navOverlay"></div>
+    <aside class="nav-panel" id="navPanel">
+        <div class="nav-panel-header">
+            <span class="nav-panel-title">Books of the Bible</span>
+            <button class="nav-panel-close" id="navClose" aria-label="Close navigation">✕</button>
+        </div>
+        <div class="nav-search">
+            <input type="text" class="nav-search-input" id="bookSearch" placeholder="Search books...">
+        </div>
+        <div class="nav-testament-tabs">
+            <button class="testament-tab old active" data-testament="old">Old Testament</button>
+            <button class="testament-tab new" data-testament="new">New Testament</button>
+        </div>
+        <div class="nav-books-list" id="booksList">
+            <!-- Populated by JS -->
+        </div>
+    </aside>
+
+    <!-- Hero -->
+    <section class="hero fade-in">
+        <div class="hero-cross">✝</div>
+        <h1 class="hero-title">The Holy Bible</h1>
+        <p class="hero-subtitle">World English Bible — Preserved Forever on the Blockchain</p>
+        
+        <div class="hero-verse">
+            "Heaven and earth will pass away, but my words will not pass away."
+            <cite>— Matthew 24:35</cite>
+        </div>
+
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="hero-stat-value">66</div>
+                <div class="hero-stat-label">Books</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">1,189</div>
+                <div class="hero-stat-label">Chapters</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">237</div>
+                <div class="hero-stat-label">On-Chain Pages</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">~3,500</div>
+                <div class="hero-stat-label">Years of History</div>
+            </div>
+        </div>
+
+        <div class="hero-divider"></div>
+
+        <div class="hero-testament-note">
+            <span class="testament-indicator old">39 Old Testament Books</span>
+            <span class="testament-indicator new">27 New Testament Books</span>
+        </div>
+    </section>
+
+    <!-- Verification Banner -->
+    <section class="verification-section fade-in fade-in-delay-1">
+        <div class="verify-card pending" id="verifyCard">
+            <div class="verify-seal pending" id="verifySealIcon">📖</div>
+            <div class="verify-info">
+                <div class="verify-title pending" id="verifyTitle">Reconstructing Scripture…</div>
+                <div class="verify-detail" id="verifyDetail">
+                    Fetching the complete Bible from 237 on-chain NFT pages and verifying cryptographic integrity.
+                </div>
+                <div class="verify-hash" id="verifyHash">
+                    <strong>Policy ID:</strong> <span id="policyDisplay">2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Provenance -->
+    <section class="provenance-section fade-in fade-in-delay-2">
+        <div class="provenance-card">
+            <div class="provenance-title">On-Chain Provenance</div>
+            <div class="provenance-grid">
+                <div class="provenance-item">
+                    <span class="provenance-label">Translation</span>
+                    <span class="provenance-value text">World English Bible</span>
+                </div>
+                <div class="provenance-item">
+                    <span class="provenance-label">Format</span>
+                    <span class="provenance-value text">HTML with Navigation</span>
+                </div>
+                <div class="provenance-item">
+                    <span class="provenance-label">Pages</span>
+                    <span class="provenance-value">237 NFTs</span>
+                </div>
+                <div class="provenance-item">
+                    <span class="provenance-label">Compression</span>
+                    <span class="provenance-value">gzip</span>
+                </div>
+                <div class="provenance-item">
+                    <span class="provenance-label">Storage</span>
+                    <span class="provenance-value">CIP-721 Metadata</span>
+                </div>
+                <div class="provenance-item">
+                    <span class="provenance-label">Network</span>
+                    <span class="provenance-value">Cardano Mainnet</span>
+                </div>
+                <div class="provenance-item">
+                    <span class="provenance-label">Policy ID</span>
+                    <span class="provenance-value">2f0c8b54...afc77e0</span>
+                </div>
+                <div class="provenance-item">
+                    <span class="provenance-label">Status</span>
+                    <span class="provenance-value text">🟢 Permanently Inscribed</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Manuscript -->
+    <main class="manuscript-container fade-in fade-in-delay-2">
+        <article class="manuscript">
+            <div class="manuscript-border-top">
+                <span class="border-ornament">✦ ✦ ✦</span>
+            </div>
+            
+            <div id="manuscriptContent">
+                <div class="loading-state" id="loadingState">
+                    <div class="loading-icon">📖</div>
+                    <div class="loading-title">Reconstructing the Sacred Text</div>
+                    <div class="loading-text" id="loadingText">Connecting to Cardano mainnet…</div>
+                    <div class="loading-progress">
+                        <div class="loading-bar">
+                            <div class="loading-bar-fill" id="loadingBarFill"></div>
+                        </div>
+                        <div class="loading-status" id="loadingStatus">Initializing…</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="manuscript-border-bottom">
+                <span class="border-ornament">✦ ✦ ✦</span>
+            </div>
+        </article>
+    </main>
+
+    <!-- Context Cards -->
+    <section class="context-section fade-in fade-in-delay-3">
+        <div class="context-grid">
+            <div class="context-card">
+                <div class="context-card-icon">📜</div>
+                <div class="context-card-title">Ancient Origins</div>
+                <div class="context-card-text">
+                    From papyrus scrolls to illuminated codices, the Bible has been copied 
+                    by hand for millennia. Now it joins the blockchain — the first truly 
+                    incorruptible medium.
+                </div>
+            </div>
+            <div class="context-card">
+                <div class="context-card-icon">🔗</div>
+                <div class="context-card-title">Eternally Preserved</div>
+                <div class="context-card-text">
+                    Stored across thousands of Cardano nodes worldwide. No single government, 
+                    institution, or catastrophe can alter or destroy this digital scripture.
+                </div>
+            </div>
+            <div class="context-card">
+                <div class="context-card-icon">🌍</div>
+                <div class="context-card-title">World English Bible</div>
+                <div class="context-card-text">
+                    A modern, public domain translation designed for global accessibility. 
+                    Free from copyright restrictions — truly belonging to all humanity.
+                </div>
+            </div>
+            <div class="context-card">
+                <div class="context-card-icon">✨</div>
+                <div class="context-card-title">Living Document</div>
+                <div class="context-card-text">
+                    While this preservation captures the text eternally, the Word itself 
+                    continues to transform lives across generations, cultures, and centuries.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bible-footer fade-in fade-in-delay-4">
+        <div class="footer-cross">✝</div>
+        <div class="footer-verse">
+            "Your word is a lamp to my feet, and a light for my path."
+        </div>
+        <div class="footer-cite">— Psalm 119:105</div>
+        <div class="footer-links">
+            <a href="index.html">Ledger Scrolls</a>
+            <a href="https://worldenglish.bible" target="_blank" rel="noopener">World English Bible</a>
+            <a href="https://github.com/BEACNpool/ledger-scrolls" target="_blank" rel="noopener">GitHub</a>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top -->
+    <button class="scroll-top-btn" id="scrollTopBtn" aria-label="Scroll to top">
+        <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+    </button>
+
+    <script>
+    /* ================================================================
+       THE HOLY BIBLE VIEWER ENGINE
+       
+       Fetches the complete Bible from 237 on-chain NFT pages via
+       Koios REST API, reconstructs the HTML document, and renders
+       it as an interactive illuminated manuscript.
+       ================================================================ */
+
+    const BIBLE_SCROLL = {
+        policy_id: '2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0',
+        manifest_tx: 'cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4',
+        pages: 237,
+        content_type: 'text/html',
+        codec: 'gzip'
+    };
+
+    // Books of the Bible with chapter counts
+    const BIBLE_BOOKS = {
+        old: [
+            { id: 'genesis', name: 'Genesis', chapters: 50 },
+            { id: 'exodus', name: 'Exodus', chapters: 40 },
+            { id: 'leviticus', name: 'Leviticus', chapters: 27 },
+            { id: 'numbers', name: 'Numbers', chapters: 36 },
+            { id: 'deuteronomy', name: 'Deuteronomy', chapters: 34 },
+            { id: 'joshua', name: 'Joshua', chapters: 24 },
+            { id: 'judges', name: 'Judges', chapters: 21 },
+            { id: 'ruth', name: 'Ruth', chapters: 4 },
+            { id: '1samuel', name: '1 Samuel', chapters: 31 },
+            { id: '2samuel', name: '2 Samuel', chapters: 24 },
+            { id: '1kings', name: '1 Kings', chapters: 22 },
+            { id: '2kings', name: '2 Kings', chapters: 25 },
+            { id: '1chronicles', name: '1 Chronicles', chapters: 29 },
+            { id: '2chronicles', name: '2 Chronicles', chapters: 36 },
+            { id: 'ezra', name: 'Ezra', chapters: 10 },
+            { id: 'nehemiah', name: 'Nehemiah', chapters: 13 },
+            { id: 'esther', name: 'Esther', chapters: 10 },
+            { id: 'job', name: 'Job', chapters: 42 },
+            { id: 'psalms', name: 'Psalms', chapters: 150 },
+            { id: 'proverbs', name: 'Proverbs', chapters: 31 },
+            { id: 'ecclesiastes', name: 'Ecclesiastes', chapters: 12 },
+            { id: 'songofsolomon', name: 'Song of Solomon', chapters: 8 },
+            { id: 'isaiah', name: 'Isaiah', chapters: 66 },
+            { id: 'jeremiah', name: 'Jeremiah', chapters: 52 },
+            { id: 'lamentations', name: 'Lamentations', chapters: 5 },
+            { id: 'ezekiel', name: 'Ezekiel', chapters: 48 },
+            { id: 'daniel', name: 'Daniel', chapters: 12 },
+            { id: 'hosea', name: 'Hosea', chapters: 14 },
+            { id: 'joel', name: 'Joel', chapters: 3 },
+            { id: 'amos', name: 'Amos', chapters: 9 },
+            { id: 'obadiah', name: 'Obadiah', chapters: 1 },
+            { id: 'jonah', name: 'Jonah', chapters: 4 },
+            { id: 'micah', name: 'Micah', chapters: 7 },
+            { id: 'nahum', name: 'Nahum', chapters: 3 },
+            { id: 'habakkuk', name: 'Habakkuk', chapters: 3 },
+            { id: 'zephaniah', name: 'Zephaniah', chapters: 3 },
+            { id: 'haggai', name: 'Haggai', chapters: 2 },
+            { id: 'zechariah', name: 'Zechariah', chapters: 14 },
+            { id: 'malachi', name: 'Malachi', chapters: 4 }
+        ],
+        new: [
+            { id: 'matthew', name: 'Matthew', chapters: 28 },
+            { id: 'mark', name: 'Mark', chapters: 16 },
+            { id: 'luke', name: 'Luke', chapters: 24 },
+            { id: 'john', name: 'John', chapters: 21 },
+            { id: 'acts', name: 'Acts', chapters: 28 },
+            { id: 'romans', name: 'Romans', chapters: 16 },
+            { id: '1corinthians', name: '1 Corinthians', chapters: 16 },
+            { id: '2corinthians', name: '2 Corinthians', chapters: 13 },
+            { id: 'galatians', name: 'Galatians', chapters: 6 },
+            { id: 'ephesians', name: 'Ephesians', chapters: 6 },
+            { id: 'philippians', name: 'Philippians', chapters: 4 },
+            { id: 'colossians', name: 'Colossians', chapters: 4 },
+            { id: '1thessalonians', name: '1 Thessalonians', chapters: 5 },
+            { id: '2thessalonians', name: '2 Thessalonians', chapters: 3 },
+            { id: '1timothy', name: '1 Timothy', chapters: 6 },
+            { id: '2timothy', name: '2 Timothy', chapters: 4 },
+            { id: 'titus', name: 'Titus', chapters: 3 },
+            { id: 'philemon', name: 'Philemon', chapters: 1 },
+            { id: 'hebrews', name: 'Hebrews', chapters: 13 },
+            { id: 'james', name: 'James', chapters: 5 },
+            { id: '1peter', name: '1 Peter', chapters: 5 },
+            { id: '2peter', name: '2 Peter', chapters: 3 },
+            { id: '1john', name: '1 John', chapters: 5 },
+            { id: '2john', name: '2 John', chapters: 1 },
+            { id: '3john', name: '3 John', chapters: 1 },
+            { id: 'jude', name: 'Jude', chapters: 1 },
+            { id: 'revelation', name: 'Revelation', chapters: 22 }
+        ]
+    };
+
+    // Koios API gateways
+    const KOIOS_GATEWAYS = [
+        'https://api.koios.rest/api/v1',
+        'https://koios.beacnpool.org/api/v1',
+        'https://corsproxy.io/?https://api.koios.rest/api/v1'
+    ];
+
+    let activeGateway = null;
+    let bibleHTML = null;
+    let currentTestament = 'old';
+
+    // ── Initialization ──────────────────────────────────────────
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initDustMotes();
+        initNavigation();
+        initScrollFeatures();
+        populateBooksList('old');
+        fetchBible();
+    });
+
+    // ── Dust Motes ──────────────────────────────────────────────
+
+    function initDustMotes() {
+        const container = document.getElementById('dustMotes');
+        const count = window.innerWidth < 768 ? 10 : 18;
+        
+        for (let i = 0; i < count; i++) {
+            const mote = document.createElement('div');
+            mote.className = 'dust-mote';
+            mote.style.left = `${Math.random() * 100}%`;
+            mote.style.animationDuration = `${15 + Math.random() * 20}s`;
+            mote.style.animationDelay = `${Math.random() * 25}s`;
+            mote.style.width = mote.style.height = `${1 + Math.random() * 2}px`;
+            container.appendChild(mote);
+        }
+    }
+
+    // ── Navigation Panel ────────────────────────────────────────
+
+    function initNavigation() {
+        const navToggle = document.getElementById('navToggle');
+        const navClose = document.getElementById('navClose');
+        const navOverlay = document.getElementById('navOverlay');
+        const navPanel = document.getElementById('navPanel');
+
+        navToggle.addEventListener('click', () => {
+            navPanel.classList.add('open');
+            navOverlay.classList.add('open');
+        });
+
+        const closeNav = () => {
+            navPanel.classList.remove('open');
+            navOverlay.classList.remove('open');
+        };
+
+        navClose.addEventListener('click', closeNav);
+        navOverlay.addEventListener('click', closeNav);
+
+        // Testament tabs
+        document.querySelectorAll('.testament-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.testament-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentTestament = tab.dataset.testament;
+                populateBooksList(currentTestament);
+            });
+        });
+
+        // Search
+        document.getElementById('bookSearch').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            filterBooks(query);
+        });
+    }
+
+    function populateBooksList(testament) {
+        const container = document.getElementById('booksList');
+        const books = BIBLE_BOOKS[testament];
+
+        container.innerHTML = books.map(book => `
+            <div class="nav-book-item" data-book="${book.id}">
+                <button class="nav-book-btn" data-book="${book.id}">
+                    <span>${book.name}</span>
+                    <span class="nav-book-badge">${book.chapters} ch</span>
+                </button>
+                <div class="nav-book-chapters" id="chapters-${book.id}">
+                    ${Array.from({ length: book.chapters }, (_, i) => `
+                        <button class="nav-chapter-btn" data-book="${book.id}" data-chapter="${i + 1}">${i + 1}</button>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+
+        // Add event listeners
+        container.querySelectorAll('.nav-book-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const bookId = btn.dataset.book;
+                const chapters = document.getElementById(`chapters-${bookId}`);
+                const wasOpen = chapters.classList.contains('open');
+
+                // Close all
+                container.querySelectorAll('.nav-book-chapters').forEach(c => c.classList.remove('open'));
+                container.querySelectorAll('.nav-book-btn').forEach(b => b.classList.remove('expanded'));
+
+                // Toggle this one
+                if (!wasOpen) {
+                    chapters.classList.add('open');
+                    btn.classList.add('expanded');
+                }
+            });
+        });
+
+        container.querySelectorAll('.nav-chapter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const bookId = btn.dataset.book;
+                const chapter = btn.dataset.chapter;
+                navigateToChapter(bookId, chapter);
+            });
+        });
+    }
+
+    function filterBooks(query) {
+        const allBooks = [...BIBLE_BOOKS.old, ...BIBLE_BOOKS.new];
+        const items = document.querySelectorAll('.nav-book-item');
+
+        items.forEach(item => {
+            const bookId = item.dataset.book;
+            const book = allBooks.find(b => b.id === bookId);
+            if (book && book.name.toLowerCase().includes(query)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    function navigateToChapter(bookId, chapter) {
+        const chapterId = `book-${bookId}-ch${chapter}`;
+        const element = document.getElementById(chapterId);
+        
+        if (element) {
+            // Close nav panel
+            document.getElementById('navPanel').classList.remove('open');
+            document.getElementById('navOverlay').classList.remove('open');
+            
+            // Smooth scroll
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Brief highlight
+            element.style.background = 'rgba(201, 162, 39, 0.15)';
+            setTimeout(() => {
+                element.style.background = '';
+            }, 2000);
+        } else {
+            // If chapter not found, try book
+            const bookElement = document.getElementById(`book-${bookId}`);
+            if (bookElement) {
+                document.getElementById('navPanel').classList.remove('open');
+                document.getElementById('navOverlay').classList.remove('open');
+                bookElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    }
+
+    // ── Scroll Features ─────────────────────────────────────────
+
+    function initScrollFeatures() {
+        const progressBar = document.getElementById('readingProgress');
+        const scrollTopBtn = document.getElementById('scrollTopBtn');
+
+        window.addEventListener('scroll', () => {
+            // Reading progress
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            progressBar.style.width = `${progress}%`;
+
+            // Scroll to top button
+            if (scrollTop > 500) {
+                scrollTopBtn.classList.add('visible');
+            } else {
+                scrollTopBtn.classList.remove('visible');
+            }
+        });
+
+        scrollTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    // ── Koios API ───────────────────────────────────────────────
+
+    async function koiosRequest(endpoint, options = {}) {
+        const gateways = activeGateway 
+            ? [activeGateway, ...KOIOS_GATEWAYS.filter(g => g !== activeGateway)] 
+            : [...KOIOS_GATEWAYS];
+        
+        for (const base of gateways) {
+            try {
+                const resp = await fetch(`${base}${endpoint}`, {
+                    ...options,
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                activeGateway = base;
+                return await resp.json();
+            } catch (e) {
+                console.warn(`Gateway ${base} failed:`, e.message);
+            }
+        }
+        throw new Error('All Koios gateways failed');
+    }
+
+    // ── Fetch Bible ─────────────────────────────────────────────
+
+    async function fetchBible() {
+        updateLoading('Connecting to Cardano mainnet…', 0);
+
+        try {
+            // Step 1: Get all assets under the policy
+            updateLoading('Querying policy assets…', 5);
+            const assets = await koiosRequest(
+                `/asset_list?policy_id=eq.${BIBLE_SCROLL.policy_id}&limit=1000`
+            );
+
+            if (!assets || assets.length === 0) {
+                throw new Error('No assets found under policy');
+            }
+
+            updateLoading(`Found ${assets.length} assets. Fetching pages…`, 10);
+
+            // Step 2: Batch fetch asset info
+            const assetList = assets.map(a => [BIBLE_SCROLL.policy_id, a.asset_name || '']);
+            const batchSize = 12;
+            let pages = [];
+            let fetchedCount = 0;
+
+            for (let i = 0; i < assetList.length; i += batchSize) {
+                const batch = assetList.slice(i, i + batchSize);
+                const progress = 10 + (i / assetList.length) * 70;
+                updateLoading(
+                    `Fetching page data ${Math.min(i + batchSize, assetList.length)} / ${assetList.length}…`,
+                    progress
+                );
+
+                try {
+                    const infoResp = await koiosRequest('/asset_info', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ _asset_list: batch })
+                    });
+
+                    if (infoResp && Array.isArray(infoResp)) {
+                        for (const asset of infoResp) {
+                            const m721 = asset.minting_tx_metadata?.['721'];
+                            if (!m721) continue;
+
+                            const policyData = m721[BIBLE_SCROLL.policy_id];
+                            if (!policyData || typeof policyData !== 'object') continue;
+
+                            for (const [assetName, assetData] of Object.entries(policyData)) {
+                                if (assetData && typeof assetData === 'object' && 
+                                    'i' in assetData && 'payload' in assetData) {
+                                    const idx = parseInt(assetData.i);
+                                    let payload = '';
+                                    
+                                    if (Array.isArray(assetData.payload)) {
+                                        for (const item of assetData.payload) {
+                                            if (typeof item === 'string') {
+                                                payload += item;
+                                            } else if (item && item.bytes) {
+                                                payload += item.bytes;
+                                            }
+                                        }
+                                    } else if (typeof assetData.payload === 'string') {
+                                        payload = assetData.payload;
+                                    }
+
+                                    if (payload) {
+                                        pages.push({ index: idx, hex: payload });
+                                        fetchedCount++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (batchErr) {
+                    console.warn(`Batch ${i} failed:`, batchErr.message);
+                }
+
+                // Rate limiting
+                await new Promise(r => setTimeout(r, 100));
+            }
+
+            if (pages.length === 0) {
+                throw new Error('No page payloads found');
+            }
+
+            // Step 3: Sort and concatenate
+            updateLoading(`Reconstructing ${pages.length} pages…`, 85);
+            pages.sort((a, b) => a.index - b.index);
+            const fullHex = pages.map(p => p.hex).join('');
+            const bytes = hexToBytes(fullHex);
+
+            // Step 4: Decompress
+            updateLoading('Decompressing scripture…', 90);
+            let textContent;
+            if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
+                textContent = await decompressGzip(bytes);
+            } else {
+                textContent = new TextDecoder('utf-8').decode(bytes);
+            }
+
+            // Step 5: Render
+            updateLoading('Rendering the sacred text…', 98);
+            bibleHTML = textContent;
+            renderBible(textContent);
+            updateVerification(true);
+
+        } catch (err) {
+            console.error('Bible fetch failed:', err);
+            showError(err.message);
+        }
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────
+
+    function hexToBytes(hex) {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) {
+            bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+        }
+        return bytes;
+    }
+
+    async function decompressGzip(bytes) {
+        if (typeof DecompressionStream !== 'undefined') {
+            const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+            const decompressed = await new Response(stream).arrayBuffer();
+            return new TextDecoder('utf-8').decode(decompressed);
+        }
+        throw new Error('Gzip decompression not available');
+    }
+
+    function updateLoading(message, progress) {
+        const loadingText = document.getElementById('loadingText');
+        const loadingStatus = document.getElementById('loadingStatus');
+        const loadingBar = document.getElementById('loadingBarFill');
+
+        if (loadingText) loadingText.textContent = message;
+        if (loadingStatus) loadingStatus.textContent = `${Math.round(progress)}% complete`;
+        if (loadingBar) loadingBar.style.width = `${progress}%`;
+    }
+
+    function renderBible(html) {
+        const container = document.getElementById('manuscriptContent');
+        
+        // Extract body content from full HTML
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const mainContent = doc.querySelector('main') || doc.body;
+
+        container.innerHTML = `<div class="scripture-content">${mainContent.innerHTML}</div>`;
+
+        // Enhance the rendered content
+        enhanceScripture();
+    }
+
+    function enhanceScripture() {
+        // Add smooth scroll behavior to internal links
+        document.querySelectorAll('.scripture-content a[href^="#"]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href').substring(1);
+                const target = document.getElementById(targetId);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Highlight effect on chapter navigation
+        if (window.location.hash) {
+            const target = document.getElementById(window.location.hash.substring(1));
+            if (target) {
+                setTimeout(() => {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 500);
+            }
+        }
+    }
+
+    function updateVerification(success) {
+        const card = document.getElementById('verifyCard');
+        const sealIcon = document.getElementById('verifySealIcon');
+        const title = document.getElementById('verifyTitle');
+        const detail = document.getElementById('verifyDetail');
+
+        if (success) {
+            card.className = 'verify-card';
+            sealIcon.className = 'verify-seal verified';
+            sealIcon.textContent = '✝';
+            title.className = 'verify-title verified';
+            title.textContent = 'Scripture Verified ✓';
+            detail.textContent = 'The complete Bible has been reconstructed from 237 on-chain NFT pages. ' +
+                'Every word is authentic and immutable.';
+        }
+    }
+
+    function showError(message) {
+        const container = document.getElementById('manuscriptContent');
+        container.innerHTML = `
+            <div class="error-state">
+                <div class="error-icon">📖</div>
+                <div class="error-title">Unable to Retrieve Scripture</div>
+                <div class="error-text">${message}</div>
+                <button class="retry-btn" onclick="location.reload()">
+                    Try Again
+                </button>
+            </div>
+        `;
+
+        const card = document.getElementById('verifyCard');
+        const title = document.getElementById('verifyTitle');
+        card.className = 'verify-card failed';
+        title.className = 'verify-title failed';
+        title.textContent = 'Reconstruction Failed';
+    }
+
+    </script>
+</body>
+</html>

@@ -20,6 +20,9 @@ Ledger Scrolls supports two storage styles:
 | Viewer | Best For | Requirements | Path |
 |--------|----------|--------------|------|
 | **Web Viewer** | Browsing & downloading any scroll | Browser (Koios or Blockfrost) | `/index.html` |
+| **Constitution** | Cardano Constitution (E608/E541) | Browser | `/constitution.html` |
+| **Holy Bible** | World English Bible (66 books) | Browser | `/bible.html` |
+| **First Video** | First video stored on Cardano | Browser | `/first-video.html` |
 | **Koios CLI** | Zero‑deps verification | Python 3 only | `viewers/koios-cli/` |
 | **P2P Viewer** | No API at all (direct relay) | Python + relay access | `p2p-viewer/` |
 

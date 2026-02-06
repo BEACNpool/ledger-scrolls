@@ -152,10 +152,11 @@ const SCROLLS = [
     {
         id: 'bible-html',
         title: 'The Holy Bible',
-        description: 'The complete King James Bible stored as gzip-compressed HTML. 237 pages of eternal scripture.',
+        description: 'The complete World English Bible — 66 books, 1,189 chapters of sacred scripture preserved forever on-chain.',
         icon: '📖',
         category: 'documents',
         type: SCROLL_TYPES.LEGACY,
+        dedicatedViewer: 'bible.html',
         pointer: {
             policy_id: '2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0',
             manifest_tx_hash: 'cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4',
@@ -166,8 +167,12 @@ const SCROLLS = [
         metadata: {
             size: '~4.6MB',
             pages: 237,
-            published: '2024',
-            format: 'HTML with navigation'
+            books: 66,
+            chapters: 1189,
+            translation: 'World English Bible',
+            format: 'HTML with navigation',
+            history: '~3,500 years of compilation',
+            significance: 'The most widely read book in human history'
         }
     },
     {
