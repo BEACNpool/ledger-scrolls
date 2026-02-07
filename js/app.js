@@ -132,11 +132,8 @@ class LedgerScrollsApp {
         this._bindEvents();
         this._initParticles();
         this._applyTheme(this.settings.theme);
-        // Start with an empty library until the user confirms loading from the on-chain registry.
-        // (This makes the trust model obvious: Name → Pointer → Verified Bytes, pulled from Cardano.)
-        if (window.ScrollLibrary?.setScrolls) {
-            window.ScrollLibrary.setScrolls([]);
-        }
+        // Default to the built-in (hardcoded) library for reliability.
+        // The on-chain Registry loading is an *optional upgrade* via Settings → Confirm.
         this._renderScrollLibrary();
 
         // Auto-connect if we have settings
@@ -504,7 +501,10 @@ class LedgerScrollsApp {
             this._toast('info', `Registry head: ${usedHead}`);
 
             if (!scrolls.length) {
-                this._toast('warning', 'Registry loaded, but it contained zero entries');
+                // Don't blow away the built-in library if the registry is empty.
+                this._toast('warning', 'Registry loaded, but it contained zero entries (keeping built-in library)');
+                this._openDrawer('libraryDrawer');
+                return;
             }
 
             window.ScrollLibrary.setScrolls(scrolls);
