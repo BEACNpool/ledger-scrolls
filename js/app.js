@@ -132,6 +132,11 @@ class LedgerScrollsApp {
         this._bindEvents();
         this._initParticles();
         this._applyTheme(this.settings.theme);
+        // Start with an empty library until the user confirms loading from the on-chain registry.
+        // (This makes the trust model obvious: Name → Pointer → Verified Bytes, pulled from Cardano.)
+        if (window.ScrollLibrary?.setScrolls) {
+            window.ScrollLibrary.setScrolls([]);
+        }
         this._renderScrollLibrary();
 
         // Auto-connect if we have settings
@@ -460,7 +465,8 @@ class LedgerScrollsApp {
         const privateHeads = this._parseHeadsTextarea(this.elements.privateHeadsInput?.value);
 
         if (!headTxIn || !headTxIn.includes('#')) {
-            this._toast('error', 'Registry head must be <txhash>#<ix>');
+            this._toast('error', 'Registry head is required (format: <txhash>#<ix>)');
+            this._openDrawer('settingsDrawer');
             return;
         }
 
@@ -533,6 +539,21 @@ class LedgerScrollsApp {
     }
 
     _renderScrollList(scrolls) {
+        if (!scrolls || scrolls.length === 0) {
+            this.elements.scrollGrid.innerHTML = `
+                <div class="scroll-item" style="grid-column: 1 / -1; cursor: default;">
+                    <div class="scroll-item-icon">📚</div>
+                    <div class="scroll-item-info">
+                        <div class="scroll-item-title">Library not loaded yet</div>
+                        <div class="scroll-item-meta">
+                            <span>Open Settings → Confirm & Load Library</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
         this.elements.scrollGrid.innerHTML = scrolls.map(scroll => `
             <div class="scroll-item" data-scroll-id="${scroll.id}">
                 <div class="scroll-item-icon">${scroll.icon}</div>
