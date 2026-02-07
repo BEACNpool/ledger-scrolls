@@ -213,25 +213,80 @@ def reconstruct_legacy_cip25(policy_id: str, manifest_asset: str | None = None, 
     return raw, sha
 
 
-def cmd_registry_dump(args) -> None:
-    head_txin = args.head or PUBLIC_REGISTRY_HEAD_TXIN
-    head = read_registry_head(head_txin)
+def _merge_registry_lists(base: Dict[str, Any], extra: Dict[str, Any], *, extra_label: str) -> Dict[str, Any]:
+    """Merge two registry list objects.
 
+    Rule: later lists override earlier lists on name collisions.
+    (This matches the user's explicit opt-in: private heads should override public.)
+    """
+    if base.get("format") != "ledger-scrolls-registry-list" or extra.get("format") != "ledger-scrolls-registry-list":
+        raise RegistryError("Cannot merge: invalid registry list format")
+
+    base_entries = base.get("entries") or []
+    extra_entries = extra.get("entries") or []
+    if not isinstance(base_entries, list) or not isinstance(extra_entries, list):
+        raise RegistryError("Cannot merge: entries must be lists")
+
+    out_map: Dict[str, Dict[str, Any]] = {}
+    order: List[str] = []
+
+    def add_entries(entries: List[Any], label: str) -> None:
+        for e in entries:
+            if not isinstance(e, dict):
+                continue
+            name = e.get("name")
+            if not isinstance(name, str) or not name:
+                continue
+            if name not in out_map:
+                order.append(name)
+            # override
+            ee = dict(e)
+            ee.setdefault("_source", label)
+            out_map[name] = ee
+
+    add_entries(base_entries, "base")
+    add_entries(extra_entries, extra_label)
+
+    merged = dict(base)
+    merged["entries"] = [out_map[n] for n in order]
+    return merged
+
+
+def _registry_list_from_head_txin(head_txin: str) -> Tuple[str, Dict[str, Any]]:
+    head = read_registry_head(head_txin)
     ptr = head.get("registryList")
     if not isinstance(ptr, dict) or ptr.get("kind") != "utxo-inline-datum-bytes-v1":
-        raise SystemExit("Head registryList pointer missing or unsupported")
+        raise RegistryError("Head registryList pointer missing or unsupported")
 
     txhash = ptr.get("txHash")
     txix = ptr.get("txIx")
     if not txhash or txix is None:
-        raise SystemExit("Invalid registryList pointer")
+        raise RegistryError("Invalid registryList pointer")
 
     list_txin = f"{txhash}#{int(txix)}"
     lst = read_registry_list(list_txin)
+    return list_txin, lst
+
+
+def cmd_registry_dump(args) -> None:
+    # public default
+    head_txin = args.head or PUBLIC_REGISTRY_HEAD_TXIN
+
+    list_txin, lst = _registry_list_from_head_txin(head_txin)
+
+    # merge in private heads (optional)
+    merged = lst
+    private_lists: List[Dict[str, Any]] = []
+    for i, ph in enumerate(getattr(args, "private_head", []) or []):
+        p_list_txin, p_list = _registry_list_from_head_txin(ph)
+        private_lists.append({"head": ph, "list_txin": p_list_txin})
+        merged = _merge_registry_lists(merged, p_list, extra_label=f"private[{i}]")
 
     out = {
-        "head": {"txin": head_txin, "value": head},
-        "list": {"txin": list_txin, "value": lst},
+        "head": {"txin": head_txin},
+        "list": {"txin": list_txin},
+        "private": private_lists,
+        "merged": merged,
     }
 
     if args.out:
@@ -315,6 +370,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     rg = sp.add_parser("registry-dump", help="Fetch registry head + list from on-chain inline datums")
     rg.add_argument("--head", default=PUBLIC_REGISTRY_HEAD_TXIN, help="Head txin (default: public BEACN head)")
+    rg.add_argument("--private-head", action="append", default=[], help="Optional additional head txin(s) to merge (private overrides public)")
     rg.add_argument("--out", help="Write JSON output")
     rg.set_defaults(func=cmd_registry_dump)
 

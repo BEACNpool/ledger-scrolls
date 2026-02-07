@@ -33,8 +33,11 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Dump the public registry head+list
+# Dump the public registry (head + merged list)
 python -m lsview registry-dump
+
+# Merge a private registry head on top (private overrides public)
+python -m lsview registry-dump --private-head <TXHASH#IX>
 
 # Reconstruct a Standard Scroll (by catalog id)
 python -m lsview reconstruct-utxo --scroll hosky-png --out hosky.png
