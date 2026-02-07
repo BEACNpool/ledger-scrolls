@@ -153,11 +153,19 @@ class LedgerScrollsApp {
                 mode: window.LS_DEFAULT_MODE || 'koios',
                 apiKey: '',
                 koiosProxy: '',
-                theme: 'dark'
+                theme: 'dark',
+                registryHeadTxIn: (window.ScrollLibrary?.REGISTRY?.public_head_txin || '').trim(),
+                privateHeads: []
             };
             const settings = saved ? JSON.parse(saved) : fallback;
             if (typeof settings.koiosProxy === 'undefined') {
                 settings.koiosProxy = '';
+            }
+            if (typeof settings.registryHeadTxIn === 'undefined') {
+                settings.registryHeadTxIn = (window.ScrollLibrary?.REGISTRY?.public_head_txin || '').trim();
+            }
+            if (!Array.isArray(settings.privateHeads)) {
+                settings.privateHeads = [];
             }
             if (window.LS_OVERRIDE_MODE) {
                 settings.mode = window.LS_OVERRIDE_MODE;
@@ -222,6 +230,11 @@ class LedgerScrollsApp {
             blockfrostSettings: document.getElementById('blockfrostSettings'),
             modeRadios: document.querySelectorAll('input[name="connectionMode"]'),
             themePills: document.querySelectorAll('.theme-pill'),
+
+            // Registry
+            registryHeadInput: document.getElementById('registryHeadInput'),
+            privateHeadsInput: document.getElementById('privateHeadsInput'),
+            loadLibraryBtn: document.getElementById('loadLibraryBtn'),
             
             // About Drawer
             aboutDrawer: document.getElementById('aboutDrawer'),
@@ -243,6 +256,15 @@ class LedgerScrollsApp {
         }
         if (this.elements.koiosProxyStatus) {
             this.elements.koiosProxyStatus.textContent = `Current: ${this.settings.koiosProxy || '(none)'}`;
+        }
+
+        // Registry defaults
+        if (this.elements.registryHeadInput) {
+            this.elements.registryHeadInput.value = (this.settings.registryHeadTxIn || window.ScrollLibrary?.REGISTRY?.public_head_txin || '').trim();
+        }
+        if (this.elements.privateHeadsInput) {
+            const priv = this.settings.privateHeads || [];
+            this.elements.privateHeadsInput.value = Array.isArray(priv) ? priv.join('\n') : '';
         }
         
         // Set correct radio button
@@ -292,6 +314,9 @@ class LedgerScrollsApp {
         
         // Connect button
         this.elements.connectBtn.addEventListener('click', () => this._connect());
+
+        // Load library from registry
+        this.elements.loadLibraryBtn?.addEventListener('click', () => this._confirmAndLoadLibrary());
         
         // Save API key
         document.getElementById('saveApiKey')?.addEventListener('click', () => this._saveApiKey());
@@ -411,6 +436,74 @@ class LedgerScrollsApp {
         this.elements.statusDot.className = `status-dot ${status}`;
         this.elements.statusText.textContent = text;
         this.elements.connectBtn.textContent = status === 'connected' ? 'Reconnect' : 'Connect to Cardano';
+    }
+
+    // =========================================================================
+    // Registry → Library Loading
+    // =========================================================================
+
+    _parseHeadsTextarea(text) {
+        return (text || '')
+            .split(/\r?\n/)
+            .map(s => s.trim())
+            .filter(Boolean);
+    }
+
+    async _confirmAndLoadLibrary() {
+        if (!this.connected) {
+            this._toast('warning', 'Please connect to Cardano first');
+            this._openDrawer('settingsDrawer');
+            return;
+        }
+
+        const headTxIn = (this.elements.registryHeadInput?.value || '').trim() || (window.ScrollLibrary?.REGISTRY?.public_head_txin || '').trim();
+        const privateHeads = this._parseHeadsTextarea(this.elements.privateHeadsInput?.value);
+
+        if (!headTxIn || !headTxIn.includes('#')) {
+            this._toast('error', 'Registry head must be <txhash>#<ix>');
+            return;
+        }
+
+        // Persist settings
+        this.settings.registryHeadTxIn = headTxIn;
+        this.settings.privateHeads = privateHeads;
+        this._saveSettings();
+
+        this._closeDrawer('settingsDrawer');
+
+        try {
+            this.elements.loadingText.textContent = '📚 Loading registry...';
+            this.elements.viewerLoading.classList.remove('hidden');
+            this.elements.viewerLoading.classList.add('loading');
+            this.elements.scrollProgress.classList.add('active');
+            this.elements.progressFill.style.width = '0%';
+            this.elements.progressStatus.textContent = 'Fetching registry head...';
+
+            const merged = await this.client.loadRegistryMerged({ headTxIn, privateHeads }, (msg, pct) => {
+                this.elements.progressStatus.textContent = msg;
+                if (pct != null) this.elements.progressFill.style.width = `${pct}%`;
+            });
+
+            const scrolls = this.client.registryToScrolls(merged);
+
+            if (!scrolls.length) {
+                this._toast('warning', 'Registry loaded, but it contained zero entries');
+            }
+
+            window.ScrollLibrary.setScrolls(scrolls);
+            this._renderScrollLibrary();
+            this._toast('success', `Library loaded (${scrolls.length} scrolls)`);
+            this._openDrawer('libraryDrawer');
+
+        } catch (e) {
+            console.error(e);
+            this._toast('error', `Registry load failed: ${e.message}`);
+        } finally {
+            this.elements.viewerLoading.classList.remove('loading');
+            this.elements.scrollProgress.classList.remove('active');
+            this.elements.progressFill.style.width = '0%';
+            this.elements.progressStatus.textContent = 'Waiting...';
+        }
     }
 
     // =========================================================================

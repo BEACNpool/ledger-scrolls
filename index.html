@@ -186,6 +186,22 @@
                     <p class="help-text">Get a free key at <a href="https://blockfrost.io" target="_blank">blockfrost.io</a></p>
                 </div>
 
+                <!-- Registry (DNS for Scrolls) -->
+                <div class="settings-section">
+                    <h4>📚 Registry (DNS for Scrolls)</h4>
+                    <div class="form-group">
+                        <label style="display:block; margin-bottom:6px; opacity:0.8;">Public Head (default)</label>
+                        <input type="text" id="registryHeadInput" placeholder="<txhash>#<ix>" style="width:100%;" />
+                        <p class="help-text">This is the trust anchor. Forks are allowed — readers choose which head to follow.</p>
+                    </div>
+                    <div class="form-group">
+                        <label style="display:block; margin-bottom:6px; opacity:0.8;">Private Heads (optional, one per line)</label>
+                        <textarea id="privateHeadsInput" rows="3" placeholder="<txhash>#<ix>\n<txhash>#<ix>" style="width:100%; resize:vertical;"></textarea>
+                        <p class="help-text">Private heads override public on name collisions. Perfect for company/private libraries.</p>
+                    </div>
+                    <button class="btn btn-primary btn-block" id="loadLibraryBtn">Confirm & Load Library</button>
+                </div>
+
                 <!-- Koios Proxy -->
                 <div class="settings-section">
                     <h4>🛰️ Koios Proxy (optional)</h4>

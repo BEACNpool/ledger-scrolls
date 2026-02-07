@@ -27,7 +27,7 @@ const CATEGORIES = {
 /**
  * The Scroll Library - On-Chain Scrolls Only
  */
-const SCROLLS = [
+let SCROLLS = [
     // =========================================================================
     // GOVERNANCE SCROLLS
     // =========================================================================
@@ -246,11 +246,25 @@ const SCROLLS = [
  * Registry Configuration
  */
 const REGISTRY = {
+    // Legacy registry (older v2 docs). Kept for compatibility.
     address: 'addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy',
     policy_id: '895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062',
     asset_hex: '4c535f5245474953545259',
-    asset_name: 'LS_REGISTRY'
+    asset_name: 'LS_REGISTRY',
+
+    // New forkable registry (Head → List) default trust anchor (BEACN public).
+    public_head_txin: 'ce86a174e1b35c37dea6898ef16352d447d11833549b1f382db22c5bb6358cab#0'
 };
+
+function setScrolls(newScrolls) {
+    SCROLLS = Array.isArray(newScrolls) ? newScrolls : [];
+}
+
+function appendScrolls(moreScrolls) {
+    if (!Array.isArray(moreScrolls) || moreScrolls.length === 0) return;
+    SCROLLS = [...SCROLLS, ...moreScrolls];
+}
+
 
 /**
  * Get all scrolls
@@ -305,11 +319,14 @@ function getCategoriesWithCounts() {
 window.ScrollLibrary = {
     SCROLL_TYPES,
     CATEGORIES,
-    SCROLLS,
+    get SCROLLS() { return SCROLLS; },
     REGISTRY,
+    setScrolls,
+    appendScrolls,
     getAllScrolls,
     getScrollById,
     getScrollsByCategory,
     searchScrolls,
     getCategoriesWithCounts
 };
+

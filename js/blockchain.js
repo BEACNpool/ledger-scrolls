@@ -411,5 +411,180 @@ class BlockchainClient {
     }
 }
 
+    // =========================================================================
+    // Registry (Head → List)
+    // =========================================================================
+
+    async _getInlineDatumHexByTxIn(txHash, txIx) {
+        // Koios-first: utxo_info returns inline_datum.bytes for a txin.
+        try {
+            const utxo = await this.queryUtxoByTxIn(txHash, txIx);
+            if (utxo?.inline_datum) return utxo.inline_datum;
+        } catch (e) {
+            // continue
+        }
+
+        // Blockfrost fallback: fetch tx utxos and datum.
+        if (this.mode.startsWith('blockfrost')) {
+            const utxo = await this.queryUtxoByTxIn(txHash, txIx);
+            if (utxo?.inline_datum) return utxo.inline_datum;
+        }
+
+        throw new Error(`Inline datum not found for ${txHash}#${txIx}`);
+    }
+
+    _decodeRegistryDatumToJson(inlineDatumHex) {
+        // inlineDatumHex is hex of datum bytes.
+        const bytes = this._hexToBytes(inlineDatumHex);
+
+        // Our registry datum is CBOR that decodes to a bytestring (JSON UTF-8).
+        // If CBOR decode fails, assume raw JSON bytes.
+        let payloadBytes = bytes;
+        try {
+            const decoded = CBOR.decode(bytes.buffer);
+            if (decoded instanceof Uint8Array) payloadBytes = decoded;
+        } catch {
+            // ignore
+        }
+
+        const text = new TextDecoder('utf-8', { fatal: false }).decode(payloadBytes);
+        return JSON.parse(text);
+    }
+
+    async loadRegistryMerged({ headTxIn, privateHeads = [] }, progressCb = null) {
+        const bump = (msg, pct) => { if (progressCb) progressCb(msg, pct); };
+
+        const [headHash, headIxStr] = headTxIn.split('#');
+        const headIx = parseInt(headIxStr, 10);
+
+        bump('Fetching public head datum (Koios)...', 10);
+        const headDatumHex = await this._getInlineDatumHexByTxIn(headHash, headIx);
+        const headObj = this._decodeRegistryDatumToJson(headDatumHex);
+
+        if (headObj.format !== 'ledger-scrolls-registry-head') {
+            throw new Error('Head datum format mismatch');
+        }
+
+        const listPtr = headObj.registryList;
+        if (!listPtr || listPtr.kind !== 'utxo-inline-datum-bytes-v1') {
+            throw new Error('Head registryList pointer missing/unsupported');
+        }
+
+        bump('Fetching public list datum...', 25);
+        const listDatumHex = await this._getInlineDatumHexByTxIn(listPtr.txHash, parseInt(listPtr.txIx, 10));
+        let merged = this._decodeRegistryDatumToJson(listDatumHex);
+
+        if (merged.format !== 'ledger-scrolls-registry-list') {
+            throw new Error('List datum format mismatch');
+        }
+
+        // Merge private heads (override)
+        const priv = Array.isArray(privateHeads) ? privateHeads : [];
+        for (let i = 0; i < priv.length; i++) {
+            const txin = priv[i];
+            bump(`Fetching private head ${i + 1}/${priv.length}...`, 40 + Math.floor((i / Math.max(1, priv.length)) * 30));
+
+            const [ph, pixStr] = txin.split('#');
+            const pix = parseInt(pixStr, 10);
+            const pd = await this._getInlineDatumHexByTxIn(ph, pix);
+            const pobj = this._decodeRegistryDatumToJson(pd);
+            const pptr = pobj.registryList;
+            const pListHex = await this._getInlineDatumHexByTxIn(pptr.txHash, parseInt(pptr.txIx, 10));
+            const plist = this._decodeRegistryDatumToJson(pListHex);
+
+            merged = this._mergeRegistryLists(merged, plist);
+        }
+
+        bump('Registry merged.', 80);
+        return merged;
+    }
+
+    _mergeRegistryLists(base, extra) {
+        const out = { ...base };
+        const baseEntries = Array.isArray(base.entries) ? base.entries : [];
+        const extraEntries = Array.isArray(extra.entries) ? extra.entries : [];
+
+        const map = new Map();
+        const order = [];
+
+        for (const e of baseEntries) {
+            if (!e?.name) continue;
+            if (!map.has(e.name)) order.push(e.name);
+            map.set(e.name, e);
+        }
+        for (const e of extraEntries) {
+            if (!e?.name) continue;
+            if (!map.has(e.name)) order.push(e.name);
+            map.set(e.name, e); // override
+        }
+
+        out.entries = order.map(n => map.get(n));
+        return out;
+    }
+
+    registryToScrolls(registryListObj) {
+        const entries = Array.isArray(registryListObj?.entries) ? registryListObj.entries : [];
+        const out = [];
+
+        for (const e of entries) {
+            if (!e?.name || !e.pointer) continue;
+            const p = e.pointer;
+
+            // Map registry entry → web viewer ScrollLibrary shape
+            if (p.kind === 'utxo-inline-datum-bytes-v1') {
+                out.push({
+                    id: e.name,
+                    title: e.name,
+                    description: e.description || 'Registry entry',
+                    icon: '📜',
+                    category: 'all',
+                    type: window.ScrollLibrary.SCROLL_TYPES.STANDARD,
+                    pointer: {
+                        lock_address: e.lockAddress || '',
+                        lock_txin: `${p.txHash}#${p.txIx}`,
+                        content_type: e.contentType || e.content_type || 'application/octet-stream',
+                        codec: e.codec || 'none',
+                        sha256: e.sha256 || null
+                    },
+                    metadata: { source: 'registry' }
+                });
+                continue;
+            }
+
+            if (p.kind === 'cip25-pages-v1') {
+                out.push({
+                    id: e.name,
+                    title: e.name,
+                    description: e.description || 'Registry entry',
+                    icon: '📜',
+                    category: 'all',
+                    type: window.ScrollLibrary.SCROLL_TYPES.LEGACY,
+                    pointer: {
+                        policy_id: p.policyId,
+                        manifest_asset: p.manifestAsset,
+                        content_type: e.contentType || 'application/octet-stream',
+                        codec: e.codec || 'auto',
+                        sha256_original: e.sha256 || null
+                    },
+                    metadata: { source: 'registry' }
+                });
+                continue;
+            }
+        }
+
+        return out;
+    }
+
+    _hexToBytes(hex) {
+        hex = String(hex || '').replace(/^0x/i, '').replace(/\s/g, '');
+        if (hex.length % 2 !== 0) throw new Error('Invalid hex');
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) {
+            bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+        }
+        return bytes;
+    }
+}
+
 // Export for use in other modules
 window.BlockchainClient = BlockchainClient;
