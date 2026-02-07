@@ -409,7 +409,6 @@ class BlockchainClient {
             return response?.[0] || null;
         }
     }
-}
 
     // =========================================================================
     // Registry (Head → List)
