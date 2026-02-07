@@ -172,15 +172,17 @@ class LedgerScrollsApp {
                 settings.registryHeadTxIn = currentDefaultHead;
             }
 
+            // Normalize private heads before migration logic.
+            const privLen = Array.isArray(settings.privateHeads) ? settings.privateHeads.length : 0;
+            if (!Array.isArray(settings.privateHeads)) {
+                settings.privateHeads = [];
+            }
+
             // Migration: if user never customized (no private heads) and they are still pinned
             // to the original genesis head, update to the latest shipped public head.
             const legacyGenesisHead = 'ce86a174e1b35c37dea6898ef16352d447d11833549b1f382db22c5bb6358cab#0';
-            if ((!settings.privateHeads || settings.privateHeads.length === 0) && settings.registryHeadTxIn === legacyGenesisHead) {
+            if (privLen === 0 && settings.registryHeadTxIn === legacyGenesisHead) {
                 settings.registryHeadTxIn = currentDefaultHead;
-            }
-
-            if (!Array.isArray(settings.privateHeads)) {
-                settings.privateHeads = [];
             }
             if (window.LS_OVERRIDE_MODE) {
                 settings.mode = window.LS_OVERRIDE_MODE;
