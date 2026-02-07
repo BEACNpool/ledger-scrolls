@@ -47,26 +47,37 @@ Pointers are tagged unions with a `kind` field.
 
 #### Pointer kinds (v0)
 
-1. `utxo-locked-bytes`
-   - Intended for content stored/referenced by a **locked UTxO**.
-   - Required fields:
-     - `txin` — `"<txHash>#<index>"`
+v0 defines a minimal set of pointer kinds.
 
-2. `asset-manifest`
-   - Intended for content referenced by a **policy id + asset name** that itself represents a manifest.
-   - Required fields:
-     - `policyId`
-     - `assetName`
-     - `manifestSha256` — hash of the manifest bytes
+1) `utxo-inline-datum-bytes-v1`
 
-3. `url`
-   - Convenience pointer for off-chain mirrors.
-   - Required fields:
-     - `url`
-   - Notes:
-     - Still verifiable via `sha256` in the entry.
+- Use when the bytes are stored in a **Cardano UTxO inline datum** (datum transports raw bytes).
+- Required fields:
+  - `txHash` — 64 hex chars
+  - `txIx` — integer output index
+- Notes:
+  - See `registry/spec/cardano-utxo-datum.md` for the datum encoding used by this project.
 
-> v0 is intentionally small. Add more pointer kinds only when a viewer implementation exists.
+2) `cip25-pages-v1` (declared)
+
+- Use when bytes are stored as **CIP-25 (label 721) pages + manifest** assets.
+- Required fields:
+  - `policyId`
+  - `manifestAsset`
+- Optional fields (to avoid hardcoded time windows):
+  - `manifestTx`
+  - `manifestSlot`, `manifestHash`
+  - `startSlot`, `startHash`
+
+3) `url`
+
+- Convenience pointer for off-chain mirrors.
+- Required fields:
+  - `url`
+- Notes:
+  - Still verifiable via `sha256` in the entry.
+
+> Add new pointer kinds only when a viewer implementation exists.
 
 ### 3) Registry List
 
