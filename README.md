@@ -7,10 +7,10 @@ Ledger Scrolls is an open-source **standard + viewer** for publishing and readin
 
 The design goal is simple:
 
-- **No chain indexing**
 - **No centralized gatekeepers**
 - **No "download the whole chain history" requirement**
-- **Local-first** (your node + your socket) — prioritized in future updates
+- **Koios-first by default** (public REST API, no key)
+- **Blockfrost optional failover** (only if you provide an API key)
 - **Forever-readable** as long as the pointer remains valid
 
 Ledger Scrolls supports two storage styles:
@@ -24,7 +24,8 @@ Ledger Scrolls supports two storage styles:
 | **Holy Bible** | World English Bible (66 books) | Browser | `/bible.html` |
 | **First Video** | First video stored on Cardano | Browser | `/first-video.html` |
 | **Koios CLI** | Zero‑deps verification | Python 3 only | `viewers/koios-cli/` |
-| **P2P Viewer** | No API at all (direct relay) | Python + relay access | `p2p-viewer/` |
+| **Koios Viewer (Python)** | Registry + scroll reconstruction | Python 3 + Koios | `koios-viewer/` |
+| **Experimental P2P Viewer** | Historical prototype (archived) | Not maintained | `archived/experimental-p2p-viewer/p2p-viewer/` |
 
 See **docs/VIEWERS.md** for a quick overview.
 
