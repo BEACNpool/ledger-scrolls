@@ -1,343 +1,246 @@
 from __future__ import annotations
 
 import argparse
-import asyncio
-import logging
+import gzip
+import hashlib
+import json
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
 
-from .blockfrost import resolve_point_from_tx
-from .cbor_helpers import Point, blake2b_256_hex, safe_cbor_loads
-from .catalog import load_catalog, refresh_catalog
-from .n2n_client import MAINNET_MAGIC, N2NConnection
-from .chainsync import ChainSyncClient
-from .blockfetch import BlockFetchClient
-from .block_parser import parse_block, iter_label
-from .scrolls.cip25 import CIP25_LABEL, extract_cip25_assets, classify_assets
-from .scrolls.reconstruct import reconstruct_cip25
-from .topology import load_topology
-from .koios import block_info_by_hash, prev_point_from_height, tx_point
+import cbor2
 
-
-logger = logging.getLogger("lsview")
-
-
-def _relay_candidates(args) -> list[tuple[str, int]]:
-    candidates: list[tuple[str, int]] = []
-    if args.relay:
-        candidates.append((args.relay, args.port))
-    if args.topology:
-        candidates.extend(load_topology(args.topology))
-    if not candidates:
-        raise SystemExit("No relays specified. Use --relay or --topology.")
-
-    seen = set()
-    uniq: list[tuple[str, int]] = []
-    for host, port in candidates:
-        key = (host, int(port))
-        if key in seen:
-            continue
-        seen.add(key)
-        uniq.append(key)
-    return uniq
+from .catalog import load_catalog
+from .koios import (
+    KoiosError,
+    asset_info,
+    get_inline_datum_hex_from_utxo_info_row,
+    policy_asset_list,
+    tx_metadata,
+    utxo_info,
+    with_retries,
+)
 
 
-async def open_connection(args) -> N2NConnection:
-    last_err: Exception | None = None
-    for host, port in _relay_candidates(args):
-        conn = N2NConnection(host, port, network_magic=args.magic, timeout=args.timeout)
-        try:
-            await conn.open()
-            logger.info("Connected to relay %s:%s", host, port)
-            return conn
-        except Exception as exc:
-            last_err = exc
-            logger.warning("Relay failed %s:%s (%s)", host, port, exc)
-            try:
-                await conn.close()
-            except Exception:
-                pass
-
-    raise SystemExit(f"Could not connect to any relay. Last error: {last_err}")
+PUBLIC_REGISTRY_HEAD_TXIN = "ce86a174e1b35c37dea6898ef16352d447d11833549b1f382db22c5bb6358cab#0"
 
 
-async def cmd_tip(args) -> None:
-    conn = await open_connection(args)
+class RegistryError(RuntimeError):
+    pass
+
+
+def sha256_hex(b: bytes) -> str:
+    return hashlib.sha256(b).hexdigest()
+
+
+def _hex_to_ascii(hex_str: str) -> str:
     try:
-        cs = ChainSyncClient(conn)
-        resp = await cs.find_intersect([])  # origin
-        print(resp)
-    finally:
-        await conn.close()
+        return bytes.fromhex(hex_str).decode("utf-8", errors="ignore")
+    except Exception:
+        return ""
 
 
-async def cmd_fetch_block(args) -> None:
-    conn = await open_connection(args)
-    try:
-        bf = BlockFetchClient(conn)
-        pt = Point.from_hex(args.slot, args.hash)
-        body = await bf.fetch_block_body(pt)
-        if body is None:
-            raise SystemExit("Block not found on relay for this point.")
-        if args.out:
-            with open(args.out, "wb") as f:
-                f.write(body)
-            print(f"Wrote raw block CBOR to {args.out} ({len(body)} bytes)")
-        else:
-            print(f"Fetched block body ({len(body)} bytes)")
-        await bf.done()
-    finally:
-        await conn.close()
-
-
-async def cmd_reconstruct_cip25(args) -> None:
-    if args.scroll:
-        catalog = load_catalog(args.catalog)
-        entry = catalog.get(args.scroll)
-        if not entry:
-            raise SystemExit(f"Unknown scroll id: {args.scroll}")
-        if entry.data.get("type") != "cip25_pages_v1":
-            raise SystemExit("Selected scroll is not a CIP-25 pages scroll.")
-        args.policy = entry.data.get("policy_id") or args.policy
-        args.manifest_asset = entry.data.get("manifest_asset") or args.manifest_asset
-        if entry.data.get("manifest_tx"):
-            args.manifest_tx = entry.data.get("manifest_tx")
-        if entry.data.get("block_slot") and entry.data.get("block_hash"):
-            args.manifest_slot = int(entry.data["block_slot"])
-            args.manifest_hash = entry.data["block_hash"]
-
-    if not (args.policy and args.manifest_asset):
-        raise SystemExit("Missing policy or manifest asset. Provide args or use --scroll with a catalog entry.")
-
-    if not (args.start_slot and args.start_hash):
-        manifest_info = None
-        if args.manifest_tx:
-            manifest_info = tx_point(args.manifest_tx)
-        elif args.manifest_hash:
-            manifest_info = block_info_by_hash(args.manifest_hash)
-        if manifest_info is None:
-            raise SystemExit("Missing start point. Provide --start-slot/--start-hash or --manifest-tx/--manifest-hash.")
-        prev_info = prev_point_from_height(manifest_info["height"])
-        args.start_slot = prev_info["slot"]
-        args.start_hash = prev_info["hash"]
-
-    if not (args.start_slot and args.start_hash):
-        raise SystemExit("Missing start point. Provide --start-slot/--start-hash or --manifest-tx/--manifest-hash.")
-
-    start_point = Point.from_hex(args.start_slot, args.start_hash)
-    wanted_policy = args.policy.lower()
-
-    conn = await open_connection(args)
-    pages = []
-    manifest = None
-    bf_conn = None
-
-    try:
-        cs = ChainSyncClient(conn)
-        bf_conn = N2NConnection(
-            relay_host=conn.relay_host,
-            relay_port=conn.relay_port,
-            network_magic=conn.network_magic,
-            timeout=conn.timeout,
-        )
-        await bf_conn.open()
-        bf = BlockFetchClient(bf_conn)
-
-        intersect = await cs.find_intersect([start_point])
-        if intersect.get("type") != "intersect_found":
-            raise SystemExit(f"Start point not on relay chain: {intersect}")
-
-        prev_point = start_point
-        async for pt, _ in cs.stream_headers(max_headers=args.max_blocks, idle_timeout=args.timeout):
-            # --- Rollback/ordering guard ---
-            pt_slot = getattr(pt, "slot", getattr(pt, "slot_no", None))
-            prev_slot = getattr(prev_point, "slot", getattr(prev_point, "slot_no", None))
-            if pt == prev_point:
-                continue
-            if pt_slot is not None and prev_slot is not None and pt_slot <= prev_slot:
-                prev_point = pt
-                continue
-
-            # --- BlockFetch with one reconnect retry on relay resets ---
-            try:
-                body = await bf.fetch_block_body(pt, prev_point=prev_point)
-            except (ConnectionResetError, OSError) as e:
-                logger.warning("BlockFetch reset (%r); reconnecting and retrying once...", e)
-                try:
-                    await bf_conn.close()
-                except Exception:
-                    pass
-                bf_conn = await open_connection(args)
-                bf = BlockFetchClient(bf_conn)
-                body = await bf.fetch_block_body(pt, prev_point=prev_point)
-
-            prev_point = pt
-            if body is None:
-                continue
-
-            block = parse_block(body)
-
-            for md721 in iter_label(block, CIP25_LABEL):
-                assets = extract_cip25_assets(md721, wanted_policy)
-                if not assets:
-                    continue
-                new_pages, new_manifest = classify_assets(assets, args.manifest_asset)
-                if new_manifest is not None:
-                    manifest = new_manifest
-                if new_pages:
-                    pages.extend(new_pages)
-
-            if manifest and manifest.total_pages:
-                uniq = len({p.asset.asset_name for p in pages})
-                if uniq >= manifest.total_pages:
-                    break
-
-        await bf.done()
-        await cs.done()
-
-    finally:
-        try:
-            if bf_conn is not None:
-                await bf_conn.close()
-        except Exception:
-            pass
-        await conn.close()
-
-    if not pages:
-        raise SystemExit("No CIP-25 pages were found in the scanned window. Increase --max-blocks or start closer.")
-
-    out = reconstruct_cip25(pages=pages, manifest=manifest, out_name=args.out)
-    with open(args.out, "wb") as f:
-        f.write(out.raw_bytes)
-
-    print(f"Reconstructed: {args.out}")
-    print(f"Bytes:         {len(out.raw_bytes)}")
-    print(f"Codec:         {out.codec}")
-    print(f"Content-Type:  {out.content_type}")
-    print(f"SHA-256:       {out.sha256}")
-
-
-def _tx_hash_from_body(tx_body: object) -> str:
-    import cbor2
-
-    raw = cbor2.dumps(tx_body, canonical=True)
-    return blake2b_256_hex(raw)
-
-
-def _extract_outputs(tx_body: object) -> list:
-    if isinstance(tx_body, dict):
-        return list(tx_body.get(1) or [])
-    if isinstance(tx_body, list) and len(tx_body) > 1:
-        return list(tx_body[1])
-    return []
-
-
-def _extract_inline_datum(output: object) -> bytes | None:
-    datum = None
-
-    if isinstance(output, list) and len(output) >= 3:
-        datum = output[2]
-    elif isinstance(output, dict):
-        datum = output.get(2)
-
-    if datum is None:
+def _extract_cip721(meta: Any) -> Dict[str, Any] | None:
+    # Koios tx_metadata returns different shapes; support common ones.
+    if isinstance(meta, dict):
+        if "721" in meta:
+            return meta["721"]
+        if 721 in meta:
+            return meta[721]
         return None
-
-    if isinstance(datum, list) and len(datum) >= 2:
-        tag = datum[0]
-        if tag == 2:  # inline datum
-            datum = datum[1]
-        else:
-            return None
-
-    if isinstance(datum, bytes):
-        try:
-            decoded = safe_cbor_loads(datum)
-            if isinstance(decoded, bytes):
-                return decoded
-        except Exception:
-            pass
-        return datum
-
+    if isinstance(meta, list):
+        for item in meta:
+            if isinstance(item, dict) and str(item.get("label")) == "721":
+                return item.get("json_metadata") or item.get("metadata") or item.get("value")
     return None
 
 
-async def cmd_reconstruct_utxo(args) -> None:
-    if args.scroll:
-        catalog = load_catalog(args.catalog)
-        entry = catalog.get(args.scroll)
-        if not entry:
-            raise SystemExit(f"Unknown scroll id: {args.scroll}")
-        if entry.data.get("type") != "utxo_datum_bytes_v1":
-            raise SystemExit("Selected scroll is not a Standard Scroll.")
-        args.tx_hash = entry.data.get("tx_hash") or args.tx_hash
-        if entry.data.get("tx_ix") is not None:
-            args.tx_ix = int(entry.data.get("tx_ix"))
-        if entry.data.get("block_slot") and entry.data.get("block_hash"):
-            args.block_slot = int(entry.data["block_slot"])
-            args.block_hash = entry.data["block_hash"]
+def _decode_registry_datum_to_json(datum_hex: str) -> Dict[str, Any]:
+    raw = bytes.fromhex(datum_hex)
 
-    if args.tx_ix is None:
-        raise SystemExit("Missing --tx-ix (output index). Provide it or select a catalog scroll that includes tx_ix.")
-
-    if args.block_hash and args.block_slot:
-        point = Point.from_hex(args.block_slot, args.block_hash)
-    else:
-        if not args.tx_hash:
-            raise SystemExit("Provide --tx-hash or both --block-hash and --block-slot.")
-        resolved = resolve_point_from_tx(args.tx_hash, args.blockfrost_key)
-        point = Point.from_hex(resolved.slot, resolved.block_hash)
-
-    conn = await open_connection(args)
+    # The standard datum encoding we minted is "CBOR bytes -> JSON bytes".
+    # Koios might return either the CBOR itself or the already-decoded bytes.
     try:
-        bf = BlockFetchClient(conn)
-        body = await bf.fetch_block_body(point)
-        if body is None:
-            raise SystemExit("Block not found on relay for this point.")
+        decoded = cbor2.loads(raw)
+        if isinstance(decoded, (bytes, bytearray)):
+            raw = bytes(decoded)
+    except Exception:
+        pass
 
-        block = parse_block(body)
-        target_hash = args.tx_hash.lower() if args.tx_hash else None
+    try:
+        txt = raw.decode("utf-8")
+    except Exception as exc:
+        raise RegistryError(f"Datum is not UTF-8: {exc}") from exc
 
-        tx_index = None
-        tx_body = None
-        for i, tb in enumerate(block.tx_bodies):
-            if target_hash:
-                if _tx_hash_from_body(tb) != target_hash:
-                    continue
-            tx_index = i
-            tx_body = tb
-            break
-
-        if tx_body is None:
-            raise SystemExit("Transaction not found in block.")
-
-        outputs = _extract_outputs(tx_body)
-        if args.tx_ix >= len(outputs):
-            raise SystemExit("tx output index out of range for this transaction.")
-
-        datum_bytes = _extract_inline_datum(outputs[args.tx_ix])
-        if datum_bytes is None:
-            raise SystemExit("No inline datum bytes found at that tx output.")
-
-        with open(args.out, "wb") as f:
-            f.write(datum_bytes)
-
-        print(f"Reconstructed: {args.out}")
-        print(f"Bytes:         {len(datum_bytes)}")
-        print(f"SHA-256:       {blake2b_256_hex(datum_bytes)}")
-
-        await bf.done()
-    finally:
-        await conn.close()
+    try:
+        return json.loads(txt)
+    except Exception as exc:
+        raise RegistryError(f"Datum is not JSON: {exc}") from exc
 
 
-def cmd_blockfrost_point(args) -> None:
-    point = resolve_point_from_tx(args.tx_hash, args.blockfrost_key)
-    print(f"slot={point.slot}")
-    print(f"hash={point.block_hash}")
+def read_utxo_inline_datum_json(txin: str) -> Dict[str, Any]:
+    row = with_retries(lambda: utxo_info(txin))
+    datum_hex = get_inline_datum_hex_from_utxo_info_row(row)
+    return _decode_registry_datum_to_json(datum_hex)
 
 
-def cmd_refresh_catalog(args) -> None:
-    refresh_catalog(args.catalog, args.blockfrost_key)
-    print("Catalog refreshed.")
+def read_registry_head(txin: str) -> Dict[str, Any]:
+    head = read_utxo_inline_datum_json(txin)
+    if head.get("format") != "ledger-scrolls-registry-head":
+        raise RegistryError("Not a registry head datum")
+    return head
+
+
+def read_registry_list(txin: str) -> Dict[str, Any]:
+    lst = read_utxo_inline_datum_json(txin)
+    if lst.get("format") != "ledger-scrolls-registry-list":
+        raise RegistryError("Not a registry list datum")
+    return lst
+
+
+def _parse_txin(txin: str) -> Tuple[str, int]:
+    if "#" not in txin:
+        raise RegistryError("txin must be <txHash>#<txIx>")
+    h, ix = txin.split("#", 1)
+    return h, int(ix)
+
+
+def reconstruct_standard_from_txin(txin: str, expected_sha256: Optional[str] = None) -> Tuple[bytes, str]:
+    row = with_retries(lambda: utxo_info(txin))
+    datum_hex = get_inline_datum_hex_from_utxo_info_row(row)
+    raw = bytes.fromhex(datum_hex)
+
+    # For standard scrolls, the datum bytes are typically the file bytes. No extra CBOR wrapper.
+    # If CBOR-decodes to bytes, accept that too.
+    try:
+        decoded = cbor2.loads(raw)
+        if isinstance(decoded, (bytes, bytearray)):
+            raw = bytes(decoded)
+    except Exception:
+        pass
+
+    sha = sha256_hex(raw)
+    if expected_sha256 and sha.lower() != expected_sha256.lower():
+        raise RegistryError(f"SHA-256 mismatch: got {sha} expected {expected_sha256}")
+    return raw, sha
+
+
+def reconstruct_legacy_cip25(policy_id: str, manifest_asset: str | None = None, expected_sha256: str | None = None) -> Tuple[bytes, str]:
+    # This is the same approach as viewers/koios-cli/read_scroll.py but inside the lsview package.
+    assets = with_retries(lambda: policy_asset_list(policy_id))
+    if not assets:
+        raise RegistryError("No assets returned for policy")
+
+    info_map: Dict[str, Dict[str, Any]] = {}
+    mint_txs: List[str] = []
+
+    # Fetch asset info (Koios rate-limited; keep gentle)
+    for a in assets:
+        asset_name_hex = a.get("asset_name")
+        if not asset_name_hex:
+            continue
+        info = with_retries(lambda h=asset_name_hex: asset_info(policy_id, h))
+        asset_ascii = info.get("asset_name_ascii") or _hex_to_ascii(asset_name_hex)
+        mint_tx = info.get("minting_tx_hash")
+        info_map[asset_name_hex] = {"ascii": asset_ascii, "mint_tx": mint_tx}
+        if mint_tx:
+            mint_txs.append(str(mint_tx))
+
+    mint_txs = sorted(set(mint_txs))
+
+    # Fetch metadata in batches
+    meta_by_tx: Dict[str, Any] = {}
+    for i in range(0, len(mint_txs), 5):
+        batch = mint_txs[i : i + 5]
+        meta_by_tx.update(with_retries(lambda b=batch: tx_metadata(b)))
+
+    pages: List[Tuple[int, List[str]]] = []
+
+    for asset_hex, inf in info_map.items():
+        tx_hash = inf.get("mint_tx")
+        if not tx_hash:
+            continue
+        meta = meta_by_tx.get(str(tx_hash))
+        cip721 = _extract_cip721(meta)
+        if not cip721 or not isinstance(cip721, dict):
+            continue
+        policy_meta = cip721.get(policy_id)
+        if not isinstance(policy_meta, dict):
+            continue
+
+        asset_ascii = inf.get("ascii")
+        asset_meta = policy_meta.get(asset_ascii) if asset_ascii else None
+        if not isinstance(asset_meta, dict):
+            continue
+
+        # Skip manifest
+        is_manifest = False
+        if manifest_asset and asset_ascii == manifest_asset:
+            is_manifest = True
+        elif any(k in asset_meta for k in ("codec", "content_type", "content-type", "sha256", "sha", "sha256_gz", "sha_gz")):
+            is_manifest = True
+        if is_manifest:
+            continue
+
+        idx = asset_meta.get("i") or asset_meta.get("index")
+        if idx is None:
+            continue
+        try:
+            page_idx = int(idx)
+        except Exception:
+            continue
+
+        payload = asset_meta.get("payload") or asset_meta.get("segments") or asset_meta.get("seg") or []
+        if isinstance(payload, str):
+            payload = [payload]
+        if not isinstance(payload, list):
+            continue
+
+        pages.append((page_idx, [str(x) for x in payload]))
+
+    if not pages:
+        raise RegistryError("No pages found in CIP-721 metadata")
+
+    pages.sort(key=lambda x: x[0])
+    hex_blob = "".join("".join(seg for seg in payload) for _, payload in pages)
+    raw = bytes.fromhex(hex_blob)
+    if raw.startswith(b"\x1f\x8b"):
+        raw = gzip.decompress(raw)
+
+    sha = sha256_hex(raw)
+    if expected_sha256 and sha.lower() != expected_sha256.lower():
+        raise RegistryError(f"SHA-256 mismatch: got {sha} expected {expected_sha256}")
+
+    return raw, sha
+
+
+def cmd_registry_dump(args) -> None:
+    head_txin = args.head or PUBLIC_REGISTRY_HEAD_TXIN
+    head = read_registry_head(head_txin)
+
+    ptr = head.get("registryList")
+    if not isinstance(ptr, dict) or ptr.get("kind") != "utxo-inline-datum-bytes-v1":
+        raise SystemExit("Head registryList pointer missing or unsupported")
+
+    txhash = ptr.get("txHash")
+    txix = ptr.get("txIx")
+    if not txhash or txix is None:
+        raise SystemExit("Invalid registryList pointer")
+
+    list_txin = f"{txhash}#{int(txix)}"
+    lst = read_registry_list(list_txin)
+
+    out = {
+        "head": {"txin": head_txin, "value": head},
+        "list": {"txin": list_txin, "value": lst},
+    }
+
+    if args.out:
+        with open(args.out, "w", encoding="utf-8") as f:
+            json.dump(out, f, indent=2)
+            f.write("\n")
+        print(f"Wrote: {args.out}")
+    else:
+        print(json.dumps(out, indent=2))
 
 
 def cmd_list_scrolls(args) -> None:
@@ -345,79 +248,94 @@ def cmd_list_scrolls(args) -> None:
     for entry in catalog.values():
         data = entry.data
         kind = data.get("type")
-        line = f"{entry.id}  ({kind})"
-        extra = []
-        if data.get("policy_id"):
-            extra.append(f"policy={data.get('policy_id')}")
-        if data.get("tx_hash"):
-            extra.append(f"tx={data.get('tx_hash')}")
-        if data.get("manifest_tx"):
-            extra.append(f"manifest_tx={data.get('manifest_tx')}")
-        if data.get("block_slot"):
-            extra.append(f"slot={data.get('block_slot')}")
-        if extra:
-            line += "  " + " ".join(extra)
-        print(line)
+        print(f"{entry.id} ({kind})")
+
+
+def cmd_reconstruct_utxo(args) -> None:
+    if not args.txin and args.scroll:
+        catalog = load_catalog(args.catalog)
+        entry = catalog.get(args.scroll)
+        if not entry:
+            raise SystemExit(f"Unknown scroll id: {args.scroll}")
+        if entry.data.get("type") != "utxo_datum_bytes_v1":
+            raise SystemExit("Selected scroll is not a Standard Scroll")
+        tx_hash = entry.data.get("tx_hash")
+        tx_ix = entry.data.get("tx_ix")
+        if tx_hash is None or tx_ix is None:
+            raise SystemExit("Catalog entry missing tx_hash/tx_ix")
+        args.txin = f"{tx_hash}#{int(tx_ix)}"
+
+    if not args.txin:
+        raise SystemExit("Provide --txin <txHash#txIx> or --scroll")
+
+    data, sha = reconstruct_standard_from_txin(args.txin)
+
+    if args.out:
+        with open(args.out, "wb") as f:
+            f.write(data)
+        print(f"Reconstructed: {args.out}")
+    print(f"Bytes: {len(data)}")
+    print(f"SHA-256: {sha}")
+
+
+def cmd_reconstruct_cip25(args) -> None:
+    policy = args.policy
+    manifest_asset = args.manifest_asset
+
+    if args.scroll:
+        catalog = load_catalog(args.catalog)
+        entry = catalog.get(args.scroll)
+        if not entry:
+            raise SystemExit(f"Unknown scroll id: {args.scroll}")
+        if entry.data.get("type") != "cip25_pages_v1":
+            raise SystemExit("Selected scroll is not a CIP-25 pages scroll")
+        policy = entry.data.get("policy_id") or policy
+        manifest_asset = entry.data.get("manifest_asset") or manifest_asset
+
+    if not policy:
+        raise SystemExit("Missing --policy (or use --scroll from catalog)")
+
+    data, sha = reconstruct_legacy_cip25(policy_id=policy, manifest_asset=manifest_asset)
+
+    if args.out:
+        with open(args.out, "wb") as f:
+            f.write(data)
+        print(f"Reconstructed: {args.out}")
+    print(f"Bytes: {len(data)}")
+    print(f"SHA-256: {sha}")
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="lsview", description="Ledger Scrolls P2P Viewer (N2N ChainSync + BlockFetch)")
-    p.add_argument("--relay", default="backbone.cardano.iog.io")
-    p.add_argument("--port", type=int, default=3001)
-    p.add_argument("--topology", help="Path or URL to topology JSON (relay fallback list)")
-    p.add_argument("--magic", type=int, default=MAINNET_MAGIC)
-    p.add_argument("--timeout", type=float, default=60.0)
-    p.add_argument("-v", "--verbose", action="store_true")
+    p = argparse.ArgumentParser(
+        prog="lsview",
+        description="Ledger Scrolls Viewer (Koios-first; Blockfrost optional fallback)",
+    )
 
     sp = p.add_subparsers(dest="cmd", required=True)
 
-    tip = sp.add_parser("tip", help="Query relay tip using intersect origin")
-    tip.set_defaults(func=cmd_tip)
+    rg = sp.add_parser("registry-dump", help="Fetch registry head + list from on-chain inline datums")
+    rg.add_argument("--head", default=PUBLIC_REGISTRY_HEAD_TXIN, help="Head txin (default: public BEACN head)")
+    rg.add_argument("--out", help="Write JSON output")
+    rg.set_defaults(func=cmd_registry_dump)
 
-    fb = sp.add_parser("fetch-block", help="Fetch a block by exact point (slot + header hash)")
-    fb.add_argument("--slot", type=int, required=True)
-    fb.add_argument("--hash", required=True, help="Block header hash (64 hex chars)")
-    fb.add_argument("--out", help="Write raw block CBOR to file")
-    fb.set_defaults(func=cmd_fetch_block)
-
-    rc = sp.add_parser("reconstruct-cip25", help="Reconstruct CIP-25 pages+manifest scroll by scanning forward from a start point")
-    rc.add_argument("--scroll", help="Scroll id from catalog (e.g., constitution-e608)")
+    rc = sp.add_parser("reconstruct-cip25", help="Reconstruct CIP-25 pages scroll via Koios metadata")
+    rc.add_argument("--scroll", help="Scroll id from catalog")
     rc.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")
     rc.add_argument("--policy", help="Policy ID hex")
-    rc.add_argument("--manifest-asset", help="Manifest asset name (e.g., CONSTITUTION_E608_MANIFEST)")
-    rc.add_argument("--manifest-tx", help="Manifest minting tx hash (used to resolve start point via Koios)")
-    rc.add_argument("--manifest-slot", type=int, help="Manifest block slot (optional, used to resolve start point)")
-    rc.add_argument("--manifest-hash", help="Manifest block header hash (optional, used to resolve start point)")
-    rc.add_argument("--start-slot", type=int, help="Start slot (previous block point before the manifest block)")
-    rc.add_argument("--start-hash", help="Start header hash (previous block point before the manifest block)")
-    rc.add_argument("--max-blocks", type=int, default=400, help="How many headers/blocks to scan forward")
+    rc.add_argument("--manifest-asset", help="Manifest asset name (optional)")
     rc.add_argument("--out", required=True, help="Output filename")
     rc.set_defaults(func=cmd_reconstruct_cip25)
 
-    bf = sp.add_parser("blockfrost-point", help="Resolve start slot+hash from a tx hash via Blockfrost (optional)")
-    bf.add_argument("--tx-hash", required=True, help="Transaction hash to resolve")
-    bf.add_argument("--blockfrost-key", help="Blockfrost project_id (or env BLOCKFROST_PROJECT_ID)")
-    bf.set_defaults(func=cmd_blockfrost_point)
-
-    rcatalog = sp.add_parser("refresh-catalog", help="Update catalog with block slot/hash via Blockfrost")
-    rcatalog.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")
-    rcatalog.add_argument("--blockfrost-key", help="Blockfrost project_id (or env BLOCKFROST_PROJECT_ID)")
-    rcatalog.set_defaults(func=cmd_refresh_catalog)
-
-    lsc = sp.add_parser("list-scrolls", help="List known scrolls from catalog")
-    lsc.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")
-    lsc.set_defaults(func=cmd_list_scrolls)
-
-    ru = sp.add_parser("reconstruct-utxo", help="Reconstruct Standard Scroll from inline datum at a tx output")
-    ru.add_argument("--scroll", help="Scroll id from catalog (e.g., hosky-png)")
+    ru = sp.add_parser("reconstruct-utxo", help="Reconstruct Standard Scroll from Koios utxo_info inline datum")
+    ru.add_argument("--scroll", help="Scroll id from catalog")
     ru.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")
-    ru.add_argument("--tx-hash", help="Transaction hash (optional if block point provided)")
-    ru.add_argument("--tx-ix", type=int, help="Output index within the transaction (txin index)")
-    ru.add_argument("--block-hash", help="Block header hash (64 hex chars)")
-    ru.add_argument("--block-slot", type=int, help="Block slot number")
-    ru.add_argument("--blockfrost-key", help="Blockfrost project_id (or env BLOCKFROST_PROJECT_ID)")
+    ru.add_argument("--txin", help="TxIn as <txHash#txIx>")
     ru.add_argument("--out", required=True, help="Output filename")
     ru.set_defaults(func=cmd_reconstruct_utxo)
+
+    ls = sp.add_parser("list-scrolls", help="List known scrolls from catalog")
+    ls.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")
+    ls.set_defaults(func=cmd_list_scrolls)
 
     return p
 
@@ -425,11 +343,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
-
-    level = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(level=level, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-
-    asyncio.run(args.func(args))
+    args.func(args)
 
 
 if __name__ == "__main__":
