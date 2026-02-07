@@ -415,18 +415,43 @@ class BlockchainClient {
     // =========================================================================
 
     async _getInlineDatumHexByTxIn(txHash, txIx) {
-        // Koios-first: utxo_info returns inline_datum.bytes for a txin.
+        // Koios-first: utxo_info sometimes returns inline_datum=null but provides datum_hash.
         try {
             const utxo = await this.queryUtxoByTxIn(txHash, txIx);
             if (utxo?.inline_datum) return utxo.inline_datum;
+
+            // Koios datum fallback
+            const dh = utxo?.datum_hash;
+            if (dh && this.queryDatumByHash) {
+                const datumInfo = await this.queryDatumByHash(dh);
+                // Koios datum_info commonly returns either value.bytes (decoded bytes hex) or bytes (datum CBOR hex)
+                const bytesHex = datumInfo?.value?.bytes || datumInfo?.value?.fields?.[0]?.bytes || datumInfo?.bytes || null;
+                if (bytesHex) return bytesHex;
+            }
         } catch (e) {
             // continue
         }
 
-        // Blockfrost fallback: fetch tx utxos and datum.
-        if (this.mode.startsWith('blockfrost')) {
-            const utxo = await this.queryUtxoByTxIn(txHash, txIx);
-            if (utxo?.inline_datum) return utxo.inline_datum;
+        // Optional Blockfrost fallback: only if user provided an API key.
+        // We do not switch modes in the UI; this is a failover path.
+        if (this.apiKey) {
+            try {
+                const response = await this._rateLimitedFetch(`https://cardano-mainnet.blockfrost.io/api/v0/txs/${txHash}/utxos`, {
+                    headers: { project_id: this.apiKey }
+                });
+                const out = (response.outputs || []).find(o => o.output_index === txIx);
+                const inline = out?.inline_datum;
+                if (inline) return inline;
+                const datumHash = out?.data_hash || out?.datum_hash;
+                if (datumHash) {
+                    const d = await this._rateLimitedFetch(`https://cardano-mainnet.blockfrost.io/api/v0/scripts/datum/${datumHash}/cbor`, {
+                        headers: { project_id: this.apiKey }
+                    });
+                    if (d?.cbor) return d.cbor;
+                }
+            } catch (e) {
+                // ignore
+            }
         }
 
         throw new Error(`Inline datum not found for ${txHash}#${txIx}`);

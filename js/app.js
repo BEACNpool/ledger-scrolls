@@ -155,7 +155,7 @@ class LedgerScrollsApp {
         try {
             const saved = localStorage.getItem('ledgerScrollsSettings');
             const fallback = {
-                mode: window.LS_DEFAULT_MODE || 'koios',
+                mode: 'koios',
                 apiKey: '',
                 koiosProxy: '',
                 theme: 'dark',
@@ -233,7 +233,8 @@ class LedgerScrollsApp {
             koiosProxyInput: document.getElementById('koiosProxyInput'),
             koiosProxyStatus: document.getElementById('koiosProxyStatus'),
             blockfrostSettings: document.getElementById('blockfrostSettings'),
-            modeRadios: document.querySelectorAll('input[name="connectionMode"]'),
+            // Koios-only: no connection mode radios in the main web viewer.
+            modeRadios: [],
             themePills: document.querySelectorAll('.theme-pill'),
 
             // Registry
@@ -272,15 +273,11 @@ class LedgerScrollsApp {
             this.elements.privateHeadsInput.value = Array.isArray(priv) ? priv.join('\n') : '';
         }
         
-        // Set correct radio button
-        this.elements.modeRadios.forEach(radio => {
-            radio.checked = radio.value === this.settings.mode;
-        });
-        
-        // Show/hide blockfrost settings
+        // Koios-only: no mode radios.
+
+        // Blockfrost failover settings are always shown (optional).
         if (this.elements.blockfrostSettings) {
-            this.elements.blockfrostSettings.style.display = 
-                this.settings.mode === 'blockfrost' ? 'block' : 'none';
+            this.elements.blockfrostSettings.style.display = 'block';
         }
     }
 
@@ -317,8 +314,7 @@ class LedgerScrollsApp {
             this._openModal('customScrollModal');
         });
         
-        // Connect button
-        this.elements.connectBtn.addEventListener('click', () => this._connect());
+        // Koios-only: connect happens automatically; no manual connect button.
 
         // Load library from registry
         this.elements.loadLibraryBtn?.addEventListener('click', () => this._confirmAndLoadLibrary());
@@ -329,11 +325,8 @@ class LedgerScrollsApp {
         // Save Koios proxy
         document.getElementById('saveKoiosProxy')?.addEventListener('click', () => this._saveKoiosProxy());
         
-        // Connection mode change
-        this.elements.modeRadios.forEach(radio => {
-            radio.addEventListener('change', (e) => this._onModeChange(e.target.value));
-        });
-        
+        // Koios-only: no connection mode change UI.
+
         // Theme change
         this.elements.themePills.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -440,7 +433,9 @@ class LedgerScrollsApp {
     _setConnectionStatus(status, text) {
         this.elements.statusDot.className = `status-dot ${status}`;
         this.elements.statusText.textContent = text;
-        this.elements.connectBtn.textContent = status === 'connected' ? 'Reconnect' : 'Connect to Cardano';
+        if (this.elements.connectBtn) {
+            this.elements.connectBtn.textContent = status === 'connected' ? 'Online' : 'Offline';
+        }
     }
 
     // =========================================================================
@@ -887,10 +882,11 @@ class LedgerScrollsApp {
     }
 
     _onModeChange(mode) {
-        this.settings.mode = mode;
+        // Deprecated in Koios-only web viewer. Kept to avoid breaking older saved code paths.
+        this.settings.mode = 'koios';
         this._saveSettings();
         if (this.elements.blockfrostSettings) {
-            this.elements.blockfrostSettings.style.display = mode === 'blockfrost' ? 'block' : 'none';
+            this.elements.blockfrostSettings.style.display = 'block';
         }
     }
 

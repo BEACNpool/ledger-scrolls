@@ -154,36 +154,20 @@
                 <button class="btn-icon drawer-close" data-close="settingsDrawer">✕</button>
             </div>
             <div class="drawer-body">
-                <!-- Connection -->
+                <!-- Connection (Koios-only) -->
                 <div class="settings-section">
                     <h4>🔗 Connection</h4>
-                    <div class="toggle-group">
-                        <label class="toggle-option">
-                            <input type="radio" name="connectionMode" value="koios" checked>
-                            <span class="toggle-label">
-                                <strong>Koios API</strong>
-                                <small>Free, no key required</small>
-                            </span>
-                        </label>
-                        <label class="toggle-option">
-                            <input type="radio" name="connectionMode" value="blockfrost">
-                            <span class="toggle-label">
-                                <strong>Blockfrost API</strong>
-                                <small>Requires API key</small>
-                            </span>
-                        </label>
-                    </div>
-                    <button class="btn btn-primary btn-block" id="connectBtn">Connect to Cardano</button>
+                    <p class="help-text">This viewer is <strong>Koios-first</strong> by design. No node/relay required.</p>
                 </div>
-                
-                <!-- Blockfrost Settings -->
-                <div class="settings-section" id="blockfrostSettings" style="display: none;">
-                    <h4>🔑 Blockfrost API Key</h4>
+
+                <!-- Blockfrost Failover (optional) -->
+                <div class="settings-section" id="blockfrostSettings">
+                    <h4>🔑 Blockfrost Failover (optional)</h4>
                     <div class="input-row">
                         <input type="password" id="apiKeyInput" placeholder="mainnetXXX...">
                         <button class="btn btn-sm" id="saveApiKey">Save</button>
                     </div>
-                    <p class="help-text">Get a free key at <a href="https://blockfrost.io" target="_blank">blockfrost.io</a></p>
+                    <p class="help-text">Only used if Koios is unavailable or missing datum fields.</p>
                 </div>
 
                 <!-- Registry (DNS for Scrolls) -->
