@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beacnpool.github.io/ledger-scrolls/schemas/registry-list.schema.json",
+  "title": "Ledger Scrolls Registry List",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "version", "entries"],
+  "properties": {
+    "format": { "const": "ledger-scrolls-registry-list" },
+    "version": { "type": "integer", "const": 0 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "generator": { "type": "string" },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "registry-entry.schema.json" }
+    }
+  }
+}

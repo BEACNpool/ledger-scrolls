@@ -1,0 +1,10 @@
+{
+  "format": "ledger-scrolls-registry-head",
+  "version": 0,
+  "createdAt": "2026-02-07T03:30:00Z",
+  "author": "BEACN (example)",
+  "registryList": {
+    "kind": "url",
+    "url": "./example-registry-list.json"
+  }
+}

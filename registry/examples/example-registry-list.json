@@ -1,0 +1,30 @@
+{
+  "format": "ledger-scrolls-registry-list",
+  "version": 0,
+  "generatedAt": "2026-02-07T03:30:00Z",
+  "generator": "ledger-scrolls-registry v0 (example)",
+  "entries": [
+    {
+      "name": "constitution-e608",
+      "pointer": {
+        "kind": "asset-manifest",
+        "policyId": "<policy-id-here>",
+        "assetName": "<asset-name-here>",
+        "manifestSha256": "<sha256-of-manifest-bytes>"
+      },
+      "contentType": "application/pdf",
+      "sha256": "<sha256-of-pdf-bytes>",
+      "description": "Example: constitution scroll"
+    },
+    {
+      "name": "hosky-png",
+      "pointer": {
+        "kind": "utxo-locked-bytes",
+        "txin": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef#0"
+      },
+      "contentType": "image/png",
+      "sha256": "<sha256-of-png-bytes>",
+      "description": "Example: hosky image"
+    }
+  ]
+}

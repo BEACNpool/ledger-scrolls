@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beacnpool.github.io/ledger-scrolls/schemas/registry-entry.schema.json",
+  "title": "Ledger Scrolls Registry Entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "pointer", "contentType", "sha256"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]{1,64}$"
+    },
+    "pointer": {
+      "$ref": "pointer.schema.json"
+    },
+    "contentType": {
+      "type": "string"
+    },
+    "sha256": {
+      "type": "string",
+      "description": "SHA-256 of resolved bytes (hex/base16 recommended)",
+      "minLength": 32
+    },
+    "sizeBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "description": {
+      "type": "string"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "license": {
+      "type": "string"
+    }
+  }
+}

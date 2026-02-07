@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beacnpool.github.io/ledger-scrolls/schemas/registry-head.schema.json",
+  "title": "Ledger Scrolls Registry Head",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "version", "registryList"],
+  "properties": {
+    "format": { "const": "ledger-scrolls-registry-head" },
+    "version": { "type": "integer", "const": 0 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "author": { "type": "string" },
+    "prevHead": { "$ref": "pointer.schema.json" },
+    "registryList": { "$ref": "pointer.schema.json" },
+    "signature": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Reserved for v1 signed heads"
+    }
+  }
+}

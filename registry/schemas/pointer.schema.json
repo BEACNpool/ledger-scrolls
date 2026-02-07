@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beacnpool.github.io/ledger-scrolls/schemas/pointer.schema.json",
+  "title": "Ledger Scrolls Pointer",
+  "type": "object",
+  "oneOf": [
+    {
+      "title": "UTxO Locked Bytes",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "txin"],
+      "properties": {
+        "kind": { "const": "utxo-locked-bytes" },
+        "txin": { "type": "string", "pattern": "^[0-9a-fA-F]{64}#[0-9]+$" }
+      }
+    },
+    {
+      "title": "Asset Manifest",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "policyId", "assetName", "manifestSha256"],
+      "properties": {
+        "kind": { "const": "asset-manifest" },
+        "policyId": { "type": "string" },
+        "assetName": { "type": "string" },
+        "manifestSha256": { "type": "string" }
+      }
+    },
+    {
+      "title": "URL",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "url"],
+      "properties": {
+        "kind": { "const": "url" },
+        "url": { "type": "string", "format": "uri" }
+      }
+    }
+  ]
+}
