@@ -253,7 +253,7 @@ const REGISTRY = {
     asset_name: 'LS_REGISTRY',
 
     // New forkable registry (Head → List) default trust anchor (BEACN public).
-    public_head_txin: 'ce86a174e1b35c37dea6898ef16352d447d11833549b1f382db22c5bb6358cab#0'
+    public_head_txin: 'a9c56fb3d4d8b526fe7a0aa7c2416615154af30c2c09ce747a899a886ba8bad9#0'
 };
 
 function setScrolls(newScrolls) {
