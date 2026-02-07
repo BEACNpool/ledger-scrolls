@@ -166,9 +166,19 @@ class LedgerScrollsApp {
             if (typeof settings.koiosProxy === 'undefined') {
                 settings.koiosProxy = '';
             }
+            const currentDefaultHead = (window.ScrollLibrary?.REGISTRY?.public_head_txin || '').trim();
+
             if (typeof settings.registryHeadTxIn === 'undefined') {
-                settings.registryHeadTxIn = (window.ScrollLibrary?.REGISTRY?.public_head_txin || '').trim();
+                settings.registryHeadTxIn = currentDefaultHead;
             }
+
+            // Migration: if user never customized (no private heads) and they are still pinned
+            // to the original genesis head, update to the latest shipped public head.
+            const legacyGenesisHead = 'ce86a174e1b35c37dea6898ef16352d447d11833549b1f382db22c5bb6358cab#0';
+            if ((!settings.privateHeads || settings.privateHeads.length === 0) && settings.registryHeadTxIn === legacyGenesisHead) {
+                settings.registryHeadTxIn = currentDefaultHead;
+            }
+
             if (!Array.isArray(settings.privateHeads)) {
                 settings.privateHeads = [];
             }
@@ -486,6 +496,10 @@ class LedgerScrollsApp {
             });
 
             const scrolls = this.client.registryToScrolls(merged);
+
+            // Make resolution transparent in the UI.
+            const usedHead = headTxIn;
+            this._toast('info', `Registry head: ${usedHead}`);
 
             if (!scrolls.length) {
                 this._toast('warning', 'Registry loaded, but it contained zero entries');
