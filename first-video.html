@@ -20,15 +20,12 @@
             --void: #030508;
             --deep: #080c14;
             --surface: #0e1320;
-            --surface2: #151c2e;
-            --surface3: #1c2540;
             --gold: #d4a855;
             --gold-bright: #ffd700;
             --gold-pale: #f0d78c;
             --gold-dim: #9a7b3a;
             --gold-glow: rgba(212, 168, 85, 0.35);
             --cyan: #22d3ee;
-            --cyan-glow: rgba(34, 211, 238, 0.25);
             --text: #eef2f7;
             --text-dim: #94a3b8;
             --text-muted: #5a6578;
@@ -40,7 +37,6 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-
         body {
             background: var(--void);
             color: var(--text);
@@ -49,9 +45,7 @@
             overflow-x: hidden;
         }
 
-        /* ═══════════════════════════════════════════════════════════
-           BACKGROUND — Deep space atmosphere
-        ═══════════════════════════════════════════════════════════ */
+        /* ═══════════════════════ BACKGROUND ═══════════════════════ */
         .bg-cosmos {
             position: fixed; inset: 0; z-index: 0;
             pointer-events: none; overflow: hidden;
@@ -61,34 +55,23 @@
             position: absolute; inset: -40%;
             background:
                 radial-gradient(ellipse at 20% 20%, rgba(212, 168, 85, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 70%, rgba(34, 211, 238, 0.04) 0%, transparent 45%),
-                radial-gradient(ellipse at 50% 50%, rgba(255, 215, 0, 0.03) 0%, transparent 60%);
+                radial-gradient(ellipse at 80% 70%, rgba(34, 211, 238, 0.04) 0%, transparent 45%);
             animation: cosmicDrift 30s ease-in-out infinite alternate;
         }
         @keyframes cosmicDrift {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(3%, -2%) scale(1.08); }
+            0% { transform: translate(0,0) scale(1); }
+            100% { transform: translate(3%,-2%) scale(1.08); }
         }
-
-        /* Star field */
-        .starfield {
-            position: fixed; inset: 0; z-index: 0;
-            pointer-events: none;
-        }
+        .starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
         .star {
-            position: absolute;
-            border-radius: 50%;
-            background: white;
-            animation: starTwinkle var(--dur) ease-in-out infinite alternate;
+            position: absolute; border-radius: 50%; background: white;
+            animation: twinkle var(--dur) ease-in-out infinite alternate;
         }
-        @keyframes starTwinkle {
-            0% { opacity: var(--o1); transform: scale(1); }
-            100% { opacity: var(--o2); transform: scale(1.3); }
+        @keyframes twinkle {
+            0% { opacity: var(--o1); } 100% { opacity: var(--o2); }
         }
 
-        /* ═══════════════════════════════════════════════════════════
-           CINEMA INTRO OVERLAY — The "Premiere" feel
-        ═══════════════════════════════════════════════════════════ */
+        /* ═══════════════════════ CINEMA INTRO ═══════════════════════ */
         .cinema-intro {
             position: fixed; inset: 0; z-index: 1000;
             background: var(--void);
@@ -96,464 +79,398 @@
             align-items: center; justify-content: center;
             transition: opacity 1.2s ease, visibility 1.2s ease;
         }
-        .cinema-intro.fade-out {
-            opacity: 0; visibility: hidden;
-        }
+        .cinema-intro.fade-out { opacity: 0; visibility: hidden; }
         .cinema-tagline {
             font-family: var(--font-display);
-            font-size: clamp(0.7rem, 2vw, 0.95rem);
-            letter-spacing: 6px;
-            text-transform: uppercase;
+            font-size: clamp(0.65rem, 2vw, 0.9rem);
+            letter-spacing: 6px; text-transform: uppercase;
             color: var(--gold);
-            opacity: 0;
-            animation: fadeSlideUp 1s 0.5s ease forwards;
+            opacity: 0; animation: fadeUp 1s 0.5s ease forwards;
         }
-        .cinema-title {
-            font-family: var(--font-display);
-            font-size: clamp(1.8rem, 6vw, 3.5rem);
-            font-weight: 700;
-            text-align: center;
-            background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 40%, var(--gold-pale) 70%, var(--gold) 100%);
-            background-size: 200% 200%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: fadeSlideUp 1.2s 1s ease forwards, shimmer 4s ease-in-out infinite;
-            opacity: 0;
-            margin: 16px 0;
-            line-height: 1.2;
-            padding: 0 20px;
-        }
-        .cinema-subtitle {
-            font-family: var(--font-body);
-            font-size: clamp(1rem, 3vw, 1.4rem);
-            font-style: italic;
-            color: var(--text-dim);
-            opacity: 0;
-            animation: fadeSlideUp 1s 1.8s ease forwards;
-        }
-        @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes shimmer {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        /* Divider line */
         .cinema-line {
             width: 60px; height: 1px;
             background: linear-gradient(90deg, transparent, var(--gold), transparent);
             margin: 14px 0;
-            opacity: 0;
-            animation: fadeSlideUp 1s 1.4s ease forwards;
+            opacity: 0; animation: fadeUp 1s 1.2s ease forwards;
+        }
+        .cinema-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.7rem, 6vw, 3.5rem);
+            font-weight: 700; text-align: center;
+            background: linear-gradient(135deg, var(--gold-bright), var(--gold), var(--gold-pale), var(--gold));
+            background-size: 200% 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeUp 1.2s 0.8s ease forwards, shimmer 4s ease-in-out infinite;
+            opacity: 0; margin: 12px 0; line-height: 1.2; padding: 0 20px;
+        }
+        .cinema-subtitle {
+            font-family: var(--font-body);
+            font-size: clamp(0.95rem, 3vw, 1.35rem);
+            font-style: italic; color: var(--text-dim);
+            opacity: 0; animation: fadeUp 1s 1.6s ease forwards;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shimmer {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
-        /* ═══════════════════════════════════════════════════════════
-           MAIN LAYOUT
-        ═══════════════════════════════════════════════════════════ */
+        /* ═══════════════════════ MAIN ═══════════════════════ */
         .main-content {
             position: relative; z-index: 1;
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 20px;
-            opacity: 0;
-            transition: opacity 0.8s ease 0.3s;
+            max-width: 1100px; margin: 0 auto; padding: 0 20px;
+            opacity: 0; transition: opacity 0.8s ease 0.3s;
         }
         .main-content.visible { opacity: 1; }
 
-        /* ═══════════════════════════════════════════════════════════
-           THEATER — The video/loading container
-        ═══════════════════════════════════════════════════════════ */
-        .theater-wrapper {
-            margin: 30px 0 20px;
-        }
+        /* ═══════════════════════ THEATER ═══════════════════════ */
+        .theater-wrapper { margin: 30px 0 20px; }
         .theater-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 4px 12px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 4px 10px;
         }
         .theater-badge {
             display: flex; align-items: center; gap: 8px;
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            color: var(--gold);
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            font-family: var(--font-mono); font-size: 0.7rem;
+            color: var(--gold); letter-spacing: 1px; text-transform: uppercase;
         }
-        .theater-badge .pulse-dot {
-            width: 6px; height: 6px;
-            background: var(--gold);
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
+        .pulse-dot {
+            width: 6px; height: 6px; background: var(--gold);
+            border-radius: 50%; animation: pulse 2s ease-in-out infinite;
         }
         @keyframes pulse {
-            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--gold-glow); }
+            0%,100% { opacity: 1; box-shadow: 0 0 0 0 var(--gold-glow); }
             50% { opacity: 0.6; box-shadow: 0 0 0 6px transparent; }
         }
         .theater-live {
             display: flex; align-items: center; gap: 6px;
-            font-family: var(--font-mono);
-            font-size: 0.65rem;
-            color: var(--cyan);
-            letter-spacing: 1px;
-            transition: opacity 0.5s ease;
+            font-family: var(--font-mono); font-size: 0.65rem;
+            color: var(--cyan); letter-spacing: 1px; transition: opacity 0.5s;
         }
-        .theater-live .dot {
-            width: 5px; height: 5px;
-            background: var(--cyan);
-            border-radius: 50%;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
+        .theater-live .dot { width: 5px; height: 5px; background: var(--cyan); border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
 
         .theater {
-            position: relative;
-            width: 100%;
+            position: relative; width: 100%;
             aspect-ratio: 16/9;
-            background: var(--deep);
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid rgba(212, 168, 85, 0.08);
-            box-shadow:
-                0 0 80px rgba(0,0,0,0.6),
-                0 0 40px rgba(212, 168, 85, 0.05),
-                inset 0 0 80px rgba(0,0,0,0.3);
-            transition: min-height 0.6s ease, aspect-ratio 0.6s ease;
+            background: var(--void); border-radius: 12px; overflow: hidden;
+            border: 1px solid rgba(212,168,85,0.08);
+            box-shadow: 0 0 80px rgba(0,0,0,0.6), 0 0 40px rgba(212,168,85,0.05);
+            transition: min-height 0.6s ease;
         }
         .theater video {
-            width: 100%; height: 100%;
-            object-fit: contain;
-            display: none;
+            width: 100%; height: 100%; object-fit: contain; display: none;
         }
         .theater video.ready { display: block; }
 
         /* ═══════════════════════════════════════════════════════════
-           LOADING EXPERIENCE — The main event
+           CINEMATIC SLIDESHOW LOADER
+           Full-bleed slides with Ken Burns, crossfade transitions,
+           and a minimal progress HUD overlay.
         ═══════════════════════════════════════════════════════════ */
-        .loader {
+        .slideshow {
             position: absolute; inset: 0;
-            display: flex;
+            background: var(--void);
             transition: opacity 0.8s ease;
         }
-        .loader.done { opacity: 0; pointer-events: none; }
+        .slideshow.done { opacity: 0; pointer-events: none; }
 
-        /* LEFT PANEL — Cinema narrative + facts */
-        .loader-narrative {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 30px 28px 30px 32px;
-            position: relative;
+        /* ── Individual Slide ── */
+        .slide {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            justify-content: flex-end;
+            padding: 0;
+            opacity: 0;
+            transition: opacity 1.2s ease;
             overflow: hidden;
         }
-        .loader-narrative::after {
-            content: '';
-            position: absolute;
-            right: 0; top: 10%; bottom: 10%;
-            width: 1px;
-            background: linear-gradient(180deg, transparent, rgba(212,168,85,0.15), transparent);
+        .slide.active { opacity: 1; z-index: 2; }
+        .slide.exiting { opacity: 0; z-index: 1; }
+
+        /* Background layer — images or CSS visuals */
+        .slide-bg {
+            position: absolute; inset: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        /* Ken Burns effect for image slides */
+        .slide.active .slide-bg.ken-burns {
+            animation: kenBurns 12s ease-in-out forwards;
+        }
+        @keyframes kenBurns {
+            0% { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.08) translate(-1%, -1%); }
+        }
+        /* Slow zoom for text slides */
+        .slide.active .slide-bg.slow-zoom {
+            animation: slowZoom 12s ease-in-out forwards;
+        }
+        @keyframes slowZoom {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.04); }
         }
 
-        /* Narrative fact card */
-        .fact-card {
-            position: relative;
+        /* Gradient overlay for text readability */
+        .slide-overlay {
+            position: absolute; inset: 0;
+            z-index: 1;
         }
-        .fact-eyebrow {
+        .slide-overlay.bottom-heavy {
+            background: linear-gradient(0deg,
+                rgba(3,5,8,0.95) 0%,
+                rgba(3,5,8,0.7) 35%,
+                rgba(3,5,8,0.3) 60%,
+                rgba(3,5,8,0.15) 100%);
+        }
+        .slide-overlay.full-dark {
+            background: radial-gradient(ellipse at center, rgba(3,5,8,0.6) 0%, rgba(3,5,8,0.9) 100%);
+        }
+        .slide-overlay.center-vignette {
+            background: radial-gradient(ellipse at center, transparent 20%, rgba(3,5,8,0.85) 100%);
+        }
+
+        /* Text content — always at the bottom */
+        .slide-content {
+            position: relative; z-index: 2;
+            padding: 0 40px 40px;
+            max-width: 700px;
+        }
+        .slide-eyebrow {
             font-family: var(--font-mono);
-            font-size: 0.6rem;
-            letter-spacing: 3px;
+            font-size: 0.6rem; letter-spacing: 3px;
             text-transform: uppercase;
             color: var(--gold-dim);
             margin-bottom: 10px;
+            opacity: 0;
+            animation: none;
         }
-        .fact-title {
+        .slide.active .slide-eyebrow {
+            animation: fadeUp 0.8s 0.3s ease forwards;
+        }
+        .slide-title {
             font-family: var(--font-display);
-            font-size: clamp(1rem, 2.5vw, 1.35rem);
-            font-weight: 600;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            font-weight: 700;
             color: var(--gold-pale);
-            margin-bottom: 10px;
-            line-height: 1.3;
+            line-height: 1.25;
+            margin-bottom: 12px;
+            opacity: 0;
         }
-        .fact-body {
+        .slide.active .slide-title {
+            animation: fadeUp 0.8s 0.5s ease forwards;
+        }
+        .slide-body {
             font-family: var(--font-body);
-            font-size: clamp(0.95rem, 2vw, 1.15rem);
+            font-size: clamp(1rem, 2.2vw, 1.2rem);
             color: var(--text-dim);
-            line-height: 1.7;
+            line-height: 1.75;
+            opacity: 0;
         }
-        .fact-body em { color: var(--gold); font-style: normal; font-weight: 600; }
+        .slide.active .slide-body {
+            animation: fadeUp 0.8s 0.7s ease forwards;
+        }
+        .slide-body em {
+            color: var(--gold); font-style: normal; font-weight: 600;
+        }
 
-        /* Fact transition */
-        .fact-card { animation: factIn 0.7s ease; }
-        @keyframes factIn {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Centered dramatic text slide variant */
+        .slide-content.centered {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 40px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            position: absolute; inset: 0;
+        }
+        .slide-content.centered .slide-title {
+            font-size: clamp(1.4rem, 3.5vw, 2.2rem);
         }
 
-        /* Fact navigation dots */
-        .fact-nav {
-            display: flex; gap: 5px;
-            margin-top: 20px;
+        /* NFT grid special bg */
+        .slide-bg.nft-grid {
+            background-image: url('assets/nft-grid.png');
+            background-size: cover;
+            background-position: center top;
         }
-        .fact-dot {
-            width: 20px; height: 3px;
-            background: rgba(255,255,255,0.1);
+
+        /* CSS-driven visual backgrounds */
+        .slide-bg.pipeline-visual {
+            background:
+                radial-gradient(circle at 15% 50%, rgba(34,211,238,0.08) 0%, transparent 30%),
+                radial-gradient(circle at 50% 50%, rgba(212,168,85,0.06) 0%, transparent 25%),
+                radial-gradient(circle at 85% 50%, rgba(255,215,0,0.08) 0%, transparent 30%),
+                var(--void);
+        }
+        .slide-bg.hash-visual {
+            background:
+                radial-gradient(circle at 50% 40%, rgba(212,168,85,0.1) 0%, transparent 40%),
+                var(--void);
+        }
+        .slide-bg.library-visual {
+            background:
+                radial-gradient(ellipse at 30% 60%, rgba(212,168,85,0.08) 0%, transparent 40%),
+                radial-gradient(ellipse at 70% 30%, rgba(34,211,238,0.06) 0%, transparent 35%),
+                var(--void);
+        }
+        .slide-bg.cosmos-visual {
+            background:
+                radial-gradient(ellipse at 50% 30%, rgba(255,215,0,0.07) 0%, transparent 45%),
+                radial-gradient(ellipse at 20% 70%, rgba(212,168,85,0.05) 0%, transparent 40%),
+                radial-gradient(ellipse at 80% 80%, rgba(34,211,238,0.04) 0%, transparent 35%),
+                var(--void);
+        }
+
+        /* CSS animated pipeline diagram inside a slide */
+        .pipeline-diagram {
+            position: absolute; top: 15%; left: 50%;
+            transform: translateX(-50%);
+            display: flex; align-items: center; gap: 0;
+            z-index: 1;
+            opacity: 0.6;
+        }
+        .pipe-node {
+            width: 64px; height: 64px;
+            border: 1px solid rgba(212,168,85,0.25);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            background: rgba(212,168,85,0.04);
+            flex-shrink: 0;
+        }
+        .pipe-arrow {
+            width: 40px; height: 1px;
+            background: linear-gradient(90deg, rgba(212,168,85,0.3), rgba(212,168,85,0.1));
+            position: relative;
+            flex-shrink: 0;
+        }
+        .pipe-arrow::after {
+            content: '›';
+            position: absolute; right: -4px; top: -8px;
+            color: var(--gold-dim); font-size: 0.9rem;
+        }
+
+        /* Hex watermark on hash slide */
+        .hex-watermark {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-mono);
+            font-size: clamp(0.4rem, 1vw, 0.6rem);
+            color: rgba(212,168,85,0.06);
+            line-height: 2;
+            text-align: center;
+            word-break: break-all;
+            padding: 20px;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        /* BEACN logo in library slide */
+        .beacn-watermark {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -55%);
+            width: 120px; height: 120px;
+            opacity: 0.08;
+            background-image: url('assets/beacn-logo.png');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 0;
+        }
+
+        /* ── Progress HUD (overlay on slideshow) ── */
+        .progress-hud {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            z-index: 10;
+            padding: 10px 16px 12px;
+            background: linear-gradient(0deg, rgba(3,5,8,0.85) 0%, transparent 100%);
+            display: flex; align-items: center; gap: 14px;
+        }
+        .progress-bar-track {
+            flex: 1; height: 3px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 2px; overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--gold), var(--gold-bright));
+            border-radius: 2px;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 8px var(--gold-glow);
+        }
+        .progress-label {
+            font-family: var(--font-mono); font-size: 0.6rem;
+            color: var(--gold); white-space: nowrap;
+            min-width: 90px; text-align: right;
+        }
+        .progress-label .pct { font-weight: 500; }
+
+        /* Slide indicator dots */
+        .slide-dots {
+            position: absolute;
+            bottom: 32px; right: 16px;
+            z-index: 10;
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .sdot {
+            width: 3px; height: 12px;
+            background: rgba(255,255,255,0.12);
             border-radius: 2px;
             transition: all 0.4s ease;
         }
-        .fact-dot.active {
+        .sdot.active {
             background: var(--gold);
-            width: 32px;
-            box-shadow: 0 0 8px var(--gold-glow);
+            height: 20px;
+            box-shadow: 0 0 6px var(--gold-glow);
         }
-        .fact-dot.seen {
-            background: rgba(212, 168, 85, 0.25);
-        }
+        .sdot.seen { background: rgba(212,168,85,0.25); }
 
-        /* RIGHT PANEL — Technical visualization */
-        .loader-viz {
-            width: 38%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            background: rgba(0,0,0,0.2);
-            position: relative;
-        }
-
-        /* Circular progress */
-        .ring-container {
-            position: relative;
-            width: 130px; height: 130px;
-            margin-bottom: 16px;
-        }
-        .ring-svg { transform: rotate(-90deg); filter: drop-shadow(0 0 12px var(--gold-glow)); }
-        .ring-bg {
-            fill: none;
-            stroke: rgba(255,255,255,0.05);
-            stroke-width: 5;
-        }
-        .ring-fill {
-            fill: none;
-            stroke: url(#ringGrad);
-            stroke-width: 5;
-            stroke-linecap: round;
-            stroke-dasharray: 345.575;
-            stroke-dashoffset: 345.575;
-            transition: stroke-dashoffset 0.4s ease;
-        }
-        .ring-percent {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-family: var(--font-mono);
-            font-size: 1.8rem;
-            font-weight: 300;
-            color: var(--gold);
-            letter-spacing: -1px;
-        }
-        .ring-percent span {
-            font-size: 0.8rem;
-            color: var(--gold-dim);
-        }
-
-        /* Page counter */
-        .page-count {
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            margin-bottom: 16px;
-            letter-spacing: 0.5px;
-        }
-        .page-count .hi { color: var(--gold); }
-
-        /* Phase steps */
-        .phases {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .phase-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: var(--font-mono);
-            font-size: 0.6rem;
-            color: var(--text-muted);
-            letter-spacing: 0.5px;
-            transition: color 0.3s ease;
-        }
-        .phase-row.active { color: var(--gold); }
-        .phase-row.done { color: var(--gold-dim); }
-        .phase-icon {
-            width: 16px; height: 16px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.1);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.5rem;
-            transition: all 0.3s ease;
-            flex-shrink: 0;
-        }
-        .phase-row.active .phase-icon {
-            border-color: var(--gold);
-            background: rgba(212, 168, 85, 0.15);
-            box-shadow: 0 0 10px var(--gold-glow);
-        }
-        .phase-row.done .phase-icon {
-            border-color: var(--gold-dim);
-            background: rgba(212, 168, 85, 0.1);
-            color: var(--gold);
-        }
-
-        /* Data stream visualization */
-        .data-stream {
-            width: 100%;
-            height: 32px;
-            margin-top: 14px;
-            border-radius: 4px;
-            overflow: hidden;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(212,168,85,0.06);
-            position: relative;
-            font-family: var(--font-mono);
-            font-size: 0.5rem;
-            color: rgba(212,168,85,0.4);
-            display: flex;
-            align-items: center;
-            padding: 0 6px;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-        .data-stream-text {
-            animation: streamScroll 8s linear infinite;
-        }
-        @keyframes streamScroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-        /* ═══════════════════════════════════════════════════════════
-           MOBILE — Complete redesign for phones
-           The theater 16/9 is too short for the loader on mobile,
-           so we break the loader out of that constraint.
-        ═══════════════════════════════════════════════════════════ */
+        /* ═══════════════════════ MOBILE ═══════════════════════ */
         @media (max-width: 700px) {
-            /* Theater expands vertically while loading */
             .theater.is-loading {
                 aspect-ratio: auto;
-                min-height: 80vh;
-                border-radius: 10px;
+                min-height: 82vh;
             }
-            .theater:not(.is-loading) {
-                aspect-ratio: 16/9;
-            }
+            .theater:not(.is-loading) { aspect-ratio: 16/9; }
 
-            /* Loader stacks vertically, fills space */
-            .loader {
-                flex-direction: column;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
+            .slide-content {
+                padding: 0 22px 52px;
             }
+            .slide-content.centered {
+                padding: 20px 22px 52px;
+            }
+            .slide-eyebrow { font-size: 0.5rem; letter-spacing: 2px; margin-bottom: 8px; }
+            .slide-title { font-size: 1.15rem; margin-bottom: 8px; }
+            .slide-content.centered .slide-title { font-size: 1.3rem; }
+            .slide-body { font-size: 1rem; line-height: 1.6; }
 
-            /* Top section: compact progress strip */
-            .loader-viz {
-                width: 100%;
-                padding: 20px 20px 16px;
-                flex-direction: column;
-                align-items: center;
-                gap: 12px;
-                background: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.15) 100%);
-                border-bottom: 1px solid rgba(212,168,85,0.08);
-                flex-shrink: 0;
-            }
+            .pipeline-diagram { top: 8%; gap: 0; transform: translateX(-50%) scale(0.7); }
+            .beacn-watermark { width: 80px; height: 80px; }
 
-            /* Ring + page count side by side on mobile */
-            .loader-viz .ring-container {
-                width: 90px; height: 90px;
-                margin-bottom: 4px;
-            }
-            .ring-percent { font-size: 1.3rem; }
-            .ring-percent span { font-size: 0.7rem; }
-            .page-count { margin-bottom: 8px; font-size: 0.65rem; }
+            .progress-hud { padding: 8px 14px 10px; }
+            .progress-label { font-size: 0.5rem; min-width: 75px; }
 
-            /* Phases as horizontal compact strip */
-            .phases {
-                flex-direction: row;
-                flex-wrap: wrap;
-                gap: 4px 12px;
-                justify-content: center;
-                width: auto;
-            }
-            .phase-row { font-size: 0.55rem; gap: 4px; }
-            .phase-icon { width: 14px; height: 14px; font-size: 0.45rem; }
+            .slide-dots { bottom: 28px; right: 12px; gap: 4px; }
+            .sdot { width: 2.5px; height: 10px; }
+            .sdot.active { height: 16px; }
 
-            /* Hide data stream on mobile */
-            .data-stream { display: none; }
-
-            /* Bottom section: fact cards are the hero */
-            .loader-narrative {
-                flex: 1;
-                padding: 24px 22px 28px;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-            }
-            .loader-narrative::after { display: none; }
-
-            .fact-eyebrow {
-                font-size: 0.55rem;
-                letter-spacing: 2.5px;
-                margin-bottom: 8px;
-            }
-            .fact-title {
-                font-size: 1.15rem;
-                margin-bottom: 10px;
-                line-height: 1.35;
-            }
-            .fact-body {
-                font-size: 1.05rem;
-                line-height: 1.65;
-            }
-            .fact-nav {
-                margin-top: 18px;
-                flex-wrap: wrap;
-                gap: 4px;
-            }
-            .fact-dot { width: 14px; height: 2.5px; }
-            .fact-dot.active { width: 24px; }
-
-            /* Theater header adjustments */
-            .theater-header {
-                padding: 0 2px 8px;
-            }
-            .theater-badge { font-size: 0.6rem; gap: 6px; }
-            .theater-badge .pulse-dot { width: 5px; height: 5px; }
+            .theater-header { padding: 0 2px 8px; }
+            .theater-badge { font-size: 0.6rem; }
             .theater-live { font-size: 0.55rem; }
 
-            /* Cinema intro mobile */
-            .cinema-tagline {
-                font-size: 0.65rem;
-                letter-spacing: 4px;
-            }
-            .cinema-title {
-                font-size: 1.6rem;
-                padding: 0 16px;
-            }
-            .cinema-subtitle {
-                font-size: 0.95rem;
-                padding: 0 16px;
-            }
+            .cinema-tagline { font-size: 0.6rem; letter-spacing: 4px; }
+            .cinema-title { font-size: 1.5rem; }
+            .cinema-subtitle { font-size: 0.9rem; }
 
-            /* Main content spacing */
             .main-content { padding: 0 14px; }
             .theater-wrapper { margin: 16px 0 14px; }
 
-            /* Post-load sections */
             .info-panel { padding: 22px 18px; margin: 14px 0; border-radius: 10px; }
             .info-panel h2 { font-size: 1rem; }
             .info-panel p { font-size: 1rem; line-height: 1.65; }
@@ -566,220 +483,123 @@
             .explainer-card h3 { font-size: 0.8rem; }
             .explainer-card p { font-size: 0.95rem; }
             .download-section { padding: 22px 18px; margin: 14px 0; }
-            .download-section h2 { font-size: 1rem; }
-            .download-section p { font-size: 0.95rem; }
             .links-bar { gap: 8px; margin: 20px 0; }
             .link-btn { padding: 10px 18px; font-size: 0.65rem; }
             .site-footer { padding: 20px 16px 30px; font-size: 0.85rem; }
         }
 
-        /* Extra small phones */
         @media (max-width: 380px) {
-            .theater.is-loading { min-height: 85vh; }
-            .fact-title { font-size: 1.05rem; }
-            .fact-body { font-size: 0.95rem; }
-            .loader-viz { padding: 16px 16px 12px; }
-            .loader-narrative { padding: 18px 16px 22px; }
+            .theater.is-loading { min-height: 88vh; }
+            .slide-title { font-size: 1.05rem; }
+            .slide-content.centered .slide-title { font-size: 1.15rem; }
+            .slide-body { font-size: 0.92rem; }
+            .slide-content { padding: 0 18px 48px; }
         }
 
-        /* ═══════════════════════════════════════════════════════════
-           POST-LOAD — Info sections below video
-        ═══════════════════════════════════════════════════════════ */
+        /* ═══════════════════════ POST-LOAD SECTIONS ═══════════════════════ */
         .info-panel {
             background: var(--deep);
-            border: 1px solid rgba(212, 168, 85, 0.06);
-            border-radius: 12px;
-            padding: 32px;
-            margin: 20px 0;
+            border: 1px solid rgba(212,168,85,0.06);
+            border-radius: 12px; padding: 32px; margin: 20px 0;
         }
         .info-panel h2 {
-            font-family: var(--font-display);
-            font-size: 1.15rem;
-            color: var(--gold-pale);
-            margin-bottom: 14px;
-            letter-spacing: 0.5px;
+            font-family: var(--font-display); font-size: 1.15rem;
+            color: var(--gold-pale); margin-bottom: 14px;
         }
         .info-panel p {
-            font-family: var(--font-body);
-            font-size: 1.1rem;
-            color: var(--text-dim);
-            line-height: 1.75;
-            margin-bottom: 14px;
+            font-family: var(--font-body); font-size: 1.1rem;
+            color: var(--text-dim); line-height: 1.75; margin-bottom: 14px;
         }
         .info-panel p:last-child { margin-bottom: 0; }
         .info-panel strong { color: var(--text); }
 
-        /* Stats row */
         .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 12px;
-            margin-top: 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr));
+            gap: 12px; margin-top: 20px;
         }
         .stat {
-            background: rgba(212, 168, 85, 0.03);
-            border: 1px solid rgba(212, 168, 85, 0.06);
-            border-radius: 8px;
-            padding: 16px;
-            text-align: center;
+            background: rgba(212,168,85,0.03);
+            border: 1px solid rgba(212,168,85,0.06);
+            border-radius: 8px; padding: 16px; text-align: center;
         }
-        .stat-val {
-            font-family: var(--font-mono);
-            font-size: 1.5rem;
-            font-weight: 400;
-            color: var(--gold);
-        }
-        .stat-lbl {
-            font-family: var(--font-ui);
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-            letter-spacing: 0.5px;
-        }
+        .stat-val { font-family: var(--font-mono); font-size: 1.5rem; color: var(--gold); }
+        .stat-lbl { font-family: var(--font-ui); font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
 
-        /* Tech explainer cards */
         .explainer-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
-            margin-top: 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
+            gap: 16px; margin-top: 20px;
         }
         .explainer-card {
             background: rgba(0,0,0,0.2);
             border: 1px solid rgba(212,168,85,0.05);
-            border-radius: 10px;
-            padding: 22px;
+            border-radius: 10px; padding: 22px;
         }
         .explainer-card h3 {
-            font-family: var(--font-display);
-            font-size: 0.85rem;
-            color: var(--gold);
-            margin-bottom: 8px;
-            display: flex; align-items: center; gap: 8px;
+            font-family: var(--font-display); font-size: 0.85rem;
+            color: var(--gold); margin-bottom: 8px;
         }
         .explainer-card p {
-            font-family: var(--font-body);
-            font-size: 1rem;
-            color: var(--text-dim);
-            line-height: 1.65;
-            margin: 0;
+            font-family: var(--font-body); font-size: 1rem;
+            color: var(--text-dim); line-height: 1.65; margin: 0;
         }
 
-        /* Download section */
         .download-section {
             background: linear-gradient(135deg, rgba(212,168,85,0.05), rgba(34,211,238,0.03));
             border: 1px solid rgba(212,168,85,0.1);
-            border-radius: 12px;
-            padding: 28px;
-            margin: 20px 0;
-            text-align: center;
+            border-radius: 12px; padding: 28px; margin: 20px 0; text-align: center;
         }
-        .download-section h2 {
-            font-family: var(--font-display);
-            font-size: 1.1rem;
-            color: var(--gold-pale);
-            margin-bottom: 10px;
-        }
-        .download-section p {
-            font-family: var(--font-body);
-            font-size: 1.05rem;
-            color: var(--text-dim);
-            margin-bottom: 18px;
-            line-height: 1.6;
-        }
+        .download-section h2 { font-family: var(--font-display); font-size: 1.1rem; color: var(--gold-pale); margin-bottom: 10px; }
+        .download-section p { font-family: var(--font-body); font-size: 1.05rem; color: var(--text-dim); margin-bottom: 18px; line-height: 1.6; }
         .btn-download {
             display: inline-flex; align-items: center; gap: 8px;
             padding: 12px 32px;
             background: linear-gradient(135deg, var(--gold), var(--gold-dim));
-            color: var(--void);
-            font-family: var(--font-display);
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.25s ease;
+            color: var(--void); font-family: var(--font-display);
+            font-size: 0.8rem; font-weight: 600; letter-spacing: 1px;
+            text-transform: uppercase; border: none; border-radius: 6px;
+            cursor: pointer; transition: all 0.25s ease;
         }
-        .btn-download:hover {
-            box-shadow: 0 6px 24px var(--gold-glow);
-            transform: translateY(-2px);
-        }
-        .btn-download:disabled {
-            opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none;
-        }
+        .btn-download:hover { box-shadow: 0 6px 24px var(--gold-glow); transform: translateY(-2px); }
+        .btn-download:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        /* Links */
-        .links-bar {
-            display: flex; flex-wrap: wrap; gap: 12px;
-            justify-content: center;
-            margin: 30px 0;
-        }
+        .links-bar { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 30px 0; }
         .link-btn {
             display: inline-flex; align-items: center; gap: 8px;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-family: var(--font-display);
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            transition: all 0.25s ease;
+            padding: 12px 24px; border-radius: 8px; text-decoration: none;
+            font-family: var(--font-display); font-size: 0.75rem; font-weight: 600;
+            letter-spacing: 1px; text-transform: uppercase; transition: all 0.25s ease;
         }
-        .link-primary {
-            background: linear-gradient(135deg, var(--gold), var(--gold-dim));
-            color: var(--void);
-        }
+        .link-primary { background: linear-gradient(135deg, var(--gold), var(--gold-dim)); color: var(--void); }
         .link-primary:hover { box-shadow: 0 4px 20px var(--gold-glow); transform: translateY(-2px); }
-        .link-secondary {
-            border: 1px solid rgba(212,168,85,0.2);
-            color: var(--gold);
-        }
+        .link-secondary { border: 1px solid rgba(212,168,85,0.2); color: var(--gold); }
         .link-secondary:hover { border-color: var(--gold); box-shadow: 0 0 20px var(--gold-glow); }
 
-        /* Footer */
         .site-footer {
-            text-align: center;
-            padding: 30px 20px 40px;
-            font-family: var(--font-body);
-            font-size: 0.95rem;
-            color: var(--text-muted);
+            text-align: center; padding: 30px 20px 40px;
+            font-family: var(--font-body); font-size: 0.95rem; color: var(--text-muted);
         }
         .site-footer a { color: var(--gold); text-decoration: none; }
         .site-footer a:hover { text-decoration: underline; }
 
-        /* Error state */
         .error-box {
-            position: absolute; inset: 0;
-            display: none; flex-direction: column;
+            position: absolute; inset: 0; display: none; flex-direction: column;
             align-items: center; justify-content: center;
-            padding: 30px; text-align: center;
-            background: var(--deep);
+            padding: 30px; text-align: center; background: var(--deep); z-index: 50;
         }
         .error-box.show { display: flex; }
         .error-box .icon { font-size: 2.5rem; margin-bottom: 16px; }
         .error-box p { font-family: var(--font-body); font-size: 1.1rem; color: var(--text-dim); margin-bottom: 16px; }
         .error-box button {
-            padding: 10px 28px;
-            background: var(--gold);
-            color: var(--void);
-            border: none; border-radius: 6px;
-            font-family: var(--font-display);
-            font-weight: 600; font-size: 0.8rem;
-            cursor: pointer; letter-spacing: 1px;
+            padding: 10px 28px; background: var(--gold); color: var(--void); border: none; border-radius: 6px;
+            font-family: var(--font-display); font-weight: 600; font-size: 0.8rem; cursor: pointer;
         }
 
-        /* Scroll reveal for post-load content */
         .below-fold { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
         .below-fold.visible { opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body>
 
-<!-- ═══════════════════════ STAR FIELD ═══════════════════════ -->
 <div class="starfield" id="starfield"></div>
 <div class="bg-cosmos"></div>
 
@@ -791,71 +611,158 @@
     <div class="cinema-subtitle">175 NFTs · Zero Servers · Reconstructed Live</div>
 </div>
 
-<!-- ═══════════════════════ MAIN CONTENT ═══════════════════════ -->
+<!-- ═══════════════════════ MAIN ═══════════════════════ -->
 <div class="main-content" id="mainContent">
-
-    <!-- Theater -->
     <div class="theater-wrapper">
         <div class="theater-header">
-            <div class="theater-badge">
-                <div class="pulse-dot"></div>
-                <span>Reconstructing from Cardano</span>
-            </div>
-            <div class="theater-live" id="liveIndicator" style="opacity:0">
-                <div class="dot"></div>
-                <span>BLOCKCHAIN LIVE</span>
-            </div>
+            <div class="theater-badge"><div class="pulse-dot"></div><span>Reconstructing from Cardano</span></div>
+            <div class="theater-live" id="liveIndicator" style="opacity:0"><div class="dot"></div><span>BLOCKCHAIN LIVE</span></div>
         </div>
 
         <div class="theater" id="theater">
             <video id="videoPlayer" controls playsinline></video>
 
-            <!-- Loading Experience -->
-            <div class="loader" id="loader">
-                <!-- LEFT: Narrative -->
-                <div class="loader-narrative">
-                    <div class="fact-card" id="factCard">
-                        <div class="fact-eyebrow" id="factEyebrow">Initializing</div>
-                        <div class="fact-title" id="factTitle">Connecting to the Cardano Blockchain…</div>
-                        <div class="fact-body" id="factBody">Your browser is about to do something no browser has done before — reconstruct a complete video file from <em>175 on-chain NFTs</em>, with zero servers involved.</div>
+            <!-- ════════════ CINEMATIC SLIDESHOW ════════════ -->
+            <div class="slideshow" id="slideshow">
+
+                <!-- SLIDE 0: World Premiere -->
+                <div class="slide active" data-idx="0">
+                    <div class="slide-bg cosmos-visual slow-zoom"></div>
+                    <div class="slide-overlay full-dark"></div>
+                    <div class="slide-content centered">
+                        <div class="slide-eyebrow">February 2026</div>
+                        <div class="slide-title" style="font-size:clamp(1.4rem,4vw,2.4rem)">The First Video Ever Stored<br>Entirely on a Blockchain</div>
+                        <div class="slide-body">Not a link. Not a hash. Not a pointer to a server. The actual video data — every byte — lives on the Cardano blockchain. Your browser is about to reconstruct it live.</div>
                     </div>
-                    <div class="fact-nav" id="factNav"></div>
                 </div>
 
-                <!-- RIGHT: Viz -->
-                <div class="loader-viz">
-                    <div class="ring-container">
-                        <svg class="ring-svg" width="130" height="130" viewBox="0 0 130 130">
-                            <defs>
-                                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" stop-color="#d4a855"/>
-                                    <stop offset="100%" stop-color="#ffd700"/>
-                                </linearGradient>
-                            </defs>
-                            <circle class="ring-bg" cx="65" cy="65" r="55"/>
-                            <circle class="ring-fill" id="ringFill" cx="65" cy="65" r="55"/>
-                        </svg>
-                        <div class="ring-percent" id="ringPercent">0<span>%</span></div>
-                    </div>
-
-                    <div class="page-count">
-                        NFT <span class="hi" id="pageNow">0</span> / <span id="pageTotal">175</span>
-                    </div>
-
-                    <div class="phases">
-                        <div class="phase-row active" id="ph1"><div class="phase-icon">1</div> Querying Policy</div>
-                        <div class="phase-row" id="ph2"><div class="phase-icon">2</div> Fetching NFTs</div>
-                        <div class="phase-row" id="ph3"><div class="phase-icon">3</div> Extracting Payloads</div>
-                        <div class="phase-row" id="ph4"><div class="phase-icon">4</div> Assembling Video</div>
-                    </div>
-
-                    <div class="data-stream" id="dataStream">
-                        <div class="data-stream-text" id="streamText"></div>
+                <!-- SLIDE 1: What's Happening -->
+                <div class="slide" data-idx="1">
+                    <div class="slide-bg cosmos-visual slow-zoom"></div>
+                    <div class="slide-overlay bottom-heavy"></div>
+                    <div class="slide-content">
+                        <div class="slide-eyebrow">Right Now</div>
+                        <div class="slide-title">Your Browser Is Querying the Cardano Blockchain</div>
+                        <div class="slide-body">No app download. No login. No streaming server. Right now, your browser is reaching out to <em>Koios</em> — a decentralized, community-run API — to locate and read 176 NFTs that carry a video encoded in their metadata.</div>
                     </div>
                 </div>
+
+                <!-- SLIDE 2: 176 NFTs — THE IMAGE SLIDE -->
+                <div class="slide" data-idx="2">
+                    <div class="slide-bg nft-grid ken-burns"></div>
+                    <div class="slide-overlay bottom-heavy"></div>
+                    <div class="slide-content">
+                        <div class="slide-eyebrow">On-Chain Proof</div>
+                        <div class="slide-title">176 NFTs. Each One a Fragment of This Video.</div>
+                        <div class="slide-body">What you see above is the actual on-chain wallet view. <em>176 NFTs minted under a single time-locked policy</em> — a manifest plus 175 pages of hex-encoded MP4 data. Your browser is downloading each one right now.</div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 3: How Koios Works -->
+                <div class="slide" data-idx="3">
+                    <div class="slide-bg pipeline-visual slow-zoom"></div>
+                    <div class="slide-overlay full-dark"></div>
+                    <!-- CSS Pipeline Diagram -->
+                    <div class="pipeline-diagram">
+                        <div class="pipe-node">🌐</div>
+                        <div class="pipe-arrow"></div>
+                        <div class="pipe-node">📡</div>
+                        <div class="pipe-arrow"></div>
+                        <div class="pipe-node">🧩</div>
+                        <div class="pipe-arrow"></div>
+                        <div class="pipe-node">🔗</div>
+                        <div class="pipe-arrow"></div>
+                        <div class="pipe-node">🎬</div>
+                    </div>
+                    <div class="slide-content">
+                        <div class="slide-eyebrow">The Pipeline</div>
+                        <div class="slide-title">Browser → Koios → Cardano → Video</div>
+                        <div class="slide-body">Koios is a <em>distributed, open-source API layer</em> for Cardano. No API key. No single company controls it. Multiple independent operators host endpoints worldwide. If one node goes down, others keep serving. Your browser queries the policy ID, fetches each NFT's metadata, extracts the hex payload, and stitches them into a playable file.</div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 4: CIP-25 -->
+                <div class="slide" data-idx="4">
+                    <div class="slide-bg cosmos-visual slow-zoom"></div>
+                    <div class="slide-overlay bottom-heavy"></div>
+                    <div class="slide-content">
+                        <div class="slide-eyebrow">Open Standard</div>
+                        <div class="slide-title">CIP-25: Cardano's Native NFT Metadata</div>
+                        <div class="slide-body">Every NFT page uses <em>CIP-25 metadata</em> — the same open standard every Cardano NFT uses. Readable by any wallet, any block explorer, any tool ever built for Cardano. No proprietary format. No vendor lock-in. This data will be readable by software that doesn't even exist yet.</div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 5: No Server -->
+                <div class="slide" data-idx="5">
+                    <div class="slide-bg slow-zoom" style="background:var(--void)"></div>
+                    <div class="slide-overlay full-dark"></div>
+                    <div class="slide-content centered">
+                        <div class="slide-eyebrow">Zero Dependencies</div>
+                        <div class="slide-title" style="font-size:clamp(1.3rem,3.5vw,2rem)">No Server. No CDN.<br>No Hosting Bill. No Kill Switch.</div>
+                        <div class="slide-body">Traditional video requires servers, bandwidth, and someone paying the bills. This video requires <em>nothing</em> — just a browser and the Cardano blockchain. No infrastructure to maintain. No domain to renew. No company needs to stay in business. No government can order it taken down.</div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 6: SHA-256 -->
+                <div class="slide" data-idx="6">
+                    <div class="slide-bg hash-visual slow-zoom"></div>
+                    <div class="slide-overlay full-dark"></div>
+                    <div class="hex-watermark" aria-hidden="true">aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814</div>
+                    <div class="slide-content">
+                        <div class="slide-eyebrow">Cryptographic Proof</div>
+                        <div class="slide-title">Verified by Math, Not by Trust</div>
+                        <div class="slide-body">The reconstructed video carries a <em>SHA-256 cryptographic hash</em>. Every byte can be independently verified against the on-chain record. What you see is exactly what was minted — mathematically provable, no trust required, no authority needed.</div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 7: Library That Cannot Burn -->
+                <div class="slide" data-idx="7">
+                    <div class="slide-bg library-visual slow-zoom"></div>
+                    <div class="slide-overlay full-dark"></div>
+                    <div class="beacn-watermark"></div>
+                    <div class="slide-content centered">
+                        <div class="slide-eyebrow">Ledger Scrolls</div>
+                        <div class="slide-title">"A Library That Cannot Burn"</div>
+                        <div class="slide-body">The Library of Alexandria. The House of Wisdom. Baghdad. History is a graveyard of lost knowledge. <em>Ledger Scrolls</em> is an open-source standard for storing any data permanently on the Cardano blockchain — documents, images, audio, video. An open library that no fire, no war, no corporate shutdown can destroy.</div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 8: Already on chain -->
+                <div class="slide" data-idx="8">
+                    <div class="slide-bg cosmos-visual slow-zoom"></div>
+                    <div class="slide-overlay bottom-heavy"></div>
+                    <div class="slide-content">
+                        <div class="slide-eyebrow">Already Permanent</div>
+                        <div class="slide-title">The Bible. The Constitution. Philosophical Texts. Now Video.</div>
+                        <div class="slide-body">The complete World English Bible — all 66 books. Both Cardano Constitutions. Philosophical meditations. Historical documents. And now, <em>the first-ever on-chain video</em>. Anyone can mint their own scroll using the open-source tools. The permanent library grows with every contribution.</div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 9: Final -->
+                <div class="slide" data-idx="9">
+                    <div class="slide-bg slow-zoom" style="background:var(--void)"></div>
+                    <div class="slide-overlay full-dark"></div>
+                    <div class="slide-content centered">
+                        <div class="slide-eyebrow">Stand By</div>
+                        <div class="slide-title" style="font-size:clamp(1.3rem,3.5vw,2rem)">Assembling Video from the Blockchain…</div>
+                        <div class="slide-body">All NFT payloads collected. Hex data concatenated. Bytes verified. Converting to a playable MP4 blob. <em>History is about to play.</em></div>
+                    </div>
+                </div>
+
+                <!-- Progress HUD -->
+                <div class="progress-hud">
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-label">
+                        <span id="pageNow">0</span>/<span id="pageTotal">175</span> NFTs · <span class="pct" id="pctLabel">0%</span>
+                    </div>
+                </div>
+
+                <!-- Slide dots -->
+                <div class="slide-dots" id="slideDots"></div>
             </div>
 
-            <!-- Error -->
             <div class="error-box" id="errorBox">
                 <div class="icon">⚠️</div>
                 <p id="errorMsg">Connection failed</p>
@@ -864,76 +771,38 @@
         </div>
     </div>
 
-    <!-- Post-load info -->
-    <section class="info-panel below-fold" id="infoPanel">
+    <!-- Post-load -->
+    <section class="info-panel below-fold">
         <h2>What Just Happened</h2>
-        <p>
-            Your browser just reconstructed a complete <strong>MP4 video file</strong> by reading raw data
-            from <strong>175 NFTs minted on the Cardano blockchain</strong>. No streaming server. No CDN.
-            No IPFS link. The actual binary video data lives permanently in CIP-25 NFT metadata — and your
-            browser stitched it back together in real-time.
-        </p>
-        <p>
-            This makes it the <strong>first video ever stored entirely on any blockchain</strong>.
-            It will remain playable for as long as Cardano exists — truly permanent, censorship-resistant media.
-        </p>
+        <p>Your browser reconstructed a complete <strong>MP4 video file</strong> by reading raw data from <strong>176 NFTs on the Cardano blockchain</strong>. No streaming server. No CDN. No IPFS link. The actual binary video data lives permanently in CIP-25 NFT metadata — stitched back together in real-time by your browser.</p>
+        <p>This is the <strong>first video ever stored entirely on any blockchain</strong>. It will remain playable for as long as Cardano exists.</p>
         <div class="stats-row">
-            <div class="stat">
-                <div class="stat-val">175</div>
-                <div class="stat-lbl">On-Chain NFTs</div>
-            </div>
-            <div class="stat">
-                <div class="stat-val" id="finalSize">—</div>
-                <div class="stat-lbl">Video Size</div>
-            </div>
-            <div class="stat">
-                <div class="stat-val">MP4</div>
-                <div class="stat-lbl">Format</div>
-            </div>
-            <div class="stat">
-                <div class="stat-val">∞</div>
-                <div class="stat-lbl">Lifespan</div>
-            </div>
+            <div class="stat"><div class="stat-val">176</div><div class="stat-lbl">On-Chain NFTs</div></div>
+            <div class="stat"><div class="stat-val" id="finalSize">—</div><div class="stat-lbl">Video Size</div></div>
+            <div class="stat"><div class="stat-val">MP4</div><div class="stat-lbl">Format</div></div>
+            <div class="stat"><div class="stat-val">∞</div><div class="stat-lbl">Lifespan</div></div>
         </div>
     </section>
 
-    <section class="info-panel below-fold" id="techPanel" style="transition-delay:0.15s">
+    <section class="info-panel below-fold" style="transition-delay:0.15s">
         <h2>The Technology</h2>
         <div class="explainer-grid">
-            <div class="explainer-card">
-                <h3>📜 Ledger Scrolls</h3>
-                <p>An open-source standard for storing immutable data on the Cardano blockchain. Documents, images, audio, video — anything — permanently preserved on-chain. A library that cannot burn.</p>
-            </div>
-            <div class="explainer-card">
-                <h3>🔗 Koios API</h3>
-                <p>A decentralized, community-run REST API for querying Cardano data. No API key required. No single point of failure. Your browser queries Koios to read NFT metadata directly from the chain.</p>
-            </div>
-            <div class="explainer-card">
-                <h3>🧩 CIP-25 Metadata</h3>
-                <p>Cardano's native NFT metadata standard. Each of the 175 NFTs carries a payload of hex-encoded video data in its minting transaction metadata — readable by any Cardano tool.</p>
-            </div>
-            <div class="explainer-card">
-                <h3>🔐 SHA-256 Verification</h3>
-                <p>Every byte is cryptographically verifiable. The reconstructed file can be checked against the on-chain SHA-256 hash to guarantee nothing was altered — trustless data integrity.</p>
-            </div>
+            <div class="explainer-card"><h3>📜 Ledger Scrolls</h3><p>An open-source standard for storing immutable data on the Cardano blockchain. Documents, images, audio, video — permanently preserved on-chain. A library that cannot burn.</p></div>
+            <div class="explainer-card"><h3>🔗 Koios API</h3><p>A decentralized, community-run REST API for querying Cardano. No API key. No single point of failure. Multiple independent operators worldwide serve chain data freely.</p></div>
+            <div class="explainer-card"><h3>🧩 CIP-25 Metadata</h3><p>Cardano's native NFT metadata standard. Each NFT carries hex-encoded video data in its minting transaction — readable by any Cardano tool, forever.</p></div>
+            <div class="explainer-card"><h3>🔐 SHA-256 Verification</h3><p>Every byte is cryptographically verifiable against an on-chain hash. Trustless data integrity — mathematically provable, no authority needed.</p></div>
         </div>
     </section>
 
-    <section class="download-section below-fold" id="downloadPanel" style="transition-delay:0.3s">
+    <section class="download-section below-fold" style="transition-delay:0.3s">
         <h2>Take It With You</h2>
-        <p>The video you just watched was reconstructed from immutable on-chain data. Download a perfect copy — the same bytes that will exist on Cardano forever.</p>
-        <button class="btn-download" id="downloadBtn" disabled onclick="downloadVideo()">
-            ⬇ Download Video
-        </button>
+        <p>This video was reconstructed from immutable on-chain data. Download a perfect copy — the same bytes that will exist on Cardano forever.</p>
+        <button class="btn-download" id="downloadBtn" disabled onclick="downloadVideo()">⬇ Download Video</button>
     </section>
 
     <section class="info-panel below-fold" style="transition-delay:0.45s">
         <h2>Create Your Own Scroll</h2>
-        <p>
-            Ledger Scrolls is fully open-source. Anyone can mint their own immutable data on Cardano —
-            documents, images, audio, even video. Your data, permanently on-chain, readable by anyone,
-            owned by no one. The tools, templates, and viewers are all free on GitHub.
-        </p>
+        <p>Ledger Scrolls is fully open-source. Anyone can mint immutable data on Cardano — documents, images, audio, video. Your data, permanently on-chain, readable by anyone, owned by no one. The tools, templates, and viewers are all free on GitHub.</p>
     </section>
 
     <div class="links-bar below-fold" style="transition-delay:0.6s">
@@ -948,18 +817,8 @@
 </div>
 
 <script>
-/**
- * THE FIRST VIDEO ON A BLOCKCHAIN
- * Cinema-quality viewer with immersive loading narrative.
- *
- * The loading sequence (~60-90s) is treated as the main event —
- * a curated educational journey through the technology, not dead time.
- */
 (function() {
 
-// ═══════════════════════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════════════════════
 const CFG = {
     policyId: '38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2',
     expected: 175,
@@ -971,224 +830,103 @@ const CFG = {
 };
 
 // ═══════════════════════════════════════════════════════
-// NARRATIVE FACTS — The core engagement loop
-// Each fact builds understanding while maintaining cinematic tension.
-// Designed for ~5.5s per card, covering the full ~90s load time.
+// SLIDESHOW ENGINE
 // ═══════════════════════════════════════════════════════
-const FACTS = [
-    {
-        eyebrow: 'Right Now',
-        title: 'Your Browser Is Reading the Blockchain',
-        body: 'No app. No login. No download. Your browser is querying the <em>Cardano blockchain</em> directly through Koios — a decentralized API run by the community — to locate 175 NFTs that contain a video.'
-    },
-    {
-        eyebrow: 'World First',
-        title: 'The First Video Ever Stored Entirely On-Chain',
-        body: 'Not a link to a server. Not an IPFS hash. The <em>actual binary video data</em> is encoded across 175 NFT metadata payloads on the Cardano blockchain. Every byte is on-chain.'
-    },
-    {
-        eyebrow: 'How It Works',
-        title: 'Split Across 175 NFTs',
-        body: 'The original MP4 was split into 175 fragments. Each fragment was hex-encoded and embedded into a <em>CIP-25 NFT\'s minting metadata</em> — Cardano\'s native standard. Your browser is now collecting each piece.'
-    },
-    {
-        eyebrow: 'The Pipeline',
-        title: 'Query → Fetch → Stitch → Play',
-        body: 'Step 1: Query the policy ID to find all NFTs. Step 2: Fetch each NFT\'s metadata from the chain. Step 3: Extract hex payloads and concatenate in order. Step 4: Convert to a playable MP4 blob. <em>Pure client-side reconstruction.</em>'
-    },
-    {
-        eyebrow: 'Koios API',
-        title: 'Decentralized Data Access',
-        body: 'Koios is a distributed, open-source API layer for Cardano. <em>No API key required.</em> No single company controls it. Multiple independent operators host endpoints — if one goes down, others keep serving. Your browser tries BEACNpool\'s Koios node first, with a public fallback.'
-    },
-    {
-        eyebrow: 'CIP-25 Standard',
-        title: 'Using Cardano\'s Native NFT Format',
-        body: 'Every NFT page uses <em>CIP-25 metadata</em> — the same standard every Cardano NFT uses. This means the data is readable by any wallet, any explorer, any tool. No proprietary format. No vendor lock-in. Open data, forever.'
-    },
-    {
-        eyebrow: 'Permanence',
-        title: 'Immutable by Design',
-        body: 'Once minted, CIP-25 metadata <em>cannot be changed, censored, or deleted</em>. The minting policy is time-locked — no new NFTs can ever be added, and existing ones are permanent. This video will exist for as long as Cardano runs.'
-    },
-    {
-        eyebrow: 'Zero Dependencies',
-        title: 'No Server. No CDN. No Hosting Bill.',
-        body: 'Traditional video requires servers, bandwidth, and ongoing payment. This video requires <em>nothing</em> — just a browser and the blockchain. No infrastructure to maintain. No domain to renew. No company needs to stay in business.'
-    },
-    {
-        eyebrow: 'Verification',
-        title: 'Trustless Cryptographic Proof',
-        body: 'The reconstructed video can be verified against a <em>SHA-256 cryptographic hash</em> stored on-chain. What you see is exactly what was minted — mathematically provable, no trust required.'
-    },
-    {
-        eyebrow: 'Ledger Scrolls',
-        title: 'A Library That Cannot Burn',
-        body: 'The Library of Alexandria. The House of Wisdom. History is full of lost knowledge. Ledger Scrolls stores documents, images, audio, and video <em>permanently on the Cardano blockchain</em> — an open library that no fire, no war, no company shutdown can destroy.'
-    },
-    {
-        eyebrow: 'Open Source',
-        title: 'Anyone Can Create a Scroll',
-        body: 'The tools are free. The standard is open. <em>Anyone can mint their own immutable data</em> on Cardano using Ledger Scrolls — from a single image to a multi-volume book. Mint it once, read it forever.'
-    },
-    {
-        eyebrow: 'Already On-Chain',
-        title: 'The Bible. The Constitution. Now Video.',
-        body: 'The complete World English Bible. Both Cardano Constitutions. Philosophical texts. Historical documents. And now, the <em>first-ever on-chain video</em>. The permanent library grows with every scroll minted.'
-    },
-    {
-        eyebrow: 'Did You Know',
-        title: 'Over 2,800 Pages of Data On-Chain',
-        body: 'Across all Ledger Scrolls, thousands of pages of <em>human knowledge</em> have already been permanently preserved. From sacred texts to governance frameworks to memes — all immutable, all verifiable, all free to read.'
-    },
-    {
-        eyebrow: 'Almost There',
-        title: 'Stitching 175 Fragments Together',
-        body: 'Your browser is now concatenating hex-encoded payloads from across the Cardano ledger into a single MP4 binary. <em>The blockchain is becoming your video player.</em>'
-    },
-    {
-        eyebrow: 'Final Assembly',
-        title: 'Verifying & Preparing Playback',
-        body: 'All NFT payloads collected. Bytes verified. Converting to a playable video blob… <em>History is about to play.</em>'
-    }
-];
+const SLIDE_DURATION = 9000; // 9 seconds per slide
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+let currentSlide = 0;
+let slideTimer = null;
+
+// Build slide dots
+const dotsContainer = document.getElementById('slideDots');
+for (let i = 0; i < totalSlides; i++) {
+    const d = document.createElement('div');
+    d.className = 'sdot' + (i === 0 ? ' active' : '');
+    dotsContainer.appendChild(d);
+}
+
+function goToSlide(idx) {
+    const prev = currentSlide;
+    currentSlide = idx % totalSlides;
+
+    slides.forEach((s, i) => {
+        s.classList.remove('active', 'exiting');
+        // Reset child animations
+        s.querySelectorAll('.slide-eyebrow, .slide-title, .slide-body').forEach(el => {
+            el.style.opacity = '0';
+            el.style.animation = 'none';
+        });
+    });
+
+    // Exit old slide
+    if (slides[prev]) slides[prev].classList.add('exiting');
+
+    // Enter new slide
+    const next = slides[currentSlide];
+    next.classList.add('active');
+
+    // Update dots
+    dotsContainer.querySelectorAll('.sdot').forEach((d, i) => {
+        d.className = 'sdot';
+        if (i === currentSlide) d.classList.add('active');
+        else if (i < currentSlide) d.classList.add('seen');
+    });
+}
+
+function startSlideshow() {
+    goToSlide(0);
+    slideTimer = setInterval(() => {
+        goToSlide(currentSlide + 1);
+    }, SLIDE_DURATION);
+}
+
+function stopSlideshow() {
+    if (slideTimer) { clearInterval(slideTimer); slideTimer = null; }
+}
 
 // ═══════════════════════════════════════════════════════
-// DOM
+// DOM & STATE
 // ═══════════════════════════════════════════════════════
 const $ = id => document.getElementById(id);
-const el = {
-    video: $('videoPlayer'),
-    loader: $('loader'),
-    ring: $('ringFill'),
-    pct: $('ringPercent'),
-    pageNow: $('pageNow'),
-    factCard: $('factCard'),
-    factEyebrow: $('factEyebrow'),
-    factTitle: $('factTitle'),
-    factBody: $('factBody'),
-    factNav: $('factNav'),
-    stream: $('streamText'),
-    errorBox: $('errorBox'),
-    errorMsg: $('errorMsg'),
-    finalSize: $('finalSize'),
-    downloadBtn: $('downloadBtn'),
-    liveIndicator: $('liveIndicator')
-};
-
-// ═══════════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════════
-let factIndex = 0;
-let factTimer = null;
 let videoBlob = null;
-const CIRC = 2 * Math.PI * 55;
 
-// Build fact navigation dots
-FACTS.forEach((_, i) => {
-    const d = document.createElement('div');
-    d.className = 'fact-dot' + (i === 0 ? ' active' : '');
-    el.factNav.appendChild(d);
-});
-
-// ═══════════════════════════════════════════════════════
-// STAR FIELD
-// ═══════════════════════════════════════════════════════
-(function initStars() {
-    const c = document.getElementById('starfield');
-    const n = window.innerWidth < 768 ? 40 : 80;
+// Stars
+(function() {
+    const c = $('starfield');
+    const n = window.innerWidth < 768 ? 35 : 70;
     for (let i = 0; i < n; i++) {
         const s = document.createElement('div');
         s.className = 'star';
-        const size = 0.5 + Math.random() * 1.5;
-        s.style.cssText = `
-            left:${Math.random()*100}%;
-            top:${Math.random()*100}%;
-            width:${size}px;height:${size}px;
-            --dur:${2+Math.random()*4}s;
-            --o1:${0.15+Math.random()*0.35};
-            --o2:${0.5+Math.random()*0.5};
-            animation-delay:${Math.random()*5}s;
-        `;
+        const sz = 0.5 + Math.random() * 1.5;
+        s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;--dur:${2+Math.random()*4}s;--o1:${0.1+Math.random()*0.3};--o2:${0.5+Math.random()*0.5};animation-delay:${Math.random()*5}s;`;
         c.appendChild(s);
     }
 })();
 
 // ═══════════════════════════════════════════════════════
-// AUTO-START — Intro plays, then transitions to reconstruction
-// ═══════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-    // Let the cinema intro animations play (~3s), then auto-transition
-    setTimeout(() => {
-        const intro = $('cinemaIntro');
-        intro.classList.add('fade-out');
-        const main = $('mainContent');
-        setTimeout(() => { main.classList.add('visible'); }, 400);
-        setTimeout(() => { intro.style.display = 'none'; startReconstruction(); }, 1400);
-    }, 3200);
-});
-
-// ═══════════════════════════════════════════════════════
-// DATA STREAM VISUALIZER
-// ═══════════════════════════════════════════════════════
-function generateStreamHex() {
-    const chars = '0123456789abcdef';
-    let s = '';
-    for (let i = 0; i < 300; i++) s += chars[Math.floor(Math.random()*16)];
-    return s.match(/.{1,2}/g).join(' ') + '  ···  ' + s.match(/.{1,2}/g).join(' ');
-}
-el.stream.textContent = generateStreamHex();
-setInterval(() => { el.stream.textContent = generateStreamHex(); }, 8000);
-
-// ═══════════════════════════════════════════════════════
-// FACT ROTATION
-// ═══════════════════════════════════════════════════════
-function showFact(idx) {
-    const f = FACTS[idx % FACTS.length];
-    const card = el.factCard;
-    card.style.animation = 'none';
-    card.offsetHeight;
-    card.style.animation = 'factIn 0.7s ease';
-
-    el.factEyebrow.textContent = f.eyebrow;
-    el.factTitle.textContent = f.title;
-    el.factBody.innerHTML = f.body;
-
-    const dots = el.factNav.querySelectorAll('.fact-dot');
-    dots.forEach((d, i) => {
-        d.className = 'fact-dot';
-        if (i === idx % FACTS.length) d.classList.add('active');
-        else if (i < idx % FACTS.length) d.classList.add('seen');
-    });
-}
-
-function startFacts() {
-    showFact(0);
-    factTimer = setInterval(() => {
-        factIndex++;
-        showFact(factIndex);
-    }, 5500);
-}
-function stopFacts() { if (factTimer) { clearInterval(factTimer); factTimer = null; } }
-
-// ═══════════════════════════════════════════════════════
-// PROGRESS UI
+// PROGRESS
 // ═══════════════════════════════════════════════════════
 function setProgress(pct, page) {
-    const offset = CIRC - (pct / 100) * CIRC;
-    el.ring.style.strokeDashoffset = offset;
-    el.pct.innerHTML = `${Math.round(pct)}<span>%</span>`;
-    el.pageNow.textContent = page;
+    $('progressFill').style.width = pct + '%';
+    $('pctLabel').textContent = Math.round(pct) + '%';
+    $('pageNow').textContent = page;
 }
 
-function setPhase(n) {
-    for (let i = 1; i <= 4; i++) {
-        const row = $(`ph${i}`);
-        row.className = 'phase-row';
-        if (i < n) row.classList.add('done');
-        else if (i === n) row.classList.add('active');
-    }
-}
+// ═══════════════════════════════════════════════════════
+// AUTO-START
+// ═══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        $('cinemaIntro').classList.add('fade-out');
+        setTimeout(() => { $('mainContent').classList.add('visible'); }, 400);
+        setTimeout(() => {
+            $('cinemaIntro').style.display = 'none';
+            $('theater').classList.add('is-loading');
+            startReconstruction();
+        }, 1400);
+    }, 3200);
+});
 
 // ═══════════════════════════════════════════════════════
 // BLOCKCHAIN API
@@ -1206,39 +944,32 @@ async function koios(endpoint, body = null) {
             return await r.json();
         } catch(e) { continue; }
     }
-    throw new Error('All Koios endpoints failed. The blockchain may be temporarily unreachable.');
+    throw new Error('All Koios endpoints unreachable. The blockchain may be temporarily unavailable.');
 }
 
 function hexToBytes(hex) {
-    hex = hex.replace(/^0x/i, '').replace(/\s/g, '');
-    const b = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < hex.length; i += 2) b[i/2] = parseInt(hex.substr(i, 2), 16);
+    hex = hex.replace(/^0x/i,'').replace(/\s/g,'');
+    const b = new Uint8Array(hex.length/2);
+    for (let i=0;i<hex.length;i+=2) b[i/2]=parseInt(hex.substr(i,2),16);
     return b;
 }
-
 function hexToAscii(hex) {
-    let s = '';
-    for (let i = 0; i < hex.length; i += 2) s += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-    return s;
+    let s=''; for (let i=0;i<hex.length;i+=2) s+=String.fromCharCode(parseInt(hex.substr(i,2),16)); return s;
 }
-
 function extractPayloadHex(payload) {
-    let hex = '';
+    let hex='';
     if (Array.isArray(payload)) {
         for (const e of payload) {
-            if (typeof e === 'object' && e.bytes) hex += e.bytes.replace(/^0x/i, '');
-            else if (typeof e === 'string') hex += e.replace(/^0x/i, '');
+            if (typeof e==='object' && e.bytes) hex+=e.bytes.replace(/^0x/i,'');
+            else if (typeof e==='string') hex+=e.replace(/^0x/i,'');
         }
-    } else if (typeof payload === 'string') {
-        hex = payload.replace(/^0x/i, '');
-    }
-    return hex.replace(/\s/g, '');
+    } else if (typeof payload==='string') hex=payload.replace(/^0x/i,'');
+    return hex.replace(/\s/g,'');
 }
-
 function formatSize(bytes) {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    if (bytes<1024) return bytes+' B';
+    if (bytes<1024*1024) return (bytes/1024).toFixed(1)+' KB';
+    return (bytes/(1024*1024)).toFixed(2)+' MB';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1246,112 +977,90 @@ function formatSize(bytes) {
 // ═══════════════════════════════════════════════════════
 async function startReconstruction() {
     try {
-        // Expand theater on mobile for loading content
-        document.getElementById('theater').classList.add('is-loading');
-        startFacts();
-        el.liveIndicator.style.opacity = '1';
-        el.ring.style.strokeDasharray = CIRC;
-        el.ring.style.strokeDashoffset = CIRC;
-
-        // Phase 1: Query policy
-        setPhase(1);
+        startSlideshow();
+        $('liveIndicator').style.opacity = '1';
         setProgress(3, 0);
 
+        // Query policy
         const assets = [];
         let offset = 0;
         while (true) {
-            const batch = await koios(
-                `/asset_list?policy_id=eq.${CFG.policyId}&limit=1000&offset=${offset}`
-            );
-            if (!batch || batch.length === 0) break;
+            const batch = await koios(`/asset_list?policy_id=eq.${CFG.policyId}&limit=1000&offset=${offset}`);
+            if (!batch || batch.length===0) break;
             assets.push(...batch);
-            if (batch.length < 1000) break;
-            offset += 1000;
+            if (batch.length<1000) break;
+            offset+=1000;
         }
-
-        // Phase 2: Begin fetching
-        setPhase(2);
         setProgress(8, 0);
 
+        // Fetch NFTs
         const pages = [];
         let done = 0;
-
         for (const asset of assets) {
             const name = asset.asset_name || '';
             const ascii = hexToAscii(name);
             if (!ascii.startsWith('CM_PAGE')) continue;
 
             done++;
-            const pct = 10 + Math.floor((done / CFG.expected) * 72);
-            setProgress(pct, done);
-            if (done === 1) setPhase(3);
+            setProgress(10 + Math.floor((done/CFG.expected)*72), done);
 
             try {
-                const info = await koios('/asset_info', {
-                    _asset_list: [[CFG.policyId, name]]
-                });
+                const info = await koios('/asset_info', { _asset_list: [[CFG.policyId, name]] });
                 if (!info?.[0]) continue;
                 const meta = info[0].minting_tx_metadata?.[721]?.[CFG.policyId]?.[ascii];
-                if (!meta || meta.payload === undefined || meta.i === undefined) continue;
+                if (!meta || meta.payload===undefined || meta.i===undefined) continue;
                 pages.push({ index: parseInt(meta.i), payload: meta.payload });
-            } catch(e) {
-                console.warn(`Skip ${ascii}:`, e);
-            }
-            await new Promise(r => setTimeout(r, 50));
+            } catch(e) { console.warn(`Skip ${ascii}:`, e); }
+            await new Promise(r=>setTimeout(r,50));
         }
 
-        if (pages.length === 0) throw new Error('No page data found on the blockchain');
+        if (pages.length===0) throw new Error('No page data found on the blockchain');
 
-        // Phase 4: Assembly
-        setPhase(4);
+        // Assembly
         setProgress(86, pages.length);
-        pages.sort((a, b) => a.index - b.index);
-
-        let allHex = '';
-        for (const p of pages) allHex += extractPayloadHex(p.payload);
+        pages.sort((a,b)=>a.index-b.index);
+        let allHex='';
+        for (const p of pages) allHex+=extractPayloadHex(p.payload);
 
         setProgress(93, pages.length);
         const raw = hexToBytes(allHex);
-        const sizeStr = formatSize(raw.length);
-        el.finalSize.textContent = sizeStr;
+        $('finalSize').textContent = formatSize(raw.length);
 
         setProgress(98, pages.length);
         videoBlob = new Blob([raw], { type: CFG.type });
         const url = URL.createObjectURL(videoBlob);
 
         // Complete
-        stopFacts();
+        stopSlideshow();
         setProgress(100, pages.length);
-        el.downloadBtn.disabled = false;
+        $('downloadBtn').disabled = false;
 
-        // Transition to video
-        await new Promise(r => setTimeout(r, 600));
-        document.getElementById('theater').classList.remove('is-loading');
-        el.video.src = url;
-        el.video.classList.add('ready');
-        el.loader.classList.add('done');
-        el.liveIndicator.style.opacity = '0';
+        // Jump to the final "Preparing Playback" slide
+        goToSlide(totalSlides - 1);
 
-        // Reveal below-fold content
+        await new Promise(r=>setTimeout(r, 1500));
+
+        $('theater').classList.remove('is-loading');
+        $('videoPlayer').src = url;
+        $('videoPlayer').classList.add('ready');
+        $('slideshow').classList.add('done');
+        $('liveIndicator').style.opacity = '0';
+
         setTimeout(() => {
-            document.querySelectorAll('.below-fold').forEach(el => {
-                el.classList.add('visible');
-            });
+            document.querySelectorAll('.below-fold').forEach(el=>el.classList.add('visible'));
         }, 800);
 
     } catch(e) {
         console.error('Reconstruction failed:', e);
-        stopFacts();
-        document.getElementById('theater').classList.remove('is-loading');
-        el.loader.classList.add('done');
-        el.errorBox.classList.add('show');
-        el.errorMsg.textContent = e.message;
+        stopSlideshow();
+        $('theater').classList.remove('is-loading');
+        $('slideshow').classList.add('done');
+        $('errorBox').classList.add('show');
+        $('errorMsg').textContent = e.message;
     }
 }
 
-// ═══════════════════════════════════════════════════════
-// DOWNLOAD
-// ═══════════════════════════════════════════════════════
+// Download
 window.downloadVideo = function() {
     if (!videoBlob) return;
     const a = document.createElement('a');
