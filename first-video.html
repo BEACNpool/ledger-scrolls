@@ -352,43 +352,56 @@
             100% { transform: translate3d(-1.5%,1%,0) scale(1.05); opacity: 0.5; }
         }
 
-        /* Hosky visual (real on-chain image) */
+        /* Hosky visual (kept as fallback) */
         .slide-bg.hosky-visual {
             background:
-                linear-gradient(180deg, rgba(3,5,8,0.15) 0%, rgba(3,5,8,0.75) 75%, rgba(3,5,8,0.92) 100%),
-                url('media/hosky.png'),
                 radial-gradient(circle at 30% 35%, rgba(212,168,85,0.10) 0%, transparent 45%),
                 radial-gradient(circle at 70% 60%, rgba(34,211,238,0.08) 0%, transparent 48%),
                 var(--void);
-            background-size: cover;
-            background-position: center;
+        }
+
+        /* Hosky example row (image + facts) */
+        .hosky-row {
+            margin-top: 14px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .hosky-img {
+            width: 96px;
+            height: 96px;
+            image-rendering: pixelated;
+            border-radius: 12px;
+            border: 1px solid rgba(212,168,85,0.18);
+            background: rgba(0,0,0,0.25);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+            flex: 0 0 auto;
         }
 
         /* On-chain facts list */
         .nft-facts {
-            margin-top: 14px;
-            padding: 12px 12px;
-            border-radius: 10px;
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 12px;
             border: 1px solid rgba(212,168,85,0.12);
             background: rgba(0,0,0,0.35);
             backdrop-filter: blur(6px);
-            max-width: 640px;
         }
         .nft-fact {
             display: grid;
-            grid-template-columns: 90px 1fr;
+            grid-template-columns: 88px 1fr;
             gap: 10px;
-            padding: 6px 0;
+            padding: 5px 0;
             border-bottom: 1px solid rgba(255,255,255,0.06);
             font-family: var(--font-mono);
-            font-size: 0.62rem;
+            font-size: 0.68rem;
             line-height: 1.35;
-            color: rgba(238,242,247,0.85);
-            word-break: break-all;
+            color: rgba(238,242,247,0.88);
+            word-break: break-word;
         }
         .nft-fact:last-child { border-bottom: none; }
-        .nft-fact .k { color: rgba(212,168,85,0.85); letter-spacing: 1px; text-transform: uppercase; }
-        .nft-fact .v { color: rgba(238,242,247,0.85); }
+        .nft-fact .k { color: rgba(212,168,85,0.9); letter-spacing: 1px; text-transform: uppercase; }
+        .nft-fact .v { color: rgba(238,242,247,0.88); }
 
         /* CSS animated pipeline diagram inside a slide */
         .pipeline-diagram {
@@ -497,6 +510,10 @@
 
         /* ═══════════════════════ MOBILE ═══════════════════════ */
         @media (max-width: 700px) {
+            .hosky-row { flex-direction: column; gap: 10px; }
+            .hosky-img { width: 112px; height: 112px; }
+            .nft-fact { font-size: 0.7rem; grid-template-columns: 78px 1fr; }
+
             .theater.is-loading {
                 aspect-ratio: auto;
                 min-height: 82vh;
@@ -696,27 +713,31 @@
                     <div class="slide-content centered">
                         <div class="slide-eyebrow">February 2026</div>
                         <div class="slide-title" style="font-size:clamp(1.4rem,4vw,2.4rem)">The First Video Ever Stored<br>Entirely on a Blockchain</div>
-                        <div class="slide-body">Not a link. Not a hash. Not a pointer to a server. The <em>actual bytes</em> live on Cardano. Your browser is about to read them and rebuild the film in real time.</div>
+                        <div class="slide-body">Not a link. Not a pointer. The <em>actual bytes</em> live on Cardano — and your browser rebuilds the film live.</div>
                     </div>
                 </div>
 
                 <!-- SLIDE 1: What people think an NFT is -->
                 <div class="slide" data-idx="1">
-                    <div class="slide-bg hosky-visual ken-burns"></div>
+                    <div class="slide-bg cosmos-visual ken-burns"></div>
                     <div class="slide-overlay bottom-heavy"></div>
                     <div class="slide-content">
                         <div class="slide-eyebrow">First, The Mental Model</div>
                         <div class="slide-title">When Most People Hear “NFT”…</div>
-                        <div class="slide-body">They picture a meme image. A tiny file. A collectible. That’s not wrong — it’s just the most common use.</div>
-                        <div class="slide-body" style="margin-top:10px">Example: <em>Hosky</em> — Cardano’s most popular NFT — stored <em>fully on-chain</em> with <em>Ledger Scrolls</em>.</div>
-                        <div class="nft-facts" aria-label="On-chain Hosky details">
-                            <div class="nft-fact"><span class="k">ID</span><span class="v">hosky-png</span></div>
-                            <div class="nft-fact"><span class="k">Type</span><span class="v">utxo_datum_bytes_v1 (LS-LOCK v1)</span></div>
-                            <div class="nft-fact"><span class="k">Lock Addr</span><span class="v">addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn</span></div>
-                            <div class="nft-fact"><span class="k">UTxO</span><span class="v">728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0</span></div>
-                            <div class="nft-fact"><span class="k">Content-Type</span><span class="v">image/png</span></div>
-                            <div class="nft-fact"><span class="k">Codec</span><span class="v">none</span></div>
-                            <div class="nft-fact"><span class="k">SHA-256</span><span class="v">798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f</span></div>
+                        <div class="slide-body">They picture a meme image. That’s the common case.</div>
+                        <div class="slide-body" style="margin-top:10px">Example: <em>Hosky</em> — stored <em>fully on-chain</em> with <em>Ledger Scrolls</em>.</div>
+
+                        <div class="hosky-row" aria-label="Hosky on-chain example">
+                            <img class="hosky-img" src="media/hosky.png" alt="Hosky (on-chain PNG)" loading="eager" decoding="async" />
+                            <div class="nft-facts" aria-label="On-chain Hosky details">
+                                <div class="nft-fact"><span class="k">ID</span><span class="v">hosky-png</span></div>
+                                <div class="nft-fact"><span class="k">Type</span><span class="v">utxo_datum_bytes_v1 (LS-LOCK v1 — Standard Scroll)</span></div>
+                                <div class="nft-fact"><span class="k">Lock Addr</span><span class="v">addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn</span></div>
+                                <div class="nft-fact"><span class="k">UTxO</span><span class="v">728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0</span></div>
+                                <div class="nft-fact"><span class="k">Content-Type</span><span class="v">image/png</span></div>
+                                <div class="nft-fact"><span class="k">Codec</span><span class="v">none</span></div>
+                                <div class="nft-fact"><span class="k">SHA-256</span><span class="v">798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f</span></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -728,7 +749,7 @@
                     <div class="slide-content">
                         <div class="slide-eyebrow">The Limit</div>
                         <div class="slide-title">A Single NFT Can’t Hold Much Data</div>
-                        <div class="slide-body">On-chain metadata isn’t designed for huge payloads. So most NFTs end up pointing elsewhere — because there isn’t enough room to store something meaningful like <em>video</em> directly inside one mint.</div>
+                        <div class="slide-body">One NFT can’t hold much. So most projects point to off-chain storage.</div>
                     </div>
                 </div>
 
@@ -739,7 +760,14 @@
                     <div class="slide-content">
                         <div class="slide-eyebrow">Ledger Scrolls</div>
                         <div class="slide-title">So We Turn One NFT Into a Scroll</div>
-                        <div class="slide-body">A <em>policy</em> becomes the bookshelf. The <em>manifest</em> explains how to read the series. Then the rest of the NFTs are numbered pages — each page carries a chunk of data. Put together, they become a complete file.</div>
+                        <div class="slide-body">One policy. One manifest. Then numbered page NFTs — each carries a chunk. Together they become a complete file.</div>
+                        <div class="pipeline-diagram" aria-hidden="true">
+                            <div class="pipe-node">📦</div><div class="pipe-arrow"></div>
+                            <div class="pipe-node">📜</div><div class="pipe-arrow"></div>
+                            <div class="pipe-node">#1</div><div class="pipe-arrow"></div>
+                            <div class="pipe-node">#2</div><div class="pipe-arrow"></div>
+                            <div class="pipe-node">…</div>
+                        </div>
                     </div>
                 </div>
 
@@ -750,7 +778,7 @@
                     <div class="slide-content">
                         <div class="slide-eyebrow">On-Chain Proof</div>
                         <div class="slide-title">175 Pages + 1 Manifest = 176 NFTs</div>
-                        <div class="slide-body">This is a real screenshot from the mint. One policy. One set. One manifest that describes the scroll — and <em>175 numbered pages</em> containing hex-encoded MP4 bytes.</div>
+                        <div class="slide-body">Real mint screenshot: one policy, one manifest, and <em>175 numbered pages</em> of MP4 bytes.</div>
                     </div>
                 </div>
 
@@ -761,7 +789,7 @@
                     <div class="slide-content">
                         <div class="slide-eyebrow">Sealed Set</div>
                         <div class="slide-title">Minted with CNTools. Locked by Time.</div>
-                        <div class="slide-body">The policy is <em>38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2</em>. It locks on <em>2026-02-12 03:29:07 UTC</em>. After lock, no new pages can be added — the scroll becomes a permanent record.</div>
+                        <div class="slide-body">Minted under one policy — then time-locked. After lock, the set is permanent.</div>
                     </div>
                 </div>
 
@@ -773,7 +801,7 @@
                     <div class="slide-content">
                         <div class="slide-eyebrow">Reading the Chain</div>
                         <div class="slide-title">Koios: Decentralized Chain Data, Free to Use</div>
-                        <div class="slide-body">Cardano is separate from the internet — but its data is public. <em>Koios</em> is a community-run network of API endpoints operated by independent node runners. Your browser asks for the policy, pulls the metadata, and reconstructs the file — no paywall, no key, no single company.</div>
+                        <div class="slide-body"><em>Koios</em> is a community-run API network. Your browser pulls the on-chain pages and reconstructs the file — no key, no paywall.</div>
                     </div>
                 </div>
 
@@ -784,7 +812,7 @@
                     <div class="slide-content centered">
                         <div class="slide-eyebrow">Stand By</div>
                         <div class="slide-title" style="font-size:clamp(1.3rem,3.5vw,2rem)">Assembling Video from the Blockchain…</div>
-                        <div class="slide-body">Pages collected. Payloads extracted. Bytes stitched. Converting to a playable MP4 blob. <em>History is about to play.</em></div>
+                        <div class="slide-body">Collecting pages → stitching bytes → building a playable MP4. <em>Stand by.</em></div>
                     </div>
                 </div>
                 <!-- Progress HUD -->
