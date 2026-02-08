@@ -220,6 +220,7 @@
                 0 0 80px rgba(0,0,0,0.6),
                 0 0 40px rgba(212, 168, 85, 0.05),
                 inset 0 0 80px rgba(0,0,0,0.3);
+            transition: min-height 0.6s ease, aspect-ratio 0.6s ease;
         }
         .theater video {
             width: 100%; height: 100%;
@@ -437,30 +438,148 @@
         }
 
         /* ═══════════════════════════════════════════════════════════
-           MOBILE LOADER — Stacked layout
+           MOBILE — Complete redesign for phones
+           The theater 16/9 is too short for the loader on mobile,
+           so we break the loader out of that constraint.
         ═══════════════════════════════════════════════════════════ */
         @media (max-width: 700px) {
+            /* Theater expands vertically while loading */
+            .theater.is-loading {
+                aspect-ratio: auto;
+                min-height: 80vh;
+                border-radius: 10px;
+            }
+            .theater:not(.is-loading) {
+                aspect-ratio: 16/9;
+            }
+
+            /* Loader stacks vertically, fills space */
             .loader {
-                flex-direction: column-reverse;
+                flex-direction: column;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
-            .loader-narrative {
-                padding: 20px 20px 24px;
-            }
-            .loader-narrative::after { display: none; }
+
+            /* Top section: compact progress strip */
             .loader-viz {
                 width: 100%;
+                padding: 20px 20px 16px;
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+                background: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.15) 100%);
+                border-bottom: 1px solid rgba(212,168,85,0.08);
+                flex-shrink: 0;
+            }
+
+            /* Ring + page count side by side on mobile */
+            .loader-viz .ring-container {
+                width: 90px; height: 90px;
+                margin-bottom: 4px;
+            }
+            .ring-percent { font-size: 1.3rem; }
+            .ring-percent span { font-size: 0.7rem; }
+            .page-count { margin-bottom: 8px; font-size: 0.65rem; }
+
+            /* Phases as horizontal compact strip */
+            .phases {
                 flex-direction: row;
                 flex-wrap: wrap;
-                gap: 12px;
-                padding: 16px 20px;
+                gap: 4px 12px;
                 justify-content: center;
-                border-bottom: 1px solid rgba(212,168,85,0.06);
+                width: auto;
             }
-            .ring-container { width: 80px; height: 80px; margin: 0; }
-            .ring-percent { font-size: 1.2rem; }
-            .phases { width: auto; flex-direction: row; flex-wrap: wrap; gap: 4px 10px; }
+            .phase-row { font-size: 0.55rem; gap: 4px; }
+            .phase-icon { width: 14px; height: 14px; font-size: 0.45rem; }
+
+            /* Hide data stream on mobile */
             .data-stream { display: none; }
-            .page-count { margin: 0; }
+
+            /* Bottom section: fact cards are the hero */
+            .loader-narrative {
+                flex: 1;
+                padding: 24px 22px 28px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .loader-narrative::after { display: none; }
+
+            .fact-eyebrow {
+                font-size: 0.55rem;
+                letter-spacing: 2.5px;
+                margin-bottom: 8px;
+            }
+            .fact-title {
+                font-size: 1.15rem;
+                margin-bottom: 10px;
+                line-height: 1.35;
+            }
+            .fact-body {
+                font-size: 1.05rem;
+                line-height: 1.65;
+            }
+            .fact-nav {
+                margin-top: 18px;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .fact-dot { width: 14px; height: 2.5px; }
+            .fact-dot.active { width: 24px; }
+
+            /* Theater header adjustments */
+            .theater-header {
+                padding: 0 2px 8px;
+            }
+            .theater-badge { font-size: 0.6rem; gap: 6px; }
+            .theater-badge .pulse-dot { width: 5px; height: 5px; }
+            .theater-live { font-size: 0.55rem; }
+
+            /* Cinema intro mobile */
+            .cinema-tagline {
+                font-size: 0.65rem;
+                letter-spacing: 4px;
+            }
+            .cinema-title {
+                font-size: 1.6rem;
+                padding: 0 16px;
+            }
+            .cinema-subtitle {
+                font-size: 0.95rem;
+                padding: 0 16px;
+            }
+
+            /* Main content spacing */
+            .main-content { padding: 0 14px; }
+            .theater-wrapper { margin: 16px 0 14px; }
+
+            /* Post-load sections */
+            .info-panel { padding: 22px 18px; margin: 14px 0; border-radius: 10px; }
+            .info-panel h2 { font-size: 1rem; }
+            .info-panel p { font-size: 1rem; line-height: 1.65; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .stat { padding: 12px; }
+            .stat-val { font-size: 1.2rem; }
+            .stat-lbl { font-size: 0.6rem; }
+            .explainer-grid { grid-template-columns: 1fr; gap: 10px; }
+            .explainer-card { padding: 18px; }
+            .explainer-card h3 { font-size: 0.8rem; }
+            .explainer-card p { font-size: 0.95rem; }
+            .download-section { padding: 22px 18px; margin: 14px 0; }
+            .download-section h2 { font-size: 1rem; }
+            .download-section p { font-size: 0.95rem; }
+            .links-bar { gap: 8px; margin: 20px 0; }
+            .link-btn { padding: 10px 18px; font-size: 0.65rem; }
+            .site-footer { padding: 20px 16px 30px; font-size: 0.85rem; }
+        }
+
+        /* Extra small phones */
+        @media (max-width: 380px) {
+            .theater.is-loading { min-height: 85vh; }
+            .fact-title { font-size: 1.05rem; }
+            .fact-body { font-size: 0.95rem; }
+            .loader-viz { padding: 16px 16px 12px; }
+            .loader-narrative { padding: 18px 16px 22px; }
         }
 
         /* ═══════════════════════════════════════════════════════════
@@ -1127,6 +1246,8 @@ function formatSize(bytes) {
 // ═══════════════════════════════════════════════════════
 async function startReconstruction() {
     try {
+        // Expand theater on mobile for loading content
+        document.getElementById('theater').classList.add('is-loading');
         startFacts();
         el.liveIndicator.style.opacity = '1';
         el.ring.style.strokeDasharray = CIRC;
@@ -1205,6 +1326,7 @@ async function startReconstruction() {
 
         // Transition to video
         await new Promise(r => setTimeout(r, 600));
+        document.getElementById('theater').classList.remove('is-loading');
         el.video.src = url;
         el.video.classList.add('ready');
         el.loader.classList.add('done');
@@ -1220,6 +1342,7 @@ async function startReconstruction() {
     } catch(e) {
         console.error('Reconstruction failed:', e);
         stopFacts();
+        document.getElementById('theater').classList.remove('is-loading');
         el.loader.classList.add('done');
         el.errorBox.classList.add('show');
         el.errorMsg.textContent = e.message;
