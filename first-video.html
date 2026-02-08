@@ -294,7 +294,8 @@
 
         /* NFT grid special bg */
         .slide-bg.nft-grid {
-            background-image: url('assets/nft-grid.png');
+            /* Personal proof screenshot (local asset in this repo) */
+            background-image: url('media/176.png');
             background-size: cover;
             background-position: center top;
         }
@@ -608,7 +609,7 @@
     <div class="cinema-tagline">A Ledger Scrolls Premiere</div>
     <div class="cinema-line"></div>
     <div class="cinema-title">The First Video<br>Ever Stored on a Blockchain</div>
-    <div class="cinema-subtitle">175 NFTs · Zero Servers · Reconstructed Live</div>
+    <div class="cinema-subtitle">175 pages + 1 manifest · Zero servers · Reconstructed live</div>
 </div>
 
 <!-- ═══════════════════════ MAIN ═══════════════════════ -->
@@ -632,7 +633,7 @@
                     <div class="slide-content centered">
                         <div class="slide-eyebrow">February 2026</div>
                         <div class="slide-title" style="font-size:clamp(1.4rem,4vw,2.4rem)">The First Video Ever Stored<br>Entirely on a Blockchain</div>
-                        <div class="slide-body">Not a link. Not a hash. Not a pointer to a server. The actual video data — every byte — lives on the Cardano blockchain. Your browser is about to reconstruct it live.</div>
+                        <div class="slide-body">Not a link. Not a hash. Not a pointer to a server. The actual video data — every byte — was minted onto Cardano in a scroll of pages. Your browser is about to reconstruct it live, the same way I verified it after the mint: one fragment at a time.</div>
                     </div>
                 </div>
 
@@ -643,7 +644,7 @@
                     <div class="slide-content">
                         <div class="slide-eyebrow">Right Now</div>
                         <div class="slide-title">Your Browser Is Querying the Cardano Blockchain</div>
-                        <div class="slide-body">No app download. No login. No streaming server. Right now, your browser is reaching out to <em>Koios</em> — a decentralized, community-run API — to locate and read 176 NFTs that carry a video encoded in their metadata.</div>
+                        <div class="slide-body">No app download. No login. No streaming server. This is the same move I made when I built it: point a browser at the chain and let it do the work. Right now, your browser is reaching out to <em>Koios</em> — a decentralized, community-run API — to locate the policy and start reading the scroll page by page.</div>
                     </div>
                 </div>
 
@@ -654,7 +655,7 @@
                     <div class="slide-content">
                         <div class="slide-eyebrow">On-Chain Proof</div>
                         <div class="slide-title">176 NFTs. Each One a Fragment of This Video.</div>
-                        <div class="slide-body">What you see above is the actual on-chain wallet view. <em>176 NFTs minted under a single time-locked policy</em> — a manifest plus 175 pages of hex-encoded MP4 data. Your browser is downloading each one right now.</div>
+                        <div class="slide-body">That image isn’t stock art — it’s a screenshot I took and left on my desktop the moment the mint finished. <em>176 NFTs under one policy</em>: one manifest that explains the scroll, plus <em>175 pages</em> carrying hex-encoded MP4 bytes. While you’re reading this, your browser is pulling those pages and stitching them back into a real video.</div>
                     </div>
                 </div>
 
@@ -755,7 +756,7 @@
                         <div class="progress-bar-fill" id="progressFill"></div>
                     </div>
                     <div class="progress-label">
-                        <span id="pageNow">0</span>/<span id="pageTotal">175</span> NFTs · <span class="pct" id="pctLabel">0%</span>
+                        <span id="pageNow">0</span>/<span id="pageTotal">175</span> pages (+ manifest) · <span class="pct" id="pctLabel">0%</span>
                     </div>
                 </div>
 
@@ -832,7 +833,7 @@ const CFG = {
 // ═══════════════════════════════════════════════════════
 // SLIDESHOW ENGINE
 // ═══════════════════════════════════════════════════════
-const SLIDE_DURATION = 9000; // 9 seconds per slide
+const SLIDE_DURATION = 11000; // ~11 seconds per slide (gives the story room to breathe)
 const slides = document.querySelectorAll('.slide');
 const totalSlides = slides.length;
 let currentSlide = 0;
