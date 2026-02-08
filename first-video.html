@@ -123,7 +123,7 @@
         .main-content {
             position: relative; z-index: 1;
             max-width: 1100px; margin: 0 auto; padding: 0 20px;
-            opacity: 0; transition: opacity 0.8s ease 0.3s;
+            opacity: 0; transition: opacity 0.8s ease;
         }
         .main-content.visible { opacity: 1; }
 
@@ -326,6 +326,39 @@
                 radial-gradient(ellipse at 20% 70%, rgba(212,168,85,0.05) 0%, transparent 40%),
                 radial-gradient(ellipse at 80% 80%, rgba(34,211,238,0.04) 0%, transparent 35%),
                 var(--void);
+
+
+        /* Koios / network visual (subtle node constellation) */
+        .slide-bg.koios-visual {
+            background:
+                radial-gradient(circle at 20% 30%, rgba(34,211,238,0.10) 0%, transparent 35%),
+                radial-gradient(circle at 75% 40%, rgba(212,168,85,0.08) 0%, transparent 38%),
+                radial-gradient(circle at 55% 75%, rgba(255,215,0,0.06) 0%, transparent 40%),
+                var(--void);
+        }
+        .koios-net {
+            position: absolute; inset: 0;
+            background-image:
+                radial-gradient(circle, rgba(34,211,238,0.35) 1px, transparent 2px),
+                radial-gradient(circle, rgba(212,168,85,0.25) 1px, transparent 2px);
+            background-size: 180px 180px, 240px 240px;
+            background-position: 10% 20%, 70% 60%;
+            opacity: 0.45;
+            filter: blur(0.2px);
+            animation: koiosDrift 16s ease-in-out infinite alternate;
+        }
+        @keyframes koiosDrift {
+            0% { transform: translate3d(0,0,0) scale(1); opacity: 0.35; }
+            100% { transform: translate3d(-1.5%,1%,0) scale(1.05); opacity: 0.5; }
+        }
+
+        /* Placeholder Hosky visual until an actual hosky.png is added */
+        .slide-bg.hosky-visual {
+            background:
+                radial-gradient(circle at 30% 35%, rgba(212,168,85,0.10) 0%, transparent 45%),
+                radial-gradient(circle at 70% 60%, rgba(34,211,238,0.08) 0%, transparent 48%),
+                var(--void);
+        }
         }
 
         /* CSS animated pipeline diagram inside a slide */
@@ -634,134 +667,87 @@
                     <div class="slide-content centered">
                         <div class="slide-eyebrow">February 2026</div>
                         <div class="slide-title" style="font-size:clamp(1.4rem,4vw,2.4rem)">The First Video Ever Stored<br>Entirely on a Blockchain</div>
-                        <div class="slide-body">Not a link. Not a hash. Not a pointer to a server. The actual video data — every byte — was minted onto Cardano in a scroll of pages. Your browser is about to reconstruct it live, the same way I verified it after the mint: one fragment at a time.</div>
+                        <div class="slide-body">Not a link. Not a hash. Not a pointer to a server. The <em>actual bytes</em> live on Cardano. Your browser is about to read them and rebuild the film in real time.</div>
                     </div>
                 </div>
 
-                <!-- SLIDE 1: What's Happening -->
+                <!-- SLIDE 1: What people think an NFT is -->
                 <div class="slide" data-idx="1">
+                    <div class="slide-bg hosky-visual ken-burns"></div>
+                    <div class="slide-overlay bottom-heavy"></div>
+                    <div class="slide-content">
+                        <div class="slide-eyebrow">First, The Mental Model</div>
+                        <div class="slide-title">When Most People Hear “NFT”…</div>
+                        <div class="slide-body">They picture a meme image. A tiny file. A collectible. That’s not wrong — it’s just the most common use. (Example: a little Hosky PNG, stored on-chain as <em>image/png</em>.)</div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 2: The constraint -->
+                <div class="slide" data-idx="2">
                     <div class="slide-bg cosmos-visual slow-zoom"></div>
                     <div class="slide-overlay bottom-heavy"></div>
                     <div class="slide-content">
-                        <div class="slide-eyebrow">Right Now</div>
-                        <div class="slide-title">Your Browser Is Querying the Cardano Blockchain</div>
-                        <div class="slide-body">No app download. No login. No streaming server. This is the same move I made when I built it: point a browser at the chain and let it do the work. Right now, your browser is reaching out to <em>Koios</em> — a decentralized, community-run API — to locate the policy and start reading the scroll page by page.</div>
+                        <div class="slide-eyebrow">The Limit</div>
+                        <div class="slide-title">A Single NFT Can’t Hold Much Data</div>
+                        <div class="slide-body">On-chain metadata isn’t designed for huge payloads. So most NFTs end up pointing elsewhere — because there isn’t enough room to store something meaningful like <em>video</em> directly inside one mint.</div>
                     </div>
                 </div>
 
-                <!-- SLIDE 2: 176 NFTs — THE IMAGE SLIDE -->
-                <div class="slide" data-idx="2">
+                <!-- SLIDE 3: Ledger Scrolls concept -->
+                <div class="slide" data-idx="3">
+                    <div class="slide-bg pipeline-visual slow-zoom"></div>
+                    <div class="slide-overlay full-dark"></div>
+                    <div class="slide-content">
+                        <div class="slide-eyebrow">Ledger Scrolls</div>
+                        <div class="slide-title">So We Turn One NFT Into a Scroll</div>
+                        <div class="slide-body">A <em>policy</em> becomes the bookshelf. The <em>manifest</em> explains how to read the series. Then the rest of the NFTs are numbered pages — each page carries a chunk of data. Put together, they become a complete file.</div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 4: Proof screenshot -->
+                <div class="slide" data-idx="4">
                     <div class="slide-bg nft-grid ken-burns"></div>
                     <div class="slide-overlay bottom-heavy"></div>
                     <div class="slide-content">
                         <div class="slide-eyebrow">On-Chain Proof</div>
-                        <div class="slide-title">176 NFTs. One Policy. One Day.</div>
-                        <div class="slide-body">That image isn’t stock art — it’s a screenshot I took and left on my desktop the moment the mint finished. <em>176 NFTs under one policy</em>: one manifest that explains the scroll, plus <em>175 pages</em> carrying hex-encoded MP4 bytes. It wasn’t batch-minted with a fancy UI — it was done the stubborn way, one at a time, until it was finally complete.</div>
+                        <div class="slide-title">175 Pages + 1 Manifest = 176 NFTs</div>
+                        <div class="slide-body">This is a real screenshot from the mint. One policy. One set. One manifest that describes the scroll — and <em>175 numbered pages</em> containing hex-encoded MP4 bytes.</div>
                     </div>
                 </div>
 
-                <!-- SLIDE 3: The Human Part (CNTools) -->
-                <div class="slide" data-idx="3">
-                    <div class="slide-bg cosmos-visual slow-zoom"></div>
-                    <div class="slide-overlay bottom-heavy"></div>
-                    <div class="slide-content">
-                        <div class="slide-eyebrow">How It Was Made</div>
-                        <div class="slide-title">CNTools. Page by Page.</div>
-                        <div class="slide-body">This scroll was minted with <em>CNTools</em> — not as a single upload, but as a careful sequence: the manifest first, then the 175 data pages that follow. The policy is <em>38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2</em>, and it locks on <em>2026-02-12 03:29:07 UTC</em>. After that moment, the set is sealed — permanent, readable, and unchangeable.</div>
-                    </div>
-                </div>
-
-                <!-- SLIDE 4: How Koios Works -->
-                <div class="slide" data-idx="4">
-                    <div class="slide-bg pipeline-visual slow-zoom"></div>
-                    <div class="slide-overlay full-dark"></div>
-                    <!-- CSS Pipeline Diagram -->
-                    <div class="pipeline-diagram">
-                        <div class="pipe-node">🌐</div>
-                        <div class="pipe-arrow"></div>
-                        <div class="pipe-node">📡</div>
-                        <div class="pipe-arrow"></div>
-                        <div class="pipe-node">🧩</div>
-                        <div class="pipe-arrow"></div>
-                        <div class="pipe-node">🔗</div>
-                        <div class="pipe-arrow"></div>
-                        <div class="pipe-node">🎬</div>
-                    </div>
-                    <div class="slide-content">
-                        <div class="slide-eyebrow">The Pipeline</div>
-                        <div class="slide-title">Koios: A Community API, Not a Company</div>
-                        <div class="slide-body">Koios is a <em>distributed, open-source API layer</em> for Cardano, run by independent operators around the world. Many endpoints, one shared interface. If an operator goes offline, others keep serving. Your browser uses Koios to query the policy, read each NFT’s metadata, extract the hex payload, and stitch the pages into a playable file.</div>
-                    </div>
-                </div>
-
-                <!-- SLIDE 5: CIP-25 -->
+                <!-- SLIDE 5: Minting method + lock -->
                 <div class="slide" data-idx="5">
                     <div class="slide-bg cosmos-visual slow-zoom"></div>
                     <div class="slide-overlay bottom-heavy"></div>
                     <div class="slide-content">
-                        <div class="slide-eyebrow">Open Standard</div>
-                        <div class="slide-title">CIP-25: Cardano's Native NFT Metadata</div>
-                        <div class="slide-body">Every NFT page uses <em>CIP-25 metadata</em> — the same open standard every Cardano NFT uses. Readable by any wallet, any block explorer, any tool ever built for Cardano. No proprietary format. No vendor lock-in. This data will be readable by software that doesn't even exist yet.</div>
+                        <div class="slide-eyebrow">Sealed Set</div>
+                        <div class="slide-title">Minted with CNTools. Locked by Time.</div>
+                        <div class="slide-body">The policy is <em>38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2</em>. It locks on <em>2026-02-12 03:29:07 UTC</em>. After lock, no new pages can be added — the scroll becomes a permanent record.</div>
                     </div>
                 </div>
 
-                <!-- SLIDE 6: No Server -->
+                <!-- SLIDE 6: Koios + infographic -->
                 <div class="slide" data-idx="6">
-                    <div class="slide-bg slow-zoom" style="background:var(--void)"></div>
+                    <div class="slide-bg koios-visual slow-zoom"></div>
                     <div class="slide-overlay full-dark"></div>
-                    <div class="slide-content centered">
-                        <div class="slide-eyebrow">Zero Dependencies</div>
-                        <div class="slide-title" style="font-size:clamp(1.3rem,3.5vw,2rem)">No Server. No CDN.<br>No Hosting Bill. No Kill Switch.</div>
-                        <div class="slide-body">Traditional video requires servers, bandwidth, and someone paying the bills. This video requires <em>nothing</em> — just a browser and the Cardano blockchain. No infrastructure to maintain. No domain to renew. No company needs to stay in business. No government can order it taken down.</div>
+                    <div class="koios-net" aria-hidden="true"></div>
+                    <div class="slide-content">
+                        <div class="slide-eyebrow">Reading the Chain</div>
+                        <div class="slide-title">Koios: Decentralized Chain Data, Free to Use</div>
+                        <div class="slide-body">Cardano is separate from the internet — but its data is public. <em>Koios</em> is a community-run network of API endpoints operated by independent node runners. Your browser asks for the policy, pulls the metadata, and reconstructs the file — no paywall, no key, no single company.</div>
                     </div>
                 </div>
 
-                <!-- SLIDE 7: SHA-256 -->
+                <!-- SLIDE 7: Final -->
                 <div class="slide" data-idx="7">
-                    <div class="slide-bg hash-visual slow-zoom"></div>
-                    <div class="slide-overlay full-dark"></div>
-                    <div class="hex-watermark" aria-hidden="true">aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814</div>
-                    <div class="slide-content">
-                        <div class="slide-eyebrow">Cryptographic Proof</div>
-                        <div class="slide-title">Verified by Math, Not by Trust</div>
-                        <div class="slide-body">The reconstructed video carries a <em>SHA-256 cryptographic hash</em>. Every byte can be independently verified against the on-chain record. What you see is exactly what was minted — mathematically provable, no trust required, no authority needed.</div>
-                    </div>
-                </div>
-
-                <!-- SLIDE 8: Library That Cannot Burn -->
-                <div class="slide" data-idx="8">
-                    <div class="slide-bg library-visual slow-zoom"></div>
-                    <div class="slide-overlay full-dark"></div>
-                    <div class="beacn-watermark"></div>
-                    <div class="slide-content centered">
-                        <div class="slide-eyebrow">Ledger Scrolls</div>
-                        <div class="slide-title">"A Library That Cannot Burn"</div>
-                        <div class="slide-body">The Library of Alexandria. The House of Wisdom. Baghdad. History is a graveyard of lost knowledge. <em>Ledger Scrolls</em> is an open-source standard for storing any data permanently on the Cardano blockchain — documents, images, audio, video. An open library that no fire, no war, no corporate shutdown can destroy.</div>
-                    </div>
-                </div>
-
-                <!-- SLIDE 9: Already on chain -->
-                <div class="slide" data-idx="9">
-                    <div class="slide-bg cosmos-visual slow-zoom"></div>
-                    <div class="slide-overlay bottom-heavy"></div>
-                    <div class="slide-content">
-                        <div class="slide-eyebrow">Already Permanent</div>
-                        <div class="slide-title">The Bible. The Constitution. Philosophical Texts. Now Video.</div>
-                        <div class="slide-body">The complete World English Bible — all 66 books. Both Cardano Constitutions. Philosophical meditations. Historical documents. And now, <em>the first-ever on-chain video</em>. Anyone can mint their own scroll using the open-source tools. The permanent library grows with every contribution.</div>
-                    </div>
-                </div>
-
-                <!-- SLIDE 10: Final -->
-                <div class="slide" data-idx="10">
                     <div class="slide-bg slow-zoom" style="background:var(--void)"></div>
                     <div class="slide-overlay full-dark"></div>
                     <div class="slide-content centered">
                         <div class="slide-eyebrow">Stand By</div>
                         <div class="slide-title" style="font-size:clamp(1.3rem,3.5vw,2rem)">Assembling Video from the Blockchain…</div>
-                        <div class="slide-body">All NFT payloads collected. Hex data concatenated. Bytes verified. Converting to a playable MP4 blob. <em>History is about to play.</em></div>
+                        <div class="slide-body">Pages collected. Payloads extracted. Bytes stitched. Converting to a playable MP4 blob. <em>History is about to play.</em></div>
                     </div>
                 </div>
-
                 <!-- Progress HUD -->
                 <div class="progress-hud">
                     <div class="progress-bar-track">
@@ -933,21 +919,15 @@ function setProgress(pct, page) {
 // AUTO-START
 // ═══════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-    // Let the opening card breathe a little longer, then dissolve directly into the loader
-    // (avoids the "black gap" feeling on slower connections/devices).
+    // Start the loader immediately (behind the intro). This removes the dead-black gap
+    // and makes the experience feel continuous even on slow devices/connections.
+    $('mainContent').classList.add('visible');
+    $('theater').classList.add('is-loading');
+    startReconstruction();
+
+    // Let the opening card breathe, then dissolve away.
     setTimeout(() => {
         $('cinemaIntro').classList.add('fade-out');
-
-        // Bring the main layout in as the intro is dissolving
-        setTimeout(() => { $('mainContent').classList.add('visible'); }, 250);
-
-        // Start reconstruction + slideshow shortly after fade begins (keep something on screen)
-        setTimeout(() => {
-            $('theater').classList.add('is-loading');
-            startReconstruction();
-        }, 650);
-
-        // Remove intro from layout after it is fully faded
         setTimeout(() => { $('cinemaIntro').style.display = 'none'; }, 1500);
     }, 6200);
 });
