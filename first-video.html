@@ -132,39 +132,6 @@
             opacity: 0;
             animation: fadeSlideUp 1s 1.8s ease forwards;
         }
-        .cinema-enter {
-            margin-top: 40px;
-            padding: 14px 44px;
-            background: transparent;
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            font-family: var(--font-display);
-            font-size: 0.85rem;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            cursor: pointer;
-            border-radius: 4px;
-            opacity: 0;
-            animation: fadeSlideUp 1s 2.6s ease forwards;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .cinema-enter::before {
-            content: '';
-            position: absolute; inset: 0;
-            background: linear-gradient(135deg, var(--gold), var(--gold-bright));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: -1;
-        }
-        .cinema-enter:hover {
-            color: var(--void);
-            border-color: var(--gold-bright);
-            box-shadow: 0 0 30px var(--gold-glow), 0 0 60px rgba(212,168,85,0.15);
-        }
-        .cinema-enter:hover::before { opacity: 1; }
-
         @keyframes fadeSlideUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -703,7 +670,6 @@
     <div class="cinema-line"></div>
     <div class="cinema-title">The First Video<br>Ever Stored on a Blockchain</div>
     <div class="cinema-subtitle">175 NFTs · Zero Servers · Reconstructed Live</div>
-    <button class="cinema-enter" id="enterBtn" onclick="enterTheater()">Begin Reconstruction</button>
 </div>
 
 <!-- ═══════════════════════ MAIN CONTENT ═══════════════════════ -->
@@ -1030,15 +996,18 @@ FACTS.forEach((_, i) => {
 })();
 
 // ═══════════════════════════════════════════════════════
-// CINEMA INTRO
+// AUTO-START — Intro plays, then transitions to reconstruction
 // ═══════════════════════════════════════════════════════
-window.enterTheater = function() {
-    const intro = $('cinemaIntro');
-    intro.classList.add('fade-out');
-    const main = $('mainContent');
-    setTimeout(() => { main.classList.add('visible'); }, 400);
-    setTimeout(() => { intro.style.display = 'none'; startReconstruction(); }, 1400);
-};
+document.addEventListener('DOMContentLoaded', () => {
+    // Let the cinema intro animations play (~3s), then auto-transition
+    setTimeout(() => {
+        const intro = $('cinemaIntro');
+        intro.classList.add('fade-out');
+        const main = $('mainContent');
+        setTimeout(() => { main.classList.add('visible'); }, 400);
+        setTimeout(() => { intro.style.display = 'none'; startReconstruction(); }, 1400);
+    }, 3200);
+});
 
 // ═══════════════════════════════════════════════════════
 // DATA STREAM VISUALIZER
