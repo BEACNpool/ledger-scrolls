@@ -666,8 +666,8 @@
                     <div class="slide-overlay bottom-heavy"></div>
                     <div class="slide-content">
                         <div class="slide-eyebrow">How It Was Made</div>
-                        <div class="slide-title">CNTools. One Mint at a Time. All Day.</div>
-                        <div class="slide-body">There isn’t a shortcut hidden off-screen. Each page was minted manually via <em>CNTools</em> — one transaction, confirm, repeat — until 175 pages and the manifest existed on-chain. The policy is <em>38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2</em>, and it locks on <em>2026-02-12 03:29:07 UTC</em>. After that moment, this scroll can’t be altered. Only read.</div>
+                        <div class="slide-title">CNTools. Page by Page.</div>
+                        <div class="slide-body">This scroll was minted with <em>CNTools</em> — not as a single upload, but as a careful sequence: the manifest first, then the 175 data pages that follow. The policy is <em>38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2</em>, and it locks on <em>2026-02-12 03:29:07 UTC</em>. After that moment, the set is sealed — permanent, readable, and unchangeable.</div>
                     </div>
                 </div>
 
@@ -689,8 +689,8 @@
                     </div>
                     <div class="slide-content">
                         <div class="slide-eyebrow">The Pipeline</div>
-                        <div class="slide-title">Browser → Koios → Cardano → Video</div>
-                        <div class="slide-body">Koios is a <em>distributed, open-source API layer</em> for Cardano. No API key. No single company controls it. Multiple independent operators host endpoints worldwide. If one node goes down, others keep serving. Your browser queries the policy ID, fetches each NFT's metadata, extracts the hex payload, and stitches them into a playable file.</div>
+                        <div class="slide-title">Koios: A Community API, Not a Company</div>
+                        <div class="slide-body">Koios is a <em>distributed, open-source API layer</em> for Cardano, run by independent operators around the world. Many endpoints, one shared interface. If an operator goes offline, others keep serving. Your browser uses Koios to query the policy, read each NFT’s metadata, extract the hex payload, and stitch the pages into a playable file.</div>
                     </div>
                 </div>
 
@@ -933,15 +933,23 @@ function setProgress(pct, page) {
 // AUTO-START
 // ═══════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+    // Let the opening card breathe a little longer, then dissolve directly into the loader
+    // (avoids the "black gap" feeling on slower connections/devices).
     setTimeout(() => {
         $('cinemaIntro').classList.add('fade-out');
-        setTimeout(() => { $('mainContent').classList.add('visible'); }, 400);
+
+        // Bring the main layout in as the intro is dissolving
+        setTimeout(() => { $('mainContent').classList.add('visible'); }, 250);
+
+        // Start reconstruction + slideshow shortly after fade begins (keep something on screen)
         setTimeout(() => {
-            $('cinemaIntro').style.display = 'none';
             $('theater').classList.add('is-loading');
             startReconstruction();
-        }, 1400);
-    }, 3200);
+        }, 650);
+
+        // Remove intro from layout after it is fully faded
+        setTimeout(() => { $('cinemaIntro').style.display = 'none'; }, 1500);
+    }, 6200);
 });
 
 // ═══════════════════════════════════════════════════════
