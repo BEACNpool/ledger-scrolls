@@ -865,10 +865,13 @@ function goToSlide(idx) {
 
     slides.forEach((s, i) => {
         s.classList.remove('active', 'exiting');
-        // Reset child animations
+        // Reset child animations WITHOUT leaving inline styles that override CSS
         s.querySelectorAll('.slide-eyebrow, .slide-title, .slide-body').forEach(el => {
-            el.style.opacity = '0';
             el.style.animation = 'none';
+            // force reflow so the next animation can restart cleanly
+            void el.offsetHeight;
+            el.style.animation = '';
+            el.style.opacity = '';
         });
     });
 
