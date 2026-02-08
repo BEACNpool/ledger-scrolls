@@ -3,915 +3,1272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0a0c10">
-    
-    <!-- SEO & Social -->
-    <title>The First Video on Cardano — Ledger Scrolls</title>
-    <meta name="description" content="Watch the first video ever stored entirely on the Cardano blockchain. Powered by Ledger Scrolls technology from BEACNpool.">
-    <meta property="og:title" content="The First Video on Cardano">
-    <meta property="og:description" content="Watch history unfold. The first video stored entirely on-chain using Ledger Scrolls technology.">
+    <meta name="theme-color" content="#030508">
+    <title>The First Video Ever Stored on a Blockchain — Ledger Scrolls</title>
+    <meta name="description" content="Watch history being made. The first video ever stored entirely on a blockchain, reconstructed live from 175 on-chain NFTs. No servers. No links. Pure blockchain.">
+    <meta property="og:title" content="The First Video Ever Stored on a Blockchain">
+    <meta property="og:description" content="175 NFTs. Zero servers. One historic moment. Watch the first video reconstructed live from the Cardano blockchain.">
     <meta property="og:type" content="video.other">
     <meta property="og:image" content="https://beacnpool.org/assets/first-video-preview.png">
     <meta name="twitter:card" content="summary_large_image">
-    
-    <!-- Fonts — aligned with main Ledger Scrolls viewer -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&family=Sora:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
     <style>
-        /* ── Design tokens aligned with main Ledger Scrolls theme ── */
         :root {
-            --color-bg-deep: #0a0c10;
-            --color-bg-primary: #12151c;
-            --color-bg-secondary: #1a1e28;
-            --color-bg-tertiary: #242938;
-            --color-accent-primary: #d4a855;
-            --color-accent-secondary: #c9943e;
-            --color-accent-tertiary: #f0d78c;
-            --color-accent-glow: rgba(212, 168, 85, 0.3);
-            --color-gold: #ffd700;
-            --color-text-primary: #f5f5f5;
-            --color-text-secondary: #a0a8b8;
-            --color-text-muted: #6b7280;
+            --void: #030508;
+            --deep: #080c14;
+            --surface: #0e1320;
+            --surface2: #151c2e;
+            --surface3: #1c2540;
+            --gold: #d4a855;
+            --gold-bright: #ffd700;
+            --gold-pale: #f0d78c;
+            --gold-dim: #9a7b3a;
+            --gold-glow: rgba(212, 168, 85, 0.35);
+            --cyan: #22d3ee;
+            --cyan-glow: rgba(34, 211, 238, 0.25);
+            --text: #eef2f7;
+            --text-dim: #94a3b8;
+            --text-muted: #5a6578;
             --font-display: 'Cinzel', serif;
             --font-body: 'Cormorant Garamond', serif;
+            --font-ui: 'Sora', sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
         }
-        
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+        html { scroll-behavior: smooth; }
+
         body {
-            font-family: var(--font-body);
-            background: var(--color-bg-deep);
-            color: var(--color-text-primary);
+            background: var(--void);
+            color: var(--text);
+            font-family: var(--font-ui);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             overflow-x: hidden;
         }
-        
-        /* ── Animated Background ── */
-        .bg-animation {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            overflow: hidden;
+
+        /* ═══════════════════════════════════════════════════════════
+           BACKGROUND — Deep space atmosphere
+        ═══════════════════════════════════════════════════════════ */
+        .bg-cosmos {
+            position: fixed; inset: 0; z-index: 0;
+            pointer-events: none; overflow: hidden;
         }
-        .bg-animation::before {
+        .bg-cosmos::before {
             content: '';
-            position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
+            position: absolute; inset: -40%;
             background:
-                radial-gradient(ellipse at 30% 20%, rgba(212, 168, 85, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 80%, rgba(255, 215, 0, 0.04) 0%, transparent 50%);
-            animation: bgPulse 15s ease-in-out infinite;
+                radial-gradient(ellipse at 20% 20%, rgba(212, 168, 85, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(34, 211, 238, 0.04) 0%, transparent 45%),
+                radial-gradient(ellipse at 50% 50%, rgba(255, 215, 0, 0.03) 0%, transparent 60%);
+            animation: cosmicDrift 30s ease-in-out infinite alternate;
         }
-        @keyframes bgPulse {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(2%, 2%) scale(1.05); }
+        @keyframes cosmicDrift {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(3%, -2%) scale(1.08); }
         }
-        
-        /* Floating particles */
-        .bg-particles {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
+
+        /* Star field */
+        .starfield {
+            position: fixed; inset: 0; z-index: 0;
             pointer-events: none;
         }
-        .particle {
+        .star {
             position: absolute;
-            width: 2px; height: 2px;
-            background: var(--color-accent-primary);
             border-radius: 50%;
-            opacity: 0;
-            animation: particleFloat 18s linear infinite;
+            background: white;
+            animation: starTwinkle var(--dur) ease-in-out infinite alternate;
         }
-        @keyframes particleFloat {
-            0%   { opacity: 0; transform: translateY(100vh) scale(0); }
-            10%  { opacity: 0.6; }
-            90%  { opacity: 0.6; }
-            100% { opacity: 0; transform: translateY(-10vh) scale(1); }
+        @keyframes starTwinkle {
+            0% { opacity: var(--o1); transform: scale(1); }
+            100% { opacity: var(--o2); transform: scale(1.3); }
         }
-        
-        /* ── Main Container ── */
-        .container {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 900px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+
+        /* ═══════════════════════════════════════════════════════════
+           CINEMA INTRO OVERLAY — The "Premiere" feel
+        ═══════════════════════════════════════════════════════════ */
+        .cinema-intro {
+            position: fixed; inset: 0; z-index: 1000;
+            background: var(--void);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 1.2s ease, visibility 1.2s ease;
         }
-        
-        /* ── Header ── */
-        .header {
-            text-align: center;
-            padding: 40px 0 20px;
+        .cinema-intro.fade-out {
+            opacity: 0; visibility: hidden;
         }
-        .header h1 {
+        .cinema-tagline {
             font-family: var(--font-display);
-            font-size: clamp(1.5rem, 5vw, 2.5rem);
-            font-weight: 600;
-            background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-accent-primary) 100%);
+            font-size: clamp(0.7rem, 2vw, 0.95rem);
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: var(--gold);
+            opacity: 0;
+            animation: fadeSlideUp 1s 0.5s ease forwards;
+        }
+        .cinema-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 6vw, 3.5rem);
+            font-weight: 700;
+            text-align: center;
+            background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 40%, var(--gold-pale) 70%, var(--gold) 100%);
+            background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 8px;
+            animation: fadeSlideUp 1.2s 1s ease forwards, shimmer 4s ease-in-out infinite;
+            opacity: 0;
+            margin: 16px 0;
+            line-height: 1.2;
+            padding: 0 20px;
         }
-        .header .subtitle {
-            color: var(--color-text-secondary);
+        .cinema-subtitle {
             font-family: var(--font-body);
-            font-size: 1.05rem;
+            font-size: clamp(1rem, 3vw, 1.4rem);
             font-style: italic;
+            color: var(--text-dim);
+            opacity: 0;
+            animation: fadeSlideUp 1s 1.8s ease forwards;
         }
-        
-        /* ── Video Container ── */
-        .video-container {
+        .cinema-enter {
+            margin-top: 40px;
+            padding: 14px 44px;
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 4px;
+            opacity: 0;
+            animation: fadeSlideUp 1s 2.6s ease forwards;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .cinema-enter::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+        .cinema-enter:hover {
+            color: var(--void);
+            border-color: var(--gold-bright);
+            box-shadow: 0 0 30px var(--gold-glow), 0 0 60px rgba(212,168,85,0.15);
+        }
+        .cinema-enter:hover::before { opacity: 1; }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Divider line */
+        .cinema-line {
+            width: 60px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            margin: 14px 0;
+            opacity: 0;
+            animation: fadeSlideUp 1s 1.4s ease forwards;
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           MAIN LAYOUT
+        ═══════════════════════════════════════════════════════════ */
+        .main-content {
+            position: relative; z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+            opacity: 0;
+            transition: opacity 0.8s ease 0.3s;
+        }
+        .main-content.visible { opacity: 1; }
+
+        /* ═══════════════════════════════════════════════════════════
+           THEATER — The video/loading container
+        ═══════════════════════════════════════════════════════════ */
+        .theater-wrapper {
+            margin: 30px 0 20px;
+        }
+        .theater-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px 12px;
+        }
+        .theater-badge {
+            display: flex; align-items: center; gap: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--gold);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .theater-badge .pulse-dot {
+            width: 6px; height: 6px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--gold-glow); }
+            50% { opacity: 0.6; box-shadow: 0 0 0 6px transparent; }
+        }
+        .theater-live {
+            display: flex; align-items: center; gap: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--cyan);
+            letter-spacing: 1px;
+            transition: opacity 0.5s ease;
+        }
+        .theater-live .dot {
+            width: 5px; height: 5px;
+            background: var(--cyan);
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .theater {
+            position: relative;
             width: 100%;
             aspect-ratio: 16/9;
-            background: var(--color-bg-primary);
-            border-radius: 16px;
+            background: var(--deep);
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 0 60px rgba(212, 168, 85, 0.12);
-            position: relative;
-            margin: 20px 0;
-            border: 1px solid rgba(212, 168, 85, 0.1);
+            border: 1px solid rgba(212, 168, 85, 0.08);
+            box-shadow:
+                0 0 80px rgba(0,0,0,0.6),
+                0 0 40px rgba(212, 168, 85, 0.05),
+                inset 0 0 80px rgba(0,0,0,0.3);
         }
-        .video-container video {
+        .theater video {
             width: 100%; height: 100%;
             object-fit: contain;
             display: none;
         }
-        .video-container video.loaded {
-            display: block;
-        }
-        
-        /* ── Loading Screen ── */
-        .loading-screen {
-            position: absolute;
-            inset: 0;
+        .theater video.ready { display: block; }
+
+        /* ═══════════════════════════════════════════════════════════
+           LOADING EXPERIENCE — The main event
+        ═══════════════════════════════════════════════════════════ */
+        .loader {
+            position: absolute; inset: 0;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 30px;
-            background: linear-gradient(180deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
+            transition: opacity 0.8s ease;
         }
-        .loading-screen.hidden { display: none; }
-        
-        /* Progress Ring */
-        .progress-ring-container {
-            position: relative;
-            width: 110px; height: 110px;
-            margin-bottom: 20px;
-        }
-        .progress-ring { transform: rotate(-90deg); }
-        .progress-ring-bg {
-            fill: none;
-            stroke: rgba(255,255,255,0.08);
-            stroke-width: 6;
-        }
-        .progress-ring-fill {
-            fill: none;
-            stroke: url(#progressGradient);
-            stroke-width: 6;
-            stroke-linecap: round;
-            stroke-dasharray: 301.593;
-            stroke-dashoffset: 301.593;
-            transition: stroke-dashoffset 0.3s ease;
-        }
-        .progress-percent {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.3rem;
-            font-family: var(--font-mono);
-            font-weight: 500;
-            color: var(--color-accent-primary);
-        }
-        
-        /* Page Counter */
-        .page-counter {
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            color: var(--color-text-muted);
-            margin-bottom: 18px;
-            letter-spacing: 0.5px;
-        }
-        .page-counter .current {
-            color: var(--color-accent-primary);
-            font-weight: 500;
-        }
-        
-        /* ── Rotating Story Cards ── */
-        .story-card {
-            background: rgba(212, 168, 85, 0.04);
-            border: 1px solid rgba(212, 168, 85, 0.12);
-            border-radius: 14px;
-            padding: 22px 26px;
-            max-width: 420px;
-            width: 90%;
-            text-align: center;
-            min-height: 130px;
+        .loader.done { opacity: 0; pointer-events: none; }
+
+        /* LEFT PANEL — Cinema narrative + facts */
+        .loader-narrative {
+            flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 8px;
-            animation: cardFadeIn 0.6s ease;
+            padding: 30px 28px 30px 32px;
             position: relative;
             overflow: hidden;
         }
-        .story-card::before {
+        .loader-narrative::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--color-accent-primary), transparent);
-            opacity: 0.4;
+            right: 0; top: 10%; bottom: 10%;
+            width: 1px;
+            background: linear-gradient(180deg, transparent, rgba(212,168,85,0.15), transparent);
         }
-        @keyframes cardFadeIn {
-            from { opacity: 0; transform: translateY(8px) scale(0.98); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
+
+        /* Narrative fact card */
+        .fact-card {
+            position: relative;
         }
-        .story-card .card-icon {
-            font-size: 1.6rem;
-            filter: drop-shadow(0 0 8px var(--color-accent-glow));
+        .fact-eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--gold-dim);
+            margin-bottom: 10px;
         }
-        .story-card h3 {
+        .fact-title {
             font-family: var(--font-display);
-            font-size: 0.95rem;
-            color: var(--color-accent-tertiary);
-            letter-spacing: 0.5px;
-        }
-        .story-card p {
-            font-family: var(--font-body);
-            font-size: 1rem;
-            color: var(--color-text-secondary);
-            line-height: 1.55;
-        }
-        .story-card .highlight {
-            color: var(--color-accent-primary);
+            font-size: clamp(1rem, 2.5vw, 1.35rem);
             font-weight: 600;
+            color: var(--gold-pale);
+            margin-bottom: 10px;
+            line-height: 1.3;
         }
-        
-        /* Story progress dots */
-        .story-progress {
-            display: flex;
-            gap: 6px;
-            margin-top: 16px;
-            justify-content: center;
+        .fact-body {
+            font-family: var(--font-body);
+            font-size: clamp(0.95rem, 2vw, 1.15rem);
+            color: var(--text-dim);
+            line-height: 1.7;
         }
-        .story-dot {
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.15);
+        .fact-body em { color: var(--gold); font-style: normal; font-weight: 600; }
+
+        /* Fact transition */
+        .fact-card { animation: factIn 0.7s ease; }
+        @keyframes factIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Fact navigation dots */
+        .fact-nav {
+            display: flex; gap: 5px;
+            margin-top: 20px;
+        }
+        .fact-dot {
+            width: 20px; height: 3px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
             transition: all 0.4s ease;
         }
-        .story-dot.active {
-            background: var(--color-accent-primary);
-            box-shadow: 0 0 8px var(--color-accent-glow);
-            width: 18px;
-            border-radius: 3px;
+        .fact-dot.active {
+            background: var(--gold);
+            width: 32px;
+            box-shadow: 0 0 8px var(--gold-glow);
         }
-        .story-dot.seen {
-            background: rgba(212, 168, 85, 0.3);
+        .fact-dot.seen {
+            background: rgba(212, 168, 85, 0.25);
         }
-        
-        /* Phase Indicator */
-        .phase-indicator {
+
+        /* RIGHT PANEL — Technical visualization */
+        .loader-viz {
+            width: 38%;
             display: flex;
-            gap: 8px;
-            margin-top: 14px;
-        }
-        .phase-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.15);
-            transition: all 0.3s;
-        }
-        .phase-dot.active {
-            background: var(--color-accent-primary);
-            box-shadow: 0 0 10px var(--color-accent-glow);
-        }
-        .phase-dot.complete {
-            background: var(--color-gold);
-        }
-        
-        /* BEACN Branding in loader */
-        .beacn-brand {
-            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            margin-top: 20px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(255,255,255,0.06);
+            padding: 24px;
+            background: rgba(0,0,0,0.2);
+            position: relative;
         }
-        .beacn-brand .beacon-icon { font-size: 1.6rem; }
-        .beacn-brand .brand-text { text-align: left; }
-        .beacn-brand .brand-name {
-            font-family: var(--font-display);
-            font-size: 1rem;
-            color: var(--color-text-primary);
+
+        /* Circular progress */
+        .ring-container {
+            position: relative;
+            width: 130px; height: 130px;
+            margin-bottom: 16px;
         }
-        .beacn-brand .brand-tagline {
-            font-family: var(--font-body);
-            font-size: 0.85rem;
-            color: var(--color-text-muted);
-            font-style: italic;
+        .ring-svg { transform: rotate(-90deg); filter: drop-shadow(0 0 12px var(--gold-glow)); }
+        .ring-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.05);
+            stroke-width: 5;
         }
-        
-        /* Error State */
-        .error-message {
-            color: #f87171;
-            text-align: center;
-            padding: 20px;
+        .ring-fill {
+            fill: none;
+            stroke: url(#ringGrad);
+            stroke-width: 5;
+            stroke-linecap: round;
+            stroke-dasharray: 345.575;
+            stroke-dashoffset: 345.575;
+            transition: stroke-dashoffset 0.4s ease;
         }
-        .error-message button {
-            margin-top: 15px;
-            padding: 10px 25px;
-            background: var(--color-accent-primary);
-            color: #0a0c10;
-            border: none;
-            border-radius: 8px;
-            font-family: var(--font-display);
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
+        .ring-percent {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: var(--font-mono);
+            font-size: 1.8rem;
+            font-weight: 300;
+            color: var(--gold);
+            letter-spacing: -1px;
+        }
+        .ring-percent span {
+            font-size: 0.8rem;
+            color: var(--gold-dim);
+        }
+
+        /* Page counter */
+        .page-count {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
             letter-spacing: 0.5px;
         }
-        .error-message button:hover {
-            box-shadow: 0 4px 16px var(--color-accent-glow);
-        }
-        
-        /* ── Info Section ── */
-        .info-section {
-            background: var(--color-bg-primary);
-            border: 1px solid rgba(212, 168, 85, 0.08);
-            border-radius: 16px;
-            padding: 30px;
+        .page-count .hi { color: var(--gold); }
+
+        /* Phase steps */
+        .phases {
             width: 100%;
-            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
-        .info-section h2 {
-            font-family: var(--font-display);
-            font-size: 1.2rem;
-            margin-bottom: 15px;
+        .phase-row {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
         }
-        .info-section p {
+        .phase-row.active { color: var(--gold); }
+        .phase-row.done { color: var(--gold-dim); }
+        .phase-icon {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.5rem;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        .phase-row.active .phase-icon {
+            border-color: var(--gold);
+            background: rgba(212, 168, 85, 0.15);
+            box-shadow: 0 0 10px var(--gold-glow);
+        }
+        .phase-row.done .phase-icon {
+            border-color: var(--gold-dim);
+            background: rgba(212, 168, 85, 0.1);
+            color: var(--gold);
+        }
+
+        /* Data stream visualization */
+        .data-stream {
+            width: 100%;
+            height: 32px;
+            margin-top: 14px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(212,168,85,0.06);
+            position: relative;
+            font-family: var(--font-mono);
+            font-size: 0.5rem;
+            color: rgba(212,168,85,0.4);
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .data-stream-text {
+            animation: streamScroll 8s linear infinite;
+        }
+        @keyframes streamScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           MOBILE LOADER — Stacked layout
+        ═══════════════════════════════════════════════════════════ */
+        @media (max-width: 700px) {
+            .loader {
+                flex-direction: column-reverse;
+            }
+            .loader-narrative {
+                padding: 20px 20px 24px;
+            }
+            .loader-narrative::after { display: none; }
+            .loader-viz {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 12px;
+                padding: 16px 20px;
+                justify-content: center;
+                border-bottom: 1px solid rgba(212,168,85,0.06);
+            }
+            .ring-container { width: 80px; height: 80px; margin: 0; }
+            .ring-percent { font-size: 1.2rem; }
+            .phases { width: auto; flex-direction: row; flex-wrap: wrap; gap: 4px 10px; }
+            .data-stream { display: none; }
+            .page-count { margin: 0; }
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           POST-LOAD — Info sections below video
+        ═══════════════════════════════════════════════════════════ */
+        .info-panel {
+            background: var(--deep);
+            border: 1px solid rgba(212, 168, 85, 0.06);
+            border-radius: 12px;
+            padding: 32px;
+            margin: 20px 0;
+        }
+        .info-panel h2 {
+            font-family: var(--font-display);
+            font-size: 1.15rem;
+            color: var(--gold-pale);
+            margin-bottom: 14px;
+            letter-spacing: 0.5px;
+        }
+        .info-panel p {
             font-family: var(--font-body);
             font-size: 1.1rem;
-            color: var(--color-text-secondary);
-            line-height: 1.7;
-            margin-bottom: 15px;
+            color: var(--text-dim);
+            line-height: 1.75;
+            margin-bottom: 14px;
         }
-        .stats-grid {
+        .info-panel p:last-child { margin-bottom: 0; }
+        .info-panel strong { color: var(--text); }
+
+        /* Stats row */
+        .stats-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
             margin-top: 20px;
         }
-        .stat-item {
-            background: rgba(212, 168, 85, 0.04);
-            border: 1px solid rgba(212, 168, 85, 0.08);
-            border-radius: 10px;
-            padding: 15px;
+        .stat {
+            background: rgba(212, 168, 85, 0.03);
+            border: 1px solid rgba(212, 168, 85, 0.06);
+            border-radius: 8px;
+            padding: 16px;
             text-align: center;
         }
-        .stat-value {
-            font-size: 1.4rem;
+        .stat-val {
             font-family: var(--font-mono);
-            font-weight: 500;
-            color: var(--color-accent-primary);
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: var(--gold);
         }
-        .stat-label {
-            font-size: 0.85rem;
-            font-family: var(--font-body);
-            color: var(--color-text-muted);
+        .stat-lbl {
+            font-family: var(--font-ui);
+            font-size: 0.7rem;
+            color: var(--text-muted);
             margin-top: 4px;
+            letter-spacing: 0.5px;
         }
-        
-        /* ── Links — Only to main viewer ── */
-        .links-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
+
+        /* Tech explainer cards */
+        .explainer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .explainer-card {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(212,168,85,0.05);
+            border-radius: 10px;
+            padding: 22px;
+        }
+        .explainer-card h3 {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            color: var(--gold);
+            margin-bottom: 8px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .explainer-card p {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--text-dim);
+            line-height: 1.65;
+            margin: 0;
+        }
+
+        /* Download section */
+        .download-section {
+            background: linear-gradient(135deg, rgba(212,168,85,0.05), rgba(34,211,238,0.03));
+            border: 1px solid rgba(212,168,85,0.1);
+            border-radius: 12px;
+            padding: 28px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .download-section h2 {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--gold-pale);
+            margin-bottom: 10px;
+        }
+        .download-section p {
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            color: var(--text-dim);
+            margin-bottom: 18px;
+            line-height: 1.6;
+        }
+        .btn-download {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 32px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+            color: var(--void);
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s ease;
+        }
+        .btn-download:hover {
+            box-shadow: 0 6px 24px var(--gold-glow);
+            transform: translateY(-2px);
+        }
+        .btn-download:disabled {
+            opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none;
+        }
+
+        /* Links */
+        .links-bar {
+            display: flex; flex-wrap: wrap; gap: 12px;
             justify-content: center;
             margin: 30px 0;
         }
         .link-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 14px 28px;
-            border-radius: 10px;
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 24px;
+            border-radius: 8px;
             text-decoration: none;
             font-family: var(--font-display);
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: 600;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
             transition: all 0.25s ease;
         }
-        .link-btn.primary {
-            background: linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary));
-            color: #0a0c10;
+        .link-primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+            color: var(--void);
         }
-        .link-btn.primary:hover {
-            box-shadow: 0 6px 24px var(--color-accent-glow);
-            transform: translateY(-2px);
+        .link-primary:hover { box-shadow: 0 4px 20px var(--gold-glow); transform: translateY(-2px); }
+        .link-secondary {
+            border: 1px solid rgba(212,168,85,0.2);
+            color: var(--gold);
         }
-        
-        /* ── Footer ── */
-        .footer {
+        .link-secondary:hover { border-color: var(--gold); box-shadow: 0 0 20px var(--gold-glow); }
+
+        /* Footer */
+        .site-footer {
             text-align: center;
-            padding: 30px 20px;
+            padding: 30px 20px 40px;
             font-family: var(--font-body);
-            color: var(--color-text-muted);
             font-size: 0.95rem;
+            color: var(--text-muted);
         }
-        .footer a {
-            color: var(--color-accent-primary);
-            text-decoration: none;
+        .site-footer a { color: var(--gold); text-decoration: none; }
+        .site-footer a:hover { text-decoration: underline; }
+
+        /* Error state */
+        .error-box {
+            position: absolute; inset: 0;
+            display: none; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 30px; text-align: center;
+            background: var(--deep);
         }
-        .footer a:hover { text-decoration: underline; }
-        
-        /* Mobile */
-        @media (max-width: 600px) {
-            .container { padding: 15px; }
-            .story-card { padding: 16px 18px; min-height: 110px; }
-            .info-section { padding: 20px; }
-            .progress-ring-container { width: 90px; height: 90px; }
+        .error-box.show { display: flex; }
+        .error-box .icon { font-size: 2.5rem; margin-bottom: 16px; }
+        .error-box p { font-family: var(--font-body); font-size: 1.1rem; color: var(--text-dim); margin-bottom: 16px; }
+        .error-box button {
+            padding: 10px 28px;
+            background: var(--gold);
+            color: var(--void);
+            border: none; border-radius: 6px;
+            font-family: var(--font-display);
+            font-weight: 600; font-size: 0.8rem;
+            cursor: pointer; letter-spacing: 1px;
         }
+
+        /* Scroll reveal for post-load content */
+        .below-fold { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .below-fold.visible { opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body>
-    <div class="bg-animation"></div>
-    <div class="bg-particles" id="bgParticles"></div>
-    
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1>📜 The First Video on Cardano</h1>
-            <p class="subtitle">Stored entirely on-chain · Powered by Ledger Scrolls</p>
-        </header>
-        
-        <!-- Video Player -->
-        <div class="video-container">
+
+<!-- ═══════════════════════ STAR FIELD ═══════════════════════ -->
+<div class="starfield" id="starfield"></div>
+<div class="bg-cosmos"></div>
+
+<!-- ═══════════════════════ CINEMA INTRO ═══════════════════════ -->
+<div class="cinema-intro" id="cinemaIntro">
+    <div class="cinema-tagline">A Ledger Scrolls Premiere</div>
+    <div class="cinema-line"></div>
+    <div class="cinema-title">The First Video<br>Ever Stored on a Blockchain</div>
+    <div class="cinema-subtitle">175 NFTs · Zero Servers · Reconstructed Live</div>
+    <button class="cinema-enter" id="enterBtn" onclick="enterTheater()">Begin Reconstruction</button>
+</div>
+
+<!-- ═══════════════════════ MAIN CONTENT ═══════════════════════ -->
+<div class="main-content" id="mainContent">
+
+    <!-- Theater -->
+    <div class="theater-wrapper">
+        <div class="theater-header">
+            <div class="theater-badge">
+                <div class="pulse-dot"></div>
+                <span>Reconstructing from Cardano</span>
+            </div>
+            <div class="theater-live" id="liveIndicator" style="opacity:0">
+                <div class="dot"></div>
+                <span>BLOCKCHAIN LIVE</span>
+            </div>
+        </div>
+
+        <div class="theater" id="theater">
             <video id="videoPlayer" controls playsinline></video>
-            
-            <div class="loading-screen" id="loadingScreen">
-                <!-- Progress Ring -->
-                <div class="progress-ring-container">
-                    <svg class="progress-ring" width="110" height="110">
-                        <defs>
-                            <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" style="stop-color:#d4a855"/>
-                                <stop offset="100%" style="stop-color:#ffd700"/>
-                            </linearGradient>
-                        </defs>
-                        <circle class="progress-ring-bg" cx="55" cy="55" r="48"/>
-                        <circle class="progress-ring-fill" id="progressRing" cx="55" cy="55" r="48"/>
-                    </svg>
-                    <div class="progress-percent" id="progressPercent">0%</div>
+
+            <!-- Loading Experience -->
+            <div class="loader" id="loader">
+                <!-- LEFT: Narrative -->
+                <div class="loader-narrative">
+                    <div class="fact-card" id="factCard">
+                        <div class="fact-eyebrow" id="factEyebrow">Initializing</div>
+                        <div class="fact-title" id="factTitle">Connecting to the Cardano Blockchain…</div>
+                        <div class="fact-body" id="factBody">Your browser is about to do something no browser has done before — reconstruct a complete video file from <em>175 on-chain NFTs</em>, with zero servers involved.</div>
+                    </div>
+                    <div class="fact-nav" id="factNav"></div>
                 </div>
-                
-                <!-- Page Counter -->
-                <div class="page-counter">
-                    Page <span class="current" id="currentPage">0</span> of <span id="totalPages">175</span>
-                </div>
-                
-                <!-- Rotating Story Card -->
-                <div class="story-card" id="storyCard">
-                    <div class="card-icon">🔗</div>
-                    <h3>Connecting to Cardano</h3>
-                    <p>Reaching out to the blockchain to begin reconstruction…</p>
-                </div>
-                
-                <!-- Story Progress Dots -->
-                <div class="story-progress" id="storyProgress"></div>
-                
-                <!-- Phase Dots -->
-                <div class="phase-indicator">
-                    <div class="phase-dot active" id="phase1"></div>
-                    <div class="phase-dot" id="phase2"></div>
-                    <div class="phase-dot" id="phase3"></div>
-                    <div class="phase-dot" id="phase4"></div>
-                </div>
-                
-                <!-- BEACN Branding -->
-                <div class="beacn-brand">
-                    <div class="beacon-icon">🏊</div>
-                    <div class="brand-text">
-                        <div class="brand-name">BEACNpool</div>
-                        <div class="brand-tagline">Cardano Stake Pool · Building the Future</div>
+
+                <!-- RIGHT: Viz -->
+                <div class="loader-viz">
+                    <div class="ring-container">
+                        <svg class="ring-svg" width="130" height="130" viewBox="0 0 130 130">
+                            <defs>
+                                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#d4a855"/>
+                                    <stop offset="100%" stop-color="#ffd700"/>
+                                </linearGradient>
+                            </defs>
+                            <circle class="ring-bg" cx="65" cy="65" r="55"/>
+                            <circle class="ring-fill" id="ringFill" cx="65" cy="65" r="55"/>
+                        </svg>
+                        <div class="ring-percent" id="ringPercent">0<span>%</span></div>
+                    </div>
+
+                    <div class="page-count">
+                        NFT <span class="hi" id="pageNow">0</span> / <span id="pageTotal">175</span>
+                    </div>
+
+                    <div class="phases">
+                        <div class="phase-row active" id="ph1"><div class="phase-icon">1</div> Querying Policy</div>
+                        <div class="phase-row" id="ph2"><div class="phase-icon">2</div> Fetching NFTs</div>
+                        <div class="phase-row" id="ph3"><div class="phase-icon">3</div> Extracting Payloads</div>
+                        <div class="phase-row" id="ph4"><div class="phase-icon">4</div> Assembling Video</div>
+                    </div>
+
+                    <div class="data-stream" id="dataStream">
+                        <div class="data-stream-text" id="streamText"></div>
                     </div>
                 </div>
             </div>
-            
-            <div class="error-message" id="errorMessage" style="display: none;"></div>
-        </div>
-        
-        <!-- Info Section -->
-        <section class="info-section">
-            <h2>📊 What You're Watching</h2>
-            <p>
-                This is the <strong>first video ever stored entirely on the Cardano blockchain</strong>. 
-                Not a link. Not a hash. The actual video data — reconstructed live in your browser from 
-                175 on-chain NFT pages using <strong>Ledger Scrolls</strong> technology.
-            </p>
-            <p>
-                Every byte exists on-chain forever. This video will be playable for as long as 
-                Cardano exists — truly permanent, censorship-resistant media.
-            </p>
-            
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-value">175</div>
-                    <div class="stat-label">On-Chain Pages</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="sizeValue">—</div>
-                    <div class="stat-label">Video Size</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">MP4</div>
-                    <div class="stat-label">Format</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">∞</div>
-                    <div class="stat-label">Permanence</div>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Links — ONLY to main Ledger Scrolls viewer -->
-        <div class="links-row">
-            <a href="index.html" class="link-btn primary">
-                📚 Explore Ledger Scrolls
-            </a>
-        </div>
-        
-        <!-- Footer -->
-        <footer class="footer">
-            <p>Built with ❤️ by <a href="https://x.com/BEACNpool" target="_blank">@BEACNpool</a></p>
-        </footer>
-    </div>
-    
-    <script>
-    /**
-     * First Video on Cardano — Enhanced Loading Experience
-     * Narrative-driven story cards that teach users about the technology
-     * while their video reconstructs from on-chain data.
-     */
-    (function() {
-        // ── Configuration ──
-        const CONFIG = {
-            policyId: '38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2',
-            expectedPages: 175,
-            contentType: 'video/mp4',
-            koiosEndpoints: [
-                'https://koios.beacnpool.org/api/v1',
-                'https://api.koios.rest/api/v1'
-            ]
-        };
-        
-        /**
-         * Story cards — a curated narrative journey through the technology.
-         * Each builds on the last to tell a coherent story about what's happening
-         * and why it matters, keeping the user engaged during reconstruction.
-         */
-        const STORY = [
-            // ── Act 1: The Hook ──
-            {
-                icon: '📡',
-                title: 'Connecting to Cardano',
-                text: 'Your browser is reaching out to the Cardano blockchain right now — no middleman, no login, no server required.'
-            },
-            {
-                icon: '💎',
-                title: 'A World First',
-                text: 'You are about to watch the <span class="highlight">first video ever stored entirely on a blockchain</span>. Every single byte lives on-chain.'
-            },
-            // ── Act 2: How It Works ──
-            {
-                icon: '🧩',
-                title: 'Split Into 175 Pieces',
-                text: 'The video is encoded across <span class="highlight">175 NFTs</span>. Each carries a fragment of the video payload in its on-chain metadata.'
-            },
-            {
-                icon: '📜',
-                title: 'CIP-25 Native Metadata',
-                text: 'Each page uses Cardano\'s standard NFT metadata format — readable by any wallet, any explorer, any tool. No proprietary lock-in.'
-            },
-            // ── Act 3: Why It Matters ──
-            {
-                icon: '⛓️',
-                title: 'Immutable by Design',
-                text: 'Once minted on Cardano, these NFTs can never be modified, censored, or deleted. The video exists for all time.'
-            },
-            {
-                icon: '🔐',
-                title: 'Trustless Verification',
-                text: 'Every byte is independently verifiable via SHA-256 cryptographic hashes. What you see is exactly what was stored.'
-            },
-            {
-                icon: '🌐',
-                title: 'Zero Dependencies',
-                text: 'No hosting fees. No CDN. No server. Your browser reconstructs this video using nothing but the Cardano blockchain.'
-            },
-            // ── Act 4: The Vision ──
-            {
-                icon: '🏛️',
-                title: 'A Library That Cannot Burn',
-                text: 'Ledger Scrolls preserves documents, images, audio, and video permanently — the first public library on the blockchain.'
-            },
-            {
-                icon: '🔧',
-                title: 'Assembling Your Video',
-                text: 'Stitching 175 pages of hex-encoded data back into a playable MP4. The blockchain becomes your streaming service.'
-            },
-            {
-                icon: '🏊',
-                title: 'Built by BEACNpool',
-                text: 'A Cardano stake pool dedicated to building infrastructure that matters. Substance over hype, always.'
-            },
-            {
-                icon: '🎬',
-                title: 'Almost Ready…',
-                text: 'Final assembly in progress. Every byte verified. Preparing playback…'
-            }
-        ];
-        
-        // ── DOM Elements ──
-        const el = {
-            video: document.getElementById('videoPlayer'),
-            loadingScreen: document.getElementById('loadingScreen'),
-            progressRing: document.getElementById('progressRing'),
-            progressPercent: document.getElementById('progressPercent'),
-            currentPage: document.getElementById('currentPage'),
-            totalPages: document.getElementById('totalPages'),
-            storyCard: document.getElementById('storyCard'),
-            storyProgress: document.getElementById('storyProgress'),
-            errorMessage: document.getElementById('errorMessage'),
-            sizeValue: document.getElementById('sizeValue'),
-            phase1: document.getElementById('phase1'),
-            phase2: document.getElementById('phase2'),
-            phase3: document.getElementById('phase3'),
-            phase4: document.getElementById('phase4')
-        };
-        
-        // ── State ──
-        let currentStoryIndex = 0;
-        let storyInterval = null;
-        const circumference = 2 * Math.PI * 48; // radius = 48
-        
-        // Build story progress dots
-        STORY.forEach((_, i) => {
-            const dot = document.createElement('div');
-            dot.className = 'story-dot' + (i === 0 ? ' active' : '');
-            dot.dataset.index = i;
-            el.storyProgress.appendChild(dot);
-        });
-        
-        // ── Floating Particles ──
-        (function initParticles() {
-            const container = document.getElementById('bgParticles');
-            const count = window.innerWidth < 768 ? 12 : 20;
-            for (let i = 0; i < count; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                p.style.left = `${Math.random() * 100}%`;
-                p.style.animationDelay = `${Math.random() * 18}s`;
-                p.style.animationDuration = `${14 + Math.random() * 10}s`;
-                p.style.width = p.style.height = `${1.5 + Math.random() * 2}px`;
-                container.appendChild(p);
-            }
-        })();
-        
-        // ── Utility Functions ──
-        function hexToBytes(hex) {
-            hex = hex.replace(/^0x/i, '').replace(/\s/g, '');
-            const bytes = new Uint8Array(hex.length / 2);
-            for (let i = 0; i < hex.length; i += 2) {
-                bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
-            }
-            return bytes;
-        }
-        
-        function hexToAscii(hex) {
-            let str = '';
-            for (let i = 0; i < hex.length; i += 2) {
-                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-            }
-            return str;
-        }
-        
-        function formatSize(bytes) {
-            if (bytes < 1024) return `${bytes} B`;
-            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-            return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-        }
-        
-        function updateProgress(percent, currentPage) {
-            const offset = circumference - (percent / 100) * circumference;
-            el.progressRing.style.strokeDashoffset = offset;
-            el.progressPercent.textContent = `${Math.round(percent)}%`;
-            el.currentPage.textContent = currentPage;
-        }
-        
-        function setPhase(phase) {
-            el.phase1.className = 'phase-dot ' + (phase >= 1 ? (phase > 1 ? 'complete' : 'active') : '');
-            el.phase2.className = 'phase-dot ' + (phase >= 2 ? (phase > 2 ? 'complete' : 'active') : '');
-            el.phase3.className = 'phase-dot ' + (phase >= 3 ? (phase > 3 ? 'complete' : 'active') : '');
-            el.phase4.className = 'phase-dot ' + (phase >= 4 ? 'active' : '');
-        }
-        
-        function showStoryCard(index) {
-            const card = STORY[index % STORY.length];
-            el.storyCard.innerHTML = `
-                <div class="card-icon">${card.icon}</div>
-                <h3>${card.title}</h3>
-                <p>${card.text}</p>
-            `;
-            el.storyCard.style.animation = 'none';
-            el.storyCard.offsetHeight; // Trigger reflow
-            el.storyCard.style.animation = 'cardFadeIn 0.6s ease';
-            
-            // Update progress dots
-            const dots = el.storyProgress.querySelectorAll('.story-dot');
-            dots.forEach((dot, i) => {
-                dot.className = 'story-dot';
-                if (i === index % STORY.length) dot.classList.add('active');
-                else if (i < index % STORY.length) dot.classList.add('seen');
-            });
-        }
-        
-        function startStoryRotation() {
-            showStoryCard(0);
-            storyInterval = setInterval(() => {
-                currentStoryIndex++;
-                showStoryCard(currentStoryIndex);
-            }, 5000); // 5s per card for comfortable reading
-        }
-        
-        function stopStoryRotation() {
-            if (storyInterval) {
-                clearInterval(storyInterval);
-                storyInterval = null;
-            }
-        }
-        
-        function showError(msg) {
-            stopStoryRotation();
-            el.loadingScreen.classList.add('hidden');
-            el.errorMessage.style.display = 'block';
-            el.errorMessage.innerHTML = `
-                <div style="font-size: 2rem; margin-bottom: 15px;">❌</div>
-                <div style="font-family: var(--font-body); font-size: 1.1rem;">${msg}</div>
+
+            <!-- Error -->
+            <div class="error-box" id="errorBox">
+                <div class="icon">⚠️</div>
+                <p id="errorMsg">Connection failed</p>
                 <button onclick="location.reload()">Try Again</button>
-            `;
+            </div>
+        </div>
+    </div>
+
+    <!-- Post-load info -->
+    <section class="info-panel below-fold" id="infoPanel">
+        <h2>What Just Happened</h2>
+        <p>
+            Your browser just reconstructed a complete <strong>MP4 video file</strong> by reading raw data
+            from <strong>175 NFTs minted on the Cardano blockchain</strong>. No streaming server. No CDN.
+            No IPFS link. The actual binary video data lives permanently in CIP-25 NFT metadata — and your
+            browser stitched it back together in real-time.
+        </p>
+        <p>
+            This makes it the <strong>first video ever stored entirely on any blockchain</strong>.
+            It will remain playable for as long as Cardano exists — truly permanent, censorship-resistant media.
+        </p>
+        <div class="stats-row">
+            <div class="stat">
+                <div class="stat-val">175</div>
+                <div class="stat-lbl">On-Chain NFTs</div>
+            </div>
+            <div class="stat">
+                <div class="stat-val" id="finalSize">—</div>
+                <div class="stat-lbl">Video Size</div>
+            </div>
+            <div class="stat">
+                <div class="stat-val">MP4</div>
+                <div class="stat-lbl">Format</div>
+            </div>
+            <div class="stat">
+                <div class="stat-val">∞</div>
+                <div class="stat-lbl">Lifespan</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="info-panel below-fold" id="techPanel" style="transition-delay:0.15s">
+        <h2>The Technology</h2>
+        <div class="explainer-grid">
+            <div class="explainer-card">
+                <h3>📜 Ledger Scrolls</h3>
+                <p>An open-source standard for storing immutable data on the Cardano blockchain. Documents, images, audio, video — anything — permanently preserved on-chain. A library that cannot burn.</p>
+            </div>
+            <div class="explainer-card">
+                <h3>🔗 Koios API</h3>
+                <p>A decentralized, community-run REST API for querying Cardano data. No API key required. No single point of failure. Your browser queries Koios to read NFT metadata directly from the chain.</p>
+            </div>
+            <div class="explainer-card">
+                <h3>🧩 CIP-25 Metadata</h3>
+                <p>Cardano's native NFT metadata standard. Each of the 175 NFTs carries a payload of hex-encoded video data in its minting transaction metadata — readable by any Cardano tool.</p>
+            </div>
+            <div class="explainer-card">
+                <h3>🔐 SHA-256 Verification</h3>
+                <p>Every byte is cryptographically verifiable. The reconstructed file can be checked against the on-chain SHA-256 hash to guarantee nothing was altered — trustless data integrity.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="download-section below-fold" id="downloadPanel" style="transition-delay:0.3s">
+        <h2>Take It With You</h2>
+        <p>The video you just watched was reconstructed from immutable on-chain data. Download a perfect copy — the same bytes that will exist on Cardano forever.</p>
+        <button class="btn-download" id="downloadBtn" disabled onclick="downloadVideo()">
+            ⬇ Download Video
+        </button>
+    </section>
+
+    <section class="info-panel below-fold" style="transition-delay:0.45s">
+        <h2>Create Your Own Scroll</h2>
+        <p>
+            Ledger Scrolls is fully open-source. Anyone can mint their own immutable data on Cardano —
+            documents, images, audio, even video. Your data, permanently on-chain, readable by anyone,
+            owned by no one. The tools, templates, and viewers are all free on GitHub.
+        </p>
+    </section>
+
+    <div class="links-bar below-fold" style="transition-delay:0.6s">
+        <a href="https://beacnpool.github.io/ledger-scrolls/" class="link-btn link-primary">📚 Explore Ledger Scrolls</a>
+        <a href="https://github.com/beacnpool/ledger-scrolls" class="link-btn link-secondary" target="_blank">GitHub</a>
+        <a href="https://beacnpool.org" class="link-btn link-secondary" target="_blank">BEACNpool</a>
+    </div>
+
+    <footer class="site-footer below-fold" style="transition-delay:0.7s">
+        <p>Built by <a href="https://x.com/BEACNpool" target="_blank">@BEACNpool</a> · Cardano Stake Pool · A library that cannot burn</p>
+    </footer>
+</div>
+
+<script>
+/**
+ * THE FIRST VIDEO ON A BLOCKCHAIN
+ * Cinema-quality viewer with immersive loading narrative.
+ *
+ * The loading sequence (~60-90s) is treated as the main event —
+ * a curated educational journey through the technology, not dead time.
+ */
+(function() {
+
+// ═══════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════
+const CFG = {
+    policyId: '38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2',
+    expected: 175,
+    type: 'video/mp4',
+    endpoints: [
+        'https://koios.beacnpool.org/api/v1',
+        'https://api.koios.rest/api/v1'
+    ]
+};
+
+// ═══════════════════════════════════════════════════════
+// NARRATIVE FACTS — The core engagement loop
+// Each fact builds understanding while maintaining cinematic tension.
+// Designed for ~5.5s per card, covering the full ~90s load time.
+// ═══════════════════════════════════════════════════════
+const FACTS = [
+    {
+        eyebrow: 'Right Now',
+        title: 'Your Browser Is Reading the Blockchain',
+        body: 'No app. No login. No download. Your browser is querying the <em>Cardano blockchain</em> directly through Koios — a decentralized API run by the community — to locate 175 NFTs that contain a video.'
+    },
+    {
+        eyebrow: 'World First',
+        title: 'The First Video Ever Stored Entirely On-Chain',
+        body: 'Not a link to a server. Not an IPFS hash. The <em>actual binary video data</em> is encoded across 175 NFT metadata payloads on the Cardano blockchain. Every byte is on-chain.'
+    },
+    {
+        eyebrow: 'How It Works',
+        title: 'Split Across 175 NFTs',
+        body: 'The original MP4 was split into 175 fragments. Each fragment was hex-encoded and embedded into a <em>CIP-25 NFT\'s minting metadata</em> — Cardano\'s native standard. Your browser is now collecting each piece.'
+    },
+    {
+        eyebrow: 'The Pipeline',
+        title: 'Query → Fetch → Stitch → Play',
+        body: 'Step 1: Query the policy ID to find all NFTs. Step 2: Fetch each NFT\'s metadata from the chain. Step 3: Extract hex payloads and concatenate in order. Step 4: Convert to a playable MP4 blob. <em>Pure client-side reconstruction.</em>'
+    },
+    {
+        eyebrow: 'Koios API',
+        title: 'Decentralized Data Access',
+        body: 'Koios is a distributed, open-source API layer for Cardano. <em>No API key required.</em> No single company controls it. Multiple independent operators host endpoints — if one goes down, others keep serving. Your browser tries BEACNpool\'s Koios node first, with a public fallback.'
+    },
+    {
+        eyebrow: 'CIP-25 Standard',
+        title: 'Using Cardano\'s Native NFT Format',
+        body: 'Every NFT page uses <em>CIP-25 metadata</em> — the same standard every Cardano NFT uses. This means the data is readable by any wallet, any explorer, any tool. No proprietary format. No vendor lock-in. Open data, forever.'
+    },
+    {
+        eyebrow: 'Permanence',
+        title: 'Immutable by Design',
+        body: 'Once minted, CIP-25 metadata <em>cannot be changed, censored, or deleted</em>. The minting policy is time-locked — no new NFTs can ever be added, and existing ones are permanent. This video will exist for as long as Cardano runs.'
+    },
+    {
+        eyebrow: 'Zero Dependencies',
+        title: 'No Server. No CDN. No Hosting Bill.',
+        body: 'Traditional video requires servers, bandwidth, and ongoing payment. This video requires <em>nothing</em> — just a browser and the blockchain. No infrastructure to maintain. No domain to renew. No company needs to stay in business.'
+    },
+    {
+        eyebrow: 'Verification',
+        title: 'Trustless Cryptographic Proof',
+        body: 'The reconstructed video can be verified against a <em>SHA-256 cryptographic hash</em> stored on-chain. What you see is exactly what was minted — mathematically provable, no trust required.'
+    },
+    {
+        eyebrow: 'Ledger Scrolls',
+        title: 'A Library That Cannot Burn',
+        body: 'The Library of Alexandria. The House of Wisdom. History is full of lost knowledge. Ledger Scrolls stores documents, images, audio, and video <em>permanently on the Cardano blockchain</em> — an open library that no fire, no war, no company shutdown can destroy.'
+    },
+    {
+        eyebrow: 'Open Source',
+        title: 'Anyone Can Create a Scroll',
+        body: 'The tools are free. The standard is open. <em>Anyone can mint their own immutable data</em> on Cardano using Ledger Scrolls — from a single image to a multi-volume book. Mint it once, read it forever.'
+    },
+    {
+        eyebrow: 'Already On-Chain',
+        title: 'The Bible. The Constitution. Now Video.',
+        body: 'The complete World English Bible. Both Cardano Constitutions. Philosophical texts. Historical documents. And now, the <em>first-ever on-chain video</em>. The permanent library grows with every scroll minted.'
+    },
+    {
+        eyebrow: 'Did You Know',
+        title: 'Over 2,800 Pages of Data On-Chain',
+        body: 'Across all Ledger Scrolls, thousands of pages of <em>human knowledge</em> have already been permanently preserved. From sacred texts to governance frameworks to memes — all immutable, all verifiable, all free to read.'
+    },
+    {
+        eyebrow: 'Almost There',
+        title: 'Stitching 175 Fragments Together',
+        body: 'Your browser is now concatenating hex-encoded payloads from across the Cardano ledger into a single MP4 binary. <em>The blockchain is becoming your video player.</em>'
+    },
+    {
+        eyebrow: 'Final Assembly',
+        title: 'Verifying & Preparing Playback',
+        body: 'All NFT payloads collected. Bytes verified. Converting to a playable video blob… <em>History is about to play.</em>'
+    }
+];
+
+// ═══════════════════════════════════════════════════════
+// DOM
+// ═══════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const el = {
+    video: $('videoPlayer'),
+    loader: $('loader'),
+    ring: $('ringFill'),
+    pct: $('ringPercent'),
+    pageNow: $('pageNow'),
+    factCard: $('factCard'),
+    factEyebrow: $('factEyebrow'),
+    factTitle: $('factTitle'),
+    factBody: $('factBody'),
+    factNav: $('factNav'),
+    stream: $('streamText'),
+    errorBox: $('errorBox'),
+    errorMsg: $('errorMsg'),
+    finalSize: $('finalSize'),
+    downloadBtn: $('downloadBtn'),
+    liveIndicator: $('liveIndicator')
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let factIndex = 0;
+let factTimer = null;
+let videoBlob = null;
+const CIRC = 2 * Math.PI * 55;
+
+// Build fact navigation dots
+FACTS.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'fact-dot' + (i === 0 ? ' active' : '');
+    el.factNav.appendChild(d);
+});
+
+// ═══════════════════════════════════════════════════════
+// STAR FIELD
+// ═══════════════════════════════════════════════════════
+(function initStars() {
+    const c = document.getElementById('starfield');
+    const n = window.innerWidth < 768 ? 40 : 80;
+    for (let i = 0; i < n; i++) {
+        const s = document.createElement('div');
+        s.className = 'star';
+        const size = 0.5 + Math.random() * 1.5;
+        s.style.cssText = `
+            left:${Math.random()*100}%;
+            top:${Math.random()*100}%;
+            width:${size}px;height:${size}px;
+            --dur:${2+Math.random()*4}s;
+            --o1:${0.15+Math.random()*0.35};
+            --o2:${0.5+Math.random()*0.5};
+            animation-delay:${Math.random()*5}s;
+        `;
+        c.appendChild(s);
+    }
+})();
+
+// ═══════════════════════════════════════════════════════
+// CINEMA INTRO
+// ═══════════════════════════════════════════════════════
+window.enterTheater = function() {
+    const intro = $('cinemaIntro');
+    intro.classList.add('fade-out');
+    const main = $('mainContent');
+    setTimeout(() => { main.classList.add('visible'); }, 400);
+    setTimeout(() => { intro.style.display = 'none'; startReconstruction(); }, 1400);
+};
+
+// ═══════════════════════════════════════════════════════
+// DATA STREAM VISUALIZER
+// ═══════════════════════════════════════════════════════
+function generateStreamHex() {
+    const chars = '0123456789abcdef';
+    let s = '';
+    for (let i = 0; i < 300; i++) s += chars[Math.floor(Math.random()*16)];
+    return s.match(/.{1,2}/g).join(' ') + '  ···  ' + s.match(/.{1,2}/g).join(' ');
+}
+el.stream.textContent = generateStreamHex();
+setInterval(() => { el.stream.textContent = generateStreamHex(); }, 8000);
+
+// ═══════════════════════════════════════════════════════
+// FACT ROTATION
+// ═══════════════════════════════════════════════════════
+function showFact(idx) {
+    const f = FACTS[idx % FACTS.length];
+    const card = el.factCard;
+    card.style.animation = 'none';
+    card.offsetHeight;
+    card.style.animation = 'factIn 0.7s ease';
+
+    el.factEyebrow.textContent = f.eyebrow;
+    el.factTitle.textContent = f.title;
+    el.factBody.innerHTML = f.body;
+
+    const dots = el.factNav.querySelectorAll('.fact-dot');
+    dots.forEach((d, i) => {
+        d.className = 'fact-dot';
+        if (i === idx % FACTS.length) d.classList.add('active');
+        else if (i < idx % FACTS.length) d.classList.add('seen');
+    });
+}
+
+function startFacts() {
+    showFact(0);
+    factTimer = setInterval(() => {
+        factIndex++;
+        showFact(factIndex);
+    }, 5500);
+}
+function stopFacts() { if (factTimer) { clearInterval(factTimer); factTimer = null; } }
+
+// ═══════════════════════════════════════════════════════
+// PROGRESS UI
+// ═══════════════════════════════════════════════════════
+function setProgress(pct, page) {
+    const offset = CIRC - (pct / 100) * CIRC;
+    el.ring.style.strokeDashoffset = offset;
+    el.pct.innerHTML = `${Math.round(pct)}<span>%</span>`;
+    el.pageNow.textContent = page;
+}
+
+function setPhase(n) {
+    for (let i = 1; i <= 4; i++) {
+        const row = $(`ph${i}`);
+        row.className = 'phase-row';
+        if (i < n) row.classList.add('done');
+        else if (i === n) row.classList.add('active');
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// BLOCKCHAIN API
+// ═══════════════════════════════════════════════════════
+async function koios(endpoint, body = null) {
+    for (const base of CFG.endpoints) {
+        try {
+            const opts = {
+                method: body ? 'POST' : 'GET',
+                headers: body ? { 'Content-Type': 'application/json' } : {},
+                body: body ? JSON.stringify(body) : null
+            };
+            const r = await fetch(`${base}${endpoint}`, opts);
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return await r.json();
+        } catch(e) { continue; }
+    }
+    throw new Error('All Koios endpoints failed. The blockchain may be temporarily unreachable.');
+}
+
+function hexToBytes(hex) {
+    hex = hex.replace(/^0x/i, '').replace(/\s/g, '');
+    const b = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < hex.length; i += 2) b[i/2] = parseInt(hex.substr(i, 2), 16);
+    return b;
+}
+
+function hexToAscii(hex) {
+    let s = '';
+    for (let i = 0; i < hex.length; i += 2) s += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+    return s;
+}
+
+function extractPayloadHex(payload) {
+    let hex = '';
+    if (Array.isArray(payload)) {
+        for (const e of payload) {
+            if (typeof e === 'object' && e.bytes) hex += e.bytes.replace(/^0x/i, '');
+            else if (typeof e === 'string') hex += e.replace(/^0x/i, '');
         }
-        
-        // ── Koios API with Fallback ──
-        async function koiosRequest(endpoint, body = null) {
-            const errors = [];
-            for (const base of CONFIG.koiosEndpoints) {
-                try {
-                    const url = `${base}${endpoint}`;
-                    const options = {
-                        method: body ? 'POST' : 'GET',
-                        headers: body ? { 'Content-Type': 'application/json' } : {},
-                        body: body ? JSON.stringify(body) : null
-                    };
-                    const resp = await fetch(url, options);
-                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                    return await resp.json();
-                } catch (e) {
-                    errors.push(`${base}: ${e.message}`);
-                }
-            }
-            throw new Error(`All endpoints failed`);
+    } else if (typeof payload === 'string') {
+        hex = payload.replace(/^0x/i, '');
+    }
+    return hex.replace(/\s/g, '');
+}
+
+function formatSize(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+// ═══════════════════════════════════════════════════════
+// MAIN RECONSTRUCTION
+// ═══════════════════════════════════════════════════════
+async function startReconstruction() {
+    try {
+        startFacts();
+        el.liveIndicator.style.opacity = '1';
+        el.ring.style.strokeDasharray = CIRC;
+        el.ring.style.strokeDashoffset = CIRC;
+
+        // Phase 1: Query policy
+        setPhase(1);
+        setProgress(3, 0);
+
+        const assets = [];
+        let offset = 0;
+        while (true) {
+            const batch = await koios(
+                `/asset_list?policy_id=eq.${CFG.policyId}&limit=1000&offset=${offset}`
+            );
+            if (!batch || batch.length === 0) break;
+            assets.push(...batch);
+            if (batch.length < 1000) break;
+            offset += 1000;
         }
-        
-        async function fetchPolicyAssets() {
-            const assets = [];
-            let offset = 0;
-            const limit = 1000;
-            while (true) {
-                const batch = await koiosRequest(
-                    `/asset_list?policy_id=eq.${CONFIG.policyId}&limit=${limit}&offset=${offset}`
-                );
-                if (!batch || batch.length === 0) break;
-                assets.push(...batch);
-                if (batch.length < limit) break;
-                offset += limit;
-            }
-            return assets;
-        }
-        
-        async function fetchAssetInfo(policyId, assetName) {
-            const response = await koiosRequest('/asset_info', {
-                _asset_list: [[policyId, assetName]]
-            });
-            return response?.[0] || null;
-        }
-        
-        function extractPayloadHex(payload) {
-            let hex = '';
-            if (Array.isArray(payload)) {
-                for (const entry of payload) {
-                    if (typeof entry === 'object' && entry.bytes) {
-                        hex += entry.bytes.replace(/^0x/i, '');
-                    } else if (typeof entry === 'string') {
-                        hex += entry.replace(/^0x/i, '');
-                    }
-                }
-            } else if (typeof payload === 'string') {
-                hex = payload.replace(/^0x/i, '');
-            }
-            return hex.replace(/\s/g, '');
-        }
-        
-        // ── Main Reconstruction ──
-        async function reconstructVideo() {
+
+        // Phase 2: Begin fetching
+        setPhase(2);
+        setProgress(8, 0);
+
+        const pages = [];
+        let done = 0;
+
+        for (const asset of assets) {
+            const name = asset.asset_name || '';
+            const ascii = hexToAscii(name);
+            if (!ascii.startsWith('CM_PAGE')) continue;
+
+            done++;
+            const pct = 10 + Math.floor((done / CFG.expected) * 72);
+            setProgress(pct, done);
+            if (done === 1) setPhase(3);
+
             try {
-                startStoryRotation();
-                setPhase(1);
-                updateProgress(2, 0);
-                
-                const assets = await fetchPolicyAssets();
-                setPhase(2);
-                updateProgress(8, 0);
-                
-                const pages = [];
-                let processed = 0;
-                
-                for (const asset of assets) {
-                    const assetName = asset.asset_name || '';
-                    const assetNameAscii = hexToAscii(assetName);
-                    if (!assetNameAscii.startsWith('CM_PAGE')) continue;
-                    
-                    processed++;
-                    const pct = 10 + Math.floor((processed / CONFIG.expectedPages) * 70);
-                    updateProgress(pct, processed);
-                    if (processed === 1) setPhase(3);
-                    
-                    try {
-                        const info = await fetchAssetInfo(CONFIG.policyId, assetName);
-                        if (!info) continue;
-                        const meta = info.minting_tx_metadata?.[721]?.[CONFIG.policyId]?.[assetNameAscii];
-                        if (!meta || meta.payload === undefined || meta.i === undefined) continue;
-                        pages.push({ index: parseInt(meta.i), payload: meta.payload });
-                    } catch (e) {
-                        console.warn(`Failed to fetch ${assetNameAscii}:`, e);
-                    }
-                    await new Promise(r => setTimeout(r, 50));
-                }
-                
-                if (pages.length === 0) throw new Error('No page data found on-chain');
-                
-                setPhase(4);
-                updateProgress(85, pages.length);
-                pages.sort((a, b) => a.index - b.index);
-                
-                let allHex = '';
-                for (const page of pages) allHex += extractPayloadHex(page.payload);
-                
-                updateProgress(92, pages.length);
-                const rawBytes = hexToBytes(allHex);
-                el.sizeValue.textContent = formatSize(rawBytes.length);
-                
-                updateProgress(98, pages.length);
-                const blob = new Blob([rawBytes], { type: CONFIG.contentType });
-                const url = URL.createObjectURL(blob);
-                
-                stopStoryRotation();
-                updateProgress(100, pages.length);
-                el.video.src = url;
-                el.video.classList.add('loaded');
-                setTimeout(() => el.loadingScreen.classList.add('hidden'), 500);
-                
-            } catch (e) {
-                console.error('Reconstruction failed:', e);
-                showError(e.message);
+                const info = await koios('/asset_info', {
+                    _asset_list: [[CFG.policyId, name]]
+                });
+                if (!info?.[0]) continue;
+                const meta = info[0].minting_tx_metadata?.[721]?.[CFG.policyId]?.[ascii];
+                if (!meta || meta.payload === undefined || meta.i === undefined) continue;
+                pages.push({ index: parseInt(meta.i), payload: meta.payload });
+            } catch(e) {
+                console.warn(`Skip ${ascii}:`, e);
             }
+            await new Promise(r => setTimeout(r, 50));
         }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            el.progressRing.style.strokeDasharray = circumference;
-            el.progressRing.style.strokeDashoffset = circumference;
-            reconstructVideo();
-        });
-    })();
-    </script>
+
+        if (pages.length === 0) throw new Error('No page data found on the blockchain');
+
+        // Phase 4: Assembly
+        setPhase(4);
+        setProgress(86, pages.length);
+        pages.sort((a, b) => a.index - b.index);
+
+        let allHex = '';
+        for (const p of pages) allHex += extractPayloadHex(p.payload);
+
+        setProgress(93, pages.length);
+        const raw = hexToBytes(allHex);
+        const sizeStr = formatSize(raw.length);
+        el.finalSize.textContent = sizeStr;
+
+        setProgress(98, pages.length);
+        videoBlob = new Blob([raw], { type: CFG.type });
+        const url = URL.createObjectURL(videoBlob);
+
+        // Complete
+        stopFacts();
+        setProgress(100, pages.length);
+        el.downloadBtn.disabled = false;
+
+        // Transition to video
+        await new Promise(r => setTimeout(r, 600));
+        el.video.src = url;
+        el.video.classList.add('ready');
+        el.loader.classList.add('done');
+        el.liveIndicator.style.opacity = '0';
+
+        // Reveal below-fold content
+        setTimeout(() => {
+            document.querySelectorAll('.below-fold').forEach(el => {
+                el.classList.add('visible');
+            });
+        }, 800);
+
+    } catch(e) {
+        console.error('Reconstruction failed:', e);
+        stopFacts();
+        el.loader.classList.add('done');
+        el.errorBox.classList.add('show');
+        el.errorMsg.textContent = e.message;
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// DOWNLOAD
+// ═══════════════════════════════════════════════════════
+window.downloadVideo = function() {
+    if (!videoBlob) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(videoBlob);
+    a.download = 'first-video-on-cardano.mp4';
+    a.click();
+};
+
+})();
+</script>
 </body>
 </html>
