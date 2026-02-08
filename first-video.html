@@ -326,7 +326,7 @@
                 radial-gradient(ellipse at 20% 70%, rgba(212,168,85,0.05) 0%, transparent 40%),
                 radial-gradient(ellipse at 80% 80%, rgba(34,211,238,0.04) 0%, transparent 35%),
                 var(--void);
-
+        }
 
         /* Koios / network visual (subtle node constellation) */
         .slide-bg.koios-visual {
@@ -352,14 +352,43 @@
             100% { transform: translate3d(-1.5%,1%,0) scale(1.05); opacity: 0.5; }
         }
 
-        /* Placeholder Hosky visual until an actual hosky.png is added */
+        /* Hosky visual (real on-chain image) */
         .slide-bg.hosky-visual {
             background:
+                linear-gradient(180deg, rgba(3,5,8,0.15) 0%, rgba(3,5,8,0.75) 75%, rgba(3,5,8,0.92) 100%),
+                url('media/hosky.png'),
                 radial-gradient(circle at 30% 35%, rgba(212,168,85,0.10) 0%, transparent 45%),
                 radial-gradient(circle at 70% 60%, rgba(34,211,238,0.08) 0%, transparent 48%),
                 var(--void);
+            background-size: cover;
+            background-position: center;
         }
+
+        /* On-chain facts list */
+        .nft-facts {
+            margin-top: 14px;
+            padding: 12px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(212,168,85,0.12);
+            background: rgba(0,0,0,0.35);
+            backdrop-filter: blur(6px);
+            max-width: 640px;
         }
+        .nft-fact {
+            display: grid;
+            grid-template-columns: 90px 1fr;
+            gap: 10px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            line-height: 1.35;
+            color: rgba(238,242,247,0.85);
+            word-break: break-all;
+        }
+        .nft-fact:last-child { border-bottom: none; }
+        .nft-fact .k { color: rgba(212,168,85,0.85); letter-spacing: 1px; text-transform: uppercase; }
+        .nft-fact .v { color: rgba(238,242,247,0.85); }
 
         /* CSS animated pipeline diagram inside a slide */
         .pipeline-diagram {
@@ -678,7 +707,17 @@
                     <div class="slide-content">
                         <div class="slide-eyebrow">First, The Mental Model</div>
                         <div class="slide-title">When Most People Hear “NFT”…</div>
-                        <div class="slide-body">They picture a meme image. A tiny file. A collectible. That’s not wrong — it’s just the most common use. Example: <em>Hosky</em> — Cardano’s most popular NFT — stored fully on-chain with <em>Ledger Scrolls</em>.</div>
+                        <div class="slide-body">They picture a meme image. A tiny file. A collectible. That’s not wrong — it’s just the most common use.</div>
+                        <div class="slide-body" style="margin-top:10px">Example: <em>Hosky</em> — Cardano’s most popular NFT — stored <em>fully on-chain</em> with <em>Ledger Scrolls</em>.</div>
+                        <div class="nft-facts" aria-label="On-chain Hosky details">
+                            <div class="nft-fact"><span class="k">ID</span><span class="v">hosky-png</span></div>
+                            <div class="nft-fact"><span class="k">Type</span><span class="v">utxo_datum_bytes_v1 (LS-LOCK v1)</span></div>
+                            <div class="nft-fact"><span class="k">Lock Addr</span><span class="v">addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn</span></div>
+                            <div class="nft-fact"><span class="k">UTxO</span><span class="v">728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0</span></div>
+                            <div class="nft-fact"><span class="k">Content-Type</span><span class="v">image/png</span></div>
+                            <div class="nft-fact"><span class="k">Codec</span><span class="v">none</span></div>
+                            <div class="nft-fact"><span class="k">SHA-256</span><span class="v">798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f</span></div>
+                        </div>
                     </div>
                 </div>
 
