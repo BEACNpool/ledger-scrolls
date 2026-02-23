@@ -13,13 +13,11 @@ class BlockchainClient {
         this.apiKey = apiKey;
         this.koiosProxy = koiosProxy;
         this.baseUrl = this._getBaseUrl();
-        // Koios endpoints for browser use.
-        // Note: many generic CORS proxies have started blocking free usage.
-        // Prefer our Cloudflare Worker proxy (adds CORS headers) first.
         this.koiosBaseUrls = [
-            'https://koios.beacn.workers.dev/api/v1',
+            'https://api.koios.rest/api/v1',
             'https://koios.beacnpool.org/api/v1',
-            'https://api.koios.rest/api/v1'
+            'https://corsproxy.io/?https://api.koios.rest/api/v1',
+            'https://cors.isomorphic-git.org/https://api.koios.rest/api/v1'
         ];
         this.rateLimitDelay = 100; // ms between requests
         this.lastRequest = 0;
