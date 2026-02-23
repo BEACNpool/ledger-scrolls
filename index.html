@@ -730,6 +730,51 @@ function gunzip(bytes) {
 // Koios returns inline_datum already decoded as Plutus data JSON.
 // For a byte-string datum: { "bytes": "hexhex..." }
 // This function simply extracts those bytes. No CBOR needed.
+function cborExtractByteString(cbor) {
+  // Minimal CBOR decoder for major type 2 (byte string), incl. indefinite-length (0x5f).
+  // Returns Uint8Array.
+  let i = 0;
+  const readLen = (ai) => {
+    if (ai < 24) return ai;
+    if (ai === 24) return cbor[i++];
+    if (ai === 25) { const v = (cbor[i] << 8) | cbor[i+1]; i += 2; return v; }
+    if (ai === 26) {
+      const v = (cbor[i] * 2**24) + (cbor[i+1] << 16) + (cbor[i+2] << 8) + cbor[i+3];
+      i += 4;
+      return v;
+    }
+    throw new Error('CBOR length too large');
+  };
+
+  const b0 = cbor[i++];
+  if (b0 === 0x5f) {
+    // Indefinite-length bytes: chunks until break (0xff)
+    const chunks = [];
+    let total = 0;
+    while (true) {
+      const b = cbor[i++];
+      if (b === 0xff) break;
+      const major = b >> 5;
+      const ai = b & 0x1f;
+      if (major !== 2) throw new Error('CBOR: expected byte string chunk');
+      const n = readLen(ai);
+      chunks.push(cbor.slice(i, i + n));
+      total += n;
+      i += n;
+    }
+    const out = new Uint8Array(total);
+    let o = 0;
+    for (const ch of chunks) { out.set(ch, o); o += ch.length; }
+    return out;
+  }
+
+  const major = b0 >> 5;
+  const ai = b0 & 0x1f;
+  if (major !== 2) throw new Error('CBOR: expected byte string');
+  const n = readLen(ai);
+  return cbor.slice(i, i + n);
+}
+
 function datumBytes(datum) {
   if (!datum) return null;
   // Koios standard shape: { bytes: "hex" }
@@ -739,6 +784,16 @@ function datumBytes(datum) {
   // Blockfrost json_value shape
   if (datum.json_value?.bytes)  return hex2bytes(datum.json_value.bytes);
   return null;
+}
+
+async function datumBytesByHash(datumHash) {
+  const rows = await koiosPost('/datum_info', { _datum_hashes: [datumHash] });
+  const row = (rows || [])[0];
+  const hex = row?.bytes;
+  if (!hex) throw new Error('datum_info returned no bytes');
+  // Koios datum_info.bytes is CBOR (often an indefinite-length bytestring) that wraps the raw payload.
+  const cbor = hex2bytes(hex);
+  return cborExtractByteString(cbor);
 }
 
 // ── KOIOS API ───────────────────────────────────────────────────
@@ -835,7 +890,11 @@ async function loadStandard(scroll) {
   if (!target) throw new Error('Target UTxO not found at lock address');
 
   step('Extracting datum bytes…');
-  const bytes = datumBytes(target.inline_datum);
+  let bytes = datumBytes(target.inline_datum);
+  if ((!bytes || !bytes.length) && target.datum_hash) {
+    step('Fetching datum by hash…');
+    bytes = await datumBytesByHash(target.datum_hash);
+  }
   if (!bytes || !bytes.length) throw new Error('Datum has no byte content (wrong UTxO shape?)');
 
   if (scroll.codec === 'gzip') {
@@ -903,14 +962,9 @@ async function fetchPageData(policyId, pageNum, totalPages, manifest, segsPerPag
   for (const name of nameCandidates) {
     const nameHex = str2hex(name);
     try {
-      // Koios: get asset tx history to find mint tx
-      const txs = await koiosPost('/asset_txs', {
-        _asset_list: [[policyId, nameHex]],
-        _history: false,
-      });
-      if (!txs || !txs.length) continue;
-      // Use earliest tx (mint)
-      const mintTx = txs[0].tx_hash || txs[0].hash;
+      // Koios: asset_info includes minting_tx_hash (mint tx). asset_txs endpoint is no longer available.
+      const info = await koiosPost('/asset_info', { _asset_list: [[policyId, nameHex]] });
+      const mintTx = info?.[0]?.minting_tx_hash;
       if (!mintTx) continue;
       const pageMeta = await getTxMetadata(mintTx);
       const bytes = extractPayload(pageMeta, policyId, pageNum);
