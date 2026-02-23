@@ -1,1341 +1,379 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ledger Scrolls — A Library That Cannot Burn</title>
-  <meta name="description" content="Immutable documents stored forever on the Cardano blockchain. No indexing. No gatekeepers. No censorship.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:         #070a10;
-      --bg2:        #0d1118;
-      --surface:    #111827;
-      --surface2:   #1a2235;
-      --surface3:   #222c3f;
-      --gold:       #c9a84c;
-      --gold-glow:  rgba(201,168,76,0.18);
-      --gold-dim:   rgba(201,168,76,0.1);
-      --ada:        #0ea5c5;
-      --ada-dim:    rgba(14,165,197,0.12);
-      --text:       #d8d0c0;
-      --text-dim:   #8a8070;
-      --text-muted: #4a4540;
-      --border:     rgba(201,168,76,0.18);
-      --border-ada: rgba(14,165,197,0.22);
-      --success:    #4caf7d;
-      --warn:       #e09050;
-      --error:      #e05252;
-      --radius:     8px;
-      --transition: 200ms cubic-bezier(0.4,0,0.2,1);
-      --font-display: 'Cinzel', serif;
-      --font-body:    'Crimson Pro', Georgia, serif;
-      --font-mono:    'JetBrains Mono', 'Courier New', monospace;
-    }
-    [data-theme="light"] {
-      --bg: #f5f0e8; --bg2: #ede7d9; --surface: #ffffff; --surface2: #f7f2ea;
-      --surface3: #e8e0ce; --text: #1a1612; --text-dim: #4a4038; --text-muted: #9a9088;
-      --border: rgba(140,100,20,0.2); --border-ada: rgba(14,165,197,0.3);
-      --gold: #a07820; --gold-glow: rgba(160,120,32,0.15); --gold-dim: rgba(160,120,32,0.1);
-    }
-    [data-theme="parchment"] {
-      --bg: #2a1f0e; --bg2: #221806; --surface: #3a2c15; --surface2: #453520;
-      --surface3: #52412b; --text: #e8d8a0; --text-dim: #a09060; --text-muted: #705840;
-      --border: rgba(232,200,100,0.25); --gold: #e8c860; --gold-glow: rgba(232,200,96,0.2);
-      --gold-dim: rgba(232,200,96,0.1);
-    }
-
-    html, body { height: 100%; }
-    body {
-      font-family: var(--font-body);
-      background: var(--bg);
-      color: var(--text);
-      font-size: 16px;
-      line-height: 1.6;
-      overflow: hidden;
-    }
-    ::selection { background: var(--gold-glow); color: var(--gold); }
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 99px; }
-
-    #app {
-      display: flex; flex-direction: column; height: 100vh;
-      background-image:
-        radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.04) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 80%, rgba(14,165,197,0.04) 0%, transparent 60%);
-    }
-
-    /* ── TOP BAR ── */
-    .topbar {
-      display: flex; align-items: center; gap: 16px;
-      padding: 0 24px; height: 60px;
-      background: var(--bg2); border-bottom: 1px solid var(--border);
-      flex-shrink: 0; position: relative; z-index: 100;
-    }
-    .topbar::after {
-      content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
-      height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent);
-      opacity: 0.4;
-    }
-    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; flex-shrink: 0; }
-    .logo-icon { font-size: 22px; filter: drop-shadow(0 0 8px var(--gold)); animation: float 4s ease-in-out infinite; }
-    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-    .logo-text {
-      font-family: var(--font-display); font-size: 15px; font-weight: 700;
-      letter-spacing: 0.12em; color: var(--gold); text-shadow: 0 0 20px rgba(201,168,76,0.4);
-    }
-    .logo-sub { font-family: var(--font-body); font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em; font-style: italic; }
-    .logo-block { display: flex; flex-direction: column; }
-    .topbar-spacer { flex: 1; }
-
-    .conn-badge {
-      display: flex; align-items: center; gap: 8px; padding: 5px 12px;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 99px;
-      font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); transition: var(--transition);
-    }
-    .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); transition: var(--transition); }
-    .conn-badge.online .conn-dot { background: var(--success); box-shadow: 0 0 6px var(--success); }
-    .conn-badge.online { color: var(--success); border-color: rgba(76,175,125,0.3); }
-    .conn-badge.connecting .conn-dot { background: var(--warn); animation: blink 1s infinite; }
-    .conn-badge.error .conn-dot { background: var(--error); }
-    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-
-    .topbar-btn {
-      display: flex; align-items: center; justify-content: center;
-      width: 36px; height: 36px; background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); color: var(--text-dim); cursor: pointer;
-      transition: var(--transition); font-size: 16px; text-decoration: none;
-    }
-    .topbar-btn:hover { color: var(--gold); border-color: var(--gold); background: var(--gold-dim); }
-
-    /* ── LAYOUT ── */
-    .body-layout { display: flex; flex: 1; overflow: hidden; }
-
-    /* ── SIDEBAR ── */
-    .sidebar {
-      width: 300px; flex-shrink: 0; background: var(--bg2);
-      border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden;
-    }
-    .sidebar-header { padding: 16px 20px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .sidebar-title {
-      font-family: var(--font-display); font-size: 11px; letter-spacing: 0.16em;
-      color: var(--text-dim); text-transform: uppercase;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .scroll-counter { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
-    .sidebar-nav { display: flex; align-items: center; gap: 6px; margin-top: 12px; }
-    .nav-btn {
-      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-      padding: 7px 12px; background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); color: var(--text-dim); cursor: pointer;
-      transition: var(--transition); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
-    }
-    .nav-btn:hover { color: var(--gold); border-color: var(--gold); background: var(--gold-dim); }
-    .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-    .scroll-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
-    .scroll-item {
-      padding: 12px 14px; background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); cursor: pointer; transition: var(--transition);
-      position: relative; overflow: hidden;
-    }
-    .scroll-item::before {
-      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-      width: 3px; background: transparent; transition: var(--transition);
-    }
-    .scroll-item:hover { background: var(--surface2); border-color: rgba(201,168,76,0.35); }
-    .scroll-item:hover::before { background: var(--gold); }
-    .scroll-item.active { background: var(--gold-dim); border-color: rgba(201,168,76,0.5); }
-    .scroll-item.active::before { background: var(--gold); }
-    .scroll-item-title { font-family: var(--font-body); font-size: 13.5px; font-weight: 600; color: var(--text); margin-bottom: 5px; line-height: 1.3; }
-    .scroll-item-meta { display: flex; align-items: center; gap: 6px; }
-    .badge { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; }
-    .badge-standard { background: var(--ada-dim); color: var(--ada); border: 1px solid var(--border-ada); }
-    .badge-legacy { background: rgba(201,168,76,0.12); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
-    .badge-type { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 0.05em; }
-
-    .sidebar-footer { padding: 12px; border-top: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; }
-    .sidebar-action {
-      display: flex; align-items: center; gap: 8px; padding: 9px 12px;
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-      color: var(--text-dim); cursor: pointer; transition: var(--transition);
-      font-family: var(--font-body); font-size: 13px; width: 100%; text-align: left;
-    }
-    .sidebar-action:hover { color: var(--gold); border-color: var(--gold); background: var(--gold-dim); }
-    .sidebar-action .icon { font-size: 15px; }
-
-    /* ── VIEWER ── */
-    .viewer { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
-
-    .welcome {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      justify-content: center; gap: 24px; padding: 48px 32px; text-align: center;
-    }
-    .welcome-glyph { font-size: 64px; filter: drop-shadow(0 0 32px rgba(201,168,76,0.5)); animation: float 5s ease-in-out infinite; }
-    .welcome-title { font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--gold); letter-spacing: 0.08em; text-shadow: 0 0 40px rgba(201,168,76,0.3); }
-    .welcome-sub { font-family: var(--font-body); font-size: 16px; font-style: italic; color: var(--text-dim); max-width: 480px; }
-    .welcome-pillars { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 460px; width: 100%; margin-top: 8px; }
-    .pillar { padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); font-family: var(--font-body); font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
-    .welcome-featured { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 520px; }
-    .feat-link {
-      display: flex; align-items: center; gap: 7px; padding: 8px 14px;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 99px;
-      color: var(--text-dim); text-decoration: none; font-family: var(--font-body);
-      font-size: 13px; transition: var(--transition);
-    }
-    .feat-link:hover { color: var(--gold); border-color: var(--gold); background: var(--gold-dim); }
-    .beacn-credit { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.06em; }
-    .beacn-credit a { color: var(--text-muted); transition: var(--transition); }
-    .beacn-credit a:hover { color: var(--gold); }
-
-    .viewer-header {
-      display: none; align-items: center; gap: 12px; padding: 14px 20px;
-      background: var(--bg2); border-bottom: 1px solid var(--border); flex-shrink: 0;
-    }
-    .viewer-header.visible { display: flex; }
-    .viewer-scroll-title { font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: 0.04em; }
-    .viewer-spacer { flex: 1; }
-    .viewer-action {
-      display: flex; align-items: center; gap: 6px; padding: 5px 10px;
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-      color: var(--text-dim); cursor: pointer; transition: var(--transition);
-      font-family: var(--font-mono); font-size: 11px;
-    }
-    .viewer-action:hover { color: var(--gold); border-color: var(--gold); }
-
-    .content-area { flex: 1; overflow: auto; position: relative; display: flex; flex-direction: column; }
-    #content-frame { width: 100%; flex: 1; border: none; display: none; background: white; }
-    #content-image { display: none; max-width: 100%; max-height: 100%; object-fit: contain; padding: 24px; margin: auto; }
-    #content-text { display: none; padding: 32px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--text); white-space: pre-wrap; word-break: break-all; }
-    #content-video { display: none; width: 100%; background: black; }
-
-    .loading-overlay {
-      display: none; position: absolute; inset: 0;
-      background: rgba(7,10,16,0.88); backdrop-filter: blur(4px);
-      flex-direction: column; align-items: center; justify-content: center;
-      gap: 20px; z-index: 10;
-    }
-    .loading-overlay.visible { display: flex; }
-    .spinner { width: 40px; height: 40px; border: 2px solid var(--surface3); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); letter-spacing: 0.08em; max-width: 320px; text-align: center; }
-    .loading-step { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
-
-    .details-panel {
-      display: none; padding: 14px 20px; background: var(--bg2);
-      border-top: 1px solid var(--border); font-family: var(--font-mono);
-      font-size: 11px; color: var(--text-dim); line-height: 1.8;
-      flex-shrink: 0; max-height: 160px; overflow-y: auto;
-    }
-    .details-panel.visible { display: block; }
-    .detail-row { display: flex; gap: 12px; }
-    .detail-key { color: var(--text-muted); min-width: 120px; flex-shrink: 0; }
-    .detail-val { color: var(--text-dim); word-break: break-all; }
-    .detail-val.hash { color: var(--ada); }
-    .detail-val.ok { color: var(--success); }
-    .detail-val.bad { color: var(--error); }
-
-    /* ── OVERLAYS / PANELS ── */
-    .overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-      z-index: 200; align-items: flex-start; justify-content: flex-end;
-      padding: 60px 0 0 0;
-    }
-    .overlay.center { align-items: center; justify-content: center; padding: 24px; }
-    .overlay.visible { display: flex; }
-    .panel {
-      background: var(--surface); border: 1px solid var(--border); border-right: none;
-      width: 420px; height: calc(100vh - 60px); overflow-y: auto;
-      display: flex; flex-direction: column;
-      box-shadow: -20px 0 60px rgba(0,0,0,0.5); animation: slideIn 0.25s ease;
-    }
-    .overlay.center .panel {
-      border: 1px solid var(--border); border-radius: 12px;
-      height: auto; max-height: 90vh; box-shadow: 0 20px 80px rgba(0,0,0,0.6);
-    }
-    @keyframes slideIn { from { transform: translateX(30px); opacity:0; } to { transform: none; opacity:1; } }
-
-    .panel-header {
-      display: flex; align-items: center; gap: 12px;
-      padding: 20px 24px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0;
-    }
-    .panel-icon { font-size: 20px; }
-    .panel-title { font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--gold); letter-spacing: 0.08em; }
-    .panel-close {
-      margin-left: auto; background: none; border: none; color: var(--text-dim);
-      cursor: pointer; font-size: 20px; width: 32px; height: 32px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: var(--radius); transition: var(--transition);
-    }
-    .panel-close:hover { background: var(--surface2); color: var(--text); }
-    .panel-body { padding: 20px 24px; flex: 1; overflow-y: auto; }
-    .panel-section { margin-bottom: 24px; }
-    .panel-section-title {
-      font-family: var(--font-display); font-size: 11px; letter-spacing: 0.14em;
-      color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .panel-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-    .form-group { margin-bottom: 14px; }
-    .form-label { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.06em; margin-bottom: 6px; }
-    .form-input {
-      width: 100%; background: var(--bg2); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 8px 12px; color: var(--text);
-      font-family: var(--font-mono); font-size: 12px; transition: var(--transition); outline: none;
-    }
-    .form-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-dim); }
-    textarea.form-input { resize: vertical; min-height: 80px; line-height: 1.5; }
-    .form-hint { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 5px; line-height: 1.4; }
-    select.form-input {
-      cursor: pointer; appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a8070'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 12px center; padding-right: 30px;
-    }
-    .btn {
-      display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px;
-      border-radius: var(--radius); font-family: var(--font-mono); font-size: 12px;
-      letter-spacing: 0.06em; cursor: pointer; transition: var(--transition); border: none;
-    }
-    .btn-primary { background: var(--gold); color: #0a0a08; font-weight: 500; }
-    .btn-primary:hover { background: #dbb85c; box-shadow: 0 0 20px rgba(201,168,76,0.3); }
-    .btn-secondary { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
-    .btn-secondary:hover { color: var(--text); border-color: rgba(201,168,76,0.4); }
-    .btn-full { width: 100%; justify-content: center; }
-
-    .theme-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
-    .theme-opt {
-      display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px;
-      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-      cursor: pointer; transition: var(--transition); font-family: var(--font-mono);
-      font-size: 10px; color: var(--text-dim); letter-spacing: 0.05em;
-    }
-    .theme-opt:hover { border-color: var(--gold); }
-    .theme-opt.active { border-color: var(--gold); background: var(--gold-dim); color: var(--gold); }
-    .theme-swatch { width: 100%; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-    .swatch-dark { background: #111827; }
-    .swatch-light { background: #f5f0e8; }
-    .swatch-parchment { background: #3a2c15; }
-
-    .tabs { display: flex; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 3px; margin-bottom: 20px; }
-    .tab-btn { flex: 1; padding: 7px 14px; background: none; border: none; border-radius: 5px; color: var(--text-dim); cursor: pointer; transition: var(--transition); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; }
-    .tab-btn.active { background: var(--surface); color: var(--gold); }
-    .tab-pane { display: none; }
-    .tab-pane.active { display: block; }
-
-    .about-hero { text-align: center; padding: 24px 0 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-    .about-glyph { font-size: 48px; filter: drop-shadow(0 0 20px rgba(201,168,76,0.5)); display: block; margin-bottom: 12px; }
-    .about-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--gold); letter-spacing: 0.1em; }
-    .about-tagline { font-style: italic; color: var(--text-dim); font-size: 14px; margin-top: 6px; }
-    .principle-list { display: flex; flex-direction: column; gap: 7px; }
-    .principle { display: flex; align-items: center; gap: 10px; font-family: var(--font-body); font-size: 14px; color: var(--text-dim); }
-    .principle-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
-    .about-links { display: flex; flex-direction: column; gap: 8px; }
-    .about-link {
-      display: flex; align-items: center; gap: 10px; padding: 12px 16px;
-      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-      text-decoration: none; color: var(--text-dim); transition: var(--transition);
-      font-family: var(--font-body); font-size: 14px;
-    }
-    .about-link:hover { border-color: var(--gold); color: var(--text); background: var(--gold-dim); }
-    .about-link .icon { font-size: 18px; flex-shrink: 0; }
-    .about-link-title { font-weight: 600; color: var(--text); font-size: 13px; display: block; }
-    .about-link-sub { font-size: 12px; font-style: italic; color: var(--text-muted); }
-    .about-footer { text-align: center; padding-top: 20px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
-    .about-footer a { color: var(--text-dim); text-decoration: none; transition: var(--transition); }
-    .about-footer a:hover { color: var(--gold); }
-
-    .verify-result { margin-top: 14px; padding: 12px 16px; border-radius: var(--radius); font-family: var(--font-mono); font-size: 11px; line-height: 1.8; display: none; }
-    .verify-result.pass { background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.3); color: var(--success); display: block; }
-    .verify-result.fail { background: rgba(224,82,82,0.1); border: 1px solid rgba(224,82,82,0.3); color: var(--error); display: block; }
-    .verify-hash { word-break: break-all; font-size: 10px; color: var(--text-muted); margin-top: 4px; }
-
-    #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
-    .toast {
-      padding: 10px 16px; background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); font-family: var(--font-mono); font-size: 12px;
-      color: var(--text); box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-      animation: toastIn 0.3s ease; max-width: 360px;
-    }
-    .toast.success { border-color: rgba(76,175,125,0.4); color: var(--success); }
-    .toast.error { border-color: rgba(224,82,82,0.4); color: var(--error); }
-    @keyframes toastIn { from { transform: translateX(20px); opacity:0; } to { transform: none; opacity:1; } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0c10">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Ledger Scrolls</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css?v=mobile-3">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
 </head>
 <body>
-<div id="app">
-
-  <header class="topbar">
-    <a href="index.html" class="logo">
-      <span class="logo-icon">📜</span>
-      <div class="logo-block">
-        <span class="logo-text">LEDGER SCROLLS</span>
-        <span class="logo-sub">A Library That Cannot Burn</span>
-      </div>
-    </a>
-    <div class="topbar-spacer"></div>
-    <div class="conn-badge" id="conn-badge">
-      <div class="conn-dot"></div>
-      <span id="conn-text">Offline</span>
+    <!-- Animated Background -->
+    <div class="background-animation">
+        <div class="particles" id="particles"></div>
+        <div class="gradient-overlay"></div>
     </div>
-    <button class="topbar-btn" title="Settings" onclick="openPanel('settings')">⚙️</button>
-    <button class="topbar-btn" title="About" onclick="openPanel('about')">ℹ️</button>
-    <a class="topbar-btn" href="preview.html" title="Preview Testnet (Experimental — Requires Blockfrost API Key)">🧪</a>
-  </header>
 
-  <div class="body-layout">
+    <!-- Main Application -->
+    <div class="app-container">
+        <!-- Compact Header -->
+        <header class="header">
+            <div class="logo-section" id="logoSection">
+                <div class="logo-icon">📜</div>
+                <div class="logo-text">
+                    <h1>Ledger Scrolls</h1>
+                </div>
+            </div>
+            <div class="connection-pill" id="connectionPill">
+                <span class="status-dot disconnected" id="statusDot"></span>
+                <span class="status-text" id="statusText">Offline</span>
+            </div>
+        </header>
 
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-title">
-          <span>📚 The Library</span>
-          <span class="scroll-counter"><span id="scroll-idx">0</span>/<span id="scroll-total">0</span></span>
-        </div>
-        <div class="sidebar-nav">
-          <button class="nav-btn" id="btn-prev" onclick="navigate(-1)" disabled>← Prev</button>
-          <button class="nav-btn" id="btn-next" onclick="navigate(1)" disabled>Next →</button>
-        </div>
-      </div>
-      <div class="scroll-list" id="scroll-list">
-        <div style="padding:32px 16px;text-align:center;color:var(--text-muted);font-family:var(--font-mono);font-size:11px;">
-          <div style="font-size:28px;margin-bottom:12px">⏳</div>Loading registry…
-        </div>
-      </div>
-      <div class="sidebar-footer">
-        <button class="sidebar-action" onclick="openPanel('custom')"><span class="icon">🔧</span> Load Custom Scroll</button>
-        <button class="sidebar-action" onclick="openPanel('verify')"><span class="icon">🔐</span> Verify Content</button>
-      </div>
-    </aside>
+        <!-- Main Viewer Area -->
+        <main class="viewer-area">
+            <!-- Scroll Title Bar (when viewing) -->
+            <div class="scroll-title-bar" id="scrollTitleBar">
+                <button class="btn-back" id="backBtn">
+                    <span>←</span>
+                </button>
+                <h2 id="viewerTitle">Select a Scroll</h2>
+                <div class="title-actions">
+                    <button class="btn-icon" id="downloadBtn" title="Download" disabled>💾</button>
+                    <button class="btn-icon" id="verifyBtn" title="Verify" disabled>🔐</button>
+                </div>
+            </div>
 
-    <main class="viewer">
-      <div class="viewer-header" id="viewer-header">
-        <span id="viewer-icon">📄</span>
-        <span class="viewer-scroll-title" id="viewer-title">—</span>
-        <div class="viewer-spacer"></div>
-        <button class="viewer-action" onclick="toggleDetails()" id="btn-details">Details ▾</button>
-        <button class="viewer-action" onclick="openPanel('verify')">🔐 Verify</button>
-      </div>
+            <!-- Loading State with Scroll Animation -->
+            <div class="viewer-loading" id="viewerLoading">
+                <div class="scroll-animation">
+                    <div class="scroll-paper">
+                        <div class="scroll-content-preview">
+                            <div class="scroll-line"></div>
+                            <div class="scroll-line"></div>
+                            <div class="scroll-line short"></div>
+                            <div class="scroll-line"></div>
+                            <div class="scroll-line short"></div>
+                        </div>
+                    </div>
+                    <div class="scroll-roller top"></div>
+                    <div class="scroll-roller bottom"></div>
+                </div>
+                <p class="loading-text" id="loadingText">Ready to explore...</p>
+                
+                <!-- Page Counter / Progress -->
+                <div class="scroll-progress" id="scrollProgress">
+                    <div class="progress-pages" id="progressPages">
+                        <span class="current-page">0</span>
+                        <span class="page-divider">/</span>
+                        <span class="total-pages">0</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-status" id="progressStatus">Waiting...</div>
+                </div>
+            </div>
 
-      <div class="content-area" id="content-area">
-        <div class="welcome" id="welcome">
-          <div class="welcome-glyph">📜</div>
-          <div class="welcome-title">SELECT A SCROLL</div>
-          <div class="welcome-sub">"In the digital age, true knowledge must be unstoppable."</div>
-          <div class="welcome-pillars">
-            <div class="pillar">✓ No chain indexing</div>
-            <div class="pillar">✓ No gatekeepers</div>
-            <div class="pillar">✓ Forever-readable</div>
-            <div class="pillar">✓ Koios-first</div>
-          </div>
-          <div class="welcome-featured">
-            <a href="first-video.html" class="feat-link">🎬 First Video on Cardano</a>
-            <a href="constitution.html" class="feat-link">⚖️ The Constitution</a>
-            <a href="bible.html" class="feat-link">📖 The Holy Bible</a>
-          </div>
-          <div class="beacn-credit">
-            Built with ❤️ by <a href="https://x.com/BEACNpool" target="_blank">@BEACNpool</a> ·
-            <a href="https://github.com/BEACNpool/ledger-scrolls" target="_blank">GitHub</a> · MIT License ·
-            <a href="preview.html">🧪 Preview Testnet</a>
-          </div>
-        </div>
+            <!-- Content Display -->
+            <div class="viewer-content" id="viewerContent">
+                <!-- Content will be injected here -->
+            </div>
 
-        <div class="loading-overlay" id="loading-overlay">
-          <div class="spinner"></div>
-          <div class="loading-text" id="loading-text">Fetching from Cardano…</div>
-          <div class="loading-step" id="loading-step"></div>
-        </div>
+            <!-- Scroll Metadata (collapsible) -->
+            <div class="scroll-metadata" id="scrollMetadata">
+                <div class="metadata-toggle" id="metadataToggle">
+                    <span>Details</span>
+                    <span class="toggle-arrow">▼</span>
+                </div>
+                <div class="metadata-content" id="metadataContent">
+                    <!-- Metadata will be populated by JS -->
+                </div>
+            </div>
+        </main>
 
-        <iframe id="content-frame" sandbox="allow-scripts allow-same-origin"></iframe>
-        <img id="content-image" alt="On-chain image content">
-        <div id="content-text"></div>
-        <video id="content-video" controls></video>
-      </div>
-
-      <div class="details-panel" id="details-panel"></div>
-    </main>
-  </div>
-</div>
-
-<div id="toast-container"></div>
-
-<!-- SETTINGS -->
-<div class="overlay" id="overlay-settings" onclick="bgClose(event,'settings')">
-  <div class="panel">
-    <div class="panel-header">
-      <span class="panel-icon">⚙️</span>
-      <span class="panel-title">SETTINGS</span>
-      <button class="panel-close" onclick="closePanel('settings')">✕</button>
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn nav-btn-secondary" id="aboutBtn" title="About">
+                <span class="nav-icon">ℹ️</span>
+            </button>
+            <button class="nav-btn nav-btn-primary" id="libraryBtn">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">The Library</span>
+            </button>
+            <button class="nav-btn nav-btn-secondary" id="settingsBtn" title="Settings">
+                <span class="nav-icon">⚙️</span>
+            </button>
+        </nav>
     </div>
-    <div class="panel-body">
-      <div class="panel-section">
-        <div class="panel-section-title">🔗 Connection</div>
-        <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;font-family:var(--font-body);">
-          This viewer is <strong style="color:var(--gold)">Koios-first</strong> by design. No node/relay required.
-        </p>
-      </div>
-      <div class="panel-section">
-        <div class="panel-section-title">🔑 Blockfrost Failover (optional)</div>
-        <div class="form-group">
-          <input type="password" class="form-input" id="input-blockfrost" placeholder="mainnetXXXXXXXXXXXXXXXX">
-          <div class="form-hint">Only used if Koios is unavailable or missing datum fields.</div>
+
+    <!-- Library Drawer -->
+    <div class="drawer" id="libraryDrawer">
+        <div class="drawer-backdrop"></div>
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3>📚 The Library</h3>
+                <button class="btn-icon drawer-close" data-close="libraryDrawer">✕</button>
+            </div>
+            <div class="drawer-body">
+                <!-- Search -->
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchScrolls" placeholder="Search scrolls...">
+                </div>
+                
+                <!-- Categories -->
+                <div class="category-chips" id="scrollCategories">
+                    <!-- Categories will be populated by JS -->
+                </div>
+                
+                <!-- Scroll List -->
+                <div class="scroll-list" id="scrollGrid">
+                    <!-- Scrolls will be populated by JS -->
+                </div>
+                
+                <!-- Custom Scroll -->
+                <button class="btn btn-outline btn-block" id="customScrollBtn">
+                    🔧 Load Custom Scroll
+                </button>
+            </div>
         </div>
-        <button class="btn btn-secondary" onclick="saveBlockfrost()">Save</button>
-      </div>
-      <div class="panel-section">
-        <div class="panel-section-title">📚 Registry (DNS for Scrolls)</div>
-        <div class="form-group">
-          <label class="form-label">Public Head (default)</label>
-          <input type="text" class="form-input" id="input-public-head" placeholder="default">
-          <div class="form-hint">This is the trust anchor. Forks are allowed — readers choose which head to follow.</div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Private Heads (optional, one per line)</label>
-          <textarea class="form-input" id="input-private-heads" placeholder="addr1q…"></textarea>
-          <div class="form-hint">Private heads override public on name collisions. Perfect for company/private libraries.</div>
-        </div>
-        <button class="btn btn-primary" onclick="confirmRegistry()">Confirm & Load Library</button>
-      </div>
-      <div class="panel-section">
-        <div class="panel-section-title">🛰️ Koios Proxy (optional)</div>
-        <div class="form-group">
-          <input type="text" class="form-input" id="input-koios-proxy" placeholder="https://your-koios-proxy.example.com">
-          <div class="form-hint" id="proxy-hint">Current: (none)</div>
-        </div>
-        <button class="btn btn-secondary" onclick="saveProxy()">Save</button>
-      </div>
-      <div class="panel-section">
-        <div class="panel-section-title">🎨 Theme</div>
-        <div class="theme-grid">
-          <div class="theme-opt active" id="theme-dark" onclick="setTheme('dark')">
-            <div class="theme-swatch swatch-dark">🌙</div>Dark
-          </div>
-          <div class="theme-opt" id="theme-light" onclick="setTheme('light')">
-            <div class="theme-swatch swatch-light">☀️</div>Light
-          </div>
-          <div class="theme-opt" id="theme-parchment" onclick="setTheme('parchment')">
-            <div class="theme-swatch swatch-parchment">📜</div>Parchment
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
-</div>
 
-<!-- ABOUT -->
-<div class="overlay center" id="overlay-about" onclick="bgClose(event,'about')">
-  <div class="panel" style="max-width:500px;">
-    <div class="panel-header">
-      <span class="panel-icon">📜</span>
-      <span class="panel-title">ABOUT</span>
-      <button class="panel-close" onclick="closePanel('about')">✕</button>
+    <!-- Settings Drawer -->
+    <div class="drawer" id="settingsDrawer">
+        <div class="drawer-backdrop"></div>
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3>⚙️ Settings</h3>
+                <button class="btn-icon drawer-close" data-close="settingsDrawer">✕</button>
+            </div>
+            <div class="drawer-body">
+                <!-- Connection (Koios-only) -->
+                <div class="settings-section">
+                    <h4>🔗 Connection</h4>
+                    <p class="help-text">This viewer is <strong>Koios-first</strong> by design. No node/relay required.</p>
+                </div>
+
+                <!-- Blockfrost Failover (optional) -->
+                <div class="settings-section" id="blockfrostSettings">
+                    <h4>🔑 Blockfrost Failover (optional)</h4>
+                    <div class="input-row">
+                        <input type="password" id="apiKeyInput" placeholder="mainnetXXX...">
+                        <button class="btn btn-sm" id="saveApiKey">Save</button>
+                    </div>
+                    <p class="help-text">Only used if Koios is unavailable or missing datum fields.</p>
+                </div>
+
+                <!-- Registry (DNS for Scrolls) -->
+                <div class="settings-section">
+                    <h4>📚 Registry (DNS for Scrolls)</h4>
+                    <div class="form-group">
+                        <label style="display:block; margin-bottom:6px; opacity:0.8;">Public Head (default)</label>
+                        <input type="text" id="registryHeadInput" placeholder="<txhash>#<ix>" style="width:100%;" required />
+                        <p class="help-text">This is the trust anchor. Forks are allowed — readers choose which head to follow.</p>
+                    </div>
+                    <div class="form-group">
+                        <label style="display:block; margin-bottom:6px; opacity:0.8;">Private Heads (optional, one per line)</label>
+                        <textarea id="privateHeadsInput" rows="3" placeholder="<txhash>#<ix>\n<txhash>#<ix>" style="width:100%; resize:vertical;"></textarea>
+                        <p class="help-text">Private heads override public on name collisions. Perfect for company/private libraries.</p>
+                    </div>
+                    <button class="btn btn-primary btn-block" id="loadLibraryBtn">Confirm & Load Library</button>
+                </div>
+
+                <!-- Koios Proxy -->
+                <div class="settings-section">
+                    <h4>🛰️ Koios Proxy (optional)</h4>
+                    <div class="input-row">
+                        <input type="text" id="koiosProxyInput" placeholder="https://proxy.example.com/api/v1">
+                        <button class="btn btn-sm" id="saveKoiosProxy">Save</button>
+                    </div>
+                    <p class="help-text" id="koiosProxyStatus">Current: (none)</p>
+                </div>
+
+                <!-- Theme -->
+                <div class="settings-section">
+                    <h4>🎨 Theme</h4>
+                    <div class="theme-pills">
+                        <button class="theme-pill active" data-theme="dark">🌙 Dark</button>
+                        <button class="theme-pill" data-theme="light">☀️ Light</button>
+                        <button class="theme-pill" data-theme="parchment">📜 Parchment</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="panel-body">
-      <div class="about-hero">
-        <span class="about-glyph">📜</span>
-        <div class="about-title">LEDGER SCROLLS</div>
-        <div class="about-tagline">"A Library That Cannot Burn"</div>
-      </div>
-      <div class="panel-section">
-        <div class="panel-section-title">What is this?</div>
-        <p style="font-size:14px;color:var(--text-dim);font-family:var(--font-body);line-height:1.7;">
-          A viewer for <strong style="color:var(--text)">immutable documents</strong> stored on the Cardano blockchain.
-          Once published, scrolls exist forever — as long as Cardano exists.
-        </p>
-      </div>
-      <div class="panel-section">
-        <div class="panel-section-title">Design Principles</div>
-        <div class="principle-list">
-          <div class="principle"><div class="principle-dot"></div>No chain indexing required</div>
-          <div class="principle"><div class="principle-dot"></div>No centralized gatekeepers</div>
-          <div class="principle"><div class="principle-dot"></div>No "download the whole chain"</div>
-          <div class="principle"><div class="principle-dot"></div>Forever-readable by design</div>
+
+    <!-- About Drawer -->
+    <div class="drawer" id="aboutDrawer">
+        <div class="drawer-backdrop"></div>
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3>📜 About</h3>
+                <button class="btn-icon drawer-close" data-close="aboutDrawer">✕</button>
+            </div>
+            <div class="drawer-body">
+                <div class="about-hero">
+                    <div class="about-icon">📜</div>
+                    <h2>Ledger Scrolls</h2>
+                    <p class="about-tagline">A Library That Cannot Burn</p>
+                </div>
+                
+                <blockquote class="philosophy-quote">
+                    "In the digital age, true knowledge must be unstoppable."
+                </blockquote>
+                
+                <div class="about-section">
+                    <h4>What is this?</h4>
+                    <p>A viewer for <strong>immutable documents</strong> stored on the Cardano blockchain. Once published, scrolls exist forever—as long as Cardano exists.</p>
+                </div>
+                
+                <div class="about-section">
+                    <h4>Design Principles</h4>
+                    <ul class="check-list">
+                        <li>✅ No chain indexing required</li>
+                        <li>✅ No centralized gatekeepers</li>
+                        <li>✅ No "download the whole chain"</li>
+                        <li>✅ Forever-readable by design</li>
+                    </ul>
+                </div>
+                
+                <div class="about-section">
+                    <h4>🎬 Featured</h4>
+                    <p><a href="first-video.html" style="color: var(--color-accent-primary);">The First Video on Cardano</a> — Watch history unfold as the first video stored entirely on-chain plays in your browser.</p>
+                </div>
+                
+                <div class="about-section">
+                    <h4>⚖️ The Constitution</h4>
+                    <p><a href="constitution.html" style="color: var(--color-accent-primary);">Read the Cardano Constitution</a> — The founding governance document, fetched directly from on-chain storage and cryptographically verified.</p>
+                </div>
+                
+                <div class="about-section">
+                    <h4>📖 The Holy Bible</h4>
+                    <p><a href="bible.html" style="color: var(--color-accent-primary);">Read the Sacred Scripture</a> — The complete World English Bible: 66 books, 1,189 chapters — ~3,500 years of history preserved forever on-chain.</p>
+                </div>
+                
+                <div class="about-footer">
+                    <p>Built with ❤️ by <a href="https://x.com/BEACNpool" target="_blank">@BEACNpool</a></p>
+                    <p><a href="https://github.com/BEACNpool/ledger-scrolls" target="_blank">GitHub</a> • MIT License</p>
+                    <p style="margin-top: 12px; font-size: 0.7rem;"><a href="preview.html" style="color: var(--color-text-muted); opacity: 0.45; text-decoration: none;" title="Experimental — Requires Blockfrost API Key">🧪 Preview Testnet</a></p>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="panel-section">
-        <div class="panel-section-title">🎬 Featured</div>
-        <div class="about-links">
-          <a href="first-video.html" class="about-link">
-            <span class="icon">🎬</span>
-            <div><span class="about-link-title">First Video on Cardano</span>
-            <span class="about-link-sub">Watch history unfold as the first video stored entirely on-chain plays in your browser.</span></div>
-          </a>
-          <a href="constitution.html" class="about-link">
-            <span class="icon">⚖️</span>
-            <div><span class="about-link-title">The Cardano Constitution</span>
-            <span class="about-link-sub">The founding governance document, fetched directly from on-chain storage and cryptographically verified.</span></div>
-          </a>
-          <a href="bible.html" class="about-link">
-            <span class="icon">📖</span>
-            <div><span class="about-link-title">The Holy Bible</span>
-            <span class="about-link-sub">The complete World English Bible: 66 books, 1,189 chapters — ~3,500 years of history preserved forever on-chain.</span></div>
-          </a>
-        </div>
-      </div>
-      <div class="about-footer">
-        Built with ❤️ by <a href="https://x.com/BEACNpool" target="_blank">@BEACNpool</a> ·
-        <a href="https://github.com/BEACNpool/ledger-scrolls" target="_blank">GitHub</a> · MIT License
-      </div>
     </div>
-  </div>
-</div>
 
-<!-- CUSTOM SCROLL -->
-<div class="overlay" id="overlay-custom" onclick="bgClose(event,'custom')">
-  <div class="panel">
-    <div class="panel-header">
-      <span class="panel-icon">🔧</span>
-      <span class="panel-title">LOAD CUSTOM SCROLL</span>
-      <button class="panel-close" onclick="closePanel('custom')">✕</button>
+    <!-- Custom Scroll Modal -->
+    <div class="modal" id="customScrollModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔧 Load Custom Scroll</h3>
+                <button class="btn-icon modal-close" data-close="customScrollModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="standard">Standard</button>
+                    <button class="tab-btn" data-tab="legacy">Legacy</button>
+                </div>
+                
+                <div class="tab-content active" id="tab-standard">
+                    <div class="form-group">
+                        <label>Lock Address</label>
+                        <input type="text" id="customLockAddr" placeholder="addr1...">
+                    </div>
+                    <div class="form-group">
+                        <label>Transaction Input (txhash#index)</label>
+                        <input type="text" id="customTxIn" placeholder="abc123...#0">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Content Type</label>
+                            <select id="customContentType">
+                                <option value="image/png">Image (PNG)</option>
+                                <option value="image/jpeg">Image (JPEG)</option>
+                                <option value="text/html">HTML</option>
+                                <option value="text/plain">Plain Text</option>
+                                <option value="application/pdf">PDF</option>
+                                <option value="video/mp4">Video (MP4)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Codec</label>
+                            <select id="customCodec">
+                                <option value="none">None</option>
+                                <option value="gzip">Gzip</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Expected SHA256 (optional)</label>
+                        <input type="text" id="customSha256" placeholder="abc123...">
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="tab-legacy">
+                    <div class="form-group">
+                        <label>Policy ID</label>
+                        <input type="text" id="customPolicyId" placeholder="abc123...">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Content Type</label>
+                            <select id="customLegacyContentType">
+                                <option value="text/html">HTML</option>
+                                <option value="text/plain">Plain Text</option>
+                                <option value="application/pdf">PDF</option>
+                                <option value="video/mp4">Video (MP4)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Codec</label>
+                            <select id="customLegacyCodec">
+                                <option value="gzip">Gzip</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary btn-block" id="loadCustomScroll">Load Scroll</button>
+            </div>
+        </div>
     </div>
-    <div class="panel-body">
-      <div class="tabs">
-        <button class="tab-btn active" id="tab-btn-standard" onclick="switchTab('standard')">Standard</button>
-        <button class="tab-btn" id="tab-btn-legacy" onclick="switchTab('legacy')">Legacy</button>
-      </div>
-      <div class="tab-pane active" id="tab-standard">
-        <div class="form-group">
-          <label class="form-label">Lock Address</label>
-          <input type="text" class="form-input" id="c-lock-addr" placeholder="addr1w…">
+
+    <!-- Verification Modal -->
+    <div class="modal" id="verifyModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔐 Verification</h3>
+                <button class="btn-icon modal-close" data-close="verifyModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="verification-result" id="verificationResult">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Transaction Input (txhash#index)</label>
-          <input type="text" class="form-input" id="c-txin" placeholder="abc123…#0">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Content Type</label>
-          <select class="form-input" id="c-ctype">
-            <option value="image/png">Image (PNG)</option>
-            <option value="image/jpeg">Image (JPEG)</option>
-            <option value="text/html">HTML</option>
-            <option value="text/plain">Plain Text</option>
-            <option value="application/pdf">PDF</option>
-            <option value="video/mp4">Video (MP4)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Codec</label>
-          <select class="form-input" id="c-codec">
-            <option value="none">None</option>
-            <option value="gzip">Gzip</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Expected SHA256 (optional)</label>
-          <input type="text" class="form-input" id="c-sha256" placeholder="abc123…">
-        </div>
-        <button class="btn btn-primary btn-full" onclick="loadCustomStandard()">Load Scroll</button>
-      </div>
-      <div class="tab-pane" id="tab-legacy">
-        <div class="form-group">
-          <label class="form-label">Policy ID</label>
-          <input type="text" class="form-input" id="l-policy" placeholder="2f0c8b54ef86ff…">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Content Type</label>
-          <select class="form-input" id="l-ctype">
-            <option value="text/html">HTML</option>
-            <option value="text/plain">Plain Text</option>
-            <option value="application/pdf">PDF</option>
-            <option value="video/mp4">Video (MP4)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Codec</label>
-          <select class="form-input" id="l-codec">
-            <option value="gzip">Gzip</option>
-            <option value="none">None</option>
-          </select>
-        </div>
-        <button class="btn btn-primary btn-full" onclick="loadCustomLegacy()">Load Scroll</button>
-      </div>
     </div>
-  </div>
-</div>
 
-<!-- VERIFY -->
-<div class="overlay center" id="overlay-verify" onclick="bgClose(event,'verify')">
-  <div class="panel" style="max-width:480px;">
-    <div class="panel-header">
-      <span class="panel-icon">🔐</span>
-      <span class="panel-title">VERIFICATION</span>
-      <button class="panel-close" onclick="closePanel('verify')">✕</button>
-    </div>
-    <div class="panel-body">
-      <div class="panel-section">
-        <div class="panel-section-title">On-Chain Hash Check</div>
-        <p style="font-size:13px;color:var(--text-dim);font-family:var(--font-body);margin-bottom:14px;">
-          Verify that the content you see exactly matches what is stored on Cardano.
-        </p>
-        <div class="form-group">
-          <label class="form-label">Expected SHA256 (leave blank to use scroll's declared hash)</label>
-          <input type="text" class="form-input" id="verify-expected" placeholder="abc123…">
-        </div>
-        <button class="btn btn-primary btn-full" onclick="runVerification()">🔍 Verify Now</button>
-        <div class="verify-result" id="verify-result"></div>
-      </div>
-    </div>
-  </div>
-</div>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
-<script>
-/* ═══════════════════════════════════════════════════════════════
-   LEDGER SCROLLS — Core Viewer
-   BEACNpool · https://github.com/BEACNpool/ledger-scrolls · MIT
-   ═══════════════════════════════════════════════════════════════ */
-
-// ── CONSTANTS ──────────────────────────────────────────────────
-const KOIOS_BASE     = 'https://api.koios.rest/api/v1';
-const BF_BASE        = 'https://cardano-mainnet.blockfrost.io/api/v0';
-const REG_POLICY     = '895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062';
-const REG_ASSET_HEX  = '4c535f5245474953545259'; // LS_REGISTRY
-const REG_ADDRESS    = 'addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy';
-
-// ── STATE ───────────────────────────────────────────────────────
-let S = {
-  scrolls: [],
-  currentIdx: -1,
-  currentBytes: null,
-  currentScroll: null,
-  blockfrostKey: '',
-  koiosProxy: '',
-  theme: 'dark',
-};
-
-// ── UTILS ───────────────────────────────────────────────────────
-function hex2bytes(hex) {
-  hex = hex.replace(/\s/g, '');
-  const out = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
-  return out;
-}
-function bytes2hex(b) {
-  return Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('');
-}
-async function sha256hex(bytes) {
-  const buf = await crypto.subtle.digest('SHA-256', bytes);
-  return bytes2hex(new Uint8Array(buf));
-}
-function gunzip(bytes) {
-  try { return pako.inflate(bytes); }
-  catch (e) { return pako.ungzip(bytes); }
-}
-
-// ── DATUM EXTRACTION ────────────────────────────────────────────
-// Koios returns inline_datum already decoded as Plutus data JSON.
-// For a byte-string datum: { "bytes": "hexhex..." }
-// This function simply extracts those bytes. No CBOR needed.
-function datumBytes(datum) {
-  if (!datum) return null;
-  // Koios standard shape: { bytes: "hex" }
-  if (datum.bytes)              return hex2bytes(datum.bytes);
-  // Sometimes nested under .value
-  if (datum.value?.bytes)       return hex2bytes(datum.value.bytes);
-  // Blockfrost json_value shape
-  if (datum.json_value?.bytes)  return hex2bytes(datum.json_value.bytes);
-  return null;
-}
-
-// ── KOIOS API ───────────────────────────────────────────────────
-function koiosBase() {
-  return (S.koiosProxy || KOIOS_BASE).replace(/\/$/, '');
-}
-
-async function koiosPost(path, body) {
-  const r = await fetch(koiosBase() + path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!r.ok) throw new Error(`Koios ${r.status} ${path}`);
-  return r.json();
-}
-
-async function koiosGet(path) {
-  const r = await fetch(koiosBase() + path, {
-    headers: { 'Accept': 'application/json' },
-  });
-  if (!r.ok) throw new Error(`Koios ${r.status} ${path}`);
-  return r.json();
-}
-
-// ── BLOCKFROST API (true failover only) ─────────────────────────
-async function bfGet(path) {
-  if (!S.blockfrostKey) throw new Error('No Blockfrost key configured — add one in Settings');
-  const r = await fetch(BF_BASE + path, {
-    headers: { 'project_id': S.blockfrostKey },
-  });
-  if (!r.ok) throw new Error(`Blockfrost ${r.status} ${path}`);
-  return r.json();
-}
-
-// ── ADDRESS UTxOs ───────────────────────────────────────────────
-// Returns array with items having: tx_hash, tx_index, inline_datum, asset_list
-async function getAddressUtxos(address) {
-  try {
-    // Koios v1 — POST /address_utxos
-    const data = await koiosPost('/address_utxos', { _addresses: [address], _extended: true });
-    return data || [];
-  } catch (koiosErr) {
-    console.warn('Koios address_utxos failed, trying Blockfrost:', koiosErr.message);
-    // Blockfrost fallback — GET /addresses/{addr}/utxos
-    const data = await bfGet(`/addresses/${address}/utxos`);
-    // Normalise to Koios shape
-    return (data || []).map(u => ({
-      tx_hash: u.tx_hash,
-      tx_index: u.output_index,
-      inline_datum: u.inline_datum ? { bytes: u.inline_datum } : null,
-      asset_list: (u.amount || [])
-        .filter(a => a.unit !== 'lovelace')
-        .map(a => ({ policy_id: a.unit.slice(0, 56), asset_name: a.unit.slice(56) })),
-    }));
-  }
-}
-
-// ── TX METADATA ─────────────────────────────────────────────────
-// Returns object keyed by label e.g. { "721": { ... } }
-async function getTxMetadata(txHash) {
-  try {
-    const data = await koiosPost('/tx_metadata', { _tx_hashes: [txHash] });
-    // Koios returns [{tx_hash, metadata:{label:value,...}}]
-    const row = (data || []).find(r => r.tx_hash === txHash) || (data || [])[0];
-    return row?.metadata || {};
-  } catch (koiosErr) {
-    console.warn('Koios tx_metadata failed, trying Blockfrost:', koiosErr.message);
-    // Blockfrost: [{label, json_metadata}]
-    const data = await bfGet(`/txs/${txHash}/metadata`);
-    const out = {};
-    for (const m of (data || [])) out[String(m.label)] = m.json_metadata;
-    return out;
-  }
-}
-
-// ── LOAD STANDARD SCROLL (UTxO datum bytes) ─────────────────────
-async function loadStandard(scroll) {
-  step('Querying lock address…');
-  const utxos = await getAddressUtxos(scroll.lock_address);
-
-  // Find the specific UTxO by txin if given
-  let target = null;
-  if (scroll.lock_txin) {
-    const [txHash, idxStr] = scroll.lock_txin.split('#');
-    const idx = parseInt(idxStr, 10);
-    target = utxos.find(u =>
-      u.tx_hash === txHash &&
-      (u.tx_index === idx || u.output_index === idx)
-    );
-  }
-  // Fallback: first UTxO with inline datum
-  if (!target) target = utxos.find(u => u.inline_datum) || utxos[0];
-  if (!target) throw new Error('Target UTxO not found at lock address');
-
-  step('Extracting datum bytes…');
-  const bytes = datumBytes(target.inline_datum);
-  if (!bytes || !bytes.length) throw new Error('Datum has no byte content (wrong UTxO shape?)');
-
-  if (scroll.codec === 'gzip') {
-    step('Decompressing…');
-    return gunzip(bytes);
-  }
-  return bytes;
-}
-
-// ── LOAD LEGACY SCROLL (CIP-25 page NFTs) ──────────────────────
-async function loadLegacy(scroll) {
-  step('Fetching manifest metadata…');
-  const meta = await getTxMetadata(scroll.manifest_tx_hash);
-
-  // Find manifest — try label 721 first (CIP-25), then any label
-  let manifest = null;
-  for (const label of ['721', ...Object.keys(meta)]) {
-    const v = meta[label];
-    if (!v) continue;
-    // CIP-25: meta[721][policyId][assetName] = {spec/role/n/pages...}
-    const inner = v[scroll.policy_id] || v;
-    const candidate = typeof inner === 'object' ? Object.values(inner)[0] || inner : inner;
-    if (candidate && (candidate.n || candidate.pages || candidate.spec || candidate.codec)) {
-      manifest = candidate;
-      break;
-    }
-  }
-  if (!manifest) throw new Error('Could not locate manifest in transaction metadata');
-
-  const totalPages = Number(manifest.n || manifest.total_pages || manifest.pages || 1);
-  const codec = scroll.codec || manifest.codec || 'none';
-  const segsPerPage = scroll.segments_per_page || manifest.segments_per_page || 32;
-
-  step(`Reconstructing ${totalPages} page(s)…`);
-  const chunks = [];
-
-  for (let p = 1; p <= totalPages; p++) {
-    step(`Fetching page ${p}/${totalPages}…`);
-    const pageBytes = await fetchPageData(scroll.policy_id, p, totalPages, manifest, segsPerPage);
-    chunks.push(...pageBytes);
-  }
-
-  if (!chunks.length) throw new Error('No page content retrieved');
-
-  step('Concatenating pages…');
-  const totalLen = chunks.reduce((s, c) => s + c.length, 0);
-  const combined = new Uint8Array(totalLen);
-  let offset = 0;
-  for (const c of chunks) { combined.set(c, offset); offset += c.length; }
-
-  if (codec === 'gzip') {
-    step('Decompressing…');
-    return gunzip(combined);
-  }
-  return combined;
-}
-
-// Retrieve raw payload bytes for a single page number
-async function fetchPageData(policyId, pageNum, totalPages, manifest, segsPerPage) {
-  // Try common asset name patterns to find the page NFT mint tx
-  const padded4 = String(pageNum).padStart(4, '0');
-  const padded3 = String(pageNum).padStart(3, '0');
-  const nameCandidates = [padded4, padded3, String(pageNum), `PAGE_${pageNum}`, `page${pageNum}`];
-
-  for (const name of nameCandidates) {
-    const nameHex = str2hex(name);
-    try {
-      // Koios: get asset tx history to find mint tx
-      const txs = await koiosPost('/asset_txs', {
-        _asset_list: [[policyId, nameHex]],
-        _history: false,
-      });
-      if (!txs || !txs.length) continue;
-      // Use earliest tx (mint)
-      const mintTx = txs[0].tx_hash || txs[0].hash;
-      if (!mintTx) continue;
-      const pageMeta = await getTxMetadata(mintTx);
-      const bytes = extractPayload(pageMeta, policyId, pageNum);
-      if (bytes.length) return bytes;
-    } catch (e) {
-      // Try Blockfrost path
-      try {
-        const asset = policyId + nameHex;
-        const history = await bfGet(`/assets/${asset}/transactions?count=1&order=asc`);
-        if (!history || !history.length) continue;
-        const pageMeta = await getTxMetadata(history[0].tx_hash);
-        const bytes = extractPayload(pageMeta, policyId, pageNum);
-        if (bytes.length) return bytes;
-      } catch (e2) { /* try next pattern */ }
-    }
-  }
-  console.warn(`Page ${pageNum} not found`);
-  return [];
-}
-
-// Walk metadata to find payload/seg hex segments for a page
-function extractPayload(meta, policyId, pageNum) {
-  const chunks = [];
-  for (const label of Object.keys(meta)) {
-    const v = meta[label];
-    // Try nested under policy, or directly
-    const candidates = [v?.[policyId], v];
-    for (const outer of candidates) {
-      if (!outer || typeof outer !== 'object') continue;
-      // May be { assetName: { payload/seg/segments: [...] } } or flat
-      const items = [outer, ...Object.values(outer)];
-      for (const item of items) {
-        const raw = item?.payload || item?.seg || item?.segments;
-        if (!raw) continue;
-        const segs = Array.isArray(raw) ? raw : [raw];
-        for (const s of segs) {
-          if (typeof s === 'string') chunks.push(hex2bytes(s));
-          else if (Array.isArray(s)) {
-            for (const ss of s) if (typeof ss === 'string') chunks.push(hex2bytes(ss));
-          }
-        }
-        if (chunks.length) return chunks;
-      }
-    }
-  }
-  return chunks;
-}
-
-function str2hex(s) {
-  return Array.from(s).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
-}
-
-// ── REGISTRY LOAD ───────────────────────────────────────────────
-async function loadRegistry() {
-  setConn('connecting');
-  step('Querying registry address…');
-  try {
-    const utxos = await getAddressUtxos(REG_ADDRESS);
-
-    // Find UTxO holding the registry NFT
-    let regUtxo = utxos.find(u => {
-      const assets = u.asset_list || [];
-      return assets.some(a => {
-        const pid  = a.policy_id  || (a.unit && a.unit.slice(0, 56));
-        const name = a.asset_name || (a.unit && a.unit.slice(56));
-        return pid === REG_POLICY && name === REG_ASSET_HEX;
-      });
-    });
-
-    // Fallback: first UTxO with inline datum
-    if (!regUtxo) regUtxo = utxos.find(u => u.inline_datum);
-    if (!regUtxo) throw new Error('Registry UTxO not found');
-
-    step('Decoding registry…');
-    const bytes = datumBytes(regUtxo.inline_datum);
-    if (!bytes) throw new Error('No bytes in registry datum');
-
-    const json = JSON.parse(new TextDecoder().decode(gunzip(bytes)));
-    setConn('online');
-    return json.scrolls || [];
-  } catch (e) {
-    console.warn('Registry failed, using fallback:', e.message);
-    setConn('error');
-    toast('Registry load failed — using built-in fallback list', 'error');
-    return fallbackScrolls();
-  }
-}
-
-function fallbackScrolls() {
-  return [
-    {
-      id: 'hosky-png',
-      title: 'Hosky PNG (Ledger Scrolls Standard)',
-      type: 'utxo_datum_bytes_v1',
-      lock_address: 'addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn',
-      lock_txin: '728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0',
-      content_type: 'image/png',
-      codec: 'none',
-      sha256: '798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f',
-    },
-    {
-      id: 'bible',
-      title: 'Bible (HTML, gzip compressed)',
-      type: 'cip25_pages_v1',
-      policy_id: '2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0',
-      manifest_tx_hash: 'cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4',
-      manifest_slot: '175750638',
-      codec: 'gzip',
-      content_type: 'text/html',
-      segments_per_page: 32,
-    },
-    {
-      id: 'bitcoin-whitepaper',
-      title: 'Bitcoin Whitepaper',
-      type: 'cip25_pages_v1',
-      policy_id: '8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1',
-      manifest_tx_hash: '2575347068f77b21cfe8d9c23d9082a68bfe4ef7ba7a96608af90515acbe228f',
-      manifest_slot: '176360887',
-      codec: 'none',
-      content_type: 'text/plain',
-    },
-  ];
-}
-
-// ── OPEN SCROLL ─────────────────────────────────────────────────
-async function openScroll(idx) {
-  const scroll = S.scrolls[idx];
-  if (!scroll) return;
-  S.currentIdx = idx;
-  S.currentScroll = scroll;
-
-  document.querySelectorAll('.scroll-item').forEach((el, i) =>
-    el.classList.toggle('active', i === idx));
-  document.getElementById('scroll-idx').textContent = idx + 1;
-
-  hideWelcome();
-  document.getElementById('viewer-header').classList.add('visible');
-  document.getElementById('viewer-title').textContent = scroll.title || scroll.id;
-  document.getElementById('viewer-icon').textContent =
-    scroll.type === 'utxo_datum_bytes_v1' ? '📄' : '📚';
-
-  showLoading(true, 'Fetching from Cardano blockchain…');
-  try {
-    const bytes = scroll.type === 'utxo_datum_bytes_v1'
-      ? await loadStandard(scroll)
-      : await loadLegacy(scroll);
-    S.currentBytes = bytes;
-    showLoading(false);
-    render(bytes, scroll.content_type || 'text/plain');
-    buildDetails(scroll, bytes);
-    toast('Loaded: ' + scroll.title, 'success');
-  } catch (e) {
-    showLoading(false);
-    console.error(e);
-    toast('Error: ' + e.message, 'error');
-    showWelcome();
-  }
-  updateNav();
-}
-
-// ── RENDER ──────────────────────────────────────────────────────
-function render(bytes, contentType) {
-  hideRenderers();
-  const blob = new Blob([bytes], { type: contentType });
-  const url  = URL.createObjectURL(blob);
-
-  if (contentType.startsWith('image/')) {
-    const img = document.getElementById('content-image');
-    img.src = url;
-    img.style.display = 'block';
-  } else if (contentType === 'text/html' || contentType === 'application/pdf') {
-    const f = document.getElementById('content-frame');
-    f.src = url;
-    f.style.display = 'block';
-  } else if (contentType === 'text/plain') {
-    const el = document.getElementById('content-text');
-    el.textContent = new TextDecoder().decode(bytes);
-    el.style.display = 'block';
-  } else if (contentType === 'video/mp4') {
-    const v = document.getElementById('content-video');
-    v.src = url;
-    v.style.display = 'block';
-  }
-}
-
-// ── DETAILS ─────────────────────────────────────────────────────
-async function buildDetails(scroll, bytes) {
-  const hash = await sha256hex(bytes);
-  const rows = [
-    ['id',           scroll.id || '—'],
-    ['type',         scroll.type || '—'],
-    ['content-type', scroll.content_type || '—'],
-    ['codec',        scroll.codec || 'none'],
-    ['size',         (bytes.length / 1024).toFixed(1) + ' KB'],
-    ['sha256-actual',hash],
-  ];
-  if (scroll.sha256) {
-    const match = hash === scroll.sha256.toLowerCase();
-    rows.push(['sha256-declared', scroll.sha256]);
-    rows.push(['verified', match ? '✓ MATCH' : '✗ MISMATCH']);
-  }
-  if (scroll.lock_txin) rows.push(['txin', scroll.lock_txin]);
-  if (scroll.policy_id) rows.push(['policy', scroll.policy_id]);
-
-  document.getElementById('details-panel').innerHTML = rows.map(([k, v]) => {
-    let cls = 'detail-val';
-    if (['sha256-actual','txin','policy'].includes(k)) cls += ' hash';
-    if (k === 'verified' && v.startsWith('✓')) cls += ' ok';
-    if (k === 'verified' && v.startsWith('✗')) cls += ' bad';
-    return `<div class="detail-row"><span class="detail-key">${k}</span><span class="${cls}">${escHtml(v)}</span></div>`;
-  }).join('');
-}
-
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ── VERIFICATION ─────────────────────────────────────────────────
-async function runVerification() {
-  if (!S.currentBytes) { toast('No scroll loaded', 'error'); return; }
-  const manual   = document.getElementById('verify-expected').value.trim();
-  const expected = manual || S.currentScroll?.sha256;
-  const actual   = await sha256hex(S.currentBytes);
-  const el       = document.getElementById('verify-result');
-
-  if (!expected) {
-    el.className = 'verify-result fail';
-    el.innerHTML = `<strong>No expected hash available.</strong><div class="verify-hash">Actual SHA256: ${actual}</div>`;
-    return;
-  }
-  if (actual === expected.toLowerCase()) {
-    el.className = 'verify-result pass';
-    el.innerHTML = `<strong>✓ VERIFIED — Content matches on-chain declaration</strong><div class="verify-hash">SHA256: ${actual}</div>`;
-  } else {
-    el.className = 'verify-result fail';
-    el.innerHTML = `<strong>✗ MISMATCH</strong><div class="verify-hash">Expected: ${expected}<br>Actual: &nbsp;&nbsp;${actual}</div>`;
-  }
-}
-
-// ── CUSTOM SCROLL ────────────────────────────────────────────────
-async function loadCustomStandard() {
-  const addr = document.getElementById('c-lock-addr').value.trim();
-  const txin = document.getElementById('c-txin').value.trim();
-  if (!addr) { toast('Lock address is required', 'error'); return; }
-  const scroll = {
-    id: 'custom', title: 'Custom Standard Scroll',
-    type: 'utxo_datum_bytes_v1',
-    lock_address: addr, lock_txin: txin,
-    content_type: document.getElementById('c-ctype').value,
-    codec: document.getElementById('c-codec').value,
-    sha256: document.getElementById('c-sha256').value.trim() || null,
-  };
-  closePanel('custom');
-  pushAndOpen(scroll);
-}
-
-async function loadCustomLegacy() {
-  const policy = document.getElementById('l-policy').value.trim();
-  if (!policy) { toast('Policy ID is required', 'error'); return; }
-  const scroll = {
-    id: 'custom-legacy', title: 'Custom Legacy Scroll',
-    type: 'cip25_pages_v1',
-    policy_id: policy,
-    content_type: document.getElementById('l-ctype').value,
-    codec: document.getElementById('l-codec').value,
-  };
-  closePanel('custom');
-  pushAndOpen(scroll);
-}
-
-function pushAndOpen(scroll) {
-  S.scrolls.push(scroll);
-  renderList(S.scrolls);
-  openScroll(S.scrolls.length - 1);
-}
-
-// ── RENDER LIST ──────────────────────────────────────────────────
-function renderList(scrolls) {
-  S.scrolls = scrolls;
-  document.getElementById('scroll-total').textContent = scrolls.length;
-  const list = document.getElementById('scroll-list');
-  if (!scrolls.length) {
-    list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);font-family:var(--font-mono);font-size:11px;">No scrolls found.</div>';
-    return;
-  }
-  list.innerHTML = scrolls.map((s, i) => {
-    const isStd = s.type === 'utxo_datum_bytes_v1';
-    const ct = (s.content_type || '').split('/')[1] || s.content_type || '?';
-    return `<div class="scroll-item" onclick="openScroll(${i})">
-      <div class="scroll-item-title">${escHtml(s.title || s.id)}</div>
-      <div class="scroll-item-meta">
-        <span class="badge ${isStd ? 'badge-standard' : 'badge-legacy'}">${isStd ? 'Standard' : 'Legacy'}</span>
-        <span class="badge-type">${ct} · ${s.codec || 'raw'}</span>
-      </div>
-    </div>`;
-  }).join('');
-  updateNav();
-}
-
-// ── NAVIGATION ───────────────────────────────────────────────────
-function navigate(dir) {
-  const n = S.currentIdx + dir;
-  if (n >= 0 && n < S.scrolls.length) openScroll(n);
-}
-function updateNav() {
-  const n = S.scrolls.length;
-  document.getElementById('btn-prev').disabled = S.currentIdx <= 0;
-  document.getElementById('btn-next').disabled = S.currentIdx >= n - 1 || n === 0;
-}
-
-// ── SETTINGS ─────────────────────────────────────────────────────
-function loadSettings() {
-  try {
-    const saved = JSON.parse(localStorage.getItem('ls-settings') || '{}');
-    S.blockfrostKey = saved.blockfrostKey || '';
-    S.koiosProxy    = saved.koiosProxy    || '';
-    S.theme         = saved.theme         || 'dark';
-  } catch (e) {}
-  document.getElementById('input-blockfrost').value   = S.blockfrostKey;
-  document.getElementById('input-koios-proxy').value  = S.koiosProxy;
-  if (S.koiosProxy) document.getElementById('proxy-hint').textContent = 'Current: ' + S.koiosProxy;
-  setTheme(S.theme, false);
-}
-function save() {
-  localStorage.setItem('ls-settings', JSON.stringify({
-    blockfrostKey: S.blockfrostKey,
-    koiosProxy: S.koiosProxy,
-    theme: S.theme,
-  }));
-}
-function saveBlockfrost() {
-  S.blockfrostKey = document.getElementById('input-blockfrost').value.trim();
-  save();
-  toast('Blockfrost key saved', 'success');
-}
-function saveProxy() {
-  S.koiosProxy = document.getElementById('input-koios-proxy').value.trim();
-  save();
-  document.getElementById('proxy-hint').textContent = S.koiosProxy ? 'Current: ' + S.koiosProxy : 'Current: (none)';
-  toast('Koios proxy saved', 'success');
-}
-async function confirmRegistry() {
-  closePanel('settings');
-  document.getElementById('scroll-list').innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-family:var(--font-mono);font-size:11px;"><div style="font-size:28px;margin-bottom:12px">⏳</div>Loading registry…</div>';
-  const scrolls = await loadRegistry();
-  renderList(scrolls);
-}
-
-// ── THEME ────────────────────────────────────────────────────────
-function setTheme(theme, persist = true) {
-  document.documentElement.setAttribute('data-theme', theme);
-  S.theme = theme;
-  document.querySelectorAll('.theme-opt').forEach(el =>
-    el.classList.toggle('active', el.id === 'theme-' + theme));
-  if (persist) save();
-}
-
-// ── UI HELPERS ───────────────────────────────────────────────────
-function setConn(state) {
-  const badge = document.getElementById('conn-badge');
-  badge.className = 'conn-badge ' + state;
-  const labels = { connecting: 'Connecting…', online: 'Koios · Online', error: 'Koios · Error', offline: 'Offline' };
-  document.getElementById('conn-text').textContent = labels[state] || state;
-}
-function showLoading(show, msg) {
-  const el = document.getElementById('loading-overlay');
-  el.classList.toggle('visible', show);
-  if (msg) document.getElementById('loading-text').textContent = msg;
-}
-function step(s) { document.getElementById('loading-step').textContent = s; }
-function hideRenderers() {
-  ['content-frame','content-image','content-text','content-video']
-    .forEach(id => { document.getElementById(id).style.display = 'none'; });
-}
-function hideWelcome() { document.getElementById('welcome').style.display = 'none'; }
-function showWelcome() {
-  document.getElementById('welcome').style.display = '';
-  document.getElementById('viewer-header').classList.remove('visible');
-  hideRenderers();
-}
-function toggleDetails() {
-  const p = document.getElementById('details-panel');
-  const b = document.getElementById('btn-details');
-  p.classList.toggle('visible');
-  b.textContent = p.classList.contains('visible') ? 'Details ▴' : 'Details ▾';
-}
-function openPanel(name) {
-  document.querySelectorAll('.overlay').forEach(el => el.classList.remove('visible'));
-  document.getElementById('overlay-' + name)?.classList.add('visible');
-  if (name === 'verify') {
-    document.getElementById('verify-expected').value = S.currentScroll?.sha256 || '';
-    document.getElementById('verify-result').className = 'verify-result';
-  }
-}
-function closePanel(name) { document.getElementById('overlay-' + name)?.classList.remove('visible'); }
-function bgClose(e, name) { if (e.target === e.currentTarget) closePanel(name); }
-function switchTab(which) {
-  ['standard','legacy'].forEach(t => {
-    document.getElementById('tab-btn-' + t).classList.toggle('active', t === which);
-    document.getElementById('tab-' + t).classList.toggle('active', t === which);
-  });
-}
-function toast(msg, type = '') {
-  const c  = document.getElementById('toast-container');
-  const el = document.createElement('div');
-  el.className = 'toast ' + type;
-  el.textContent = msg;
-  c.appendChild(el);
-  setTimeout(() => el.remove(), 4500);
-}
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.querySelectorAll('.overlay').forEach(el => el.classList.remove('visible'));
-  if (!e.target.matches('input,textarea,select')) {
-    if (e.key === 'ArrowLeft')  navigate(-1);
-    if (e.key === 'ArrowRight') navigate(1);
-  }
-});
-
-// ── BOOT ─────────────────────────────────────────────────────────
-async function boot() {
-  loadSettings();
-  const scrolls = await loadRegistry();
-  renderList(scrolls);
-}
-boot();
-</script>
+    <!-- Scripts -->
+    <script src="js/lib/pako.min.js?v=mobile-3"></script>
+    <script src="js/lib/cbor.min.js?v=mobile-3"></script>
+    <script src="js/scrolls.js?v=mobile-3"></script>
+    <script src="js/blockchain.js?v=mobile-3"></script>
+    <script src="js/reconstruct.js?v=mobile-3"></script>
+    <script>
+        window.LS_DEFAULT_MODE = 'koios';
+    </script>
+    <script src="js/app.js?v=mobile-3"></script>
 </body>
 </html>
