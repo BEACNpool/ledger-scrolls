@@ -331,8 +331,20 @@ def main() -> None:
         data, sha = read_one(scroll_id, info, koios_base=args.koios)
 
         if args.verify:
+            expected_sha256 = info.get("sha256")
+            is_verified = bool(expected_sha256)
+            status = "verified" if is_verified else "hashed"
             print(f"OK — {scroll_id} SHA-256: {sha}")
-            report.append({"scroll": scroll_id, "sha256": sha, "bytes": len(data), "status": "verified"})
+            report.append(
+                {
+                    "scroll": scroll_id,
+                    "sha256": sha,
+                    "expected_sha256": expected_sha256,
+                    "bytes": len(data),
+                    "status": status,
+                    "verified": is_verified,
+                }
+            )
             continue
 
         if args.save:
