@@ -606,7 +606,9 @@ class LedgerScrollsApp {
         this.currentScroll = scroll;
         this.loadedContent = null;
 
-        // Show title bar
+        // Hide hero, show title bar
+        const hero = document.getElementById('heroSection');
+        if (hero) hero.style.display = 'none';
         this.elements.scrollTitleBar.classList.add('active');
         this.elements.viewerTitle.textContent = scroll.title;
         
@@ -728,7 +730,9 @@ class LedgerScrollsApp {
         this.currentScroll = null;
         this.loadedContent = null;
         
-        // Hide title bar
+        // Show hero, hide title bar
+        const hero = document.getElementById('heroSection');
+        if (hero) hero.style.display = '';
         this.elements.scrollTitleBar.classList.remove('active');
         this.elements.viewerTitle.textContent = 'Select a Scroll';
         
