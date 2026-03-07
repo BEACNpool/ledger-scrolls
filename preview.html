@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=preview-2">
+    <link rel="stylesheet" href="css/styles.css?v=4.0">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
     <style>
         /* Preview-specific overrides - Purple accent theme */
@@ -162,7 +162,7 @@
         <main class="viewer-area" id="viewerArea" style="display: none;">
             <!-- Scroll Title Bar (when viewing) -->
             <div class="scroll-title-bar" id="scrollTitleBar">
-                <button class="btn-back" id="backBtn">
+                <button class="btn-back" id="backBtn" aria-label="Go back">
                     <span>←</span>
                 </button>
                 <h2 id="viewerTitle">Select a Scroll</h2>
@@ -222,14 +222,14 @@
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav" id="bottomNav" style="display: none;">
-            <button class="nav-btn nav-btn-secondary" id="aboutBtn" title="About">
+            <button class="nav-btn nav-btn-secondary" id="aboutBtn" title="About" aria-label="About">
                 <span class="nav-icon">ℹ️</span>
             </button>
             <button class="nav-btn nav-btn-primary" id="libraryBtn">
                 <span class="nav-icon">📚</span>
                 <span class="nav-label">The Library</span>
             </button>
-            <button class="nav-btn nav-btn-secondary" id="mainnetBtn" title="Mainnet">
+            <button class="nav-btn nav-btn-secondary" id="mainnetBtn" title="Mainnet" aria-label="Switch to Mainnet">
                 <span class="nav-icon">🌐</span>
             </button>
         </nav>
@@ -347,11 +347,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- Scripts -->
-    <script src="js/lib/pako.min.js?v=preview-2"></script>
-    <script src="js/lib/cbor.min.js?v=preview-2"></script>
-    <script src="js/scrolls-preview.js?v=preview-2"></script>
-    <script src="js/blockchain.js?v=preview-2"></script>
-    <script src="js/reconstruct.js?v=preview-2"></script>
+    <script src="js/lib/pako.min.js?v=4.0"></script>
+    <script src="js/lib/cbor.min.js?v=4.0"></script>
+    <script src="js/scrolls-preview.js?v=4.0"></script>
+    <script src="js/blockchain.js?v=4.0"></script>
+    <script src="js/reconstruct.js?v=4.0"></script>
     <script>
         /**
          * Ledger Scrolls - Preview Testnet Viewer
@@ -689,7 +689,7 @@
                     this.el.viewerContent.appendChild(img);
                 } else if (ct.includes('html')) {
                     const iframe = document.createElement('iframe');
-                    iframe.sandbox = 'allow-same-origin';
+                    iframe.sandbox = 'allow-scripts';
                     iframe.src = url;
                     this.el.viewerContent.appendChild(iframe);
                 } else {
@@ -816,16 +816,18 @@
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
                 const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+                const dismiss = () => {
+                    toast.classList.add('toast-exit');
+                    setTimeout(() => toast.remove(), 300);
+                };
                 toast.innerHTML = `
                     <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
                     <span class="toast-message">${msg}</span>
+                    <button class="toast-close" aria-label="Dismiss">&times;</button>
                 `;
+                toast.querySelector('.toast-close').addEventListener('click', dismiss);
                 this.el.toastContainer.appendChild(toast);
-                
-                setTimeout(() => {
-                    toast.classList.add('toast-exit');
-                    setTimeout(() => toast.remove(), 300);
-                }, 4000);
+                setTimeout(dismiss, 4000);
             }
             
             _formatSize(bytes) {

@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0a0c10">
+    <meta name="theme-color" content="#08090d">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Ledger Scrolls</title>
+    <title>Ledger Scrolls — A Library That Cannot Burn</title>
+    <meta name="description" content="Read immutable documents stored forever on the Cardano blockchain. No servers. No gatekeepers. Truth, preserved.">
+    <meta property="og:title" content="Ledger Scrolls — A Library That Cannot Burn">
+    <meta property="og:description" content="Read immutable documents stored forever on the Cardano blockchain. No servers. No gatekeepers. Truth, preserved.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=mobile-3">
+    <link rel="stylesheet" href="css/styles.css?v=4.0">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
 </head>
 <body>
@@ -23,21 +28,21 @@
     <!-- Main Application -->
     <div class="app-container">
         <!-- Compact Header -->
-        <header class="header">
+        <header class="header" role="banner">
             <div class="logo-section" id="logoSection">
                 <div class="logo-icon">📜</div>
                 <div class="logo-text">
                     <h1>Ledger Scrolls</h1>
                 </div>
             </div>
-            <div class="connection-pill" id="connectionPill">
+            <div class="connection-pill" id="connectionPill" role="status" aria-live="polite">
                 <span class="status-dot disconnected" id="statusDot"></span>
                 <span class="status-text" id="statusText">Offline</span>
             </div>
         </header>
 
         <!-- Main Viewer Area -->
-        <main class="viewer-area">
+        <main class="viewer-area" role="main">
             <!-- Scroll Title Bar (when viewing) -->
             <div class="scroll-title-bar" id="scrollTitleBar">
                 <button class="btn-back" id="backBtn" aria-label="Go back">
@@ -66,7 +71,7 @@
                     <div class="scroll-roller bottom"></div>
                 </div>
                 <p class="loading-text" id="loadingText">Ready to explore...</p>
-                
+
                 <!-- Page Counter / Progress -->
                 <div class="scroll-progress" id="scrollProgress">
                     <div class="progress-pages" id="progressPages">
@@ -99,11 +104,11 @@
         </main>
 
         <!-- Bottom Navigation -->
-        <nav class="bottom-nav">
+        <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
             <button class="nav-btn nav-btn-secondary" id="aboutBtn" title="About" aria-label="About Ledger Scrolls">
                 <span class="nav-icon">ℹ️</span>
             </button>
-            <button class="nav-btn nav-btn-primary" id="libraryBtn">
+            <button class="nav-btn nav-btn-primary" id="libraryBtn" aria-label="Open The Library">
                 <span class="nav-icon">📚</span>
                 <span class="nav-label">The Library</span>
             </button>
@@ -114,7 +119,7 @@
     </div>
 
     <!-- Library Drawer -->
-    <div class="drawer" id="libraryDrawer">
+    <div class="drawer" id="libraryDrawer" role="dialog" aria-label="The Library">
         <div class="drawer-backdrop"></div>
         <div class="drawer-content">
             <div class="drawer-header">
@@ -126,17 +131,17 @@
                 <div class="search-box">
                     <input type="text" class="search-input" id="searchScrolls" placeholder="Search scrolls..." aria-label="Search scrolls">
                 </div>
-                
+
                 <!-- Categories -->
-                <div class="category-chips" id="scrollCategories">
+                <div class="category-chips" id="scrollCategories" role="tablist">
                     <!-- Categories will be populated by JS -->
                 </div>
-                
+
                 <!-- Scroll List -->
-                <div class="scroll-list" id="scrollGrid">
+                <div class="scroll-list" id="scrollGrid" role="list">
                     <!-- Scrolls will be populated by JS -->
                 </div>
-                
+
                 <!-- Custom Scroll -->
                 <button class="btn btn-outline btn-block" id="customScrollBtn">
                     🔧 Load Custom Scroll
@@ -146,7 +151,7 @@
     </div>
 
     <!-- Settings Drawer -->
-    <div class="drawer" id="settingsDrawer">
+    <div class="drawer" id="settingsDrawer" role="dialog" aria-label="Settings">
         <div class="drawer-backdrop"></div>
         <div class="drawer-content">
             <div class="drawer-header">
@@ -157,14 +162,14 @@
                 <!-- Connection (Koios-only) -->
                 <div class="settings-section">
                     <h4>🔗 Connection</h4>
-                    <p class="help-text">This viewer is <strong>Koios-first</strong> by design. No node/relay required.</p>
+                    <p class="help-text">This viewer is <strong>Koios-first</strong> by design. No node or relay required.</p>
                 </div>
 
                 <!-- Blockfrost Failover (optional) -->
                 <div class="settings-section" id="blockfrostSettings">
                     <h4>🔑 Blockfrost Failover (optional)</h4>
                     <div class="input-row">
-                        <input type="password" id="apiKeyInput" placeholder="mainnetXXX...">
+                        <input type="password" id="apiKeyInput" placeholder="mainnetXXX..." aria-label="Blockfrost API key">
                         <button class="btn btn-sm" id="saveApiKey">Save</button>
                     </div>
                     <p class="help-text">Only used if Koios is unavailable or missing datum fields.</p>
@@ -174,13 +179,13 @@
                 <div class="settings-section">
                     <h4>📚 Registry (DNS for Scrolls)</h4>
                     <div class="form-group">
-                        <label style="display:block; margin-bottom:6px; opacity:0.8;">Public Head (default)</label>
-                        <input type="text" id="registryHeadInput" placeholder="<txhash>#<ix>" style="width:100%;" required />
+                        <label for="registryHeadInput">Public Head (default)</label>
+                        <input type="text" id="registryHeadInput" placeholder="<txhash>#<ix>" required>
                         <p class="help-text">This is the trust anchor. Forks are allowed — readers choose which head to follow.</p>
                     </div>
                     <div class="form-group">
-                        <label style="display:block; margin-bottom:6px; opacity:0.8;">Private Heads (optional, one per line)</label>
-                        <textarea id="privateHeadsInput" rows="3" placeholder="<txhash>#<ix>\n<txhash>#<ix>" style="width:100%; resize:vertical;"></textarea>
+                        <label for="privateHeadsInput">Private Heads (optional, one per line)</label>
+                        <textarea id="privateHeadsInput" rows="3" placeholder="<txhash>#<ix>" style="resize:vertical;"></textarea>
                         <p class="help-text">Private heads override public on name collisions. Perfect for company/private libraries.</p>
                     </div>
                     <button class="btn btn-primary btn-block" id="loadLibraryBtn">Confirm & Load Library</button>
@@ -190,7 +195,7 @@
                 <div class="settings-section">
                     <h4>🛰️ Koios Proxy (optional)</h4>
                     <div class="input-row">
-                        <input type="text" id="koiosProxyInput" placeholder="https://proxy.example.com/api/v1">
+                        <input type="text" id="koiosProxyInput" placeholder="https://proxy.example.com/api/v1" aria-label="Koios proxy URL">
                         <button class="btn btn-sm" id="saveKoiosProxy">Save</button>
                     </div>
                     <p class="help-text" id="koiosProxyStatus">Current: (none)</p>
@@ -199,10 +204,10 @@
                 <!-- Theme -->
                 <div class="settings-section">
                     <h4>🎨 Theme</h4>
-                    <div class="theme-pills">
-                        <button class="theme-pill active" data-theme="dark">🌙 Dark</button>
-                        <button class="theme-pill" data-theme="light">☀️ Light</button>
-                        <button class="theme-pill" data-theme="parchment">📜 Parchment</button>
+                    <div class="theme-pills" role="radiogroup" aria-label="Theme selection">
+                        <button class="theme-pill active" data-theme="dark" role="radio" aria-checked="true">🌙 Dark</button>
+                        <button class="theme-pill" data-theme="light" role="radio" aria-checked="false">☀️ Light</button>
+                        <button class="theme-pill" data-theme="parchment" role="radio" aria-checked="false">📜 Parchment</button>
                     </div>
                 </div>
             </div>
@@ -210,7 +215,7 @@
     </div>
 
     <!-- About Drawer -->
-    <div class="drawer" id="aboutDrawer">
+    <div class="drawer" id="aboutDrawer" role="dialog" aria-label="About">
         <div class="drawer-backdrop"></div>
         <div class="drawer-content">
             <div class="drawer-header">
@@ -223,16 +228,16 @@
                     <h2>Ledger Scrolls</h2>
                     <p class="about-tagline">A Library That Cannot Burn</p>
                 </div>
-                
+
                 <blockquote class="philosophy-quote">
                     "In the digital age, true knowledge must be unstoppable."
                 </blockquote>
-                
+
                 <div class="about-section">
                     <h4>What is this?</h4>
-                    <p>A viewer for <strong>immutable documents</strong> stored on the Cardano blockchain. Once published, scrolls exist forever—as long as Cardano exists.</p>
+                    <p>A viewer for <strong>immutable documents</strong> stored on the Cardano blockchain. Once published, scrolls exist forever — as long as Cardano exists.</p>
                 </div>
-                
+
                 <div class="about-section">
                     <h4>Design Principles</h4>
                     <ul class="check-list">
@@ -242,25 +247,25 @@
                         <li>✅ Forever-readable by design</li>
                     </ul>
                 </div>
-                
+
                 <div class="about-section">
                     <h4>🎬 Featured</h4>
-                    <p><a href="first-video.html" style="color: var(--color-accent-primary);">The First Video on Cardano</a> — Watch history unfold as the first video stored entirely on-chain plays in your browser.</p>
+                    <p><a href="first-video.html">The First Video on Cardano</a> — Watch history unfold as the first video stored entirely on-chain plays in your browser.</p>
                 </div>
-                
+
                 <div class="about-section">
                     <h4>⚖️ The Constitution</h4>
-                    <p><a href="constitution.html" style="color: var(--color-accent-primary);">Read the Cardano Constitution</a> — The founding governance document, fetched directly from on-chain storage and cryptographically verified.</p>
+                    <p><a href="constitution.html">Read the Cardano Constitution</a> — The founding governance document, fetched directly from on-chain storage and cryptographically verified.</p>
                 </div>
-                
+
                 <div class="about-section">
                     <h4>📖 The Holy Bible</h4>
-                    <p><a href="bible.html" style="color: var(--color-accent-primary);">Read the Sacred Scripture</a> — The complete World English Bible: 66 books, 1,189 chapters — ~3,500 years of history preserved forever on-chain.</p>
+                    <p><a href="bible.html">Read the Sacred Scripture</a> — The complete World English Bible: 66 books, 1,189 chapters — ~3,500 years of history preserved forever on-chain.</p>
                 </div>
-                
+
                 <div class="about-footer">
-                    <p>Built with ❤️ by <a href="https://x.com/BEACNpool" target="_blank">@BEACNpool</a></p>
-                    <p><a href="https://github.com/BEACNpool/ledger-scrolls" target="_blank">GitHub</a> • MIT License</p>
+                    <p>Built with ❤️ by <a href="https://x.com/BEACNpool" target="_blank" rel="noopener">@BEACNpool</a></p>
+                    <p><a href="https://github.com/BEACNpool/ledger-scrolls" target="_blank" rel="noopener">GitHub</a> • MIT License</p>
                     <p style="margin-top: 12px; font-size: 0.7rem;"><a href="preview.html" style="color: var(--color-text-muted); opacity: 0.45; text-decoration: none;" title="Experimental — Requires Blockfrost API Key">🧪 Preview Testnet</a></p>
                 </div>
             </div>
@@ -268,7 +273,7 @@
     </div>
 
     <!-- Custom Scroll Modal -->
-    <div class="modal" id="customScrollModal">
+    <div class="modal" id="customScrollModal" role="dialog" aria-label="Load Custom Scroll">
         <div class="modal-backdrop"></div>
         <div class="modal-content">
             <div class="modal-header">
@@ -280,19 +285,19 @@
                     <button class="tab-btn active" data-tab="standard">Standard</button>
                     <button class="tab-btn" data-tab="legacy">Legacy</button>
                 </div>
-                
+
                 <div class="tab-content active" id="tab-standard">
                     <div class="form-group">
-                        <label>Lock Address</label>
+                        <label for="customLockAddr">Lock Address</label>
                         <input type="text" id="customLockAddr" placeholder="addr1...">
                     </div>
                     <div class="form-group">
-                        <label>Transaction Input (txhash#index)</label>
+                        <label for="customTxIn">Transaction Input (txhash#index)</label>
                         <input type="text" id="customTxIn" placeholder="abc123...#0">
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Content Type</label>
+                            <label for="customContentType">Content Type</label>
                             <select id="customContentType">
                                 <option value="image/png">Image (PNG)</option>
                                 <option value="image/jpeg">Image (JPEG)</option>
@@ -303,7 +308,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Codec</label>
+                            <label for="customCodec">Codec</label>
                             <select id="customCodec">
                                 <option value="none">None</option>
                                 <option value="gzip">Gzip</option>
@@ -311,19 +316,19 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Expected SHA256 (optional)</label>
+                        <label for="customSha256">Expected SHA256 (optional)</label>
                         <input type="text" id="customSha256" placeholder="abc123...">
                     </div>
                 </div>
-                
+
                 <div class="tab-content" id="tab-legacy">
                     <div class="form-group">
-                        <label>Policy ID</label>
+                        <label for="customPolicyId">Policy ID</label>
                         <input type="text" id="customPolicyId" placeholder="abc123...">
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Content Type</label>
+                            <label for="customLegacyContentType">Content Type</label>
                             <select id="customLegacyContentType">
                                 <option value="text/html">HTML</option>
                                 <option value="text/plain">Plain Text</option>
@@ -332,7 +337,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Codec</label>
+                            <label for="customLegacyCodec">Codec</label>
                             <select id="customLegacyCodec">
                                 <option value="gzip">Gzip</option>
                                 <option value="none">None</option>
@@ -340,14 +345,14 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <button class="btn btn-primary btn-block" id="loadCustomScroll">Load Scroll</button>
             </div>
         </div>
     </div>
 
     <!-- Verification Modal -->
-    <div class="modal" id="verifyModal">
+    <div class="modal" id="verifyModal" role="dialog" aria-label="Verification">
         <div class="modal-backdrop"></div>
         <div class="modal-content">
             <div class="modal-header">
@@ -363,17 +368,17 @@
     </div>
 
     <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
     <!-- Scripts -->
-    <script src="js/lib/pako.min.js?v=mobile-3"></script>
-    <script src="js/lib/cbor.min.js?v=mobile-3"></script>
-    <script src="js/scrolls.js?v=mobile-3"></script>
-    <script src="js/blockchain.js?v=mobile-3"></script>
-    <script src="js/reconstruct.js?v=mobile-3"></script>
+    <script src="js/lib/pako.min.js?v=4.0"></script>
+    <script src="js/lib/cbor.min.js?v=4.0"></script>
+    <script src="js/scrolls.js?v=4.0"></script>
+    <script src="js/blockchain.js?v=4.0"></script>
+    <script src="js/reconstruct.js?v=4.0"></script>
     <script>
         window.LS_DEFAULT_MODE = 'koios';
     </script>
-    <script src="js/app.js?v=mobile-3"></script>
+    <script src="js/app.js?v=4.0"></script>
 </body>
 </html>
