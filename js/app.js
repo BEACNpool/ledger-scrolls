@@ -561,12 +561,12 @@ class LedgerScrollsApp {
         }
 
         this.elements.scrollGrid.innerHTML = scrolls.map(scroll => `
-            <div class="scroll-item" data-scroll-id="${scroll.id}">
+            <div class="scroll-item" data-scroll-id="${scroll.id}" role="listitem">
                 <div class="scroll-item-icon">${scroll.icon}</div>
                 <div class="scroll-item-info">
-                    <div class="scroll-item-title">${scroll.title}</div>
+                    <div class="scroll-item-title">${this._escapeHtml(scroll.title)}</div>
                     <div class="scroll-item-meta">
-                        <span>${scroll.metadata?.size || 'Unknown'}</span>
+                        <span>${scroll.metadata?.size || ''}</span>
                         <span class="scroll-item-type">${
                             scroll.type === ScrollLibrary.SCROLL_TYPES.STANDARD ? 'Standard' : 'Legacy'
                         }</span>
