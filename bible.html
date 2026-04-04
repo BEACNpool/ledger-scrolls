@@ -1858,23 +1858,36 @@
 
     // ── Koios API ───────────────────────────────────────────────
 
-    async function koiosRequest(endpoint, options = {}) {
+    async function koiosRequest(endpoint, options = {}, maxRetries = 4) {
         const gateways = activeGateway 
             ? [activeGateway, ...KOIOS_GATEWAYS.filter(g => g !== activeGateway)] 
             : [...KOIOS_GATEWAYS];
         
         for (const base of gateways) {
-            try {
-                const resp = await fetch(`${base}${endpoint}`, {
-                    ...options,
-                    mode: 'cors',
-                    credentials: 'omit'
-                });
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                activeGateway = base;
-                return await resp.json();
-            } catch (e) {
-                console.warn(`Gateway ${base} failed:`, e.message);
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    const resp = await fetch(`${base}${endpoint}`, {
+                        ...options,
+                        mode: 'cors',
+                        credentials: 'omit'
+                    });
+                    if (resp.status === 429) {
+                        const retryAfter = parseInt(resp.headers.get('Retry-After') || '2', 10);
+                        if (attempt < maxRetries) {
+                            await new Promise(r => setTimeout(r, retryAfter * 1000));
+                            continue;
+                        }
+                    }
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    activeGateway = base;
+                    return await resp.json();
+                } catch (e) {
+                    if (attempt < maxRetries) {
+                        await new Promise(r => setTimeout(r, (attempt + 1) * 500));
+                        continue;
+                    }
+                    console.warn(`Gateway ${base} failed after ${maxRetries + 1} attempts:`, e.message);
+                }
             }
         }
         throw new Error('All Koios gateways failed');
@@ -1963,6 +1976,12 @@
 
             if (pages.length === 0) {
                 throw new Error('No page payloads found');
+            }
+
+            const uniquePages = new Set(pages.map(p => p.index));
+            const maxPage = Math.max(...pages.map(p => p.index));
+            if (uniquePages.size !== maxPage) {
+                throw new Error(`Incomplete page set recovered (${uniquePages.size}/${maxPage}). Please retry.`);
             }
 
             // Step 3: Sort and concatenate
