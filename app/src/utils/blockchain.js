@@ -146,10 +146,11 @@ export class BlockchainClient {
     }
 
     async _koiosQueryUtxos(address) {
+        // _extended is required for Koios to include inline_datum/datum_hash
         const response = await this._request('/address_utxos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ _addresses: [address] })
+            body: JSON.stringify({ _addresses: [address], _extended: true })
         });
         return response.map(u => ({
             tx_hash: u.tx_hash,
@@ -181,7 +182,7 @@ export class BlockchainClient {
             const response = await this._request('/utxo_info', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ _utxo_refs: [`${txHash}#${txIndex}`] })
+                body: JSON.stringify({ _utxo_refs: [`${txHash}#${txIndex}`], _extended: true })
             });
             if (!response || response.length === 0) {
                 throw new Error(`UTxO not found: ${txHash}#${txIndex}`);
