@@ -86,8 +86,11 @@ def prev_point_from_tx(tx_hash: str) -> Dict[str, Any]:
 
 
 def utxo_info(txin: str) -> Dict[str, Any]:
-    """Return the Koios utxo_info row for a txin (<txhash>#<ix>)."""
-    rows = koios_post("utxo_info", {"_utxo_refs": [txin]})
+    """Return the Koios utxo_info row for a txin (<txhash>#<ix>).
+
+    _extended is required: without it Koios omits inline_datum/datum_hash.
+    """
+    rows = koios_post("utxo_info", {"_utxo_refs": [txin], "_extended": True})
     if not rows:
         raise KoiosError(f"UTxO not found: {txin}")
     return rows[0]
@@ -103,7 +106,8 @@ def get_inline_datum_hex_from_utxo_info_row(row: Dict[str, Any]) -> str:
 
 
 def policy_asset_list(policy_id: str) -> List[Dict[str, Any]]:
-    return koios_post("policy_asset_list", {"_policy_id": policy_id}) or []
+    # Koios v1 expects _asset_policy (not _policy_id) for this endpoint.
+    return koios_post("policy_asset_list", {"_asset_policy": policy_id}) or []
 
 
 def asset_info(policy_id: str, asset_name_hex: str) -> Dict[str, Any]:
@@ -111,6 +115,16 @@ def asset_info(policy_id: str, asset_name_hex: str) -> Dict[str, Any]:
     if not rows:
         raise KoiosError(f"asset_info empty for {policy_id}.{asset_name_hex}")
     return rows[0]
+
+
+def asset_info_batch(policy_id: str, asset_name_hexes: List[str], *, chunk_size: int = 50) -> List[Dict[str, Any]]:
+    """Fetch asset_info rows for many assets of one policy in few requests."""
+    out: List[Dict[str, Any]] = []
+    for i in range(0, len(asset_name_hexes), chunk_size):
+        chunk = asset_name_hexes[i : i + chunk_size]
+        rows = koios_post("asset_info", {"_asset_list": [[policy_id, h] for h in chunk]}) or []
+        out.extend(rows)
+    return out
 
 
 def tx_metadata(tx_hashes: List[str]) -> Dict[str, Any]:

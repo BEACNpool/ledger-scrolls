@@ -4,15 +4,13 @@ import argparse
 import gzip
 import hashlib
 import json
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 import cbor2
 
 from .catalog import load_catalog
 from .koios import (
-    KoiosError,
-    asset_info,
+    asset_info_batch,
     get_inline_datum_hex_from_utxo_info_row,
     policy_asset_list,
     tx_metadata,
@@ -130,24 +128,30 @@ def reconstruct_legacy_cip25(policy_id: str, manifest_asset: str | None = None, 
     if not assets:
         raise RegistryError("No assets returned for policy")
 
+    # Fetch asset info in batches (one POST per 50 assets instead of one per page NFT)
+    name_hexes = [a.get("asset_name") for a in assets if a.get("asset_name")]
+    rows = with_retries(lambda: asset_info_batch(policy_id, name_hexes))
+
     info_map: Dict[str, Dict[str, Any]] = {}
     mint_txs: List[str] = []
 
-    # Fetch asset info (Koios rate-limited; keep gentle)
-    for a in assets:
-        asset_name_hex = a.get("asset_name")
+    for info in rows:
+        asset_name_hex = info.get("asset_name")
         if not asset_name_hex:
             continue
-        info = with_retries(lambda h=asset_name_hex: asset_info(policy_id, h))
         asset_ascii = info.get("asset_name_ascii") or _hex_to_ascii(asset_name_hex)
         mint_tx = info.get("minting_tx_hash")
-        info_map[asset_name_hex] = {"ascii": asset_ascii, "mint_tx": mint_tx}
-        if mint_tx:
+        info_map[asset_name_hex] = {
+            "ascii": asset_ascii,
+            "mint_tx": mint_tx,
+            "mint_meta": info.get("minting_tx_metadata"),
+        }
+        if mint_tx and not info.get("minting_tx_metadata"):
             mint_txs.append(str(mint_tx))
 
     mint_txs = sorted(set(mint_txs))
 
-    # Fetch metadata in batches
+    # Fetch tx metadata only for assets whose asset_info row lacked it
     meta_by_tx: Dict[str, Any] = {}
     for i in range(0, len(mint_txs), 5):
         batch = mint_txs[i : i + 5]
@@ -159,7 +163,7 @@ def reconstruct_legacy_cip25(policy_id: str, manifest_asset: str | None = None, 
         tx_hash = inf.get("mint_tx")
         if not tx_hash:
             continue
-        meta = meta_by_tx.get(str(tx_hash))
+        meta = inf.get("mint_meta") or meta_by_tx.get(str(tx_hash))
         cip721 = _extract_cip721(meta)
         if not cip721 or not isinstance(cip721, dict):
             continue
@@ -172,11 +176,19 @@ def reconstruct_legacy_cip25(policy_id: str, manifest_asset: str | None = None, 
         if not isinstance(asset_meta, dict):
             continue
 
-        # Skip manifest
+        # Skip manifest. Pages may legitimately carry codec/sha fields
+        # (e.g. BTCWP pages declare codec=gzip), so only treat an asset as
+        # a manifest when it says so or clearly carries no page payload.
+        role = asset_meta.get("role")
+        has_payload = any(k in asset_meta for k in ("payload", "segments", "seg"))
         is_manifest = False
         if manifest_asset and asset_ascii == manifest_asset:
             is_manifest = True
-        elif any(k in asset_meta for k in ("codec", "content_type", "content-type", "sha256", "sha", "sha256_gz", "sha_gz")):
+        elif role == "manifest":
+            is_manifest = True
+        elif asset_ascii and "MANIFEST" in asset_ascii.upper():
+            is_manifest = True
+        elif role != "page" and not has_payload:
             is_manifest = True
         if is_manifest:
             continue
@@ -200,8 +212,12 @@ def reconstruct_legacy_cip25(policy_id: str, manifest_asset: str | None = None, 
     if not pages:
         raise RegistryError("No pages found in CIP-721 metadata")
 
+    def _clean_seg(seg: str) -> str:
+        seg = seg.strip()
+        return seg[2:] if seg.lower().startswith("0x") else seg
+
     pages.sort(key=lambda x: x[0])
-    hex_blob = "".join("".join(seg for seg in payload) for _, payload in pages)
+    hex_blob = "".join("".join(_clean_seg(seg) for seg in payload) for _, payload in pages)
     raw = bytes.fromhex(hex_blob)
     if raw.startswith(b"\x1f\x8b"):
         raw = gzip.decompress(raw)
