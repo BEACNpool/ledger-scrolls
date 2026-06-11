@@ -1,0 +1,31 @@
+{
+  "format": "ls-chain-v2-receipts",
+  "title": "The Eternal Scroll — How to Read & Write Immutable Media on Cardano",
+  "mintedAt": "2026-06-11",
+  "mintedBy": "BEACNpool",
+  "network": "mainnet",
+  "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "ef8dce1c6359c7ae6cc44f04d60b32e6bc26987ebf30a78259c65b2063ba3b18",
+    "txIx": 0
+  },
+  "lockAddress": "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn",
+  "manifestLockedLovelace": 1586080,
+  "pageTxHashes": [
+    "8c746c9f88a1482f285d9f398f4d120ea0ac96eb9693164373f9f8903dbc5dab",
+    "46f0bb24ffa8c84601bd5b4a1950446be46ffbd05b1aa99b3caa40fe0946d417"
+  ],
+  "feesLovelace": { "page1": 452645, "page2": 231325, "manifest": 178833 },
+  "contentType": "text/html",
+  "codec": "gzip",
+  "sizeDecoded": 18182,
+  "sizeEncoded": 7411,
+  "sha256Decoded": "65824f624bc58140a33123d3e2383ea408135e5db666fcb8a0759b2846447dd2",
+  "sha256Encoded": "05052c5ba614e184109233fa7c71bad0b25b7aea442e81616b9a78c2f2de1096",
+  "segmentsPerPage": 96,
+  "metadataLabel": 22025,
+  "verification": {
+    "python": "lsview reconstruct-chain --txin ef8dce1c6359c7ae6cc44f04d60b32e6bc26987ebf30a78259c65b2063ba3b18#0 --out scroll.html",
+    "result": "byte-for-byte match with source, verified 2026-06-11 via Koios in both Python and JS readers"
+  }
+}

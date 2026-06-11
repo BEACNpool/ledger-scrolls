@@ -1,6 +1,7 @@
 export const SCROLL_TYPES = {
   STANDARD: 'utxo_datum_bytes_v1',
-  LEGACY: 'cip25_pages_v1'
+  LEGACY: 'cip25_pages_v1',
+  CHAIN: 'manifest_chain_v2'
 };
 
 export const CATEGORIES = {
@@ -14,6 +15,27 @@ export const CATEGORIES = {
 };
 
 export let SCROLLS = [
+  {
+      id: 'eternal-scroll',
+      title: 'The Eternal Scroll',
+      description: 'How to read & write immutable media on Cardano — a tutorial that is itself stored on-chain. The first LS-CHAIN v2 scroll.',
+      icon: '📜',
+      category: 'documents',
+      type: SCROLL_TYPES.CHAIN,
+      pointer: {
+          manifest_txin: 'ef8dce1c6359c7ae6cc44f04d60b32e6bc26987ebf30a78259c65b2063ba3b18#0',
+          content_type: 'text/html',
+          codec: 'gzip',
+          sha256: '65824f624bc58140a33123d3e2383ea408135e5db666fcb8a0759b2846447dd2'
+      },
+      metadata: {
+          size: '~18KB',
+          pages: 2,
+          minted: 'June 11, 2026',
+          minted_by: 'BEACNpool',
+          format: 'LS-CHAIN v2 (first ever)'
+      }
+  },
   {
       id: 'constitution-e608',
       title: 'Constitution (E608)',

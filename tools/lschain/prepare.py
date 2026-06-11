@@ -45,7 +45,12 @@ def main() -> None:
     ap.add_argument("--content-type", required=True, help="MIME type, e.g. text/html")
     ap.add_argument("--codec", choices=["auto", "gzip", "none"], default="auto")
     ap.add_argument("--out", default="lschain-work", help="Output work directory")
+    ap.add_argument(
+        "--segments-per-page", type=int, default=SEGMENTS_PER_PAGE,
+        help="Segments (64B each) per page tx; spec default 190, lower is valid "
+             "(page boundaries are arbitrary per the spec)")
     args = ap.parse_args()
+    segments_per_page = args.segments_per_page
 
     with open(args.file, "rb") as f:
         decoded = f.read()
@@ -56,7 +61,7 @@ def main() -> None:
         codec = "gzip" if len(gz) < len(decoded) else "none"
     encoded = deterministic_gzip(decoded) if codec == "gzip" else decoded
 
-    page_size = SEGMENT_BYTES * SEGMENTS_PER_PAGE
+    page_size = SEGMENT_BYTES * segments_per_page
     pages = [encoded[i : i + page_size] for i in range(0, len(encoded), page_size)]
     n = len(pages)
     if n == 0:
@@ -90,7 +95,7 @@ def main() -> None:
         "sha256Encoded": sha256_hex(encoded),
         "pages": n,
         "segmentBytes": SEGMENT_BYTES,
-        "segmentsPerPage": SEGMENTS_PER_PAGE,
+        "segmentsPerPage": segments_per_page,
         "pageSha256": page_shas,
         "metadataLabel": int(METADATA_LABEL),
     }

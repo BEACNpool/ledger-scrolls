@@ -29,9 +29,105 @@ export class ScrollReconstructor {
             return this.reconstructStandard(scroll);
         } else if (scroll.type === SCROLL_TYPES.LEGACY) {
             return this.reconstructLegacy(scroll);
+        } else if (scroll.type === SCROLL_TYPES.CHAIN) {
+            return this.reconstructChain(scroll);
         } else {
             throw new Error(`Unknown scroll type: ${scroll.type}`);
         }
+    }
+
+    // LS-CHAIN v2: manifest inline datum -> explicit page tx list -> bytes.
+    // Spec: registry/spec/manifest-chain-v2.md
+    async reconstructChain(scroll) {
+        const pointer = scroll.pointer;
+        this._progress('🔍 Fetching manifest datum...', 5);
+        const [txHash, txIndexStr] = pointer.manifest_txin.split('#');
+        const utxo = await this.client.queryUtxoByTxIn(txHash, parseInt(txIndexStr));
+        if (!utxo?.inline_datum) throw new Error('Manifest UTxO has no inline datum');
+
+        const toBytes = (x) => x instanceof Uint8Array ? x : new Uint8Array(x);
+        const td = new TextDecoder();
+        const parseManifest = (datumHex) => {
+            const decoded = CBOR.decode(this._hexToBytes(datumHex).buffer);
+            const tag = decoded?.tag;
+            const fields = decoded?.value ?? decoded?.contents;
+            if (tag !== 121 || !fields) throw new Error('Not an LS-CHAIN manifest (expected constructor 0)');
+            const f = Array.from(fields);
+            if (Number(f[0]) !== 2) throw new Error(`Unsupported LS-CHAIN version: ${f[0]}`);
+            const nxt = f[7];
+            const nxtFields = nxt?.value ?? nxt?.contents;
+            return {
+                contentType: td.decode(toBytes(f[1])),
+                codec: td.decode(toBytes(f[2])),
+                sizeDecoded: Number(f[3]),
+                sha256Decoded: this._bytesToHex(toBytes(f[4])),
+                sha256Encoded: this._bytesToHex(toBytes(f[5])),
+                pageTxHashes: Array.from(f[6]).map(h => this._bytesToHex(toBytes(h))),
+                next: nxt?.tag === 122 && nxtFields
+                    ? `${this._bytesToHex(toBytes(Array.from(nxtFields)[0]))}#${Number(Array.from(nxtFields)[1])}`
+                    : null
+            };
+        };
+
+        this._progress('📜 Decoding manifest...', 10);
+        const manifest = parseManifest(utxo.inline_datum);
+        const pageHashes = [...manifest.pageTxHashes];
+        let next = manifest.next;
+        while (next) {
+            const [nh, ni] = next.split('#');
+            const nu = await this.client.queryUtxoByTxIn(nh, parseInt(ni));
+            if (!nu?.inline_datum) throw new Error('Continuation manifest has no inline datum');
+            const nm = parseManifest(nu.inline_datum);
+            pageHashes.push(...nm.pageTxHashes);
+            next = nm.next;
+        }
+
+        this._progress(`✓ Manifest lists ${pageHashes.length} pages, fetching...`, 15);
+        const metaByTx = await this.client.queryTxMetadataBatch(
+            pageHashes,
+            (msg, frac) => this._progress(msg, 15 + Math.floor((frac || 0) * 55))
+        );
+
+        let allHex = '';
+        for (let i = 0; i < pageHashes.length; i++) {
+            if (this.aborted) throw new Error('Aborted');
+            const meta = metaByTx.get(pageHashes[i]);
+            const page = meta?.['22025'] ?? meta?.[22025];
+            if (!page?.p) throw new Error(`Page ${i + 1} metadata missing (tx ${pageHashes[i]})`);
+            const pageHex = page.p.map(s => this._extractPayloadHex(s)).join('');
+            if (page.sha) {
+                const got = await this._sha256(this._hexToBytes(pageHex));
+                const want = this._extractPayloadHex(page.sha);
+                if (got !== want.toLowerCase()) throw new Error(`Page ${i + 1} hash mismatch (tx ${pageHashes[i]})`);
+            }
+            allHex += pageHex;
+        }
+
+        this._progress('🔗 Verifying encoded stream...', 75);
+        let rawBytes = this._hexToBytes(allHex);
+        if (await this._sha256(rawBytes) !== manifest.sha256Encoded) {
+            throw new Error('Encoded stream hash mismatch — refusing to render');
+        }
+        if (manifest.codec === 'gzip') {
+            this._progress('📂 Decompressing (gzip)...', 85);
+            rawBytes = pako.inflate(rawBytes);
+        }
+        this._progress('🔐 Verifying file hash...', 92);
+        const hash = await this._sha256(rawBytes);
+        if (hash !== manifest.sha256Decoded) {
+            throw new Error('Decoded file hash mismatch — refusing to render');
+        }
+
+        this._progress('✅ Reconstruction complete!', 100);
+        return {
+            data: rawBytes,
+            contentType: manifest.contentType || pointer.content_type,
+            size: rawBytes.length,
+            hash: hash,
+            verified: true,
+            pages: pageHashes.length,
+            method: 'Chain Scroll (LS-CHAIN v2)'
+        };
     }
 
     async reconstructStandard(scroll) {

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Eternal Scroll — How to Read &amp; Write Immutable Media on Cardano</title>
+<style>
+:root{
+ --ink:#2b2419;--paper:#f4ecd8;--paper2:#ede2c8;--gold:#9a7b2d;--gold2:#c9a84c;
+ --night:#161b22;--accent:#7a5c18;--mono:ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--night);color:var(--ink);font:17px/1.65 Georgia,'Times New Roman',serif;padding:24px 12px}
+.scroll{max-width:860px;margin:0 auto;background:linear-gradient(175deg,var(--paper),var(--paper2));
+ border:1px solid #5a4a25;border-radius:6px;box-shadow:0 12px 60px rgba(0,0,0,.6);overflow:hidden}
+header{padding:56px 40px 36px;text-align:center;border-bottom:3px double var(--gold)}
+header .glyph{font-size:56px;line-height:1}
+h1{font-size:42px;letter-spacing:.04em;color:var(--accent);margin:14px 0 6px;font-variant:small-caps}
+header p.sub{font-style:italic;color:#6b5a35;font-size:19px}
+header p.live{margin-top:18px;font-size:14.5px;color:#4a3d22;background:rgba(154,123,45,.12);
+ border:1px solid var(--gold2);border-radius:4px;display:inline-block;padding:8px 16px}
+main{padding:34px 40px 48px}
+h2{font-variant:small-caps;letter-spacing:.05em;color:var(--accent);font-size:27px;
+ margin:42px 0 14px;border-bottom:1px solid var(--gold2);padding-bottom:6px}
+h3{color:#5d4a1f;font-size:20px;margin:26px 0 8px}
+p{margin:12px 0}
+em{color:#5d4a1f}
+a{color:#7a5c18;font-weight:bold}
+ul,ol{margin:12px 0 12px 26px}
+li{margin:7px 0}
+code{font-family:var(--mono);font-size:.86em;background:rgba(43,36,25,.08);padding:1px 5px;border-radius:3px}
+pre{background:#221c12;color:#e8d9ae;border-radius:6px;padding:16px 18px;overflow-x:auto;
+ font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:14px 0;border:1px solid #4a3d22}
+pre b{color:#f3e3b0}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:15.5px}
+th{background:rgba(154,123,45,.16);font-variant:small-caps;letter-spacing:.03em}
+th,td{border:1px solid #c4b083;padding:8px 12px;text-align:left;vertical-align:top}
+.rule{background:rgba(154,123,45,.10);border-left:4px solid var(--gold);padding:14px 18px;margin:16px 0;border-radius:0 4px 4px 0}
+.fig{margin:22px 0;text-align:center}
+.fig svg{max-width:100%;height:auto}
+.fig figcaption{font-size:14px;font-style:italic;color:#6b5a35;margin-top:8px}
+footer{border-top:3px double var(--gold);padding:30px 40px 42px;text-align:center;font-size:15px;color:#4a3d22}
+footer .sig{font-variant:small-caps;letter-spacing:.08em;color:var(--accent);font-size:17px;margin-top:10px}
+.kv{font-family:var(--mono);font-size:12.5px;word-break:break-all;color:#5d4a1f}
+@media(max-width:640px){main,header,footer{padding-left:18px;padding-right:18px}h1{font-size:30px}}
+</style>
+</head>
+<body>
+<div class="scroll">
+
+<header>
+ <div class="glyph">&#128220;</div>
+ <h1>The Eternal Scroll</h1>
+ <p class="sub">How to read &amp; write immutable media on Cardano</p>
+ <p class="live">You are reading a document that lives <b>on the Cardano blockchain</b>.<br>
+ No server hosts it. No one can edit it. It cannot be taken down. Ever.</p>
+</header>
+
+<main>
+
+<p>If you can see this page, your viewer just performed a small miracle: it
+asked the Cardano blockchain for a handful of transactions, reassembled
+their bytes in order, decompressed them, computed a SHA-256 hash, and
+compared it against a fingerprint locked forever in the ledger. Only when
+the fingerprints matched did it show you a single word.</p>
+
+<p>That is a <strong>Ledger Scroll</strong> — and this tutorial will teach
+you to read them, verify them with your own hands, and write your own.</p>
+
+<h2>What Is a Ledger Scroll?</h2>
+
+<p>A Ledger Scroll is any file — text, image, HTML, PDF, audio, video —
+stored <em>byte-for-byte inside Cardano transactions</em>, together with a
+cryptographic fingerprint (SHA-256) that lets anyone verify a perfect
+reconstruction. Not a link to a file. Not a hash of a file kept somewhere
+else. <strong>The file itself, on the chain that thousands of independent
+nodes replicate around the world.</strong></p>
+
+<ul>
+ <li><b>Permissionless</b> — no account, no gatekeeper, no platform. Anyone with a few ADA can publish.</li>
+ <li><b>Immutable</b> — once written, the bytes can never be altered by anyone, including the author.</li>
+ <li><b>Verifiable</b> — readers don't trust; they check. The hash either matches or it doesn't.</li>
+ <li><b>Unkillable</b> — as long as one copy of the Cardano chain exists anywhere, every scroll survives.</li>
+</ul>
+
+<h2>How Reading Works</h2>
+
+<figure class="fig">
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Scroll reconstruction diagram">
+ <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7a5c18"/></marker></defs>
+ <style>.bx{fill:#fdf6e3;stroke:#9a7b2d;stroke-width:1.6;rx:8}.tt{font:bold 14px Georgia,serif;fill:#5d4a1f}.tx{font:12px Georgia,serif;fill:#2b2419}.mn{font:11px monospace;fill:#7a5c18}.ln{stroke:#7a5c18;stroke-width:1.6;marker-end:url(#ar);fill:none}</style>
+ <rect class="bx" x="10" y="95" width="150" height="80" rx="8"/>
+ <text class="tt" x="85" y="122" text-anchor="middle">POINTER</text>
+ <text class="tx" x="85" y="142" text-anchor="middle">one transaction id</text>
+ <text class="mn" x="85" y="160" text-anchor="middle">txHash#index</text>
+ <path class="ln" d="M160 135 H 205"/>
+ <rect class="bx" x="207" y="75" width="170" height="120" rx="8"/>
+ <text class="tt" x="292" y="102" text-anchor="middle">MANIFEST</text>
+ <text class="tx" x="292" y="122" text-anchor="middle">locked datum, forever</text>
+ <text class="tx" x="292" y="140" text-anchor="middle">type &#183; codec &#183; size</text>
+ <text class="tx" x="292" y="158" text-anchor="middle">SHA-256 fingerprints</text>
+ <text class="tx" x="292" y="176" text-anchor="middle">ordered page tx list</text>
+ <path class="ln" d="M377 100 H 430 V 45 H 445"/>
+ <path class="ln" d="M377 135 H 445"/>
+ <path class="ln" d="M377 170 H 430 V 225 H 445"/>
+ <rect class="bx" x="447" y="20" width="120" height="50" rx="8"/>
+ <text class="tt" x="507" y="42" text-anchor="middle">PAGE 1</text>
+ <text class="tx" x="507" y="58" text-anchor="middle">tx metadata bytes</text>
+ <rect class="bx" x="447" y="110" width="120" height="50" rx="8"/>
+ <text class="tt" x="507" y="132" text-anchor="middle">PAGE 2</text>
+ <text class="tx" x="507" y="148" text-anchor="middle">tx metadata bytes</text>
+ <rect class="bx" x="447" y="200" width="120" height="50" rx="8"/>
+ <text class="tt" x="507" y="222" text-anchor="middle">PAGE N</text>
+ <text class="tx" x="507" y="238" text-anchor="middle">tx metadata bytes</text>
+ <path class="ln" d="M567 45 H 610 V 120 H 622"/>
+ <path class="ln" d="M567 135 H 622"/>
+ <path class="ln" d="M567 225 H 610 V 150 H 622"/>
+ <rect class="bx" x="624" y="95" width="126" height="80" rx="8"/>
+ <text class="tt" x="687" y="120" text-anchor="middle">YOUR FILE</text>
+ <text class="tx" x="687" y="140" text-anchor="middle">concat &#8594; gunzip</text>
+ <text class="tx" x="687" y="158" text-anchor="middle">&#8594; hash &#10003; verified</text>
+</svg>
+<figcaption>One pointer &#8594; one locked manifest &#8594; explicitly listed pages &#8594; verified bytes. No search, no index, no guessing.</figcaption>
+</figure>
+
+<p>Everything starts from a <strong>pointer</strong> — a single transaction
+id, small enough to share as a QR code. It leads to a <strong>manifest</strong>:
+a tiny record locked inside an <em>unspendable</em> Cardano UTxO, which means
+every Cardano node carries it in live state, forever, retrievable with one
+query. The manifest declares what the file is, lists the exact transactions
+holding its pages, and commits to the SHA-256 of the finished file. The
+reader fetches those pages, reassembles, and <em>proves</em> the result.</p>
+
+<div class="rule"><b>The golden rule:</b> a viewer never shows you bytes it
+could not verify. &ldquo;Trust&rdquo; is replaced by arithmetic.</div>
+
+<h2>Verify This Scroll With Your Own Hands</h2>
+
+<p>Don't take this page's word for anything — that's the point. With free,
+keyless tools (the <a href="https://koios.rest">Koios</a> public API and the
+open-source viewer), you can rebuild this document yourself:</p>
+
+<pre>
+git clone https://github.com/BEACNpool/ledger-scrolls
+cd ledger-scrolls/koios-viewer
+
+<b># rebuild this very document from the chain:</b>
+python3 -m lsview reconstruct-chain --txin &lt;manifest-txin&gt; --out scroll.html
+
+sha256sum scroll.html   <b># compare with the manifest's fingerprint</b>
+</pre>
+
+<p>The viewer prints the manifest's declared hash and verifies every page
+against it. If a single bit anywhere were wrong, the reconstruction would
+fail loudly. It never has — because the chain cannot change.</p>
+
+<h3>No tooling at all? Verify with two web requests</h3>
+
+<p>You don't even need our software. The entire protocol is two queries
+against any Cardano indexer. First, fetch the manifest datum (one POST to
+Koios — free, no API key):</p>
+
+<pre>
+curl -X POST https://api.koios.rest/api/v1/utxo_info \
+  -H 'Content-Type: application/json' \
+  -d '{"_utxo_refs":["&lt;manifest-txhash&gt;#0"], "_extended":true}'
+<b># the inline_datum bytes decode to: content type, codec, file size,</b>
+<b># two SHA-256 fingerprints, and the ordered list of page transactions</b>
+</pre>
+
+<p>Then fetch the pages it names:</p>
+
+<pre>
+curl -X POST https://api.koios.rest/api/v1/tx_metadata \
+  -H 'Content-Type: application/json' \
+  -d '{"_tx_hashes":["&lt;page-tx-1&gt;","&lt;page-tx-2&gt;"]}'
+<b># label 22025 of each tx holds the payload segments; concatenate them</b>
+<b># in manifest order, gunzip, sha256sum — done</b>
+</pre>
+
+<p>Concatenate, decompress, hash. Thirty lines of any language you like —
+the <a href="https://github.com/BEACNpool/ledger-scrolls">repository</a>
+ships test vectors so your thirty lines and ours can prove they agree. A
+protocol simple enough to re-implement from its spec in an afternoon is a
+protocol that survives its creators.</p>
+
+<h3>Anatomy of a manifest</h3>
+
+<p>The manifest is 8 fields of CBOR locked in the datum — small enough to
+read aloud:</p>
+
+<pre>
+Constr 0 [
+  version        = 2
+  contentType    = "text/html"
+  codec          = "gzip"            <b># or "none"</b>
+  sizeDecoded    = &lt;bytes of the original file&gt;
+  sha256Decoded  = &lt;fingerprint of the original file&gt;
+  sha256Encoded  = &lt;fingerprint of the compressed stream&gt;
+  pageTxHashes   = [ tx&#8321;, tx&#8322;, &#8230; ]   <b># the pages, in order</b>
+  next           = none              <b># or a link to a continuation manifest</b>
+]
+</pre>
+
+<p>That's the whole secret. Every field exists to answer one question:
+<em>&ldquo;are these exactly the author's bytes?&rdquo;</em></p>
+
+<h2>The Three Ways Bytes Live On-Chain</h2>
+
+<table>
+<tr><th>Format</th><th>How it stores bytes</th><th>Best for</th></tr>
+<tr><td><b>Standard Scroll</b><br><span class="kv">LS-LOCK</span></td>
+ <td>The whole file inside one <em>inline datum</em> at an address whose
+ script always fails — an unspendable vault. Lives in the UTxO set itself:
+ one query, any node, forever.</td>
+ <td>Small treasures &#8804; ~14&nbsp;KB: messages, poems, icons, pixel art,
+ manifests. The strongest guarantee Cardano can give.</td></tr>
+<tr><td><b>Chain Scroll</b><br><span class="kv">LS-CHAIN v2</span></td>
+ <td>The file split across plain transactions' <em>metadata</em> (no NFTs,
+ nothing locked per page), anchored by a Standard-Scroll manifest that lists
+ every page transaction by hash. This document is one.</td>
+ <td>Everything else: books, images, PDFs, audio, video. About 6&#215;
+ cheaper than the older NFT method, and nothing to custody.</td></tr>
+<tr><td><b>Legacy Pages</b><br><span class="kv">LS-PAGES</span></td>
+ <td>CIP-25 NFTs carrying page payloads (the original method — the on-chain
+ Bible, both Cardano Constitutions, and the Bitcoin whitepaper live this
+ way).</td>
+ <td>Reading the historical scrolls. New scrolls use LS-CHAIN.</td></tr>
+</table>
+
+<h2>Write Your Own — Step by Step</h2>
+
+<h3>1 &#183; Prepare your file</h3>
+<p>Any file works; small files cost less. Optimize images, strip private
+EXIF metadata, make HTML self-contained (inline styles, embedded images, no
+scripts — viewers run scrolls in a strict sandbox). Then:</p>
+<pre>
+python3 tools/lschain/prepare.py mywork.html --content-type text/html
+<b>#  -&gt; gzips deterministically, hashes everything, splits into pages,</b>
+<b>#     prints the page count and an honest cost estimate BEFORE you spend</b>
+</pre>
+
+<h3>2 &#183; Mint</h3>
+<pre>
+tools/lschain/mint.sh lschain-work payment.skey payment.addr
+<b>#  -&gt; submits page transactions (chained, no waiting), then locks the</b>
+<b>#     manifest at the always-fail address; writes receipts.json</b>
+</pre>
+<p>Each page is an ordinary transaction fee (~0.84 ADA per 12&nbsp;KB page at
+2026 parameters). The only ADA locked forever is the manifest's minimum
+deposit (~2 ADA). A 100&nbsp;KB illustrated essay: roughly 9 pages &#8776; 8 ADA.
+This entire tutorial: a few ADA. <em>Eternity is cheaper than a coffee
+subscription.</em></p>
+
+<h3>3 &#183; Verify, then announce</h3>
+<pre>
+python3 -m lsview reconstruct-chain --txin &lt;your-manifest&gt;#0 --out check.html
+sha256sum check.html mywork.html   <b># identical, or you don't announce</b>
+</pre>
+<p>Keep <code>receipts.json</code>. Share your manifest pointer. You have
+published something no outage, takedown, bankruptcy, or regime change can
+ever unpublish.</p>
+
+<h2>The Five Rules of the Scroll</h2>
+<ol>
+ <li><b>Permanent means permanent.</b> No edit, no delete. Never inscribe
+ secrets, private data, or words you may regret. The chain forgives nothing.</li>
+ <li><b>Rehearse on testnet.</b> Same bytes, free mistakes.</li>
+ <li><b>Hash before, verify after.</b> Record your file's SHA-256 before
+ minting; reconstruct from chain and compare before telling the world.</li>
+ <li><b>Keep receipts.</b> Transaction hashes are how civilization finds
+ your scroll again.</li>
+ <li><b>Self-contained files only.</b> Anything that phones home — external
+ images, fonts, scripts — is a future broken promise. Inline everything.</li>
+</ol>
+
+<h2>What Should You Inscribe?</h2>
+
+<table>
+<tr><th>Media</th><th>Guidance</th></tr>
+<tr><td>Text &amp; Markdown</td><td>The archival gold standard. UTF-8, costs almost nothing, readable in any century.</td></tr>
+<tr><td>Images</td><td>Optimize hard (every byte is ADA); strip EXIF — GPS in a photo becomes permanent public record. PNG/JPEG stay uncompressed; SVG gzips beautifully.</td></tr>
+<tr><td>HTML</td><td>Beautiful documents like this one. Inline CSS, embed images as data: URIs, zero JavaScript.</td></tr>
+<tr><td>PDF</td><td>Works; strip hidden author metadata first. Consider minting the plain text alongside.</td></tr>
+<tr><td>Audio &amp; Video</td><td>Fully supported (a 175-page video already lives on mainnet). Compress deliberately and price it first — the chain makes cost honest, not hidden.</td></tr>
+</table>
+
+<h2>Questions People Actually Ask</h2>
+
+<table>
+<tr><th>Question</th><th>Answer</th></tr>
+<tr><td><b>Who controls my scroll after minting?</b></td>
+ <td>No one — not you, not BEACN, not Cardano's founders. The manifest sits
+ at an address whose spending script always fails; the pages are ordinary
+ confirmed transactions. There is no admin key anywhere in the design.</td></tr>
+<tr><td><b>What if BEACN disappears?</b></td>
+ <td>Nothing happens to any scroll. The viewer is open source, the spec is
+ public, the data is on a public chain, and the protocol can be
+ re-implemented from the spec alone. BEACN is a librarian, not a landlord.</td></tr>
+<tr><td><b>Do I get an NFT?</b></td>
+ <td>No — and that's a feature. Older scrolls used NFTs to carry pages,
+ which meant tokens that could be moved or lost. LS-CHAIN pages are plain
+ transactions: nothing to custody, nothing to misplace, nothing to rug.</td></tr>
+<tr><td><b>Is it really forever?</b></td>
+ <td>As long as any copy of the Cardano chain exists. Transaction history is
+ what every node syncs from; the manifest additionally lives in the active
+ UTxO set that every node holds in full. Your scroll's survival is bound to
+ the survival of the ledger itself.</td></tr>
+<tr><td><b>Can someone else claim they wrote it?</b></td>
+ <td>The chain timestamps your scroll in a specific block, signed by your
+ keys. First inscription wins every argument thereafter.</td></tr>
+<tr><td><b>What does it cost?</b></td>
+ <td>Network fees only, plus ~2 ADA locked with the manifest. This tutorial
+ cost a few ADA. The chain shows you the exact price before you sign —
+ honesty is part of the protocol.</td></tr>
+</table>
+
+<h2>Why This Matters</h2>
+
+<p>Libraries burn. Servers go dark. Companies fold, links rot, platforms
+moderate, archives get edited. Every promise of digital permanence so far
+has depended on someone <em>continuing to pay, to host, to care</em>.</p>
+
+<p>A Ledger Scroll depends on none of that. It rides inside the same
+replicated ledger that secures billions in value, copied onto thousands of
+machines whose operators have their own reasons to keep every byte intact.
+Your words, your art, your evidence — preserved by physics and incentive,
+not by goodwill.</p>
+
+<p style="text-align:center;font-size:19px;font-style:italic;margin-top:22px">
+&ldquo;A library that cannot burn.&rdquo;</p>
+
+</main>
+
+<footer>
+ <p><b>Learn more, read the spec, run the tools, fork everything:</b><br>
+ <a href="https://github.com/BEACNpool/ledger-scrolls">github.com/BEACNpool/ledger-scrolls</a></p>
+ <p style="margin-top:8px">Browse the living library:
+ <a href="https://beacnpool.github.io/ledger-scrolls/">beacnpool.github.io/ledger-scrolls</a></p>
+ <p style="margin-top:16px">Minted June 2026 by <b>BEACN</b> [pool: BEACN] as the first LS-CHAIN&nbsp;v2 scroll.<br>
+ This document is its own proof: the hash your viewer verified is the
+ signature of every word you just read.</p>
+ <p class="sig">&#128220; The Eternal Scroll &#183; Ledger Scrolls &#183; Cardano Mainnet &#128220;</p>
+</footer>
+
+</div>
+</body>
+</html>

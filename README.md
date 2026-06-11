@@ -88,6 +88,27 @@ Output:
 
 The following scrolls are **live on Cardano mainnet** and permanently verifiable.
 
+### 0) 📜 The Eternal Scroll — first LS-CHAIN v2 scroll
+
+A self-contained HTML tutorial on reading and writing Ledger Scrolls — the
+technology's own explainer, preserved by the technology. First scroll in the
+new **LS-CHAIN v2** format: bare metadata page transactions (no NFTs, ~6×
+cheaper than CIP-25 pages) anchored by a Class-A manifest datum. See
+`registry/spec/manifest-chain-v2.md` and `examples/eternal-scroll-tutorial/`.
+
+| Field | Value |
+|-------|-------|
+| **ID** | `eternal-scroll` |
+| **Type** | `manifest-chain-v2` (LS-CHAIN v2 — Chain Scroll) |
+| **Manifest TxIn** | `ef8dce1c6359c7ae6cc44f04d60b32e6bc26987ebf30a78259c65b2063ba3b18#0` |
+| **Pages** | 2 (metadata label 22025) |
+| **Content-Type** | `text/html` |
+| **Codec** | `gzip` |
+| **SHA-256 (Original)** | `65824f624bc58140a33123d3e2383ea408135e5db666fcb8a0759b2846447dd2` |
+| **Status** | 🟢 LIVE — manifest UTxO must remain UNSPENT (it cannot be spent: always-fail script) |
+
+---
+
 ### 1) ✅ Hosky PNG — Ledger Scrolls Standard (lean & local-first)
 
 This demo stores a complete PNG **directly in an inline datum** at a **locked UTxO**.

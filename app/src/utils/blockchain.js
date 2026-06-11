@@ -228,6 +228,35 @@ export class BlockchainClient {
         }
     }
 
+    // Batch metadata lookup by explicit tx hash list (LS-CHAIN pages).
+    // Returns a Map of txHash -> metadata object ({ label: value }).
+    async queryTxMetadataBatch(txHashes, progressCallback = null) {
+        const out = new Map();
+        if (this.mode === 'koios') {
+            const chunkSize = 25;
+            for (let i = 0; i < txHashes.length; i += chunkSize) {
+                if (progressCallback) progressCallback(`📦 Fetching pages ${i + 1}-${Math.min(i + chunkSize, txHashes.length)}/${txHashes.length}...`, i / txHashes.length);
+                const response = await this._request('/tx_metadata', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ _tx_hashes: txHashes.slice(i, i + chunkSize) })
+                });
+                for (const row of response || []) {
+                    if (row.tx_hash) out.set(row.tx_hash, row.metadata || {});
+                }
+            }
+            return out;
+        }
+        for (let i = 0; i < txHashes.length; i++) {
+            if (progressCallback) progressCallback(`📦 Fetching page ${i + 1}/${txHashes.length}...`, i / txHashes.length);
+            const rows = await this.queryTxMetadata(txHashes[i]);
+            const meta = {};
+            for (const r of rows || []) meta[r.label] = r.json_metadata;
+            out.set(txHashes[i], meta);
+        }
+        return out;
+    }
+
     async queryPolicyAssets(policyId, progressCallback = null) {
         if (this.mode.startsWith('blockfrost')) {
             return this._blockfrostQueryPolicyAssets(policyId, progressCallback);

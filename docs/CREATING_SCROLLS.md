@@ -44,6 +44,16 @@ today — the worked examples are real, with receipts.
 
 ---
 
+> **June 2026 update:** large media now has a third, preferred lane —
+> **LS-CHAIN v2** (`registry/spec/manifest-chain-v2.md`): bare metadata page
+> transactions anchored by a Class-A manifest datum. ~6× cheaper than the
+> CIP-25 pages described below, nothing locked per page, and no NFTs to
+> custody. Write with `tools/lschain/prepare.py` + `mint.sh`; read with
+> `lsview reconstruct-chain` or the web viewer. The first LS-CHAIN scroll —
+> a tutorial that is itself on-chain — lives in
+> `examples/eternal-scroll-tutorial/`. The CIP-25 pages guidance below
+> remains for reading legacy scrolls.
+
 ## Choosing a Format
 
 ```

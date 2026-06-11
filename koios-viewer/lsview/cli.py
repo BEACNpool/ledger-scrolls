@@ -256,7 +256,8 @@ def _parse_chain_manifest(datum_hex: str) -> Dict[str, Any]:
     if not isinstance(decoded, cbor2.CBORTag) or decoded.tag != 121:
         raise RegistryError("Not an LS-CHAIN manifest (expected constructor 0 datum)")
     f = decoded.value
-    if not isinstance(f, list) or len(f) < 8 or f[0] != 2:
+    # cbor2 may decode arrays inside tags as tuples
+    if not isinstance(f, (list, tuple)) or len(f) < 8 or f[0] != 2:
         raise RegistryError("Unsupported LS-CHAIN manifest layout/version")
     nxt = f[7]
     next_txin = None
