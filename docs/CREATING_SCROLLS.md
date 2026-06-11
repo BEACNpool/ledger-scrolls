@@ -26,6 +26,9 @@ today — the worked examples are real, with receipts.
    ```bash
    sha256sum myfile.png                      # before
    cd koios-viewer
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
    python3 -m lsview reconstruct-utxo --txin TXHASH#0 --out check.png
    sha256sum check.png                       # must be identical
    ```
@@ -53,8 +56,8 @@ today — the worked examples are real, with receipts.
 
 | | Standard (LS-LOCK) | Legacy (LS-PAGES) |
 |---|---|---|
-| Capacity | ~14 KB compressed | Unlimited (1 tx per page) |
-| Permanence | Strongest: UTxO at always-fail script can never be spent | Metadata is immutable, but **pages must not be moved/burned**; policy must be time-locked |
+| Capacity | ~14 KB compressed | Practical/economic limit, not a single-UTxO limit (1 tx per page) |
+| Permanence | Strongest: UTxO at always-fail script can never be spent | Metadata is immutable; policy must be time-locked; park page NFTs for trust and discoverability |
 | Cost | One tx; min-UTxO ADA locked forever (~4–7.5 ADA observed for 1–3 KB datums) | One tx fee (~0.2 ADA) + one min-UTxO NFT per page |
 | Wallet-visible | No | Yes (NFTs) |
 | Reconstruction | 1 query | Policy scan + page concat |
@@ -246,9 +249,10 @@ from one that needs forensics (all learned from scrolls live today):
    [`mint/validate_tx_size.sh`](../mint/validate_tx_size.sh) before signing.
 2. **Page metadata MUST have:** integer `i` (page index, 1-based), `payload`
    (array of hex segment strings), `role: "page"`, and ideally `n` (total)
-   and `sha` (page hash). Use **plain hex strings** for segments — not
-   `0x`-prefixed, not nested objects (both exist on chain and both have
-   broken readers; don't add to the variance).
+   and `sha` (page hash). Use **plain hex strings** for segments. `0x`
+   prefixes and nested object segments both exist on chain and current
+   conformance accepts them, but they caused compatibility bugs in older
+   readers; don't add avoidable variance.
 3. **Mint a manifest NFT** with `role: "manifest"`, an asset name ending in
    `_MANIFEST`, and (v1 form): `ct`, `codec`, an explicit `pages` array of
    asset names in order, `sha256` of the decoded file, and `sha256_enc` of
@@ -257,10 +261,11 @@ from one that needs forensics (all learned from scrolls live today):
 4. **Time-lock the policy** (`"type": "before"` slot in the policy script)
    and let it expire after minting — that's what makes the page set closed
    and the scroll's content fixed.
-5. **Park the page NFTs and never move them.** Send them to a dedicated
-   address you don't trade from. Moving pages doesn't destroy the metadata,
-   but it breaks naive resolvers and burns trust. (Strongest option: lock
-   page tokens at the always-fail script address too.)
+5. **Park the page NFTs in a dedicated address.** Moving pages doesn't
+   destroy the metadata, and policy-scanning readers can still reconstruct
+   them. But parking them avoids confusing naive/custodial workflows, keeps
+   provenance easy to inspect, and preserves user trust. (Strongest option:
+   lock page tokens at the always-fail script address too.)
 6. Name assets `<NAME>_P0001 … <NAME>_P0237` + `<NAME>_MANIFEST` —
    zero-padded, so lexical order equals page order.
 
