@@ -70,7 +70,16 @@ v0 defines a minimal set of pointer kinds.
   - `manifestSlot`, `manifestHash`
   - `startSlot`, `startHash`
 
-3) `url`
+3) `manifest-chain-v2`
+
+- Use for media of any size: bare metadata page transactions anchored by a
+  Class-A manifest datum. The preferred kind for new large scrolls.
+- Required fields:
+  - `txHash` — 64 hex chars (manifest transaction)
+  - `txIx` — integer output index
+- See `registry/spec/manifest-chain-v2.md` for the full format.
+
+4) `url`
 
 - Convenience pointer for off-chain mirrors.
 - Required fields:

@@ -102,6 +102,63 @@ function reconstructCip25Pages(metadata721, policyId) {
     return [raw, raw];
 }
 
+// Minimal generic CBOR decoder (uint/nint/bytes/text/array/tag) for
+// LS-CHAIN manifests. Returns [value, nextPos]; tags -> {tag, value}.
+function decodeCbor(raw, pos = 0) {
+    const readLen = (ai, p) => {
+        if (ai < 24) return [ai, p];
+        const w = { 24: 1, 25: 2, 26: 4, 27: 8 }[ai];
+        let n = 0;
+        for (let i = 0; i < w; i++) n = n * 256 + raw[p + i];
+        return [n, p + w];
+    };
+    const mt = raw[pos] >> 5, ai = raw[pos] & 0x1f;
+    if (mt === 0) return readLen(ai, pos + 1);
+    if (mt === 1) { const [n, p] = readLen(ai, pos + 1); return [-1 - n, p]; }
+    if (mt === 2 || mt === 3) {
+        const [n, p] = readLen(ai, pos + 1);
+        const v = raw.subarray(p, p + n);
+        return [mt === 2 ? v : Buffer.from(v).toString('utf8'), p + n];
+    }
+    if (mt === 4) {
+        let [n, p] = readLen(ai, pos + 1);
+        const out = [];
+        for (let i = 0; i < n; i++) { const [v, q] = decodeCbor(raw, p); out.push(v); p = q; }
+        return [out, p];
+    }
+    if (mt === 6) {
+        const [n, p] = readLen(ai, pos + 1);
+        const [v, q] = decodeCbor(raw, p);
+        return [{ tag: n, value: v }, q];
+    }
+    throw new Error(`unsupported CBOR major type ${mt}`);
+}
+
+function reconstructChain(manifestHex, pagesByTx) {
+    const [m] = decodeCbor(Buffer.from(manifestHex, 'hex'));
+    if (m.tag !== 121) throw new Error('manifest must be Constr 0');
+    const f = m.value;
+    const info = {
+        version: f[0],
+        contentType: Buffer.from(f[1]).toString('utf8'),
+        codec: Buffer.from(f[2]).toString('utf8'),
+        sizeDecoded: f[3],
+        sha256Decoded: Buffer.from(f[4]).toString('hex'),
+        sha256Encoded: Buffer.from(f[5]).toString('hex'),
+        pageTxHashes: f[6].map(h => Buffer.from(h).toString('hex')),
+    };
+    const chunks = [];
+    for (const tx of info.pageTxHashes) {
+        const page = pagesByTx[tx]['22025'];
+        const payload = Buffer.concat(page.p.map(s => Buffer.from(cleanSegment(s), 'hex')));
+        if (sha256Hex(payload) !== cleanSegment(page.sha)) throw new Error('page sha mismatch');
+        chunks.push(payload);
+    }
+    const encoded = Buffer.concat(chunks);
+    const decoded = info.codec === 'gzip' ? gunzipSync(encoded) : encoded;
+    return [info, encoded, decoded];
+}
+
 const POINTER_RULES = {
     'utxo-inline-datum-bytes-v1': { txHash: /^[0-9a-fA-F]{64}$/, txIx: 'number' },
     'cip25-pages-v1': { policyId: /^[0-9a-fA-F]{56}$/ },
@@ -151,6 +208,20 @@ for (const v of vectors.cip25) {
     const [decoded, gzRaw] = reconstructCip25Pages(meta, v.policyId);
     check(`${v.file} reconstructed sha256`, sha256Hex(decoded) === v.reconstructedSha256);
     check(`${v.file} gzip sha256`, sha256Hex(gzRaw) === v.gzipSha256);
+}
+
+console.log('== ls-chain v2 ==');
+for (const v of vectors.chain ?? []) {
+    const mhex = readFileSync(join(ROOT, v.manifest), 'utf8').trim();
+    const pages = JSON.parse(readFileSync(join(ROOT, v.pages), 'utf8'));
+    const [info, encoded, decoded] = reconstructChain(mhex, pages);
+    check(`${v.manifest} fields`, info.contentType === v.contentType
+        && info.codec === v.codec && info.pageTxHashes.length === v.pageCount);
+    check(`${v.manifest} encoded sha256`, sha256Hex(encoded) === v.encodedSha256
+        && info.sha256Encoded === v.encodedSha256);
+    check(`${v.manifest} decoded sha256`, sha256Hex(decoded) === v.reconstructedSha256
+        && info.sha256Decoded === v.reconstructedSha256
+        && decoded.length === info.sizeDecoded);
 }
 
 console.log('== pointers ==');

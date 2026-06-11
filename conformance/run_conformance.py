@@ -114,6 +114,60 @@ def reconstruct_cip25_pages(metadata_721: dict, policy_id: str) -> bytes:
     return raw, raw
 
 
+def decode_cbor(raw: bytes, pos: int = 0):
+    """Minimal generic CBOR decoder (uint/nint/bytes/text/array/tag) for
+    LS-CHAIN manifests. Returns (value, next_pos); tags -> ("tag", n, value)."""
+
+    def read_len(ai, p):
+        if ai < 24:
+            return ai, p
+        w = {24: 1, 25: 2, 26: 4, 27: 8}[ai]
+        return int.from_bytes(raw[p : p + w], "big"), p + w
+
+    mt, ai = raw[pos] >> 5, raw[pos] & 0x1F
+    if mt == 0:
+        return read_len(ai, pos + 1)
+    if mt == 1:
+        n, p = read_len(ai, pos + 1)
+        return -1 - n, p
+    if mt in (2, 3):
+        n, p = read_len(ai, pos + 1)
+        v = raw[p : p + n]
+        return (v if mt == 2 else v.decode("utf-8")), p + n
+    if mt == 4:
+        n, p = read_len(ai, pos + 1)
+        out = []
+        for _ in range(n):
+            v, p = decode_cbor(raw, p)
+            out.append(v)
+        return out, p
+    if mt == 6:
+        n, p = read_len(ai, pos + 1)
+        v, p = decode_cbor(raw, p)
+        return ("tag", n, v), p
+    raise ValueError(f"unsupported CBOR major type {mt}")
+
+
+def reconstruct_chain(manifest_hex: str, pages_by_tx: dict):
+    m, _ = decode_cbor(bytes.fromhex(manifest_hex))
+    assert m[0] == "tag" and m[1] == 121, "manifest must be Constr 0"
+    f = m[2]
+    info = {
+        "version": f[0], "contentType": f[1].decode(), "codec": f[2].decode(),
+        "sizeDecoded": f[3], "sha256Decoded": f[4].hex(), "sha256Encoded": f[5].hex(),
+        "pageTxHashes": [h.hex() for h in f[6]],
+    }
+    encoded = bytearray()
+    for tx in info["pageTxHashes"]:
+        page = pages_by_tx[tx]["22025"]
+        payload = b"".join(bytes.fromhex(clean_segment(s)) for s in page["p"])
+        assert sha256_hex(payload) == clean_segment(page["sha"]), "page sha mismatch"
+        encoded.extend(payload)
+    encoded = bytes(encoded)
+    decoded = gzip.decompress(encoded) if info["codec"] == "gzip" else encoded
+    return info, encoded, decoded
+
+
 POINTER_RULES = {
     "utxo-inline-datum-bytes-v1": {
         "txHash": re.compile(r"^[0-9a-fA-F]{64}$"),
@@ -180,6 +234,19 @@ def main() -> int:
         decoded, gz_raw = reconstruct_cip25_pages(meta, v["policyId"])
         check(f"{v['file']} reconstructed sha256", sha256_hex(decoded) == v["reconstructedSha256"])
         check(f"{v['file']} gzip sha256", sha256_hex(gz_raw) == v["gzipSha256"])
+
+    print("== ls-chain v2 ==")
+    for v in vectors.get("chain", []):
+        mhex = (ROOT / v["manifest"]).read_text().strip()
+        pages = json.loads((ROOT / v["pages"]).read_text())
+        info, encoded, decoded = reconstruct_chain(mhex, pages)
+        check(f"{v['manifest']} fields", info["contentType"] == v["contentType"]
+              and info["codec"] == v["codec"] and len(info["pageTxHashes"]) == v["pageCount"])
+        check(f"{v['manifest']} encoded sha256", sha256_hex(encoded) == v["encodedSha256"]
+              and info["sha256Encoded"] == v["encodedSha256"])
+        check(f"{v['manifest']} decoded sha256", sha256_hex(decoded) == v["reconstructedSha256"]
+              and info["sha256Decoded"] == v["reconstructedSha256"]
+              and len(decoded) == info["sizeDecoded"])
 
     print("== pointers ==")
     valid_dir = ROOT / vectors["pointers"]["validDir"]

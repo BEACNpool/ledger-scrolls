@@ -236,6 +236,102 @@ def reconstruct_legacy_cip25(policy_id: str, manifest_asset: str | None = None, 
     return raw, sha
 
 
+LSCHAIN_LABEL = "22025"
+
+
+def _meta_value_to_bytes(v: Any) -> bytes:
+    """Decode a metadata byte value as indexers variously render it:
+    '0x<hex>' string, bare hex string, or {'bytes': '<hex>'} object."""
+    if isinstance(v, dict):
+        v = v.get("bytes") or ""
+    s = str(v).strip()
+    if s.lower().startswith("0x"):
+        s = s[2:]
+    return bytes.fromhex(s)
+
+
+def _parse_chain_manifest(datum_hex: str) -> Dict[str, Any]:
+    """Decode an LS-CHAIN v2 manifest datum (Constr 0, see spec)."""
+    decoded = cbor2.loads(bytes.fromhex(datum_hex))
+    if not isinstance(decoded, cbor2.CBORTag) or decoded.tag != 121:
+        raise RegistryError("Not an LS-CHAIN manifest (expected constructor 0 datum)")
+    f = decoded.value
+    if not isinstance(f, list) or len(f) < 8 or f[0] != 2:
+        raise RegistryError("Unsupported LS-CHAIN manifest layout/version")
+    nxt = f[7]
+    next_txin = None
+    if isinstance(nxt, cbor2.CBORTag) and nxt.tag == 122:  # Constr 1 [txHash, ix]
+        next_txin = f"{bytes(nxt.value[0]).hex()}#{int(nxt.value[1])}"
+    return {
+        "version": int(f[0]),
+        "contentType": bytes(f[1]).decode("utf-8"),
+        "codec": bytes(f[2]).decode("utf-8"),
+        "sizeDecoded": int(f[3]),
+        "sha256Decoded": bytes(f[4]).hex(),
+        "sha256Encoded": bytes(f[5]).hex(),
+        "pageTxHashes": [bytes(h).hex() for h in f[6]],
+        "next": next_txin,
+    }
+
+
+def reconstruct_chain_from_txin(txin: str) -> Tuple[bytes, Dict[str, Any]]:
+    """Reconstruct an LS-CHAIN v2 scroll. Returns (decoded bytes, manifest)."""
+    row = with_retries(lambda: utxo_info(txin))
+    manifest = _parse_chain_manifest(get_inline_datum_hex_from_utxo_info_row(row))
+
+    page_hashes = list(manifest["pageTxHashes"])
+    next_txin = manifest["next"]
+    while next_txin:
+        nrow = with_retries(lambda t=next_txin: utxo_info(t))
+        nman = _parse_chain_manifest(get_inline_datum_hex_from_utxo_info_row(nrow))
+        page_hashes.extend(nman["pageTxHashes"])
+        next_txin = nman["next"]
+
+    meta_by_tx: Dict[str, Any] = {}
+    for i in range(0, len(page_hashes), 25):
+        batch = page_hashes[i : i + 25]
+        meta_by_tx.update(with_retries(lambda b=batch: tx_metadata(b)))
+
+    encoded = bytearray()
+    for idx, tx_hash in enumerate(page_hashes, start=1):
+        meta = meta_by_tx.get(tx_hash)
+        page = None
+        if isinstance(meta, dict):
+            page = meta.get(LSCHAIN_LABEL) or meta.get(int(LSCHAIN_LABEL))
+        elif isinstance(meta, list):
+            for item in meta:
+                if isinstance(item, dict) and str(item.get("label")) == LSCHAIN_LABEL:
+                    page = item.get("json_metadata") or item.get("metadata")
+                    break
+        if not isinstance(page, dict):
+            raise RegistryError(f"Page {idx} metadata missing for tx {tx_hash}")
+        payload = b"".join(_meta_value_to_bytes(seg) for seg in page.get("p") or [])
+        sha = page.get("sha")
+        if sha is not None and sha256_hex(payload) != _meta_value_to_bytes(sha).hex():
+            raise RegistryError(f"Page {idx} hash mismatch (tx {tx_hash})")
+        encoded.extend(payload)
+
+    encoded = bytes(encoded)
+    if sha256_hex(encoded) != manifest["sha256Encoded"]:
+        raise RegistryError("Encoded stream hash mismatch")
+    decoded = gzip.decompress(encoded) if manifest["codec"] == "gzip" else encoded
+    if sha256_hex(decoded) != manifest["sha256Decoded"]:
+        raise RegistryError("Decoded file hash mismatch")
+    return decoded, manifest
+
+
+def cmd_reconstruct_chain(args) -> None:
+    data, manifest = reconstruct_chain_from_txin(args.txin)
+    if args.out:
+        with open(args.out, "wb") as f:
+            f.write(data)
+        print(f"Reconstructed: {args.out}")
+    print(f"Content-Type: {manifest['contentType']}  codec: {manifest['codec']}")
+    print(f"Pages: {len(manifest['pageTxHashes'])}")
+    print(f"Bytes: {len(data)}")
+    print(f"SHA-256: {sha256_hex(data)}  (verified against manifest)")
+
+
 def _merge_registry_lists(base: Dict[str, Any], extra: Dict[str, Any], *, extra_label: str) -> Dict[str, Any]:
     """Merge two registry list objects.
 
@@ -411,6 +507,11 @@ def build_parser() -> argparse.ArgumentParser:
     ru.add_argument("--txin", help="TxIn as <txHash#txIx>")
     ru.add_argument("--out", required=True, help="Output filename")
     ru.set_defaults(func=cmd_reconstruct_utxo)
+
+    rch = sp.add_parser("reconstruct-chain", help="Reconstruct an LS-CHAIN v2 scroll from its manifest txin")
+    rch.add_argument("--txin", required=True, help="Manifest TxIn as <txHash#txIx>")
+    rch.add_argument("--out", help="Output filename")
+    rch.set_defaults(func=cmd_reconstruct_chain)
 
     ls = sp.add_parser("list-scrolls", help="List known scrolls from catalog")
     ls.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")

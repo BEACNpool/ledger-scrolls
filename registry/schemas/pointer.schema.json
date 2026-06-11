@@ -35,6 +35,18 @@
       }
     },
     {
+      "title": "Manifest Chain (v2)",
+      "description": "LS-CHAIN v2: manifest inline datum at an always-fail script listing bare metadata page transactions. See registry/spec/manifest-chain-v2.md.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "txHash", "txIx"],
+      "properties": {
+        "kind": { "const": "manifest-chain-v2" },
+        "txHash": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
+        "txIx": { "type": "integer", "minimum": 0 }
+      }
+    },
+    {
       "title": "URL",
       "description": "Off-chain mirror; bytes remain verifiable via the entry sha256.",
       "type": "object",
