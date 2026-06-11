@@ -1,9 +1,56 @@
 import React from 'react';
-import { Download, ShieldCheck, ArrowLeft, Loader2, XCircle } from 'lucide-react';
+import { Download, ShieldCheck, ShieldAlert, ShieldQuestion, ArrowLeft, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function ViewerArea({ 
-  currentScroll, 
+const EXT_BY_TYPE = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/gif': 'gif',
+  'image/svg+xml': 'svg',
+  'video/mp4': 'mp4',
+  'application/pdf': 'pdf',
+  'text/html': 'html'
+};
+
+function downloadScroll(scroll, data) {
+  const baseType = (data.contentType || 'application/octet-stream').split(';')[0].trim();
+  const ext = EXT_BY_TYPE[baseType] || (baseType.startsWith('text/') ? 'txt' : 'bin');
+  const blob = new Blob([data.data], { type: baseType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${scroll.id || 'scroll'}.${ext}`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function VerificationBadge({ scrollData }) {
+  if (!scrollData) return null;
+  if (scrollData.verified === true) {
+    return (
+      <span className="flex items-center gap-1 text-green-400 text-xs font-mono" title={`SHA-256: ${scrollData.hash}`}>
+        <ShieldCheck size={16} /> Hash verified
+      </span>
+    );
+  }
+  if (scrollData.verified === false) {
+    return (
+      <span className="flex items-center gap-1 text-red-400 text-xs font-mono" title={`SHA-256: ${scrollData.hash}`}>
+        <ShieldAlert size={16} /> HASH MISMATCH
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-1 text-yellow-400/80 text-xs font-mono" title={`SHA-256: ${scrollData.hash}`}>
+      <ShieldQuestion size={16} /> No hash on record
+    </span>
+  );
+}
+
+export default function ViewerArea({
+  currentScroll,
   onBack,
   loadingScroll,
   scrollData,
@@ -38,12 +85,15 @@ export default function ViewerArea({
         <h2 className="text-xl font-serif text-[var(--accent-gold)] mx-4 truncate flex-1 text-center font-medium tracking-wide">
           {currentScroll.title}
         </h2>
-        <div className="flex gap-2">
-          <button className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white" title="Download">
+        <div className="flex items-center gap-3">
+          <VerificationBadge scrollData={scrollData} />
+          <button
+            onClick={() => scrollData && downloadScroll(currentScroll, scrollData)}
+            disabled={!scrollData}
+            className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white disabled:opacity-30"
+            title="Download original bytes"
+          >
             <Download size={20} />
-          </button>
-          <button className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-green-400" title="Verify">
-            <ShieldCheck size={20} />
           </button>
         </div>
       </div>
@@ -109,9 +159,13 @@ export default function ViewerArea({
             className="w-full flex-1 flex flex-col max-w-[1200px]"
           >
             {scrollData.contentType === 'text/html' ? (
-               <iframe 
-                 src={scrollData.renderUrl} 
-                 className="w-full h-[80vh] border-0 bg-white" 
+               /* Hash-verified is not the same as safe-to-execute: on-chain HTML
+                  is untrusted active content, so scripts and same-origin access
+                  stay disabled in the sandbox. */
+               <iframe
+                 src={scrollData.renderUrl}
+                 sandbox=""
+                 className="w-full h-[80vh] border-0 bg-white"
                  title="Document Content"
                />
             ) : scrollData.contentType.startsWith('image/') ? (

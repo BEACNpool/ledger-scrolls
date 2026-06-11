@@ -43,7 +43,7 @@ export class ScrollReconstructor {
         let utxo;
         try {
             utxo = await this.client.queryUtxoByTxIn(txHash, txIndex);
-        } catch (e) {
+        } catch {
             this._progress('📍 Querying lock address...', 15);
             const utxos = await this.client.queryUtxosAtAddress(pointer.lock_address);
             utxo = utxos.find(u => u.tx_hash === txHash && u.output_index === txIndex);
@@ -88,7 +88,8 @@ export class ScrollReconstructor {
             data: rawBytes,
             contentType: pointer.content_type,
             size: rawBytes.length,
-            hash: pointer.sha256 || await this._sha256(rawBytes),
+            hash: await this._sha256(rawBytes),
+            verified: pointer.sha256 ? true : null,
             method: 'Standard Scroll (Locked UTxO)'
         };
     }
@@ -104,22 +105,27 @@ export class ScrollReconstructor {
         this._progress(`✓ Found ${assets.length} assets, fetching metadata...`, 20);
         const pages = [];
         const total = assets.length;
-        
+
         // Track the learned codec and content type from the NFTs
         let activeCodec = pointer.codec;
         let activeContentType = pointer.content_type;
 
-        for (let i = 0; i < assets.length; i++) {
+        const assetIds = assets.map(a => a.asset || a);
+        const infoMap = await this.client.queryAssetInfos(
+            assetIds,
+            (msg, frac) => this._progress(msg, 20 + Math.floor((frac || 0) * 40))
+        );
+
+        for (let i = 0; i < assetIds.length; i++) {
             if (this.aborted) throw new Error('Aborted');
-            const asset = assets[i];
-            const assetId = asset.asset || asset;
-            const progress = 20 + Math.floor((i / total) * 50);
+            const assetId = assetIds[i];
+            const progress = 60 + Math.floor((i / total) * 10);
             this._progress(`📄 Processing asset ${i + 1}/${total}...`, progress);
 
             try {
                 const assetNameHex = assetId.substring(56);
                 const assetNameAscii = this._hexToAscii(assetNameHex);
-                const assetInfo = await this.client.queryAssetInfo(assetId);
+                const assetInfo = infoMap.get(assetId) || await this.client.queryAssetInfo(assetId);
                 let meta = assetInfo.onchain_metadata;
                 
                 if (!meta && assetInfo.initial_mint_tx_hash) {
@@ -194,8 +200,13 @@ export class ScrollReconstructor {
         this._progress('🔐 Computing integrity hash...', 95);
         const hash = await this._sha256(rawBytes);
 
-        if (pointer.sha256_original && hash !== pointer.sha256_original.toLowerCase()) {
-            console.warn(`Hash mismatch!\nExpected: ${pointer.sha256_original}\nGot: ${hash}`);
+        const expectedHash = pointer.sha256_original || pointer.sha256 || null;
+        let verified = null;
+        if (expectedHash) {
+            verified = hash === expectedHash.toLowerCase();
+            if (!verified) {
+                console.warn(`Hash mismatch!\nExpected: ${expectedHash}\nGot: ${hash}`);
+            }
         }
 
         this._progress('✅ Reconstruction complete!', 100);
@@ -204,6 +215,7 @@ export class ScrollReconstructor {
             contentType: contentType,
             size: rawBytes.length,
             hash: hash,
+            verified: verified,
             pages: pages.length,
             method: 'Legacy Scroll (CIP-25 Pages)'
         };
@@ -226,7 +238,7 @@ export class ScrollReconstructor {
                 
                 if (decoded instanceof Uint8Array) return this._bytesToHex(decoded);
                 throw new Error('Unexpected CBOR datum structure');
-            } catch (e) {
+            } catch {
                 return datum;
             }
         }

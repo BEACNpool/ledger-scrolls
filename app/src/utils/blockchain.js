@@ -216,7 +216,7 @@ export class BlockchainClient {
 
     async queryTxMetadata(txHash) {
         if (this.mode.startsWith('blockfrost')) {
-            try { return await this._request(`/txs/${txHash}/metadata`); } catch(e) { return [] }
+            try { return await this._request(`/txs/${txHash}/metadata`); } catch { return [] }
         } else if (this.mode === 'koios') {
             const response = await this._request('/tx_metadata', {
                 method: 'POST',
@@ -284,20 +284,71 @@ export class BlockchainClient {
                 body: JSON.stringify({ _asset_list: [[policyId, assetName]] })
             });
             if (!response || response.length === 0) throw new Error(`Asset not found: ${assetId}`);
-            const asset = response[0];
-            return {
-                asset: assetId,
-                asset_name: assetName,
-                policy_id: policyId,
-                onchain_metadata: asset.minting_tx_metadata?.[721]?.[policyId]?.[asset.asset_name_ascii] || null,
-                initial_mint_tx_hash: asset.creation_time ? null : asset.minting_tx_hash
-            };
+            return this._normalizeKoiosAssetInfo(response[0], policyId);
         }
+    }
+
+    _normalizeKoiosAssetInfo(asset, policyId) {
+        const assetNameHex = asset.asset_name ?? '';
+        const policyMeta = asset.minting_tx_metadata?.[721]?.[policyId];
+        const onchainMetadata =
+            policyMeta?.[asset.asset_name_ascii] || policyMeta?.[assetNameHex] || null;
+        return {
+            asset: policyId + assetNameHex,
+            asset_name: assetNameHex,
+            policy_id: policyId,
+            onchain_metadata: onchainMetadata,
+            initial_mint_tx_hash: asset.minting_tx_hash || null
+        };
+    }
+
+    // Batch metadata lookup. Koios accepts many assets per asset_info call,
+    // which turns the per-page request storm into a few POSTs. Blockfrost has
+    // no batch endpoint, so it falls back to sequential single queries.
+    // Returns a Map of assetId -> normalized asset info.
+    async queryAssetInfos(assetIds, progressCallback = null) {
+        const out = new Map();
+        if (this.mode === 'koios') {
+            const chunkSize = 50;
+            for (let i = 0; i < assetIds.length; i += chunkSize) {
+                const chunk = assetIds.slice(i, i + chunkSize);
+                if (progressCallback) {
+                    progressCallback(
+                        `📦 Fetching metadata batch ${Math.floor(i / chunkSize) + 1}/${Math.ceil(assetIds.length / chunkSize)}...`,
+                        i / assetIds.length
+                    );
+                }
+                const response = await this._request('/asset_info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        _asset_list: chunk.map(id => [id.substring(0, 56), id.substring(56)])
+                    })
+                });
+                for (const asset of response || []) {
+                    const policyId = asset.policy_id || chunk[0].substring(0, 56);
+                    const info = this._normalizeKoiosAssetInfo(asset, policyId);
+                    out.set(info.asset, info);
+                }
+            }
+            return out;
+        }
+        for (let i = 0; i < assetIds.length; i++) {
+            if (progressCallback) {
+                progressCallback(`📦 Fetching asset ${i + 1}/${assetIds.length}...`, i / assetIds.length);
+            }
+            try {
+                out.set(assetIds[i], await this.queryAssetInfo(assetIds[i]));
+            } catch {
+                // Missing assets are skipped; the caller decides how to handle gaps.
+            }
+        }
+        return out;
     }
 
     async queryAssetHistory(assetId, limit = 10) {
         if (this.mode.startsWith('blockfrost')) {
-            try { return await this._request(`/assets/${assetId}/history?order=desc&count=${limit}`); } catch(e) { return [] }
+            try { return await this._request(`/assets/${assetId}/history?order=desc&count=${limit}`); } catch { return [] }
         } else if (this.mode === 'koios') {
             const policyId = assetId.substring(0, 56);
             const assetName = assetId.substring(56);

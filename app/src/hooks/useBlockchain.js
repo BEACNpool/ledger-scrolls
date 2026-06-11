@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { BlockchainClient } from '../utils/blockchain.js';
 import { ScrollReconstructor } from '../utils/reconstruct.js';
 import { getAllScrolls } from '../utils/scrolls.js';
@@ -8,7 +8,7 @@ export function useBlockchain() {
   const [reconstructor] = useState(() => new ScrollReconstructor(client));
   
   const [library, setLibrary] = useState([]);
-  const [loadingList, setLoadingList] = useState(false);
+  const [loadingList] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   
   const [loadingScroll, setLoadingScroll] = useState(false);
