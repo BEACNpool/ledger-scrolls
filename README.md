@@ -37,6 +37,13 @@ Ledger Scrolls supports two storage styles:
 
 See **docs/VIEWERS.md** for a quick overview.
 
+## Project Direction (June 2026)
+
+- **[Technical Audit](docs/AUDIT_LEDGER_SCROLLS_2026-06.md)** — repo health, security findings, what was fixed
+- **[Protocol v1 Proposal](docs/PROTOCOL_V1_PROPOSAL.md)** — canonical pointer kinds, encoding/verification rules, signed registry heads
+- **[Reconstruction Plan](docs/RECONSTRUCTION_PLAN.md)** — phased path to SDK-based architecture
+- **[Conformance Suite](conformance/README.md)** — run `python3 conformance/run_conformance.py` or `node conformance/run_conformance.mjs`
+
 ## Preview Testnet PoC (Blockfrost-only)
 - **Viewer:** `/preview.html`
 - **Docs:** `docs/PREVIEW_TESTNET_POC.md`
