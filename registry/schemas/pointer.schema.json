@@ -2,10 +2,53 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://beacnpool.github.io/ledger-scrolls/schemas/pointer.schema.json",
   "title": "Ledger Scrolls Pointer",
+  "description": "Tagged union of pointer kinds. Canonical kinds match registry/spec/format.md and the live on-chain registry. Legacy kinds are deprecated aliases retained for old documents only.",
   "type": "object",
   "oneOf": [
     {
-      "title": "UTxO Locked Bytes",
+      "title": "UTxO Inline Datum Bytes (v1)",
+      "description": "Bytes stored in a Cardano UTxO inline datum (Standard Scroll / LS-LOCK). See registry/spec/cardano-utxo-datum.md for the datum encoding.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "txHash", "txIx"],
+      "properties": {
+        "kind": { "const": "utxo-inline-datum-bytes-v1" },
+        "txHash": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
+        "txIx": { "type": "integer", "minimum": 0 }
+      }
+    },
+    {
+      "title": "CIP-25 Pages (v1)",
+      "description": "Bytes stored as CIP-25 (label 721) page NFTs plus manifest (Legacy Scroll / LS-PAGES).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "policyId"],
+      "properties": {
+        "kind": { "const": "cip25-pages-v1" },
+        "policyId": { "type": "string", "pattern": "^[0-9a-fA-F]{56}$" },
+        "manifestAsset": { "type": "string" },
+        "manifestTx": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
+        "manifestSlot": { "type": "integer", "minimum": 0 },
+        "manifestHash": { "type": "string" },
+        "startSlot": { "type": "integer", "minimum": 0 },
+        "startHash": { "type": "string" }
+      }
+    },
+    {
+      "title": "URL",
+      "description": "Off-chain mirror; bytes remain verifiable via the entry sha256.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "url"],
+      "properties": {
+        "kind": { "const": "url" },
+        "url": { "type": "string", "format": "uri" }
+      }
+    },
+    {
+      "title": "UTxO Locked Bytes (deprecated alias)",
+      "description": "Deprecated: superseded by utxo-inline-datum-bytes-v1. Do not emit in new documents.",
+      "deprecated": true,
       "type": "object",
       "additionalProperties": false,
       "required": ["kind", "txin"],
@@ -15,25 +58,17 @@
       }
     },
     {
-      "title": "Asset Manifest",
+      "title": "Asset Manifest (deprecated alias)",
+      "description": "Deprecated: superseded by cip25-pages-v1. Do not emit in new documents.",
+      "deprecated": true,
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "policyId", "assetName", "manifestSha256"],
+      "required": ["kind", "policyId", "assetName"],
       "properties": {
         "kind": { "const": "asset-manifest" },
         "policyId": { "type": "string" },
         "assetName": { "type": "string" },
         "manifestSha256": { "type": "string" }
-      }
-    },
-    {
-      "title": "URL",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["kind", "url"],
-      "properties": {
-        "kind": { "const": "url" },
-        "url": { "type": "string", "format": "uri" }
       }
     }
   ]

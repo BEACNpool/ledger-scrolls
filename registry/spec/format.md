@@ -63,7 +63,8 @@ v0 defines a minimal set of pointer kinds.
 - Use when bytes are stored as **CIP-25 (label 721) pages + manifest** assets.
 - Required fields:
   - `policyId`
-  - `manifestAsset`
+- Recommended fields:
+  - `manifestAsset` — MAY be empty when pages are discoverable by `role`/`payload` metadata alone, but SHOULD be set for unambiguous resolution.
 - Optional fields (to avoid hardcoded time windows):
   - `manifestTx`
   - `manifestSlot`, `manifestHash`
@@ -78,6 +79,19 @@ v0 defines a minimal set of pointer kinds.
   - Still verifiable via `sha256` in the entry.
 
 > Add new pointer kinds only when a viewer implementation exists.
+
+#### Legacy aliases (deprecated)
+
+Earlier drafts used different kind names. They MUST NOT be emitted in new
+documents; readers MAY accept them and treat them as the canonical kind:
+
+| Legacy kind | Canonical kind | Field mapping |
+|---|---|---|
+| `utxo-locked-bytes` (`txin`: `HASH#IX`) | `utxo-inline-datum-bytes-v1` | split `txin` into `txHash` + `txIx` |
+| `asset-manifest` (`policyId`, `assetName`) | `cip25-pages-v1` | `assetName` → `manifestAsset` |
+
+The live on-chain registry (head `a9c56fb3…bad9#0`) already uses the
+canonical kinds.
 
 ### 3) Registry List
 

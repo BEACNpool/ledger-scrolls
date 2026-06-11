@@ -2,12 +2,14 @@ import argparse
 import hashlib
 import json
 import os
-from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple
 
 import requests
 
 from .hashutil import canonical_json_bytes
+
+
+KOIOS_BASE = os.environ.get("LSR_KOIOS_BASE", "https://api.koios.rest/api/v1")
 
 
 class RegistryError(RuntimeError):
@@ -21,6 +23,46 @@ def sha256_hex(data: bytes) -> str:
 def load_json(path: str) -> Any:
     with open(path, "rb") as f:
         return json.loads(f.read().decode("utf-8"))
+
+
+def _decode_cbor_bytestring(raw: bytes) -> bytes:
+    """Minimal CBOR decoder for byte strings (definite or indefinite length).
+
+    Standard Scroll / registry datums are CBOR byte strings whose chunks are
+    each <= 64 bytes (see registry/spec/cardano-utxo-datum.md). Returns the
+    input unchanged when it is not a CBOR byte string.
+    """
+
+    def read_len(buf: bytes, pos: int, ai: int) -> Tuple[int, int]:
+        if ai < 24:
+            return ai, pos
+        widths = {24: 1, 25: 2, 26: 4, 27: 8}
+        w = widths.get(ai)
+        if w is None or pos + w > len(buf):
+            raise ValueError("unsupported CBOR length")
+        return int.from_bytes(buf[pos : pos + w], "big"), pos + w
+
+    if not raw:
+        return raw
+    mt, ai = raw[0] >> 5, raw[0] & 0x1F
+    if mt != 2:
+        return raw
+    try:
+        if ai == 31:  # indefinite-length byte string
+            out = bytearray()
+            pos = 1
+            while pos < len(raw) and raw[pos] != 0xFF:
+                cmt, cai = raw[pos] >> 5, raw[pos] & 0x1F
+                if cmt != 2 or cai == 31:
+                    raise ValueError("invalid chunk in indefinite byte string")
+                clen, pos = read_len(raw, pos + 1, cai)
+                out.extend(raw[pos : pos + clen])
+                pos += clen
+            return bytes(out)
+        blen, pos = read_len(raw, 1, ai)
+        return raw[pos : pos + blen]
+    except ValueError:
+        return raw
 
 
 def read_bytes_from_url(url: str, base_dir: Optional[str] = None) -> bytes:
@@ -50,25 +92,64 @@ def read_bytes_from_url(url: str, base_dir: Optional[str] = None) -> bytes:
     raise RegistryError(f"Unsupported url pointer: {url}")
 
 
-def fetch_bytes_from_pointer(pointer: Dict[str, Any], *, base_dir: Optional[str]) -> bytes:
+def read_bytes_from_utxo_inline_datum(tx_hash: str, tx_ix: int) -> bytes:
+    """Resolve a utxo-inline-datum-bytes-v1 pointer via Koios.
+
+    _extended is required: without it Koios omits inline_datum.
+    """
+    r = requests.post(
+        f"{KOIOS_BASE}/utxo_info",
+        json={"_utxo_refs": [f"{tx_hash}#{tx_ix}"], "_extended": True},
+        timeout=30,
+    )
+    r.raise_for_status()
+    rows = r.json()
+    if not rows:
+        raise RegistryError(f"UTxO not found: {tx_hash}#{tx_ix}")
+    datum_hex = (rows[0].get("inline_datum") or {}).get("bytes")
+    if not datum_hex:
+        raise RegistryError(f"UTxO has no inline datum: {tx_hash}#{tx_ix}")
+    return _decode_cbor_bytestring(bytes.fromhex(datum_hex))
+
+
+def normalize_pointer(pointer: Dict[str, Any]) -> Dict[str, Any]:
+    """Map deprecated legacy pointer kinds onto canonical v0 kinds."""
     kind = pointer.get("kind")
+    if kind == "utxo-locked-bytes":
+        txin = str(pointer.get("txin") or "")
+        tx_hash, _, tx_ix = txin.partition("#")
+        return {
+            "kind": "utxo-inline-datum-bytes-v1",
+            "txHash": tx_hash,
+            "txIx": int(tx_ix or 0),
+        }
+    if kind == "asset-manifest":
+        return {
+            "kind": "cip25-pages-v1",
+            "policyId": pointer.get("policyId"),
+            "manifestAsset": pointer.get("assetName"),
+        }
+    return pointer
+
+
+def fetch_bytes_from_pointer(pointer: Dict[str, Any], *, base_dir: Optional[str]) -> bytes:
+    pointer = normalize_pointer(pointer)
+    kind = pointer.get("kind")
+
     if kind == "url":
         return read_bytes_from_url(pointer["url"], base_dir=base_dir)
 
-    # Cardano pointer kinds are specified but require a chain indexer/provider.
-    if kind == "utxo-locked-bytes":
-        txin = pointer.get("txin")
-        raise RegistryError(
-            "Pointer kind 'utxo-locked-bytes' is not implemented in reference tooling yet. "
-            f"Need Cardano provider to resolve txin={txin}."
-        )
+    if kind == "utxo-inline-datum-bytes-v1":
+        tx_hash = pointer.get("txHash")
+        tx_ix = pointer.get("txIx")
+        if not tx_hash or tx_ix is None:
+            raise RegistryError("utxo-inline-datum-bytes-v1 pointer requires txHash and txIx")
+        return read_bytes_from_utxo_inline_datum(str(tx_hash), int(tx_ix))
 
-    if kind == "asset-manifest":
-        policy_id = pointer.get("policyId")
-        asset_name = pointer.get("assetName")
+    if kind == "cip25-pages-v1":
         raise RegistryError(
-            "Pointer kind 'asset-manifest' is not implemented in reference tooling yet. "
-            f"Need Cardano provider to fetch manifest for policyId={policy_id} assetName={asset_name}."
+            "Pointer kind 'cip25-pages-v1' is not implemented in reference tooling yet. "
+            "Use koios-viewer (lsview reconstruct-cip25) for paged scrolls."
         )
 
     raise RegistryError(f"Unknown pointer kind: {kind}")

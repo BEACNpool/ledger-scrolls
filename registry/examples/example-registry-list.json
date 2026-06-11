@@ -7,24 +7,24 @@
     {
       "name": "constitution-e608",
       "pointer": {
-        "kind": "asset-manifest",
-        "policyId": "<policy-id-here>",
-        "assetName": "<asset-name-here>",
-        "manifestSha256": "<sha256-of-manifest-bytes>"
+        "kind": "cip25-pages-v1",
+        "policyId": "ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750",
+        "manifestAsset": "CONSTITUTION_E608_MANIFEST"
       },
-      "contentType": "application/pdf",
-      "sha256": "<sha256-of-pdf-bytes>",
-      "description": "Example: constitution scroll"
+      "contentType": "text/plain; charset=utf-8",
+      "sha256": "98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1",
+      "description": "Example: constitution scroll (CIP-25 pages)"
     },
     {
       "name": "hosky-png",
       "pointer": {
-        "kind": "utxo-locked-bytes",
-        "txin": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef#0"
+        "kind": "utxo-inline-datum-bytes-v1",
+        "txHash": "728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be",
+        "txIx": 0
       },
       "contentType": "image/png",
-      "sha256": "<sha256-of-png-bytes>",
-      "description": "Example: hosky image"
+      "sha256": "798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f",
+      "description": "Example: hosky image (Standard Scroll inline datum)"
     }
   ]
 }
