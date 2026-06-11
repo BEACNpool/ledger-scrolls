@@ -1,6 +1,6 @@
 import pako from 'pako';
 import { SCROLL_TYPES } from './scrolls.js';
-import * as CBOR from 'cbor-web';
+import CBOR from 'cbor-web';
 
 export class ScrollReconstructor {
     constructor(client) {
@@ -225,8 +225,11 @@ export class ScrollReconstructor {
         if (typeof datum === 'string') {
             try {
                 const cborBytes = this._hexToBytes(datum);
-                const decoded = CBOR.decode(cborBytes.buffer);
+                const decoded = CBOR.decode(cborBytes);
                 
+                const plutusField = this._extractPlutusConstructorField(decoded);
+                if (plutusField) return this._bytesToHex(plutusField);
+
                 if (Array.isArray(decoded) && decoded.length >= 2) {
                     const fields = decoded[1];
                     if (Array.isArray(fields) && fields.length > 0) {
@@ -254,6 +257,15 @@ export class ScrollReconstructor {
         }
         
         throw new Error(`Cannot extract bytes from datum: ${typeof datum}`);
+    }
+
+    _extractPlutusConstructorField(decoded) {
+        const fields = decoded?.value;
+        if (!Array.isArray(fields) || fields.length === 0) return null;
+        const firstField = fields[0];
+        if (firstField instanceof Uint8Array) return firstField;
+        if (ArrayBuffer.isView(firstField)) return new Uint8Array(firstField.buffer, firstField.byteOffset, firstField.byteLength);
+        return null;
     }
 
     _extractPayloadHex(payload) {

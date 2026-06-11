@@ -41,32 +41,52 @@ def canonical_json_bytes(obj) -> bytes:
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
 
 
-def decode_cbor_bytestring(raw: bytes) -> bytes:
-    """Decode a CBOR byte string (definite or indefinite length)."""
+def read_cbor_len(buf: bytes, pos: int, ai: int):
+    if ai < 24:
+        return ai, pos
+    widths = {24: 1, 25: 2, 26: 4, 27: 8}
+    w = widths[ai]
+    return int.from_bytes(buf[pos : pos + w], "big"), pos + w
 
-    def read_len(buf: bytes, pos: int, ai: int):
-        if ai < 24:
-            return ai, pos
-        widths = {24: 1, 25: 2, 26: 4, 27: 8}
-        w = widths[ai]
-        return int.from_bytes(buf[pos : pos + w], "big"), pos + w
 
-    mt, ai = raw[0] >> 5, raw[0] & 0x1F
+def decode_cbor_bytestring_at(raw: bytes, pos: int = 0) -> tuple[bytes, int]:
+    """Decode a CBOR byte string (definite or indefinite length) at pos."""
+
+    mt, ai = raw[pos] >> 5, raw[pos] & 0x1F
+    pos += 1
     if mt != 2:
         raise ValueError("not a CBOR byte string")
     if ai == 31:
         out = bytearray()
-        pos = 1
         while raw[pos] != 0xFF:
             cmt, cai = raw[pos] >> 5, raw[pos] & 0x1F
             if cmt != 2 or cai == 31:
                 raise ValueError("invalid chunk")
-            clen, pos = read_len(raw, pos + 1, cai)
+            clen, pos = read_cbor_len(raw, pos + 1, cai)
             out.extend(raw[pos : pos + clen])
             pos += clen
-        return bytes(out)
-    blen, pos = read_len(raw, 1, ai)
-    return raw[pos : pos + blen]
+        return bytes(out), pos + 1
+    blen, pos = read_cbor_len(raw, pos, ai)
+    return raw[pos : pos + blen], pos + blen
+
+
+def decode_cbor_bytestring(raw: bytes) -> bytes:
+    """Decode standard scroll datum bytes.
+
+    Supports bare CBOR bytes and Plutus constructor-0/tag-121 with one bytes
+    field, which is what cardano-cli emits for {"constructor":0,"fields":[...]}.
+    """
+
+    if raw[:2] == b"\xd8\x79":
+        pos = 2
+        if raw[pos] != 0x9F:
+            raise ValueError("expected indefinite constructor field array")
+        decoded, pos = decode_cbor_bytestring_at(raw, pos + 1)
+        if raw[pos] != 0xFF:
+            raise ValueError("expected constructor array break")
+        return decoded
+
+    return decode_cbor_bytestring_at(raw, 0)[0]
 
 
 def clean_segment(seg) -> str:

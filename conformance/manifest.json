@@ -24,6 +24,11 @@
         "file": "fixtures/datums/standard-datum-002-definite.hex",
         "encoding": "cbor-definite-bytestring",
         "decodedSha256": "f82ca11529c221207ff8b7184d07df314cf92f8001ba164425e0c8ced7e6789e"
+      },
+      {
+        "file": "fixtures/datums/standard-datum-003-plutus-constructor.hex",
+        "encoding": "plutus-constructor-single-bytes-field",
+        "decodedSha256": "f82ca11529c221207ff8b7184d07df314cf92f8001ba164425e0c8ced7e6789e"
       }
     ],
     "cip25": [

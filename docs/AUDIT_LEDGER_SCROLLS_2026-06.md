@@ -195,7 +195,7 @@ Key decisions argued for in the v1 proposal:
 
 All verified against mainnet (Hosky PNG byte-exact `798e3296…642f`; BTC
 whitepaper 33,887 bytes; live registry head resolves; `lsr-verify` returns
-`ok: true` for hosky-png; conformance 21/21 in both runtimes):
+`ok: true` for hosky-png; conformance 22/22 in both runtimes):
 
 1. `chore:` removed committed bytecode (`viewers/p2p` was bytecode-only) and
    build log; `.gitignore` tightened.

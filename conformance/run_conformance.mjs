@@ -38,32 +38,46 @@ function canonicalJson(value) {
     return JSON.stringify(value);
 }
 
-// Decode a CBOR byte string (definite or indefinite length).
-function decodeCborBytestring(raw) {
-    const readLen = (pos, ai) => {
-        if (ai < 24) return [ai, pos];
-        const widths = { 24: 1, 25: 2, 26: 4, 27: 8 };
-        const w = widths[ai];
-        let len = 0n;
-        for (let i = 0; i < w; i++) len = (len << 8n) | BigInt(raw[pos + i]);
-        return [Number(len), pos + w];
-    };
-    const mt = raw[0] >> 5, ai = raw[0] & 0x1f;
+function readCborLen(raw, pos, ai) {
+    if (ai < 24) return [ai, pos];
+    const widths = { 24: 1, 25: 2, 26: 4, 27: 8 };
+    const w = widths[ai];
+    let len = 0n;
+    for (let i = 0; i < w; i++) len = (len << 8n) | BigInt(raw[pos + i]);
+    return [Number(len), pos + w];
+}
+
+// Decode a CBOR byte string (definite or indefinite length) at pos.
+function decodeCborBytestringAt(raw, pos = 0) {
+    const mt = raw[pos] >> 5, ai = raw[pos] & 0x1f;
+    pos++;
     if (mt !== 2) throw new Error('not a CBOR byte string');
     if (ai === 31) {
         const chunks = [];
-        let pos = 1;
         while (raw[pos] !== 0xff) {
             const cmt = raw[pos] >> 5, cai = raw[pos] & 0x1f;
             if (cmt !== 2 || cai === 31) throw new Error('invalid chunk');
-            const [clen, next] = readLen(pos + 1, cai);
+            const [clen, next] = readCborLen(raw, pos + 1, cai);
             chunks.push(raw.subarray(next, next + clen));
             pos = next + clen;
         }
-        return Buffer.concat(chunks);
+        return [Buffer.concat(chunks), pos + 1];
     }
-    const [blen, pos] = readLen(1, ai);
-    return raw.subarray(pos, pos + blen);
+    const [blen, next] = readCborLen(raw, pos, ai);
+    return [raw.subarray(next, next + blen), next + blen];
+}
+
+function decodeStandardDatumBytes(raw) {
+    // Bare CBOR bytestring, or Plutus constructor-0/tag-121 with one bytes
+    // field from cardano-cli ScriptData JSON.
+    if (raw[0] === 0xd8 && raw[1] === 0x79) {
+        let pos = 2;
+        if (raw[pos] !== 0x9f) throw new Error('expected indefinite constructor field array');
+        const [decoded, next] = decodeCborBytestringAt(raw, pos + 1);
+        if (raw[next] !== 0xff) throw new Error('expected constructor array break');
+        return decoded;
+    }
+    return decodeCborBytestringAt(raw, 0)[0];
 }
 
 const cleanSegment = (seg) => {
@@ -128,7 +142,7 @@ for (const v of vectors.payloads) {
 console.log('== standard scroll datums ==');
 for (const v of vectors.datums) {
     const raw = Buffer.from(readFileSync(join(ROOT, v.file), 'utf8').trim(), 'hex');
-    check(`${v.file} decoded sha256`, sha256Hex(decodeCborBytestring(raw)) === v.decodedSha256);
+    check(`${v.file} decoded sha256`, sha256Hex(decodeStandardDatumBytes(raw)) === v.decodedSha256);
 }
 
 console.log('== cip25 page reconstruction ==');
