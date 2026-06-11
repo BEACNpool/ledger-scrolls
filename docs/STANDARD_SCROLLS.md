@@ -1,5 +1,8 @@
 # Standard Scrolls (LS-LOCK v1)
 
+> Choosing what and how to publish? Start with the per-media-type guide:
+> [CREATING_SCROLLS.md](CREATING_SCROLLS.md).
+
 Standard Scrolls are the simplest and most elegant way to inscribe permanent content on Cardano. A single locked UTxO contains your entire document, protected by an always-fail script that makes it impossible to ever spend.
 
 ---

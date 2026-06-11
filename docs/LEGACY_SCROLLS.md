@@ -1,5 +1,8 @@
 # Legacy Scrolls (LS-PAGES v1)
 
+> Choosing what and how to publish? Start with the per-media-type guide:
+> [CREATING_SCROLLS.md](CREATING_SCROLLS.md).
+
 Legacy Scrolls are designed for large documents that exceed the practical limits of a single UTxO. They use CIP-25 NFTs to store content across multiple "pages," which are concatenated to reconstruct the original document.
 
 ---

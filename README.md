@@ -37,6 +37,12 @@ Ledger Scrolls supports two storage styles:
 
 See **docs/VIEWERS.md** for a quick overview.
 
+## Create Your Own Scroll
+
+**[docs/CREATING_SCROLLS.md](docs/CREATING_SCROLLS.md)** — best practices for
+publishing every media type (text, images, HTML, PDF, audio, video, data):
+format selection, preparation, costs, minting checklists, and verification.
+
 ## Project Direction (June 2026)
 
 - **[Technical Audit](docs/AUDIT_LEDGER_SCROLLS_2026-06.md)** — repo health, security findings, what was fixed
