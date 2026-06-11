@@ -1,0 +1,5 @@
+{
+  "kind": "utxo-inline-datum-bytes-v1",
+  "txHash": "not-a-hash",
+  "txIx": 0
+}

@@ -1,0 +1,34 @@
+{
+  "721": {
+    "00000000000000000000000000000000000000000000000000000000": {
+      "VEC001_P0001": {
+        "i": 1,
+        "n": 2,
+        "role": "page",
+        "codec": "gzip",
+        "payload": [
+          "0x1f8b08000000000002ff05c1c90d80300c04c07faad80a5028813f3f2a708c39",
+          "0xa4604b8b41a27b66665b77"
+        ]
+      },
+      "VEC001_P0002": {
+        "i": 2,
+        "n": 2,
+        "role": "page",
+        "codec": "gzip",
+        "payload": [
+          "0x231665f47e43c3b7e025ae86d73483a8752c13fad928fc90872454dc23d11efa",
+          "0x507e2d24965f42000000"
+        ]
+      },
+      "VEC001_MANIFEST": {
+        "role": "manifest",
+        "codec": "gzip",
+        "content_type": "text/plain",
+        "n": 2,
+        "sha256": "f82ca11529c221207ff8b7184d07df314cf92f8001ba164425e0c8ced7e6789e",
+        "sha256_gz": "af78ec9efa567a4f0282ab2563890cf669c0341100f2694a892d92018bed6621"
+      }
+    }
+  }
+}

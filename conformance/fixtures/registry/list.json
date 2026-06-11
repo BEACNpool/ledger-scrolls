@@ -1,0 +1,29 @@
+{
+  "format": "ledger-scrolls-registry-list",
+  "version": 0,
+  "generatedAt": "2026-06-11T00:00:00Z",
+  "generator": "ledger-scrolls conformance fixtures",
+  "entries": [
+    {
+      "name": "hosky-png",
+      "pointer": {
+        "kind": "utxo-inline-datum-bytes-v1",
+        "txHash": "728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be",
+        "txIx": 0
+      },
+      "contentType": "image/png",
+      "sha256": "798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f",
+      "description": "Live mainnet Standard Scroll (Hosky PNG)"
+    },
+    {
+      "name": "vector-001",
+      "pointer": {
+        "kind": "url",
+        "url": "../payloads/vector-001.txt"
+      },
+      "contentType": "text/plain; charset=utf-8",
+      "sha256": "f82ca11529c221207ff8b7184d07df314cf92f8001ba164425e0c8ced7e6789e",
+      "description": "Local conformance payload"
+    }
+  ]
+}

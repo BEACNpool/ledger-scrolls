@@ -1,0 +1,10 @@
+{
+  "format": "ledger-scrolls-registry-head",
+  "version": 0,
+  "createdAt": "2026-06-11T00:00:00Z",
+  "author": "ledger-scrolls conformance fixtures",
+  "registryList": {
+    "kind": "url",
+    "url": "./list.json"
+  }
+}

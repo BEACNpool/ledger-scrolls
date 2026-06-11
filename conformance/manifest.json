@@ -1,0 +1,53 @@
+{
+  "format": "ledger-scrolls-conformance",
+  "version": 0,
+  "vectors": {
+    "payloads": [
+      {
+        "file": "fixtures/payloads/vector-001.txt",
+        "sha256": "f82ca11529c221207ff8b7184d07df314cf92f8001ba164425e0c8ced7e6789e"
+      },
+      {
+        "file": "fixtures/payloads/vector-001.txt.gz",
+        "sha256": "af78ec9efa567a4f0282ab2563890cf669c0341100f2694a892d92018bed6621",
+        "codec": "gzip",
+        "decodedSha256": "f82ca11529c221207ff8b7184d07df314cf92f8001ba164425e0c8ced7e6789e"
+      }
+    ],
+    "datums": [
+      {
+        "file": "fixtures/datums/standard-datum-001.hex",
+        "encoding": "cbor-indefinite-bytestring",
+        "decodedSha256": "f82ca11529c221207ff8b7184d07df314cf92f8001ba164425e0c8ced7e6789e"
+      },
+      {
+        "file": "fixtures/datums/standard-datum-002-definite.hex",
+        "encoding": "cbor-definite-bytestring",
+        "decodedSha256": "f82ca11529c221207ff8b7184d07df314cf92f8001ba164425e0c8ced7e6789e"
+      }
+    ],
+    "cip25": [
+      {
+        "file": "fixtures/cip25/vector-001-metadata.json",
+        "policyId": "00000000000000000000000000000000000000000000000000000000",
+        "pages": 2,
+        "reconstructedSha256": "f82ca11529c221207ff8b7184d07df314cf92f8001ba164425e0c8ced7e6789e",
+        "gzipSha256": "af78ec9efa567a4f0282ab2563890cf669c0341100f2694a892d92018bed6621"
+      }
+    ],
+    "pointers": {
+      "validDir": "fixtures/pointers/valid",
+      "invalidDir": "fixtures/pointers/invalid"
+    },
+    "registry": [
+      {
+        "file": "fixtures/registry/head.json",
+        "canonicalSha256": "3339a47545c06dd3a60211e541e86d2a3587452d2efe3c721c37c717a9970758"
+      },
+      {
+        "file": "fixtures/registry/list.json",
+        "canonicalSha256": "0647026ad0b8201ba820b26e247c506b3705da9c33b4363ddd57ad528c698ad5"
+      }
+    ]
+  }
+}
