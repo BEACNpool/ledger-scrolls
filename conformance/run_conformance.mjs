@@ -67,7 +67,9 @@ function decodeCborBytestring(raw) {
 }
 
 const cleanSegment = (seg) => {
-    seg = seg.trim();
+    // Segments appear as plain hex strings or as {"bytes": "<hex>"} objects
+    if (seg !== null && typeof seg === 'object') seg = seg.bytes ?? seg.seg ?? '';
+    seg = String(seg).trim();
     return seg.toLowerCase().startsWith('0x') ? seg.slice(2) : seg;
 };
 

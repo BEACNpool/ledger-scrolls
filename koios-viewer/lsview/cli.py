@@ -207,7 +207,14 @@ def reconstruct_legacy_cip25(policy_id: str, manifest_asset: str | None = None, 
         if not isinstance(payload, list):
             continue
 
-        pages.append((page_idx, [str(x) for x in payload]))
+        # Segments appear as plain hex strings or as {"bytes": "<hex>"} objects
+        segs: List[str] = []
+        for x in payload:
+            if isinstance(x, dict):
+                segs.append(str(x.get("bytes") or x.get("seg") or ""))
+            else:
+                segs.append(str(x))
+        pages.append((page_idx, segs))
 
     if not pages:
         raise RegistryError("No pages found in CIP-721 metadata")

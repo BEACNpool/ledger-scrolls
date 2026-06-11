@@ -226,8 +226,8 @@ The first ratified Cardano Constitution, preserved as a permanent historical rec
 | Architect's Scroll | `531a1eb...c67e12` | N/A | `sha256sum architects_scroll.txt` |
 | Constitution E608 | `98a29ae...35abf1` | `4565368...4e93` | `sha256sum Cardano_Constitution_Epoch_608.txt` |
 | Constitution E541 | `1939c16...9e9566` | `975d1c6...f268a` | `sha256sum Cardano_Constitution_Epoch_541.txt` |
-| Bible | Not yet recorded | Not yet recorded | `sha256sum bible.html` |
-| Bitcoin Whitepaper | Not yet recorded | Not yet recorded | `sha256sum btc_whitepaper.html` |
+| Bible | `b226867...c5dc5` | `228ff03...9af60` | `sha256sum bible.html` (matches on-chain `BIBLE_MANIFEST` `sha_html`/`sha_gz`) |
+| Bitcoin Whitepaper | `6693c86...9253a` | N/A (codec auto) | `sha256sum btc_whitepaper.html` (recorded 2026-06-11; manifest declares no hash) |
 
 ---
 
@@ -538,15 +538,24 @@ You can:
 
 ```
 ledger-scrolls/
-├── index.html              # Main application entry point
-├── css/
-│   └── styles.css          # Themes and styling
-├── js/
-│   ├── app.js              # Main UI controller
-│   ├── blockchain.js       # Blockfrost/Koios API client
-│   ├── reconstruct.js      # Scroll reconstruction engine
-│   ├── scrolls.js          # Scroll registry/definitions
-│   └── lib/                # Vendor libraries (pako, cbor)
+├── index.html              # Built web viewer (GitHub Pages entry; source in app/)
+├── assets/                 # Built JS/CSS bundle (from app/dist)
+├── app/                    # React/Vite viewer source
+│   └── src/
+│       ├── components/     # UI components
+│       ├── hooks/          # useBlockchain hook
+│       └── utils/          # blockchain.js, reconstruct.js, scrolls.js
+├── bible.html              # Standalone legacy viewers (Bible, Constitution, …)
+├── constitution.html
+├── first-video.html
+├── conformance/            # Protocol conformance fixtures + JS/Python runners
+├── registry/               # Registry spec, JSON schemas, examples, tooling
+│   ├── spec/
+│   ├── schemas/
+│   ├── examples/
+│   └── tooling/            # lsr-verify / lsr-hash (Python)
+├── koios-viewer/           # Python viewer/reconstructor (lsview)
+├── viewers/koios-cli/      # Zero-dependency Python CLI readers
 ├── scripts/                # CLI minting & verification tools
 │   ├── mint-standard-scroll.sh
 │   └── verify-scroll.sh
@@ -554,11 +563,7 @@ ledger-scrolls/
 ├── templates/              # Templates for new scrolls
 │   ├── standard-scroll/
 │   └── legacy-scroll/
-├── docs/                   # Documentation
-│   ├── GETTING_STARTED.md
-│   ├── STANDARD_SCROLLS.md
-│   ├── LEGACY_SCROLLS.md
-│   └── EXAMPLES.md
+├── docs/                   # Documentation + audits
 └── examples/               # Example scroll documentation
 ```
 

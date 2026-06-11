@@ -135,7 +135,10 @@ export let SCROLLS = [
           manifest_tx_hash: 'cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4',
           manifest_slot: '175750638',
           content_type: 'text/html',
-          codec: 'gzip'
+          codec: 'gzip',
+          // Matches sha_html declared in the on-chain BIBLE_MANIFEST NFT
+          sha256_original: 'b226867233fbaf06495b1fe6974c37f4547b19f57e49d7f64701cf40f86c5dc5',
+          sha256_gzip: '228ff0364f0804e9c6260b7bb3235569eb7dc9956bad50c31ca3f0da2489af60'
       },
       metadata: { size: '~4.6MB', pages: 237 }
   },
@@ -151,7 +154,9 @@ export let SCROLLS = [
           manifest_tx_hash: '2575347068f77b21cfe8d9c23d9082a68bfe4ef7ba7a96608af90515acbe228f',
           manifest_slot: '176360887',
           content_type: 'text/html',
-          codec: 'auto'
+          codec: 'auto',
+          // Recorded 2026-06-11 from full reconstruction (manifest declares no hash)
+          sha256_original: '6693c86312b7125666760d316572c9db984c6e2bae9fca344dafde77efc9253a'
       },
       metadata: {
           size: '~33KB',

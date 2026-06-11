@@ -69,8 +69,11 @@ def decode_cbor_bytestring(raw: bytes) -> bytes:
     return raw[pos : pos + blen]
 
 
-def clean_segment(seg: str) -> str:
-    seg = seg.strip()
+def clean_segment(seg) -> str:
+    # Segments appear as plain hex strings or as {"bytes": "<hex>"} objects
+    if isinstance(seg, dict):
+        seg = seg.get("bytes") or seg.get("seg") or ""
+    seg = str(seg).strip()
     return seg[2:] if seg.lower().startswith("0x") else seg
 
 

@@ -33,6 +33,13 @@
         "pages": 2,
         "reconstructedSha256": "f82ca11529c221207ff8b7184d07df314cf92f8001ba164425e0c8ced7e6789e",
         "gzipSha256": "af78ec9efa567a4f0282ab2563890cf669c0341100f2694a892d92018bed6621"
+      },
+      {
+        "file": "fixtures/cip25/vector-002-object-segments.json",
+        "policyId": "11111111111111111111111111111111111111111111111111111111",
+        "pages": 1,
+        "reconstructedSha256": "b4da24acb6695c2ee5d841a6c54b97ccde4f457039b4355f80d491f25edb9d5d",
+        "gzipSha256": "b4da24acb6695c2ee5d841a6c54b97ccde4f457039b4355f80d491f25edb9d5d"
       }
     ],
     "pointers": {
