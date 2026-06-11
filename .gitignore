@@ -2,6 +2,13 @@
 mint/work/
 scripts/work/
 *.tmp
+app/build-log.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
 
 # API keys (never commit these!)
 .blockfrost_key
