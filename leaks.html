@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BEACN LEAKS — This Site Hosts Nothing</title>
+<style>
+:root{--bg:#0b0b0d;--panel:#141417;--edge:#26262c;--paper:#f2efe6;--ink:#1a1a1a;
+ --red:#d4322a;--red2:#ff6f66;--green:#3fbf6f;--amber:#e0a93f;--txt:#d6d3c8;--dim:#84817a;
+ --mono:'Courier New',Courier,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:15px;line-height:1.6}
+.wrap{max-width:980px;margin:0 auto;padding:18px 14px 70px}
+header{text-align:center;padding:34px 10px 10px}
+.kicker{letter-spacing:.34em;font-size:12px;color:var(--dim)}
+h1{font-size:44px;letter-spacing:.05em;color:#fff;margin:8px 0 2px}
+h1 .r{color:var(--red)}
+.tag{display:inline-block;border:2px solid var(--red);color:var(--red2);padding:5px 16px;margin-top:12px;
+ letter-spacing:.22em;font-size:13px;transform:rotate(-1.2deg)}
+.lede{max-width:760px;margin:26px auto 8px;text-align:center;color:var(--txt);font-size:16px}
+.lede b{color:#fff}
+.lede .r{color:var(--red2)}
+.panel{background:var(--panel);border:1px solid var(--edge);border-radius:6px;padding:20px 22px;margin:20px 0}
+.panel h2{font-size:15px;letter-spacing:.22em;color:var(--dim);margin-bottom:14px}
+.chanrow{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
+select,input[type=text]{background:#0e0e11;border:1px solid var(--edge);color:var(--txt);
+ font-family:var(--mono);font-size:14px;padding:11px 12px;border-radius:4px;flex:1;min-width:240px}
+input[type=text]::placeholder{color:#55534d}
+button{background:var(--red);border:0;color:#fff;font-family:var(--mono);font-weight:bold;
+ font-size:14px;letter-spacing:.12em;padding:11px 22px;border-radius:4px;cursor:pointer}
+button:hover{background:#e8443b}
+button:disabled{background:#3a3a40;color:#777;cursor:wait}
+button.ghost{background:transparent;border:1px solid var(--edge);color:var(--txt);font-weight:normal}
+.hint{color:var(--dim);font-size:12.5px;margin-top:10px}
+.hint code{color:var(--txt)}
+#issues{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.issue{background:#0e0e11;border:1px solid var(--edge);border-radius:6px;padding:16px;cursor:pointer;
+ transition:border-color .15s}
+.issue:hover{border-color:var(--red)}
+.issue .no{color:var(--red2);font-size:12px;letter-spacing:.2em}
+.issue .nm{color:#fff;font-size:16px;margin:6px 0}
+.issue .mt{color:var(--dim);font-size:12px;word-break:break-all}
+#log{background:#0a0a0c;border:1px solid var(--edge);border-radius:6px;padding:14px 16px;
+ font-size:12.5px;max-height:340px;overflow-y:auto}
+#log div{padding:2.5px 0;border-bottom:1px dotted #1d1d22;white-space:pre-wrap;word-break:break-all}
+#log .q{color:var(--amber)}
+#log .ok{color:var(--green)}
+#log .er{color:var(--red2)}
+#log .h{color:#9ad}
+.verd{display:none;align-items:center;gap:14px;margin:16px 0;padding:14px 18px;border-radius:6px}
+.verd.ok{display:flex;background:rgba(63,191,111,.08);border:1px solid var(--green)}
+.verd.bad{display:flex;background:rgba(212,50,42,.10);border:1px solid var(--red)}
+.verd .big{font-size:22px;font-weight:bold;letter-spacing:.1em}
+.verd.ok .big{color:var(--green)}
+.verd.bad .big{color:var(--red2)}
+.verd .sub{font-size:12px;color:var(--dim);word-break:break-all}
+#stage{display:none;background:var(--paper);border-radius:6px;overflow:hidden;border:1px solid #000}
+#stage iframe{width:100%;height:78vh;border:0;background:var(--paper)}
+#stage img,#stage video{max-width:100%;display:block;margin:0 auto}
+#stage pre{color:var(--ink);padding:26px;white-space:pre-wrap;font-size:14px}
+.bar{display:none;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 8px}
+.bar .ttl{color:#fff;font-size:16px}
+.bar .acts{display:flex;gap:8px}
+.foot{text-align:center;color:var(--dim);font-size:12.5px;margin-top:46px;line-height:2}
+.foot a{color:var(--red2)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px 0 4px}
+.step{background:#0e0e11;border:1px solid var(--edge);border-radius:6px;padding:12px;text-align:center;font-size:12px;color:var(--dim)}
+.step b{display:block;color:var(--txt);font-size:13px;margin-bottom:4px}
+.step.on{border-color:var(--amber)}.step.on b{color:var(--amber)}
+.step.done{border-color:var(--green)}.step.done b{color:var(--green)}
+.step.fail{border-color:var(--red)}.step.fail b{color:var(--red2)}
+@media(max-width:560px){h1{font-size:30px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+ <div class="kicker">INDEPENDENT &#183; IMMUTABLE &#183; UNFORGEABLE</div>
+ <h1>BEACN <span class="r">LEAKS</span></h1>
+ <div class="tag">THIS SITE HOSTS NOTHING</div>
+ <p class="lede">There is no article on this server. No database. No CMS.
+ What you are about to read lives <b>inside the Cardano blockchain</b> —
+ this page merely knows <span class="r">where to point</span>. Pick a
+ channel below and your own browser will query the public ledger, rebuild
+ the bytes, and <b>cryptographically verify</b> them before showing you a
+ single word. <span class="r">Save this file to a USB stick — it still
+ works.</span></p>
+</header>
+
+<div class="panel">
+ <h2>&#9656; STEP 1 — POINT AT A CHANNEL (A MINTING POLICY ID = AN UNFORGEABLE BYLINE)</h2>
+ <div class="chanrow">
+  <select id="chansel">
+   <option value="5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415">BEACN Leaks — 5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415</option>
+   <option value="">Custom policy ID…</option>
+  </select>
+  <input type="text" id="custom" placeholder="paste any 56-hex policy id" style="display:none">
+  <button id="go">QUERY THE CHAIN</button>
+ </div>
+ <p class="hint">Only the holder of a channel's key can publish under its
+ policy ID. Nobody can forge it, suspend it, or post to it on the
+ publisher's behalf — verify it yourself, that's the point.</p>
+</div>
+
+<div class="steps" id="steps">
+ <div class="step" id="s1"><b>1 &#183; CHANNEL</b>list publications under the policy</div>
+ <div class="step" id="s2"><b>2 &#183; MANIFEST</b>fetch the locked datum</div>
+ <div class="step" id="s3"><b>3 &#183; PAGES</b>pull raw bytes from tx metadata</div>
+ <div class="step" id="s4"><b>4 &#183; VERIFY</b>SHA-256 vs on-chain seal</div>
+ <div class="step" id="s5"><b>5 &#183; RENDER</b>sandboxed, only if verified</div>
+</div>
+
+<div class="panel" id="issuepanel" style="display:none">
+ <h2>&#9656; STEP 2 — PUBLICATIONS FOUND ON-CHAIN UNDER THIS BYLINE</h2>
+ <div id="issues"></div>
+</div>
+
+<div class="panel">
+ <h2>&#9656; LIVE TRUST LOG — EVERY REQUEST YOUR BROWSER MAKES</h2>
+ <div id="log"><div class="h">idle — waiting for you. nothing has been fetched, because nothing is stored here.</div></div>
+</div>
+
+<div class="verd" id="verd"><div>
+ <div class="big" id="verdbig"></div>
+ <div class="sub" id="verdsub"></div>
+</div></div>
+
+<div class="bar" id="bar">
+ <div class="ttl" id="docttl"></div>
+ <div class="acts">
+  <button class="ghost" id="dl">&#11015; DOWNLOAD ORIGINAL BYTES</button>
+ </div>
+</div>
+<div id="stage"></div>
+
+<p class="foot">
+ The protocol, the tools, and this page are open source:
+ <a href="https://github.com/BEACNpool/ledger-scrolls">github.com/BEACNpool/ledger-scrolls</a><br>
+ Browse the full on-chain library: <a href="https://beacnpool.github.io/ledger-scrolls/">the living library</a> &#183;
+ Read the on-chain tutorial scroll &#183; Write your own<br>
+ BEACN LEAKS &#183; a library that cannot burn
+</p>
+
+</div>
+<script>
+"use strict";
+const KOIOS = ['https://api.koios.rest/api/v1','https://koios.beacn.workers.dev/api/v1'];
+const $ = id => document.getElementById(id);
+const log = (cls, msg) => { const d = document.createElement('div'); d.className = cls; d.textContent = msg; $('log').appendChild(d); $('log').scrollTop = 1e9; };
+const step = (n, st) => { const e = $('s'+n); e.classList.remove('on','done','fail'); if (st) e.classList.add(st); };
+const hex2bytes = h => { h = h.replace(/^0x/i,''); const b = new Uint8Array(h.length/2); for (let i=0;i<h.length;i+=2) b[i/2]=parseInt(h.substr(i,2),16); return b; };
+const bytes2hex = b => Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('');
+const sha256 = async b => bytes2hex(new Uint8Array(await crypto.subtle.digest('SHA-256', b)));
+const segHex = s => { if (s && typeof s === 'object') s = s.bytes ?? s.seg ?? ''; s = String(s).trim(); return s.toLowerCase().startsWith('0x') ? s.slice(2) : s; };
+
+async function koios(path, body) {
+  let lastErr;
+  for (const base of KOIOS) {
+    try {
+      log('q', `POST ${base}${path}`);
+      const r = await fetch(base + path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return await r.json();
+    } catch (e) { lastErr = e; log('er', `  ${base} failed: ${e.message}`); }
+  }
+  throw lastErr;
+}
+
+// Minimal CBOR decoder (uint/nint/bytes/text/array/tag) for LS-CHAIN manifests
+function decodeCbor(raw, pos=0) {
+  const len=(ai,p)=>{ if(ai<24)return[ai,p]; const w={24:1,25:2,26:4,27:8}[ai]; let n=0; for(let i=0;i<w;i++)n=n*256+raw[p+i]; return [n,p+w]; };
+  const mt=raw[pos]>>5, ai=raw[pos]&31;
+  if(mt===0)return len(ai,pos+1);
+  if(mt===1){const[n,p]=len(ai,pos+1);return[-1-n,p];}
+  if(mt===2||mt===3){const[n,p]=len(ai,pos+1);const v=raw.subarray(p,p+n);return[mt===2?v:new TextDecoder().decode(v),p+n];}
+  if(mt===4){let[n,p]=len(ai,pos+1);const o=[];for(let i=0;i<n;i++){const[v,q]=decodeCbor(raw,p);o.push(v);p=q;}return[o,p];}
+  if(mt===6){const[n,p]=len(ai,pos+1);const[v,q]=decodeCbor(raw,p);return[{tag:n,value:v},q];}
+  throw new Error('unsupported CBOR major type '+mt);
+}
+
+async function gunzip(bytes) {
+  if (typeof DecompressionStream === 'undefined') throw new Error('Browser lacks DecompressionStream');
+  const ds = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return new Uint8Array(await new Response(ds).arrayBuffer());
+}
+
+let currentBlobUrl = null, currentBytes = null, currentName = 'scroll';
+
+async function listChannel(policy) {
+  step(1,'on'); $('issuepanel').style.display='none'; $('issues').innerHTML='';
+  $('verd').className='verd'; $('bar').style.display='none'; $('stage').style.display='none';
+  log('h', `── following channel ${policy}`);
+  const assets = await koios('/policy_asset_list', { _asset_policy: policy });
+  if (!assets.length) { step(1,'fail'); log('er','channel exists but has no publications (or wrong policy id)'); return; }
+  log('ok', `  ${assets.length} publication(s) minted under this byline`);
+  const infos = await koios('/asset_info', { _asset_list: assets.map(a => [policy, a.asset_name]) });
+  const issues = [];
+  for (const inf of infos) {
+    const meta = inf.minting_tx_metadata?.['721']?.[policy]?.[inf.asset_name_ascii];
+    if (!meta) continue;
+    issues.push({ asset: inf.asset_name_ascii, name: meta.name || inf.asset_name_ascii,
+      issue: meta.issue, pointer: meta.pointer, sha256: segHex(meta.sha256||''), mediaType: meta.mediaType || 'application/octet-stream',
+      mintTx: inf.minting_tx_hash });
+  }
+  issues.sort((a,b)=>(a.issue??0)-(b.issue??0));
+  step(1,'done');
+  for (const it of issues) {
+    const card = document.createElement('div'); card.className='issue';
+    card.innerHTML = `<div class="no">ISSUE ${String(it.issue??'?').padStart(3,'0')} · ${it.asset}</div>
+      <div class="nm"></div><div class="mt">${it.mediaType}<br>seal ${it.sha256.slice(0,24)}…<br>mint ${String(it.mintTx).slice(0,24)}… (signed by the channel key)</div>`;
+    card.querySelector('.nm').textContent = it.name;
+    card.onclick = () => resolveIssue(it);
+    $('issues').appendChild(card);
+  }
+  $('issuepanel').style.display='block';
+  log('h', '── pick a publication to reconstruct it from the chain');
+  if (issues.length === 1) resolveIssue(issues[0]);
+}
+
+async function resolveIssue(it) {
+  try {
+    $('verd').className='verd'; $('bar').style.display='none'; $('stage').style.display='none';
+    step(2,'on'); step(3,null); step(4,null); step(5,null);
+    currentName = (it.asset || 'scroll').toLowerCase();
+    if (!it.pointer?.txHash) throw new Error('issue metadata carries no pointer');
+    log('h', `── resolving "${it.name}"`);
+    log('q', `pointer: manifest-chain-v2 ${it.pointer.txHash}#${it.pointer.txIx||0}`);
+    const rows = await koios('/utxo_info', { _utxo_refs: [`${it.pointer.txHash}#${it.pointer.txIx||0}`], _extended: true });
+    const datumHex = rows?.[0]?.inline_datum?.bytes;
+    if (!datumHex) throw new Error('manifest UTxO not found or has no datum');
+    const [m] = decodeCbor(hex2bytes(datumHex));
+    if (m.tag !== 121) throw new Error('not an LS-CHAIN manifest');
+    const f = m.value;
+    const manifest = { contentType: new TextDecoder().decode(f[1]), codec: new TextDecoder().decode(f[2]),
+      size: f[3], shaDec: bytes2hex(f[4]), shaEnc: bytes2hex(f[5]), pages: f[6].map(bytes2hex) };
+    log('ok', `  manifest: ${manifest.contentType} · ${manifest.codec} · ${manifest.size} bytes · ${manifest.pages.length} page(s)`);
+    log('ok', `  on-chain seal (sha256): ${manifest.shaDec}`);
+    step(2,'done'); step(3,'on');
+
+    const metaRows = await koios('/tx_metadata', { _tx_hashes: manifest.pages });
+    const byTx = {}; for (const r of metaRows) byTx[r.tx_hash] = r.metadata || {};
+    let allHex = '';
+    for (let i = 0; i < manifest.pages.length; i++) {
+      const page = byTx[manifest.pages[i]]?.['22025'];
+      if (!page?.p) throw new Error(`page ${i+1} metadata missing`);
+      const pageHex = page.p.map(segHex).join('');
+      if (page.sha) {
+        const got = await sha256(hex2bytes(pageHex));
+        if (got !== segHex(page.sha).toLowerCase()) throw new Error(`page ${i+1} HASH MISMATCH`);
+        log('ok', `  page ${i+1}/${manifest.pages.length}: ${pageHex.length/2} bytes · sha ✓`);
+      }
+      allHex += pageHex;
+    }
+    step(3,'done'); step(4,'on');
+
+    let bytes = hex2bytes(allHex);
+    const gotEnc = await sha256(bytes);
+    log(gotEnc===manifest.shaEnc?'ok':'er', `  encoded stream sha256: ${gotEnc} ${gotEnc===manifest.shaEnc?'✓ matches manifest':'✗ MISMATCH'}`);
+    if (gotEnc !== manifest.shaEnc) throw new Error('encoded stream hash mismatch');
+    if (manifest.codec === 'gzip') { bytes = await gunzip(bytes); log('ok', `  gunzip → ${bytes.length} bytes`); }
+    const gotDec = await sha256(bytes);
+    if (gotDec !== manifest.shaDec) { log('er', `  decoded sha256 ✗ ${gotDec}`); throw new Error('decoded hash mismatch'); }
+    log('ok', `  decoded sha256 ✓ ${gotDec}`);
+    if (it.sha256 && it.sha256.toLowerCase() !== gotDec) throw new Error('channel metadata hash disagrees with manifest');
+    step(4,'done'); step(5,'on');
+
+    currentBytes = bytes;
+    $('verd').className = 'verd ok';
+    $('verdbig').textContent = '✓ VERIFIED — not one byte altered since publication';
+    $('verdsub').textContent = `sha256 ${gotDec} · reconstructed from ${manifest.pages.length} on-chain transaction(s) by your browser, just now`;
+    $('docttl').textContent = it.name;
+    $('bar').style.display = 'flex';
+    render(bytes, manifest.contentType);
+    step(5,'done');
+    log('h', '── done. nothing you just read touched a content server. welcome to the ledger.');
+  } catch (e) {
+    [2,3,4,5].forEach(n => { if ($('s'+n).classList.contains('on')) step(n,'fail'); });
+    $('verd').className = 'verd bad';
+    $('verdbig').textContent = '✗ NOT VERIFIED — refusing to render';
+    $('verdsub').textContent = String(e.message || e);
+    log('er', 'FAILED: ' + (e.message || e));
+  }
+}
+
+function render(bytes, type) {
+  const stage = $('stage'); stage.innerHTML = ''; stage.style.display = 'block';
+  if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+  const base = (type||'').split(';')[0].trim();
+  currentBlobUrl = URL.createObjectURL(new Blob([bytes], { type: base || 'application/octet-stream' }));
+  if (base === 'text/html') {
+    const fr = document.createElement('iframe');
+    fr.setAttribute('sandbox','');           // hash-verified ≠ safe to execute
+    fr.src = currentBlobUrl; fr.title = 'verified scroll';
+    stage.appendChild(fr);
+  } else if (base.startsWith('image/')) {
+    const im = document.createElement('img'); im.src = currentBlobUrl; stage.appendChild(im);
+  } else if (base.startsWith('video/')) {
+    const v = document.createElement('video'); v.src = currentBlobUrl; v.controls = true; stage.appendChild(v);
+  } else if (base.startsWith('audio/')) {
+    const a = document.createElement('audio'); a.src = currentBlobUrl; a.controls = true; a.style.width='100%'; stage.appendChild(a);
+  } else if (base.startsWith('text/') || base === 'application/json') {
+    const pre = document.createElement('pre'); pre.textContent = new TextDecoder().decode(bytes); stage.appendChild(pre);
+  } else {
+    const pre = document.createElement('pre'); pre.textContent = `(${base || 'unknown type'} — use Download to save the verified bytes)`; stage.appendChild(pre);
+  }
+}
+
+$('dl').onclick = () => {
+  if (!currentBytes) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([currentBytes]));
+  a.download = currentName + '.html';
+  a.click();
+};
+$('chansel').onchange = () => { $('custom').style.display = $('chansel').value ? 'none' : 'block'; };
+$('go').onclick = async () => {
+  const policy = ($('chansel').value || $('custom').value).trim().toLowerCase();
+  if (!/^[0-9a-f]{56}$/.test(policy)) { log('er','that is not a 56-hex policy id'); return; }
+  $('go').disabled = true;
+  try { location.hash = 'policy=' + policy; await listChannel(policy); }
+  catch (e) { step(1,'fail'); log('er','FAILED: ' + (e.message||e)); }
+  finally { $('go').disabled = false; }
+};
+// deep link: leaks.html#policy=<id>
+const mh = location.hash.match(/policy=([0-9a-fA-F]{56})/);
+if (mh) { const p = mh[1].toLowerCase(); const opt = [...$('chansel').options].find(o=>o.value===p);
+  if (!opt) { $('chansel').value=''; $('custom').style.display='block'; $('custom').value=p; }
+  $('go').click(); }
+</script>
+</body>
+</html>

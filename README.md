@@ -3,6 +3,7 @@
 
 ## 🌐 GitHub Pages
 - Main viewer: https://beacnpool.github.io/ledger-scrolls/
+- **BEACN Leaks channel player: https://beacnpool.github.io/ledger-scrolls/leaks.html** — point at a policy ID, your browser queries the chain and verifies; this site hosts nothing
 - Constitution viewer: https://beacnpool.github.io/ledger-scrolls/constitution.html
 - Bible viewer: https://beacnpool.github.io/ledger-scrolls/bible.html
 - First video viewer: https://beacnpool.github.io/ledger-scrolls/first-video.html
