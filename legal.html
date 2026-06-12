@@ -3,88 +3,149 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ledger Docket — Public Records Terminal</title>
+<title>Ledger Scrolls Legal — Blockchain-Proven Documents</title>
+<meta name="description" content="Publish legal documents with transaction-backed signatures, permanent timestamps, and independently verifiable SHA-256 proof.">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <style>
-:root{--manila:#efe7d2;--manila2:#e6dcc2;--ink:#22201a;--navy:#1d3050;--navy2:#2c4a7c;
- --seal:#8b2020;--dim:#6b6555;--good:#2e6e45;--bad:#9c2e25;
- --serif:Georgia,'Times New Roman',serif;--mono:'Courier New',Courier,monospace}
+:root{--ink:#101a2e;--navy:#08111f;--navy2:#101f36;--blue:#2563eb;--blue2:#60a5fa;
+ --paper:#f7f8fb;--white:#fff;--line:#dce2ec;--muted:#637087;--good:#15803d;--bad:#b42318;
+ --sans:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--navy);color:var(--ink);font-family:var(--serif);font-size:15.5px;line-height:1.65;padding:26px 10px}
-.term{max-width:920px;margin:0 auto;background:var(--manila);border:1px solid #0e1a30;
- box-shadow:0 14px 60px rgba(0,0,0,.55)}
-.mast{background:var(--ink);color:var(--manila);text-align:center;padding:9px;letter-spacing:.3em;font-size:12px;font-family:var(--mono)}
-.head{text-align:center;padding:36px 30px 22px;border-bottom:3px double var(--ink)}
-.head h1{font-size:34px;letter-spacing:.08em;text-transform:uppercase}
-.head .sub{font-style:italic;color:var(--dim)}
-.head .docketid{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:12px;word-break:break-all}
-.head .docketid b{color:var(--ink)}
-main{padding:26px 34px 44px}
-.lookup{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;margin:6px 0 4px}
-.lookup label{font-variant:small-caps;letter-spacing:.08em}
-.lookup input{width:150px;background:#fff;border:1.5px solid var(--ink);font-family:var(--mono);
- font-size:18px;padding:9px 12px;text-align:center;letter-spacing:.1em}
-button{font-family:var(--serif);font-size:15px;background:var(--navy);color:#fff;border:0;
- padding:11px 26px;cursor:pointer;letter-spacing:.06em}
-button:hover{background:var(--navy2)}
-button:disabled{background:#777;cursor:wait}
-.hint{text-align:center;font-size:12.5px;color:var(--dim);margin-bottom:18px}
-.cert{display:none;border:2px solid var(--ink);margin:20px 0;background:#f7f2e4}
-.cert .certhead{background:var(--ink);color:var(--manila);text-align:center;padding:6px;
- font-family:var(--mono);font-size:11.5px;letter-spacing:.25em}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55}
+a{color:var(--blue)}
+.nav{height:72px;display:flex;align-items:center;justify-content:space-between;max-width:1160px;margin:auto;padding:0 24px}
+.brand{color:var(--white);font-weight:750;letter-spacing:-.02em;text-decoration:none;font-size:19px}
+.brand span{color:var(--blue2)}
+.navlinks{display:flex;align-items:center;gap:24px;font-size:13px}
+.navlinks a{color:#aebbd0;text-decoration:none}.navlinks a:hover{color:#fff}
+.hero{background:radial-gradient(circle at 78% 5%,#19345e 0,transparent 34%),var(--navy);color:#fff;overflow:hidden}
+.hero-inner{max-width:1160px;margin:auto;padding:88px 24px 112px;display:grid;grid-template-columns:1.15fr .85fr;gap:72px;align-items:center}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--blue2);margin-bottom:20px}
+h1{font-size:clamp(44px,6vw,72px);line-height:1.02;letter-spacing:-.055em;max-width:760px}
+.lead{font-size:20px;line-height:1.6;color:#b8c5d8;max-width:650px;margin:26px 0 34px}
+.cta{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+button,.button{font:700 14px var(--sans);border:0;border-radius:7px;padding:13px 20px;cursor:pointer;text-decoration:none;transition:.15s}
+button,.button.primary{background:var(--blue);color:#fff}.button.primary:hover,button:hover{background:#1d4ed8}
+.button.secondary{background:transparent;color:#dbe7f8;border:1px solid #40516c}.button.secondary:hover{border-color:#8aa0c0}
+button:disabled{opacity:.55;cursor:wait}
+.proof-card{border:1px solid #30415d;border-radius:14px;padding:26px;background:rgba(12,25,44,.72);box-shadow:0 24px 70px rgba(0,0,0,.22)}
+.proof-card .label{font:11px var(--mono);letter-spacing:.14em;color:#8293ad;margin-bottom:16px}
+.proof-line{display:flex;gap:12px;padding:14px 0;border-top:1px solid #283953}
+.proof-line b{display:block;font-size:14px}.proof-line span{display:block;color:#92a2ba;font-size:12px;margin-top:2px}
+.check{color:#4ade80;font-weight:bold}
+.section{max-width:1160px;margin:auto;padding:90px 24px}
+.section-head{max-width:680px;margin-bottom:38px}.section-head h2{font-size:38px;letter-spacing:-.035em;line-height:1.15}
+.section-head p{color:var(--muted);font-size:17px;margin-top:14px}
+.benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.benefit{background:#fff;border:1px solid var(--line);border-radius:12px;padding:26px}
+.benefit .num{font:12px var(--mono);color:var(--blue);margin-bottom:25px}
+.benefit h3{font-size:19px;margin-bottom:9px}.benefit p{font-size:14px;color:var(--muted)}
+.console-wrap{background:#edf1f7;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.console{max-width:920px;margin:auto;padding:86px 24px}
+.console-box{background:#fff;border:1px solid #d5dce8;border-radius:16px;padding:32px;box-shadow:0 18px 55px rgba(25,42,70,.09)}
+.console-title{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:28px}
+.console-title h2{font-size:28px;letter-spacing:-.03em}.console-title p{color:var(--muted);font-size:14px;margin-top:7px}
+.live{font:11px var(--mono);color:var(--good);background:#edf9f0;border:1px solid #c8e8d0;border-radius:20px;padding:6px 10px;white-space:nowrap}
+.field{margin:14px 0}.field label{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:7px}
+.field label span{font-weight:400;color:var(--muted)}
+.field input{width:100%;border:1px solid #cfd7e4;border-radius:7px;background:#fafbfc;padding:13px 14px;font:12px var(--mono);color:var(--ink)}
+.field input:focus{outline:2px solid #bfdbfe;border-color:var(--blue)}
+.record-row{display:grid;grid-template-columns:1fr 170px;gap:12px}.record-row input{font-size:16px}
+.hint{font-size:12px;color:var(--muted);margin-top:11px}
+.hint button{background:none;color:var(--blue);padding:0;font-size:12px}.hint button:hover{text-decoration:underline;background:none}
+.cert{display:none;border:1px solid #cfd7e4;border-radius:10px;margin:24px 0 0;overflow:hidden;background:#fff}
+.cert .certhead{background:var(--navy);color:#fff;padding:10px 14px;font:10px var(--mono);letter-spacing:.16em}
 .cert table{width:100%;border-collapse:collapse;font-size:13px}
-.cert td{border-bottom:1px solid #c9bf9f;padding:7px 14px;vertical-align:top;word-break:break-all}
-.cert td:first-child{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--dim);width:170px;white-space:nowrap}
-.cert td:last-child{font-family:var(--mono);font-size:12px}
+.cert td{border-bottom:1px solid #e6eaf0;padding:9px 14px;vertical-align:top;word-break:break-all}
+.cert td:first-child{font:10px var(--mono);letter-spacing:.08em;color:var(--muted);width:170px;white-space:nowrap}
+.cert td:last-child{font:12px var(--mono)}
 .cert .ok{color:var(--good);font-weight:bold}
 .cert .no{color:var(--bad);font-weight:bold}
-#status{font-family:var(--mono);font-size:12px;background:#1b1914;color:#cfc7ae;border:1px solid #000;
- padding:10px 14px;margin:14px 0;display:none;max-height:200px;overflow-y:auto}
+#status{font:11px var(--mono);background:#0b1423;color:#aebbd0;border-radius:8px;
+ padding:12px 14px;margin:14px 0;display:none;max-height:200px;overflow-y:auto}
 #status div{padding:1.5px 0;word-break:break-all}
 #status .er{color:#e08379}#status .ok{color:#8fc79f}
-.stage{display:none;border:1px solid var(--ink);background:#fff;margin:16px 0}
+.stage{display:none;border:1px solid #cfd7e4;border-radius:8px;overflow:hidden;background:#fff;margin:16px 0}
 .stage iframe{width:100%;height:80vh;border:0;display:block;background:#fff}
 .stage pre{padding:24px;white-space:pre-wrap;font-family:var(--mono);font-size:13.5px;max-height:80vh;overflow:auto}
 .stage img{max-width:100%;display:block;margin:0 auto}
 .actions{display:none;gap:10px;justify-content:center;margin:10px 0}
-.actions button.alt{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
-.explain{border-top:3px double var(--ink);margin-top:30px;padding-top:20px}
-.explain h2{font-variant:small-caps;letter-spacing:.1em;font-size:18px;margin-bottom:8px}
-.explain p,.explain li{font-size:13.8px}
-.explain ul{margin:8px 0 8px 24px}
-.foot{background:var(--ink);color:#b8b094;text-align:center;font-family:var(--mono);font-size:11px;
- padding:14px;line-height:2}
-.foot a{color:var(--manila)}
-@media(max-width:640px){main{padding:18px 14px}.head h1{font-size:24px}}
+.actions button.alt{background:#fff;color:var(--ink);border:1px solid #cfd7e4}
+.bottom{background:var(--navy);color:#fff}.bottom-inner{max-width:1160px;margin:auto;padding:72px 24px;display:flex;justify-content:space-between;gap:40px;align-items:center}
+.bottom h2{font-size:34px;letter-spacing:-.035em;max-width:600px}.bottom p{color:#9fadc1;margin-top:10px;font-size:14px}
+.foot{background:#050b14;color:#74839a;text-align:center;font:11px var(--mono);padding:20px;line-height:2}
+.foot a{color:#aebbd0}
+@media(max-width:800px){.hero-inner{grid-template-columns:1fr;padding-top:60px;gap:44px}.benefits{grid-template-columns:1fr}.bottom-inner{display:block}.bottom .cta{margin-top:26px}}
+@media(max-width:560px){.navlinks a:not(:last-child){display:none}.hero-inner{padding-bottom:78px}.record-row{grid-template-columns:1fr}.console-box{padding:22px}.console-title{display:block}.live{display:inline-block;margin-top:12px}.cert td:first-child{width:110px;white-space:normal}}
 </style>
 </head>
 <body>
-<div class="term">
-<div class="mast">PUBLIC RECORDS TERMINAL &#183; OPEN TO ALL &#183; NO CLERK REQUIRED</div>
-
-<div class="head">
- <h1>&#9878; Ledger Docket</h1>
- <div class="sub">recorded instruments on the Cardano blockchain — executed by signature, sealed by hash, dated by consensus</div>
- <div class="docketid">only the holder of a docket's key can record under its policy —<br>every instrument this terminal pulls is provably its signatory's</div>
+<div class="hero">
+ <nav class="nav">
+  <a class="brand" href="./">Ledger <span>Scrolls</span> Legal</a>
+  <div class="navlinks">
+   <a href="#proof">Why it works</a>
+   <a href="#verify">Verify a document</a>
+   <a href="https://github.com/BEACNpool/ledger-scrolls">Open source</a>
+  </div>
+ </nav>
+ <div class="hero-inner">
+  <div>
+   <div class="eyebrow">Legal records, built for independent proof</div>
+   <h1>Documents that prove themselves.</h1>
+   <p class="lead">Publish a legal instrument with its signer's transaction, exact-file fingerprint, and permanent blockchain timestamp attached. Anyone can verify the proof. No account, private database, or trusted portal required.</p>
+   <div class="cta">
+    <a class="button primary" href="#verify">Verify the live record</a>
+    <a class="button secondary" href="https://github.com/BEACNpool/ledger-scrolls">Build with the technology</a>
+   </div>
+  </div>
+  <div class="proof-card" aria-label="Document proof summary">
+   <div class="label">DOCUMENT PROOF / LIVE ON CARDANO</div>
+   <div class="proof-line"><div class="check">✓</div><div><b>Transaction-signed</b><span>The docket key authorized the recording transaction.</span></div></div>
+   <div class="proof-line"><div class="check">✓</div><div><b>Hash-sealed</b><span>SHA-256 proves the exact document bytes are unchanged.</span></div></div>
+   <div class="proof-line"><div class="check">✓</div><div><b>Consensus-timestamped</b><span>The network fixes the document's date of record.</span></div></div>
+   <div class="proof-line"><div class="check">✓</div><div><b>Independently readable</b><span>Open-source software reconstructs the file from public ledger data.</span></div></div>
+  </div>
+ </div>
 </div>
 
-<main>
- <div class="lookup" style="margin-bottom:2px">
-  <label>Docket</label>
-  <select id="docksel" style="font-family:var(--mono);font-size:12px;padding:10px;border:1.5px solid var(--ink);background:#fff;max-width:420px">
-   <option value="97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4">BEACN Ledger Docket — 97d3659d…4d95e4 (demo)</option>
-   <option value="">my own docket (paste policy id)…</option>
-  </select>
-  <input id="dockcustom" placeholder="56-hex policy id of YOUR docket" style="display:none;width:340px;font-size:12px;text-align:left;letter-spacing:0">
+<section class="section" id="proof">
+ <div class="section-head">
+  <div class="eyebrow">Proof travels with the document</div>
+  <h2>A stronger record than “trust our database.”</h2>
+  <p>Ledger Scrolls turns a legal document into a portable, independently verifiable record.</p>
  </div>
- <div class="lookup">
-  <label>Document No.</label>
-  <input id="docno" placeholder="0001" inputmode="numeric" maxlength="6">
-  <button id="pull">Pull Record</button>
+ <div class="benefits">
+  <div class="benefit"><div class="num">01 / EXECUTION</div><h3>Signed by the recording transaction</h3><p>The policy requires the docket key's signature before a document record can be created.</p></div>
+  <div class="benefit"><div class="num">02 / INTEGRITY</div><h3>Verified byte for byte</h3><p>The viewer rebuilds the original file and checks its SHA-256 seal before displaying it.</p></div>
+  <div class="benefit"><div class="num">03 / PERMANENCE</div><h3>Dated on a public ledger</h3><p>The record, proof, and timestamp remain independently inspectable without our company in the middle.</p></div>
  </div>
- <p class="hint">this terminal stores nothing and favors no one — paste <b>your own</b> docket policy above and pull <b>your own</b> documents by number; the BEACN docket is only the demonstration (try doc no. <b>1</b>)</p>
+</section>
+
+<div class="console-wrap" id="verify">
+<section class="console">
+ <div class="console-box">
+  <div class="console-title">
+   <div><h2>Verify a legal record</h2><p>Use the live demonstration docket or replace it with any compatible 56-character policy ID.</p></div>
+   <div class="live">● LIVE LEDGER QUERY</div>
+  </div>
+  <div class="field">
+   <label for="docket">Docket policy ID <span>editable for custom dockets</span></label>
+   <input id="docket" value="97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4" placeholder="56-hex policy ID" spellcheck="false">
+  </div>
+  <div class="field">
+   <label for="docno">Document number</label>
+   <div class="record-row">
+    <input id="docno" value="1" placeholder="1" inputmode="numeric" maxlength="6">
+    <button id="pull">Verify Document</button>
+   </div>
+  </div>
+  <p class="hint">Default: BEACN demonstration policy, document 1. <button type="button" id="resetdemo">Restore demo values</button></p>
 
  <div class="cert" id="cert">
-  <div class="certhead">CERTIFICATE OF RECORD — COMPILED FROM PUBLIC LEDGER DATA, JUST NOW</div>
+  <div class="certhead">CERTIFICATE OF RECORD / COMPILED FROM LIVE PUBLIC LEDGER DATA</div>
   <table id="certtbl"></table>
  </div>
 
@@ -94,42 +155,29 @@ button:disabled{background:#777;cursor:wait}
   <button class="alt" id="prn" onclick="window.print()">&#128424; print</button>
  </div>
  <div class="stage" id="stage"></div>
-
- <div class="explain">
-  <h2>What this terminal proves</h2>
-  <ul>
-   <li><b>Integrity</b> — the instrument's SHA-256 is recomputed in your browser and compared against the seal recorded on-chain. A single altered character fails the pull.</li>
-   <li><b>Time</b> — the recording transaction's block time is fixed by network consensus: a postmark no party controls.</li>
-   <li><b>Execution</b> — no token exists under the docket policy unless the docket key signed the recording transaction. The signature is the execution; it cannot be forged or repudiated.</li>
-  </ul>
-  <p>Key custody is not legal identity (binding a key to a person is an
-  ordinary identity act — see Article V of document 0001), evidentiary
-  treatment varies by jurisdiction, and this terminal is a demonstration,
-  not legal advice. Everything else, the mathematics handles.</p>
-  <h2 style="margin-top:18px">Run your own docket</h2>
-  <ul>
-   <li>Create a minting policy keyed to your wallet (<span style="font-family:var(--mono)">{"type":"all","scripts":[{"type":"sig","keyHash":&lt;yours&gt;}]}</span>) — its policy ID is your docket number-plate, forever.</li>
-   <li>Record each instrument as a Ledger Scroll, then mint <span style="font-family:var(--mono)">LEGAL_0001, LEGAL_0002, …</span> under your policy with the scroll pointer + SHA-256 in the token metadata (full recipe &amp; receipts: <a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/examples/legal-0001">examples/legal-0001</a>).</li>
-   <li>Paste your policy ID above — or share a direct link: <span style="font-family:var(--mono)">legal.html#docket=&lt;your-policy&gt;&amp;doc=1</span>. This terminal treats your docket exactly as it treats BEACN's.</li>
-  </ul>
-  <p style="margin-top:8px">Protocol, tools and this page are open source —
-  <a href="https://github.com/BEACNpool/ledger-scrolls">github.com/BEACNpool/ledger-scrolls</a>.</p>
  </div>
-</main>
+</section>
+</div>
 
-<div class="foot">
- LEDGER DOCKET &#183; a Ledger Scrolls demonstration by BEACN<br>
- <a href="https://beacnpool.github.io/ledger-scrolls/">the library</a> &#183;
- <a href="leaks.html">BEACN Leaks</a> &#183;
- <a href="https://github.com/BEACNpool/ledger-scrolls">source &amp; protocol</a>
-</div>
-</div>
+<section class="bottom">
+ <div class="bottom-inner">
+  <div><h2>Own the record. Keep the proof public.</h2><p>Ledger Scrolls is open-source read/write technology for permanent, transaction-backed documents.</p></div>
+  <div class="cta"><a class="button primary" href="https://github.com/BEACNpool/ledger-scrolls/tree/main/examples/legal-0001">See the implementation</a></div>
+ </div>
+</section>
+
+<footer class="foot">
+ LEDGER SCROLLS LEGAL &#183; OPEN-SOURCE BLOCKCHAIN DOCUMENT TECHNOLOGY<br>
+ <a href="./">Ledger Scrolls</a> &#183; <a href="https://github.com/BEACNpool/ledger-scrolls">Source and protocol</a><br>
+ Cryptographic proof supports authenticity and integrity; legal effect and identity binding depend on the agreement and jurisdiction.
+</footer>
 
 <script>
 "use strict";
 const SOURCES=['https://koios.beacn.workers.dev/api/v1','https://api.koios.rest/api/v1'];
 let DOCKET='97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4';
 const $=id=>document.getElementById(id);
+const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const st=(cls,m)=>{const s=$('status');s.style.display='block';const d=document.createElement('div');d.className=cls;d.textContent=m;s.appendChild(d);s.scrollTop=1e9;};
 const hex2b=h=>{h=String(h).replace(/^0x/i,'');const b=new Uint8Array(h.length/2);for(let i=0;i<h.length;i+=2)b[i/2]=parseInt(h.substr(i,2),16);return b;};
 const b2hex=b=>Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('');
@@ -151,7 +199,7 @@ function cbor(raw,pos=0){const len=(ai,p)=>{if(ai<24)return[ai,p];const w={24:1,
 let bytesOut=null,urlOut=null,nameOut='document';
 
 function currentDocket(){
-  const v=($('docksel').value || $('dockcustom').value).trim().toLowerCase();
+  const v=$('docket').value.trim().toLowerCase();
   return /^[0-9a-f]{56}$/.test(v)?v:null;
 }
 
@@ -225,15 +273,15 @@ async function pull(){
     st('ok',`  seal verified ✓ ${got}`);
     // certificate
     const rowsHtml=[
-      ['DOCUMENT NO.',asset.replace('_','-')],
-      ['TITLE',meta.name||'(untitled)'],
+      ['DOCUMENT NO.',esc(asset.replace('_','-'))],
+      ['TITLE',esc(meta.name||'(untitled)')],
       ['STATUS','<span class="ok">RECORDED · SEAL VERIFIED ✓</span>'],
-      ['DATE OF RECORD',when+' (block time, network consensus)'],
-      ['RECORDING TX',inf.minting_tx_hash+' — its Ed25519 signature is the execution'],
-      ['EXECUTED BY','holder of key '+(meta.signerKeyHash||'(see docket policy)')],
-      ['DOCKET POLICY',DOCKET],
-      ['SEAL (SHA-256)',got],
-      ['INSTRUMENT POINTER','manifest-chain-v2 · '+ptr],
+      ['DATE OF RECORD',esc(when+' (block time, network consensus)')],
+      ['RECORDING TX',esc(inf.minting_tx_hash+' — its Ed25519 signature is the execution')],
+      ['EXECUTED BY',esc('holder of key '+(meta.signerKeyHash||'(see docket policy)'))],
+      ['DOCKET POLICY',esc(DOCKET)],
+      ['SEAL (SHA-256)',esc(got)],
+      ['INSTRUMENT POINTER',esc('manifest-chain-v2 · '+ptr)],
     ].map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');
     $('certtbl').innerHTML=rowsHtml;
     $('cert').style.display='block';
@@ -250,21 +298,19 @@ async function pull(){
     st('ok','── record pulled, verified, and rendered. no clerk was involved.');
   }catch(e){
     st('er','FAILED: '+(e.message||e));
-    $('certtbl').innerHTML=`<tr><td>STATUS</td><td><span class="no">✗ ${String(e.message||e)}</span></td></tr>`;
+    $('certtbl').innerHTML=`<tr><td>STATUS</td><td><span class="no">✗ ${esc(e.message||e)}</span></td></tr>`;
     $('cert').style.display='block';
   }finally{$('pull').disabled=false;}
 }
 
 $('pull').onclick=pull;
 $('docno').addEventListener('keydown',e=>{if(e.key==='Enter')pull();});
-$('dockcustom').addEventListener('keydown',e=>{if(e.key==='Enter')pull();});
-$('docksel').onchange=()=>{ $('dockcustom').style.display=$('docksel').value?'none':'inline-block'; };
+$('docket').addEventListener('keydown',e=>{if(e.key==='Enter')pull();});
+$('resetdemo').onclick=()=>{$('docket').value='97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4';$('docno').value='1';};
 $('dl').onclick=()=>{if(!bytesOut)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytesOut]));a.download=nameOut+'.html';a.click();};
 const mh=location.hash.match(/docket=([0-9a-fA-F]{56})/);
 if(mh){
-  const p=mh[1].toLowerCase(); DOCKET=p;
-  const opt=[...$('docksel').options].find(o=>o.value===p);
-  if(opt){$('docksel').value=p;}else{$('docksel').value='';$('dockcustom').style.display='inline-block';$('dockcustom').value=p;}
+  const p=mh[1].toLowerCase(); DOCKET=p;$('docket').value=p;
 }
 const md=location.hash.match(/doc=(\d+)/);
 if(md){$('docno').value=md[1];pull();}
