@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LEGAL-0001 — Declaration of Authorship and Proof of Existence</title>
+<style>
+:root{--paper:#fcfaf4;--ink:#19170f;--rule:#19170f;--dim:#5a5648;--seal:#8b2020;
+ --serif:Georgia,'Times New Roman',Times,serif;--mono:'Courier New',Courier,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#23211a;font-family:var(--serif);color:var(--ink);font-size:15.5px;line-height:1.7;padding:28px 10px}
+.inst{max-width:780px;margin:0 auto;background:var(--paper);padding:64px 70px 56px;
+ box-shadow:0 10px 50px rgba(0,0,0,.55);border:1px solid #888}
+.cap{text-align:center;border-bottom:3px double var(--rule);padding-bottom:18px;margin-bottom:26px}
+.cap .docket{font-family:var(--mono);font-size:12px;letter-spacing:.18em;color:var(--dim)}
+.cap h1{font-size:25px;letter-spacing:.06em;margin:14px 0 4px;text-transform:uppercase}
+.cap .sub{font-style:italic;color:var(--dim)}
+.capbox{margin:22px auto 0;border:1px solid var(--rule);max-width:560px;font-family:var(--mono);
+ font-size:11px;text-align:left;padding:10px 14px;line-height:1.9;word-break:break-all}
+.capbox b{font-weight:bold}
+h2{font-size:15.5px;letter-spacing:.1em;text-transform:uppercase;margin:30px 0 8px;text-align:center}
+h2:before,h2:after{content:" — "}
+p{margin:11px 0;text-align:justify}
+p.c{text-align:center}
+ol.art{counter-reset:art;list-style:none}
+ol.art>li{margin:14px 0;padding-left:0}
+ol.art>li:before{counter-increment:art;content:counter(art) ". ";font-weight:bold}
+ul{margin:8px 0 8px 30px}
+li{margin:6px 0}
+.mono{font-family:var(--mono);font-size:.88em;word-break:break-all}
+.defined{font-variant:small-caps;font-weight:bold}
+.sigblock{margin-top:36px;border-top:1px solid var(--rule);padding-top:22px}
+.sigrow{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;margin-top:14px}
+.sigcell{flex:1;min-width:240px}
+.sigline{border-bottom:1px solid var(--ink);height:34px;position:relative}
+.sigline .cursive{position:absolute;bottom:2px;left:8px;font-family:var(--mono);font-size:11px;color:var(--seal)}
+.siglabel{font-size:11.5px;color:var(--dim);margin-top:4px;font-family:var(--mono);line-height:1.7;word-break:break-all}
+.seal{margin:30px auto 0;width:170px;height:170px;border:3px double var(--seal);border-radius:50%;
+ display:flex;align-items:center;justify-content:center;text-align:center;color:var(--seal);
+ font-family:var(--mono);font-size:10px;letter-spacing:.14em;line-height:1.8;transform:rotate(-6deg);padding:14px}
+.notice{border:1px solid var(--rule);padding:12px 16px;margin:18px 0;font-size:13.5px;background:#f4f0e2}
+.notice b{text-transform:uppercase;letter-spacing:.06em;font-size:12px}
+.foot{margin-top:30px;border-top:3px double var(--rule);padding-top:14px;text-align:center;
+ font-family:var(--mono);font-size:11px;color:var(--dim);line-height:2}
+@media(max-width:640px){.inst{padding:30px 22px}}
+@media print{body{background:#fff;padding:0}.inst{box-shadow:none;border:0}}
+</style>
+</head>
+<body>
+<div class="inst">
+
+<div class="cap">
+ <div class="docket">LEDGER DOCKET &#183; RECORDED INSTRUMENT &#183; DOCUMENT NO. <b>LEGAL-0001</b></div>
+ <h1>Declaration of Authorship<br>and Proof of Existence</h1>
+ <div class="sub">a demonstrative instrument, executed by cryptographic signature<br>and entered into the permanent record of the Cardano ledger</div>
+ <div class="capbox">
+  DOCKET POLICY (the &ldquo;Docket&rdquo;): <b>97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4</b><br>
+  DECLARANT KEY HASH (the &ldquo;Key&rdquo;): <b>843b6d1793fb7fbc6ceb1117f32062a323a8ae21847004aa712609d6</b><br>
+  RECORD TOKEN: <b>LEGAL_0001</b>, minted under the Docket in the transaction that entered this instrument into the record (the &ldquo;Recording Transaction&rdquo;)
+ </div>
+</div>
+
+<h2>Recitals</h2>
+
+<p><b>WHEREAS</b>, parties to agreements, creators of works, and custodians of
+records have at all times required three assurances of a written instrument —
+that it has not been altered (<span class="defined">integrity</span>), that it
+existed at a stated time (<span class="defined">priority</span>), and that an
+identified party stands behind it (<span class="defined">execution</span>) —
+assurances historically supplied by notaries, registries, and witnesses;</p>
+
+<p><b>WHEREAS</b>, a public blockchain supplies each of these assurances by
+mathematics rather than by institutional custody, and does so identically for
+every person, in every jurisdiction, at any hour, without permission;</p>
+
+<p><b>NOW, THEREFORE</b>, the holder of the Key declares and demonstrates as
+follows:</p>
+
+<h2>Article I — The Instrument and Its Integrity</h2>
+
+<ol class="art">
+ <li>This document (the <span class="defined">Instrument</span>) is identified
+ uniquely and exhaustively by the SHA-256 digest of its bytes (the
+ <span class="defined">Seal</span>). The Seal is recorded inside the
+ Instrument&rsquo;s on-chain manifest at the moment of recording.</li>
+ <li>Any party holding any purported copy of this Instrument may recompute its
+ digest and compare it against the Seal. A copy whose digest matches the Seal
+ is this Instrument, entire and unaltered, to a certainty bounded only by the
+ collision resistance of SHA-256. A copy whose digest differs is not this
+ Instrument.</li>
+ <li>No party — including the declarant — retains any ability to amend,
+ substitute, or withdraw the recorded Instrument.</li>
+</ol>
+
+<h2>Article II — Time of Record</h2>
+
+<ol class="art">
+ <li>The Recording Transaction is incorporated in a block of the Cardano
+ ledger bearing a slot number and timestamp fixed by the consensus of the
+ network&rsquo;s independent operators.</li>
+ <li>Said timestamp establishes, against the entire world, that this
+ Instrument existed in its exact present form no later than that moment —
+ the function of a postmark, a notarial date, or a registered-mail receipt,
+ performed here by a clock that no single party controls.</li>
+</ol>
+
+<h2>Article III — Execution by Cryptographic Signature</h2>
+
+<ol class="art">
+ <li>The Docket is a Cardano minting policy whose terms admit exactly one
+ signatory: the holder of the Key. <b>No token can exist under the Docket
+ unless the holder of the Key signed the transaction that minted it.</b></li>
+ <li>The Recording Transaction bears an Ed25519 signature verifiable against
+ the Key by any party, using public data alone. That signature is the
+ execution of this Instrument: deliberate, unforgeable, and permanently
+ affixed — the function of a wet signature and a seal, performed by
+ mathematics.</li>
+ <li>Each subsequent instrument entered under the Docket (LEGAL_0002,
+ LEGAL_0003, and so forth) is likewise executed, creating a continuous,
+ numbered, publicly auditable docket of records by the same signatory.</li>
+</ol>
+
+<h2>Article IV — Independent Verification Procedure</h2>
+
+<p class="c"><i>Any court, counsel, counterparty, or member of the public may
+verify this Instrument without the declarant&rsquo;s cooperation:</i></p>
+
+<ol class="art">
+ <li>Query any Cardano node or indexer for asset <span class="mono">LEGAL_0001</span>
+ under policy <span class="mono">97d3659d&hellip;4d95e4</span>; obtain the minting
+ transaction, its block time, and its metadata, which contains the pointer to
+ this Instrument and the Seal.</li>
+ <li>Retrieve the Instrument&rsquo;s bytes from the ledger via the pointer;
+ recompute the SHA-256 digest; compare with the Seal.</li>
+ <li>Verify the Ed25519 witness on the Recording Transaction against the Key.</li>
+ <li>No step requires trust in the declarant, in BEACN, in any website, or in
+ any single server. The open-source tooling published at
+ <span class="mono">github.com/BEACNpool/ledger-scrolls</span> performs steps
+ 1&ndash;2 automatically; any competent engineer can reproduce all steps from
+ the public protocol specification.</li>
+</ol>
+
+<h2>Article V — Limitations, Honestly Stated</h2>
+
+<div class="notice"><b>This section is the difference between a demonstration
+and a deception; read it.</b></div>
+
+<ol class="art">
+ <li><b>Key custody is not legal identity.</b> This record proves that
+ <i>whoever holds the Key</i> executed this Instrument. Binding the Key to a
+ natural or legal person requires an ordinary identity act — an affidavit, a
+ filing, a contract clause, or public attribution maintained over time — after
+ which every past and future record under the Docket inherits that binding.</li>
+ <li><b>The record is public and permanent.</b> Instruments recorded in full
+ are readable by everyone, forever. For confidential agreements, record only
+ the Seal: a one-page hash-anchor instrument establishes integrity, priority,
+ and execution while the agreement itself remains private.</li>
+ <li><b>Evidentiary weight varies by jurisdiction.</b> Many jurisdictions
+ recognize electronic signatures and blockchain records; their treatment is
+ not uniform. This Instrument is a <i>demonstrative sample</i>, is not legal
+ advice, and creates no rights or obligations.</li>
+ <li><b>A lost or stolen key compromises future records, never past ones.</b>
+ Records already entered remain sealed by their block; a successor-key notice
+ can be entered into the Docket as a final instrument under the old Key.</li>
+</ol>
+
+<h2>Article VI — Illustrative Applications</h2>
+
+<ul>
+ <li><b>Contracts:</b> anchor the executed agreement&rsquo;s hash; both parties&rsquo; dockets record the same Seal.</li>
+ <li><b>Intellectual property:</b> priority of authorship for manuscripts, designs, source code, research.</li>
+ <li><b>Corporate records:</b> board resolutions and filings entered on a numbered, auditable docket.</li>
+ <li><b>Chain of custody:</b> evidence manifests timestamped at intake, transfer, and disposition.</li>
+ <li><b>Public notices:</b> statements that must remain exactly as issued, beyond recall or revision.</li>
+</ul>
+
+<div class="sigblock">
+ <p class="c"><b>IN WITNESS WHEREOF</b>, this Instrument is executed not by ink
+ but by the only signature that cannot be forged, backdated, or repudiated to
+ the limits of the underlying mathematics:</p>
+ <div class="sigrow">
+  <div class="sigcell">
+   <div class="sigline"><span class="cursive">/s/ Ed25519 — witness of the Recording Transaction</span></div>
+   <div class="siglabel">SIGNATURE OF DECLARANT<br>verifiable against key hash<br>843b6d1793fb7fbc6ceb1117f32062a323a8ae21847004aa712609d6</div>
+  </div>
+  <div class="sigcell">
+   <div class="sigline"><span class="cursive">/d/ block time of the Recording Transaction</span></div>
+   <div class="siglabel">DATE OF EXECUTION<br>fixed by Cardano network consensus;<br>no party may alter it</div>
+  </div>
+ </div>
+ <div class="seal">CARDANO LEDGER<br>&#9878;<br>RECORDED &#183; SEALED<br>DOCKET 97d3659d&hellip;<br>DOC NO. LEGAL-0001</div>
+</div>
+
+<div class="foot">
+ LEDGER DOCKET &#183; an open-protocol demonstration by BEACN &#183; June 2026<br>
+ protocol, tooling &amp; verification: github.com/BEACNpool/ledger-scrolls<br>
+ this document was reconstructed from the Cardano blockchain by the page you are reading it in —<br>
+ if its seal had not matched, you would be reading an error instead
+</div>
+
+</div>
+</body>
+</html>

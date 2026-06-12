@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ledger Docket — Public Records Terminal</title>
+<style>
+:root{--manila:#efe7d2;--manila2:#e6dcc2;--ink:#22201a;--navy:#1d3050;--navy2:#2c4a7c;
+ --seal:#8b2020;--dim:#6b6555;--good:#2e6e45;--bad:#9c2e25;
+ --serif:Georgia,'Times New Roman',serif;--mono:'Courier New',Courier,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy);color:var(--ink);font-family:var(--serif);font-size:15.5px;line-height:1.65;padding:26px 10px}
+.term{max-width:920px;margin:0 auto;background:var(--manila);border:1px solid #0e1a30;
+ box-shadow:0 14px 60px rgba(0,0,0,.55)}
+.mast{background:var(--ink);color:var(--manila);text-align:center;padding:9px;letter-spacing:.3em;font-size:12px;font-family:var(--mono)}
+.head{text-align:center;padding:36px 30px 22px;border-bottom:3px double var(--ink)}
+.head h1{font-size:34px;letter-spacing:.08em;text-transform:uppercase}
+.head .sub{font-style:italic;color:var(--dim)}
+.head .docketid{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:12px;word-break:break-all}
+.head .docketid b{color:var(--ink)}
+main{padding:26px 34px 44px}
+.lookup{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;margin:6px 0 4px}
+.lookup label{font-variant:small-caps;letter-spacing:.08em}
+.lookup input{width:150px;background:#fff;border:1.5px solid var(--ink);font-family:var(--mono);
+ font-size:18px;padding:9px 12px;text-align:center;letter-spacing:.1em}
+button{font-family:var(--serif);font-size:15px;background:var(--navy);color:#fff;border:0;
+ padding:11px 26px;cursor:pointer;letter-spacing:.06em}
+button:hover{background:var(--navy2)}
+button:disabled{background:#777;cursor:wait}
+.hint{text-align:center;font-size:12.5px;color:var(--dim);margin-bottom:18px}
+.cert{display:none;border:2px solid var(--ink);margin:20px 0;background:#f7f2e4}
+.cert .certhead{background:var(--ink);color:var(--manila);text-align:center;padding:6px;
+ font-family:var(--mono);font-size:11.5px;letter-spacing:.25em}
+.cert table{width:100%;border-collapse:collapse;font-size:13px}
+.cert td{border-bottom:1px solid #c9bf9f;padding:7px 14px;vertical-align:top;word-break:break-all}
+.cert td:first-child{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--dim);width:170px;white-space:nowrap}
+.cert td:last-child{font-family:var(--mono);font-size:12px}
+.cert .ok{color:var(--good);font-weight:bold}
+.cert .no{color:var(--bad);font-weight:bold}
+#status{font-family:var(--mono);font-size:12px;background:#1b1914;color:#cfc7ae;border:1px solid #000;
+ padding:10px 14px;margin:14px 0;display:none;max-height:200px;overflow-y:auto}
+#status div{padding:1.5px 0;word-break:break-all}
+#status .er{color:#e08379}#status .ok{color:#8fc79f}
+.stage{display:none;border:1px solid var(--ink);background:#fff;margin:16px 0}
+.stage iframe{width:100%;height:80vh;border:0;display:block;background:#fff}
+.stage pre{padding:24px;white-space:pre-wrap;font-family:var(--mono);font-size:13.5px;max-height:80vh;overflow:auto}
+.stage img{max-width:100%;display:block;margin:0 auto}
+.actions{display:none;gap:10px;justify-content:center;margin:10px 0}
+.actions button.alt{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.explain{border-top:3px double var(--ink);margin-top:30px;padding-top:20px}
+.explain h2{font-variant:small-caps;letter-spacing:.1em;font-size:18px;margin-bottom:8px}
+.explain p,.explain li{font-size:13.8px}
+.explain ul{margin:8px 0 8px 24px}
+.foot{background:var(--ink);color:#b8b094;text-align:center;font-family:var(--mono);font-size:11px;
+ padding:14px;line-height:2}
+.foot a{color:var(--manila)}
+@media(max-width:640px){main{padding:18px 14px}.head h1{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="term">
+<div class="mast">PUBLIC RECORDS TERMINAL &#183; OPEN TO ALL &#183; NO CLERK REQUIRED</div>
+
+<div class="head">
+ <h1>&#9878; Ledger Docket</h1>
+ <div class="sub">recorded instruments on the Cardano blockchain — executed by signature, sealed by hash, dated by consensus</div>
+ <div class="docketid">DOCKET POLICY: <b id="dpol">97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4</b><br>
+ only the holder of the docket key can record here — every instrument below is provably theirs</div>
+</div>
+
+<main>
+ <div class="lookup">
+  <label>Document No.</label>
+  <input id="docno" placeholder="0001" inputmode="numeric" maxlength="6">
+  <button id="pull">Pull Record</button>
+ </div>
+ <p class="hint">enter a docket number (e.g. <b>1</b>) — this terminal stores nothing; the record is fetched from the blockchain and verified in your browser</p>
+
+ <div class="cert" id="cert">
+  <div class="certhead">CERTIFICATE OF RECORD — COMPILED FROM PUBLIC LEDGER DATA, JUST NOW</div>
+  <table id="certtbl"></table>
+ </div>
+
+ <div id="status"></div>
+ <div class="actions" id="actions">
+  <button class="alt" id="dl">&#11015; download original bytes</button>
+  <button class="alt" id="prn" onclick="window.print()">&#128424; print</button>
+ </div>
+ <div class="stage" id="stage"></div>
+
+ <div class="explain">
+  <h2>What this terminal proves</h2>
+  <ul>
+   <li><b>Integrity</b> — the instrument's SHA-256 is recomputed in your browser and compared against the seal recorded on-chain. A single altered character fails the pull.</li>
+   <li><b>Time</b> — the recording transaction's block time is fixed by network consensus: a postmark no party controls.</li>
+   <li><b>Execution</b> — no token exists under the docket policy unless the docket key signed the recording transaction. The signature is the execution; it cannot be forged or repudiated.</li>
+  </ul>
+  <p>Key custody is not legal identity (binding a key to a person is an
+  ordinary identity act — see Article V of document 0001), evidentiary
+  treatment varies by jurisdiction, and this terminal is a demonstration,
+  not legal advice. Everything else, the mathematics handles.</p>
+  <p style="margin-top:10px">Run your own docket: the protocol, tools and this
+  terminal are open source — <a href="https://github.com/BEACNpool/ledger-scrolls">github.com/BEACNpool/ledger-scrolls</a>.
+  Point this page at any docket with <span style="font-family:var(--mono)">#docket=&lt;policy-id&gt;</span>.</p>
+ </div>
+</main>
+
+<div class="foot">
+ LEDGER DOCKET &#183; a Ledger Scrolls demonstration by BEACN<br>
+ <a href="https://beacnpool.github.io/ledger-scrolls/">the library</a> &#183;
+ <a href="leaks.html">BEACN Leaks</a> &#183;
+ <a href="https://github.com/BEACNpool/ledger-scrolls">source &amp; protocol</a>
+</div>
+</div>
+
+<script>
+"use strict";
+const SOURCES=['https://koios.beacn.workers.dev/api/v1','https://api.koios.rest/api/v1'];
+let DOCKET='97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4';
+const $=id=>document.getElementById(id);
+const st=(cls,m)=>{const s=$('status');s.style.display='block';const d=document.createElement('div');d.className=cls;d.textContent=m;s.appendChild(d);s.scrollTop=1e9;};
+const hex2b=h=>{h=String(h).replace(/^0x/i,'');const b=new Uint8Array(h.length/2);for(let i=0;i<h.length;i+=2)b[i/2]=parseInt(h.substr(i,2),16);return b;};
+const b2hex=b=>Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('');
+const sha256=async b=>b2hex(new Uint8Array(await crypto.subtle.digest('SHA-256',b)));
+const segHex=s=>{if(s&&typeof s==='object')s=s.bytes??s.seg??'';s=String(s).trim();return s.toLowerCase().startsWith('0x')?s.slice(2):s;};
+const td=new TextDecoder();
+async function gunzip(b){const ds=new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'));return new Uint8Array(await new Response(ds).arrayBuffer());}
+async function api(path,body){let last;for(const base of SOURCES){try{const r=await fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}catch(e){last=e;st('er',`${base} → ${e.message}`);}}throw last;}
+function cbor(raw,pos=0){const len=(ai,p)=>{if(ai<24)return[ai,p];const w={24:1,25:2,26:4,27:8}[ai];let n=0;for(let i=0;i<w;i++)n=n*256+raw[p+i];return[n,p+w];};
+ const mt=raw[pos]>>5,ai=raw[pos]&31;
+ if(mt===0)return len(ai,pos+1);
+ if(mt===1){const[n,p]=len(ai,pos+1);return[-1-n,p];}
+ if(mt===2||mt===3){if(ai===31){let p=pos+1;const ps=[];while(raw[p]!==0xff){const[n,q]=len(raw[p]&31,p+1);ps.push(raw.subarray(q,q+n));p=q+n;}const t=ps.reduce((a,b)=>a+b.length,0);const o=new Uint8Array(t);let z=0;for(const x of ps){o.set(x,z);z+=x.length;}return[mt===2?o:td.decode(o),p+1];}
+  const[n,p]=len(ai,pos+1);const v=raw.subarray(p,p+n);return[mt===2?v:td.decode(v),p+n];}
+ if(mt===4){let[n,p]=ai===31?[Infinity,pos+1]:len(ai,pos+1);const o=[];for(let i=0;i<n;i++){if(ai===31&&raw[p]===0xff){p++;break;}const[v,q]=cbor(raw,p);o.push(v);p=q;}return[o,p];}
+ if(mt===6){const[n,p]=len(ai,pos+1);const[v,q]=cbor(raw,p);return[{tag:n,value:v},q];}
+ throw new Error('cbor major '+mt);}
+
+let bytesOut=null,urlOut=null,nameOut='document';
+
+async function pull(){
+  const raw=($('docno').value||'').replace(/[^0-9]/g,'');
+  if(!raw){alert('enter a document number');return;}
+  const num=parseInt(raw,10);
+  const asset='LEGAL_'+String(num).padStart(4,'0');
+  $('pull').disabled=true;
+  $('status').innerHTML='';$('status').style.display='block';
+  $('cert').style.display='none';$('stage').style.display='none';$('stage').innerHTML='';$('actions').style.display='none';
+  try{
+    st('ok',`── pulling ${asset} from docket ${DOCKET.slice(0,16)}…`);
+    const nameHex=b2hex(new TextEncoder().encode(asset));
+    const infos=await api('/asset_info',{_asset_list:[[DOCKET,nameHex]]});
+    if(!infos?.length) throw new Error(`no instrument recorded as ${asset} in this docket`);
+    const inf=infos[0];
+    const meta=inf.minting_tx_metadata?.['721']?.[DOCKET]?.[asset];
+    if(!meta?.pointer?.txHash) throw new Error('record exists but carries no instrument pointer');
+    const when=inf.creation_time?new Date((typeof inf.creation_time==='number'?inf.creation_time*1000:inf.creation_time)).toUTCString():'(pending)';
+    st('ok',`  recording tx ${inf.minting_tx_hash}`);
+    st('ok',`  date of record: ${when}`);
+    // reconstruct the instrument (LS-CHAIN v2)
+    const ptr=`${meta.pointer.txHash}#${meta.pointer.txIx||0}`;
+    const rows=await api('/utxo_info',{_utxo_refs:[ptr],_extended:true});
+    const dHex=rows?.[0]?.inline_datum?.bytes;
+    if(!dHex)throw new Error('instrument manifest not found');
+    const[m]=cbor(hex2b(dHex));
+    if(m.tag!==121)throw new Error('not an instrument manifest');
+    const f=m.value;
+    const man={ct:td.decode(f[1]),codec:td.decode(f[2]),shaDec:b2hex(f[4]),shaEnc:b2hex(f[5]),pages:f[6].map(b2hex)};
+    st('ok',`  manifest: ${man.ct} · ${man.codec} · ${man.pages.length} page(s)`);
+    const metaRows=await api('/tx_metadata',{_tx_hashes:man.pages});
+    const byTx={};for(const r of metaRows)byTx[r.tx_hash]=r.metadata||{};
+    let hexAll='';
+    for(let i=0;i<man.pages.length;i++){
+      const pg=byTx[man.pages[i]]?.['22025'];
+      if(!pg?.p)throw new Error(`page ${i+1} missing`);
+      const ph=pg.p.map(segHex).join('');
+      if(pg.sha&&await sha256(hex2b(ph))!==segHex(pg.sha).toLowerCase())throw new Error(`page ${i+1} seal mismatch`);
+      hexAll+=ph;
+    }
+    let bytes=hex2b(hexAll);
+    if(await sha256(bytes)!==man.shaEnc)throw new Error('encoded seal mismatch');
+    if(man.codec==='gzip')bytes=await gunzip(bytes);
+    const got=await sha256(bytes);
+    const sealOk=got===man.shaDec && (!meta.sha256||got===segHex(meta.sha256).toLowerCase());
+    if(!sealOk)throw new Error('SEAL MISMATCH — instrument not rendered');
+    st('ok',`  seal verified ✓ ${got}`);
+    // certificate
+    const rowsHtml=[
+      ['DOCUMENT NO.',asset.replace('_','-')],
+      ['TITLE',meta.name||'(untitled)'],
+      ['STATUS','<span class="ok">RECORDED · SEAL VERIFIED ✓</span>'],
+      ['DATE OF RECORD',when+' (block time, network consensus)'],
+      ['RECORDING TX',inf.minting_tx_hash+' — its Ed25519 signature is the execution'],
+      ['EXECUTED BY','holder of key '+(meta.signerKeyHash||'(see docket policy)')],
+      ['DOCKET POLICY',DOCKET],
+      ['SEAL (SHA-256)',got],
+      ['INSTRUMENT POINTER','manifest-chain-v2 · '+ptr],
+    ].map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+    $('certtbl').innerHTML=rowsHtml;
+    $('cert').style.display='block';
+    // render
+    bytesOut=bytes;nameOut=asset.toLowerCase();
+    if(urlOut)URL.revokeObjectURL(urlOut);
+    const base=(meta.mediaType||man.ct||'text/html').split(';')[0].trim();
+    urlOut=URL.createObjectURL(new Blob([bytes],{type:base}));
+    const stage=$('stage');stage.style.display='block';
+    if(base==='text/html'){const fr=document.createElement('iframe');fr.setAttribute('sandbox','');fr.src=urlOut;fr.title='recorded instrument';stage.appendChild(fr);}
+    else if(base.startsWith('image/')){const im=document.createElement('img');im.src=urlOut;stage.appendChild(im);}
+    else{const pre=document.createElement('pre');pre.textContent=base.startsWith('text/')?td.decode(bytes):`(${base}) — download to view`;stage.appendChild(pre);}
+    $('actions').style.display='flex';
+    st('ok','── record pulled, verified, and rendered. no clerk was involved.');
+  }catch(e){
+    st('er','FAILED: '+(e.message||e));
+    $('certtbl').innerHTML=`<tr><td>STATUS</td><td><span class="no">✗ ${String(e.message||e)}</span></td></tr>`;
+    $('cert').style.display='block';
+  }finally{$('pull').disabled=false;}
+}
+
+$('pull').onclick=pull;
+$('docno').addEventListener('keydown',e=>{if(e.key==='Enter')pull();});
+$('dl').onclick=()=>{if(!bytesOut)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytesOut]));a.download=nameOut+'.html';a.click();};
+const mh=location.hash.match(/docket=([0-9a-fA-F]{56})/);
+if(mh){DOCKET=mh[1].toLowerCase();$('dpol').textContent=DOCKET;}
+const md=location.hash.match(/doc=(\d+)/);
+if(md){$('docno').value=md[1];pull();}
+</script>
+</body>
+</html>

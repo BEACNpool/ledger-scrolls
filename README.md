@@ -4,6 +4,7 @@
 ## 🌐 GitHub Pages
 - Main viewer: https://beacnpool.github.io/ledger-scrolls/
 - **BEACN Leaks channel player: https://beacnpool.github.io/ledger-scrolls/leaks.html** — point at a policy ID, your browser queries the chain and verifies; this site hosts nothing
+- **Ledger Docket (legal records terminal): https://beacnpool.github.io/ledger-scrolls/legal.html** — type a document number, pull a recorded instrument with its Certificate of Record (try doc no. 1)
 - Constitution viewer: https://beacnpool.github.io/ledger-scrolls/constitution.html
 - Bible viewer: https://beacnpool.github.io/ledger-scrolls/bible.html
 - First video viewer: https://beacnpool.github.io/ledger-scrolls/first-video.html

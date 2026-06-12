@@ -1,0 +1,40 @@
+{
+  "format": "ls-chain-v2-receipts",
+  "title": "LEGAL-0001 — Declaration of Authorship and Proof of Existence",
+  "mintedAt": "2026-06-12",
+  "mintedBy": "BEACNpool",
+  "network": "mainnet",
+  "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "ceced54b2bd462b1ed41864f2583309666010ce1fb96b9f3dc9968174d958bc9",
+    "txIx": 0
+  },
+  "lockAddress": "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn",
+  "manifestLockedLovelace": 1439540,
+  "pageTxHashes": [
+    "ee22d43f77bbf374f87a81569f5770b559eb2d5a454e5e18e7ea8422706eabef"
+  ],
+  "feesLovelace": { "page1": 379341, "manifest": 176105, "docketNft": 204353 },
+  "contentType": "text/html",
+  "codec": "gzip",
+  "sizeDecoded": 11192,
+  "sizeEncoded": 4555,
+  "sha256Decoded": "8c95db4bb4248d82d3d5c4bb49dfe0200d779f4b6905cd3b5649fcb847378bc1",
+  "sha256Encoded": "caaf4cfd1fabf7be39499876d8c7e8699093c80db28f4ea007fd896a3b8e08b9",
+  "segmentsPerPage": 190,
+  "metadataLabel": 22025,
+  "legalDocket": {
+    "name": "BEACN Ledger Docket",
+    "policyId": "97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4",
+    "policyScript": { "type": "all", "scripts": [ { "type": "sig", "keyHash": "843b6d1793fb7fbc6ceb1117f32062a323a8ae21847004aa712609d6" } ] },
+    "asset": "LEGAL_0001",
+    "assetHex": "4c4547414c5f30303031",
+    "recordingTx": "ad23968e473b25fc1c226a49d6eafe5b343376a1c2430977877584a7af43bbf8",
+    "note": "The Ed25519 witness on the recording tx is the execution; its block time is the date of record."
+  },
+  "verification": {
+    "terminal": "legal.html#doc=1",
+    "python": "lsview reconstruct-chain --txin ceced54b2bd462b1ed41864f2583309666010ce1fb96b9f3dc9968174d958bc9#0 --out legal-0001.html",
+    "result": "seal verified byte-for-byte from mainnet, 2026-06-12"
+  }
+}
