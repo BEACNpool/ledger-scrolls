@@ -88,6 +88,26 @@ Output:
 
 The following scrolls are **live on Cardano mainnet** and permanently verifiable.
 
+### 00) 🗽 BEACN Leaks — Issue 000: The Manifesto
+
+A freedom-of-speech manifesto: Ledger Scrolls as independent, immutable,
+unforgeable media. Founding issue of the first **publisher channel**
+(`registry/spec/publisher-channel-v1.md`) — a minting policy used as a
+byline that only the publisher's key can ever write under.
+
+| Field | Value |
+|-------|-------|
+| **ID** | `beacn-leaks-000` |
+| **Type** | `manifest-chain-v2` (LS-CHAIN v2) |
+| **Manifest TxIn** | `f3ee01c1e742c27c205867de4cfa8836e4ab541b9da0d5652aa4d269c73255c7#0` |
+| **Channel Policy** | `5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415` |
+| **Channel Asset** | `BEACN_LEAKS_0000` |
+| **Content-Type** | `text/html` · gzip · 1 page |
+| **SHA-256 (Original)** | `025a81aeffe8aed98868b89b8f04a1f137f698362cfebafd2f8b5a56312d49b2` |
+| **Status** | 🟢 LIVE |
+
+---
+
 ### 0) 📜 The Eternal Scroll — first LS-CHAIN v2 scroll
 
 A self-contained HTML tutorial on reading and writing Ledger Scrolls — the
@@ -236,6 +256,7 @@ The first ratified Cardano Constitution, preserved as a permanent historical rec
 
 | Scroll | Policy ID | Purpose | Minting Status |
 |--------|-----------|---------|----------------|
+| BEACN Leaks (channel) | `5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415` | Publisher channel — unforgeable byline | Open (sig-only; key holder publishes) |
 | LS_REGISTRY | `895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062` | Registry NFT (DNS for scrolls) | Active (spend-and-recreate) |
 | Bible | `2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0` | 237-page HTML Bible (Legacy) | Policy likely locked |
 | Bitcoin Whitepaper | `8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1` | 3-page BTC whitepaper (Legacy) | Policy likely locked |

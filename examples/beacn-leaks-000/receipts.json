@@ -1,0 +1,40 @@
+{
+  "format": "ls-chain-v2-receipts",
+  "title": "BEACN Leaks — Issue 000: The Manifesto",
+  "mintedAt": "2026-06-11",
+  "mintedBy": "BEACNpool",
+  "network": "mainnet",
+  "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "f3ee01c1e742c27c205867de4cfa8836e4ab541b9da0d5652aa4d269c73255c7",
+    "txIx": 0
+  },
+  "lockAddress": "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn",
+  "manifestLockedLovelace": 1439540,
+  "pageTxHashes": [
+    "e255b690f6de5004cf31f7eae1fe6fbe5e53347a2404df08899504a62db5dd93"
+  ],
+  "feesLovelace": { "page1": 382861, "manifest": 176105, "channelNft": 200965 },
+  "contentType": "text/html",
+  "codec": "gzip",
+  "sizeDecoded": 10304,
+  "sizeEncoded": 4632,
+  "sha256Decoded": "025a81aeffe8aed98868b89b8f04a1f137f698362cfebafd2f8b5a56312d49b2",
+  "sha256Encoded": "70813706b66ed354d99e13f40db5be7358fa82b85e042458d2da98c186b3e330",
+  "segmentsPerPage": 190,
+  "metadataLabel": 22025,
+  "publisherChannel": {
+    "name": "BEACN Leaks",
+    "policyId": "5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415",
+    "policyScript": { "type": "sig", "keyHash": "843b6d1793fb7fbc6ceb1117f32062a323a8ae21847004aa712609d6" },
+    "asset": "BEACN_LEAKS_0000",
+    "assetHex": "424541434e5f4c45414b535f30303030",
+    "fingerprint": "asset19wd43xk9eajm54yvnjsawfl3c2p0ktrzkjkp75",
+    "mintTx": "fb8aae62fb1d7d9949abbafa41889aa7e7c872ccb90aa258c5bad58564aa3dcb",
+    "timeLock": "none — channel stays open; only the key holder can ever mint"
+  },
+  "verification": {
+    "python": "lsview reconstruct-chain --txin f3ee01c1e742c27c205867de4cfa8836e4ab541b9da0d5652aa4d269c73255c7#0 --out leak.html",
+    "result": "byte-for-byte match with source, verified 2026-06-11 via Koios"
+  }
+}

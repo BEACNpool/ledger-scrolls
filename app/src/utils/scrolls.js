@@ -16,6 +16,28 @@ export const CATEGORIES = {
 
 export let SCROLLS = [
   {
+      id: 'beacn-leaks-000',
+      title: 'BEACN Leaks — Issue 000',
+      description: 'The Manifesto: independent, immutable, unforgeable media for the suppressed. Founding issue of the first publisher channel — only one key on Earth can publish under its policy ID.',
+      icon: '🗽',
+      category: 'documents',
+      type: SCROLL_TYPES.CHAIN,
+      pointer: {
+          manifest_txin: 'f3ee01c1e742c27c205867de4cfa8836e4ab541b9da0d5652aa4d269c73255c7#0',
+          content_type: 'text/html',
+          codec: 'gzip',
+          sha256: '025a81aeffe8aed98868b89b8f04a1f137f698362cfebafd2f8b5a56312d49b2'
+      },
+      metadata: {
+          size: '~10KB',
+          pages: 1,
+          minted: 'June 11, 2026',
+          minted_by: 'BEACNpool',
+          channel_policy: '5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415',
+          channel_asset: 'BEACN_LEAKS_0000'
+      }
+  },
+  {
       id: 'eternal-scroll',
       title: 'The Eternal Scroll',
       description: 'How to read & write immutable media on Cardano — a tutorial that is itself stored on-chain. The first LS-CHAIN v2 scroll.',
