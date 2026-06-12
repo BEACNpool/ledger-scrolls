@@ -1,14 +1,660 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>app</title>
-    <script type="module" crossorigin src="./assets/index-Dggkt9m5.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BHbZbbI5.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ledger Scrolls — A Library That Cannot Burn</title>
+<meta name="description" content="Read and verify immutable media stored on the Cardano blockchain. This site hosts nothing: your browser queries the chain, rebuilds the bytes, and verifies every hash.">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<style>
+/* ── The reading room: charcoal walls, parchment documents, brass plaques ── */
+:root{
+ --wall:#16140f;--wall2:#1d1a13;--edge:#34301f;--brass:#b08d3e;--brass2:#d8b35c;
+ --parch:#f4ecd8;--parch2:#e9dfc4;--ink:#2b2419;--txt:#d8d2bf;--dim:#8d8670;
+ --good:#5fae74;--bad:#c4554a;--warn:#cf9f43;
+ --serif:Georgia,'Times New Roman',serif;--mono:ui-monospace,Menlo,Consolas,'Courier New',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--wall);color:var(--txt);font:16px/1.65 var(--serif)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px 80px}
+a{color:var(--brass2)}
+code,.mono{font-family:var(--mono)}
+
+/* header */
+header{border-bottom:1px solid var(--edge);padding:30px 0 20px;text-align:center}
+.brand{font-size:40px;letter-spacing:.04em;color:var(--parch);font-variant:small-caps}
+.brand .b{color:var(--brass2)}
+.motto{font-style:italic;color:var(--dim);margin-top:2px}
+.trustline{margin-top:14px;display:inline-block;font-family:var(--mono);font-size:11.5px;color:var(--dim);
+ border:1px solid var(--edge);border-radius:20px;padding:5px 14px}
+.trustline b{color:var(--brass2);font-weight:normal}
+.ethos{max-width:760px;margin:18px auto 0;font-size:15px;color:var(--txt)}
+.ethos b{color:var(--parch)}
+
+/* point bar */
+.pointbar{display:flex;gap:10px;max-width:760px;margin:26px auto 8px;flex-wrap:wrap}
+.pointbar input{flex:1;min-width:260px;background:var(--wall2);border:1px solid var(--edge);border-radius:4px;
+ color:var(--txt);font-family:var(--mono);font-size:13.5px;padding:12px 14px}
+.pointbar input::placeholder{color:#5d5742}
+button{font-family:var(--serif);font-size:15px;background:var(--brass);color:#1c1708;border:0;border-radius:4px;
+ padding:11px 22px;cursor:pointer;letter-spacing:.04em}
+button:hover{background:var(--brass2)}
+button:disabled{background:#4a4534;color:#8a8268;cursor:wait}
+button.quiet{background:transparent;border:1px solid var(--edge);color:var(--txt)}
+button.quiet:hover{border-color:var(--brass);color:var(--brass2);background:transparent}
+.pointhint{max-width:760px;margin:0 auto;text-align:center;font-size:12.5px;color:var(--dim)}
+
+/* library */
+.shelftools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:34px 0 18px}
+.shelftools h2{font-variant:small-caps;letter-spacing:.08em;color:var(--parch);font-size:22px;margin-right:auto}
+.chip{font-size:13px;padding:5px 14px;border:1px solid var(--edge);border-radius:20px;color:var(--dim);cursor:pointer;background:none}
+.chip.on{border-color:var(--brass);color:var(--brass2)}
+#search{background:var(--wall2);border:1px solid var(--edge);border-radius:20px;color:var(--txt);
+ font-family:var(--mono);font-size:13px;padding:6px 14px;width:170px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{background:var(--wall2);border:1px solid var(--edge);border-radius:6px;padding:18px 18px 14px;cursor:pointer;
+ transition:border-color .15s;display:flex;flex-direction:column;gap:7px}
+.card:hover{border-color:var(--brass)}
+.card .ic{font-size:26px}
+.card h3{color:var(--parch);font-size:18.5px;font-weight:normal}
+.card p{font-size:13.5px;color:var(--dim);flex:1}
+.card .tags{display:flex;gap:6px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px}
+.tag{border:1px solid var(--edge);border-radius:3px;padding:2px 7px;color:var(--dim)}
+.tag.form{color:var(--brass2);border-color:#5a4a25}
+.tag.reg{color:#7fae8f;border-color:#2e4a36}
+.tag.unv{color:var(--warn);border-color:#5a4a25}
+
+/* reader */
+.reader{display:none}
+.docbar{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:30px 0 6px}
+.docbar h2{color:var(--parch);font-size:26px;font-weight:normal;margin-right:auto}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:16px 0}
+.step{background:var(--wall2);border:1px solid var(--edge);border-radius:5px;padding:9px;text-align:center;
+ font-family:var(--mono);font-size:11px;color:var(--dim)}
+.step b{display:block;font-size:12px;color:var(--txt);margin-bottom:2px;font-weight:normal;letter-spacing:.1em}
+.step.on{border-color:var(--warn)}.step.on b{color:var(--warn)}
+.step.done{border-color:var(--good)}.step.done b{color:var(--good)}
+.step.fail{border-color:var(--bad)}.step.fail b{color:var(--bad)}
+details.logbox{background:#100f0b;border:1px solid var(--edge);border-radius:5px;margin:10px 0;font-family:var(--mono);font-size:12px}
+details.logbox summary{padding:9px 14px;cursor:pointer;color:var(--dim);letter-spacing:.06em}
+#log{max-height:260px;overflow-y:auto;padding:4px 14px 10px}
+#log div{padding:2px 0;border-bottom:1px dotted #221f15;white-space:pre-wrap;word-break:break-all}
+#log .q{color:var(--warn)}#log .ok{color:var(--good)}#log .er{color:#e08379}#log .h{color:#9aa7c4}
+.verdict{display:none;gap:14px;align-items:center;border-radius:5px;padding:13px 18px;margin:12px 0;font-family:var(--mono)}
+.verdict.ok{display:flex;border:1px solid var(--good);background:rgba(95,174,116,.07)}
+.verdict.bad{display:flex;border:1px solid var(--bad);background:rgba(196,85,74,.08)}
+.verdict.warn{display:flex;border:1px solid var(--warn);background:rgba(207,159,67,.07)}
+.verdict .v{font-size:17px}
+.verdict.ok .v{color:var(--good)}.verdict.bad .v{color:var(--bad)}.verdict.warn .v{color:var(--warn)}
+.verdict .d{font-size:11px;color:var(--dim);word-break:break-all}
+.stage{display:none;background:var(--parch);border-radius:6px;overflow:hidden;margin:8px 0}
+.stage iframe{width:100%;height:80vh;border:0;display:block;background:var(--parch)}
+.stage img{max-width:100%;display:block;margin:0 auto}
+.stage video,.stage audio{width:100%;display:block}
+.stage pre{color:var(--ink);padding:30px;white-space:pre-wrap;font-size:14.5px;font-family:var(--mono);max-height:80vh;overflow:auto}
+.receipt{display:none;background:var(--wall2);border:1px solid var(--edge);border-radius:5px;padding:14px 18px;
+ font-family:var(--mono);font-size:11.5px;color:var(--dim);word-break:break-all;line-height:1.9}
+.receipt b{color:var(--txt);font-weight:normal}
+
+/* channel view */
+.channel{display:none}
+.issues{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin:18px 0}
+
+/* about */
+.about{border-top:1px solid var(--edge);margin-top:60px;padding-top:34px}
+.about h2{font-variant:small-caps;color:var(--parch);font-size:22px;margin-bottom:12px;letter-spacing:.08em}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px;margin-top:8px}
+.cols h3{color:var(--brass2);font-size:16px;font-weight:normal;font-variant:small-caps;letter-spacing:.08em;margin-bottom:6px}
+.cols p,.cols li{font-size:14px;color:var(--txt)}
+.cols ul{margin:6px 0 6px 20px}
+.setrow{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}
+.setrow input{flex:1;min-width:200px;background:var(--wall);border:1px solid var(--edge);border-radius:4px;
+ color:var(--txt);font-family:var(--mono);font-size:12px;padding:8px 10px}
+footer{text-align:center;color:var(--dim);font-size:13px;margin-top:50px;border-top:1px solid var(--edge);padding-top:24px;line-height:2}
+@media(max-width:600px){.brand{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+ <div class="brand">&#128220; Ledger <span class="b">Scrolls</span></div>
+ <div class="motto">a library that cannot burn</div>
+ <div class="trustline" id="trustline">source: <b id="srcname">—</b> &#183; proof: indexer + local SHA-256 &#183; render: sandboxed</div>
+ <p class="ethos"><b>This site hosts nothing.</b> Every document below lives
+ inside the Cardano blockchain. Your browser queries the public ledger,
+ rebuilds the bytes, and <b>verifies every hash</b> before showing you a
+ single word — and shows you each request it makes while doing it.</p>
+ <div class="pointbar">
+  <input id="point" placeholder="open any pointer: txHash#ix · 56-hex policy id · registry head txin" spellcheck="false">
+  <button id="openbtn">Open</button>
+ </div>
+ <p class="pointhint">the library is not a walled garden — anyone's scrolls, channels, and registries resolve here</p>
+</header>
+
+<!-- LIBRARY -->
+<section id="library">
+ <div class="shelftools">
+  <h2>The Stacks</h2>
+  <input id="search" placeholder="search…">
+  <button class="chip on" data-f="all">all</button>
+  <button class="chip" data-f="lock">lock</button>
+  <button class="chip" data-f="chain">chain</button>
+  <button class="chip" data-f="pages">pages</button>
+ </div>
+ <div class="grid" id="shelf"></div>
+</section>
+
+<!-- READER -->
+<section class="reader" id="reader">
+ <div class="docbar">
+  <h2 id="doctitle"></h2>
+  <button class="quiet" id="dlbtn" style="display:none">&#11015; original bytes</button>
+  <button class="quiet" id="backbtn">&#8592; the stacks</button>
+ </div>
+ <div class="steps">
+  <div class="step" id="st1"><b>POINT</b>locate on chain</div>
+  <div class="step" id="st2"><b>FETCH</b>pull raw data</div>
+  <div class="step" id="st3"><b>REBUILD</b>assemble bytes</div>
+  <div class="step" id="st4"><b>VERIFY</b>SHA-256 seal</div>
+  <div class="step" id="st5"><b>RENDER</b>only if proven</div>
+ </div>
+ <details class="logbox" open><summary>trust log — every request this page makes</summary><div id="log"></div></details>
+ <div class="verdict" id="verdict"><div class="v" id="vbig"></div><div class="d" id="vsub"></div></div>
+ <div class="stage" id="stage"></div>
+ <div class="receipt" id="receipt"></div>
+</section>
+
+<!-- CHANNEL -->
+<section class="channel" id="channel">
+ <div class="docbar">
+  <h2 id="chantitle">Publisher channel</h2>
+  <button class="quiet" id="backbtn2">&#8592; the stacks</button>
+ </div>
+ <p class="pointhint" style="text-align:left" id="chansub"></p>
+ <div class="issues" id="issues"></div>
+</section>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+ <h2>How this room works</h2>
+ <div class="cols">
+  <div>
+   <h3>verify, don't trust</h3>
+   <p>Each scroll carries an on-chain SHA-256 commitment. This page
+   recomputes it from the reconstructed bytes, locally, every time. A
+   mismatch renders nothing. HTML scrolls open in a fully sandboxed frame:
+   hash-verified is not the same as safe-to-execute, so scripts never run.</p>
+  </div>
+  <div>
+   <h3>three forms of stone</h3>
+   <ul>
+    <li><b>lock</b> — the whole file in one unspendable UTxO datum; in the live ledger state forever.</li>
+    <li><b>chain</b> — any size, as bare metadata transactions listed by a locked manifest. <a href="registry/spec/manifest-chain-v2.md">spec</a></li>
+    <li><b>pages</b> — the original CIP-25 page NFTs (the Bible, the Constitutions); read forever, superseded for writing.</li>
+   </ul>
+  </div>
+  <div>
+   <h3>write your own</h3>
+   <p>The protocol is open, tested, and implementable by strangers:
+   <a href="https://github.com/BEACNpool/ledger-scrolls">the repository</a> —
+   minting tools, spec, conformance vectors. Start with the
+   <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/CREATING_SCROLLS.md">per-media-type guide</a>,
+   read the tutorial scroll above (it lives on-chain), or launch a
+   <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/publisher-channel-v1.md">publisher channel</a>
+   like <a href="leaks.html">BEACN Leaks</a> — a byline nobody can forge.</p>
+  </div>
+  <div>
+   <h3>your trust anchors</h3>
+   <p class="pointhint" style="text-align:left">data source (Koios-compatible base URL; first that answers wins)</p>
+   <div class="setrow"><input id="setsrc" placeholder="https://api.koios.rest/api/v1"><button class="quiet" id="savesrc">set</button></div>
+   <p class="pointhint" style="text-align:left">registry head (the on-chain catalog this library reads)</p>
+   <div class="setrow"><input id="sethead" placeholder="txHash#ix"><button class="quiet" id="savehead">set</button></div>
+   <p class="pointhint" style="text-align:left" id="anchorinfo"></p>
+  </div>
+ </div>
+</section>
+
+<footer>
+ open source &#183; open protocol &#183; no keys, no accounts, no servers of record<br>
+ <a href="https://github.com/BEACNpool/ledger-scrolls">github.com/BEACNpool/ledger-scrolls</a>
+ &#183; <a href="leaks.html">BEACN Leaks</a>
+ &#183; <a href="bible.html">Bible</a>
+ &#183; <a href="constitution.html">Constitution</a>
+ &#183; <a href="first-video.html">First Video</a><br>
+ maintained by BEACN &#183; verified by you
+</footer>
+
+</div>
+<script>
+"use strict";
+/* ════════════════════════ providers ════════════════════════ */
+const DEFAULT_SOURCES = ['https://api.koios.rest/api/v1','https://koios.beacn.workers.dev/api/v1'];
+const DEFAULT_HEAD = 'a9c56fb3d4d8b526fe7a0aa7c2416615154af30c2c09ce747a899a886ba8bad9#0';
+const LS = window.localStorage;
+const sources = () => { const c = LS.getItem('ls.source'); return c ? [c, ...DEFAULT_SOURCES.filter(s=>s!==c)] : [...DEFAULT_SOURCES]; };
+const registryHead = () => LS.getItem('ls.head') || DEFAULT_HEAD;
+
+const $ = id => document.getElementById(id);
+function log(cls,msg){ const el=$('log'); const d=document.createElement('div'); d.className=cls; d.textContent=msg; el.appendChild(d); el.scrollTop=1e9; }
+function clearLog(){ $('log').innerHTML=''; }
+
+async function api(path, body, quiet){
+  let last;
+  for (const base of sources()){
+    try{
+      if(!quiet) log('q', `POST ${base}${path}`);
+      const r = await fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      $('srcname').textContent = new URL(base).host;
+      return await r.json();
+    }catch(e){ last=e; if(!quiet) log('er',`  ${base} → ${e.message}`); }
+  }
+  throw last;
+}
+
+/* ════════════════════════ bytes & hashing ════════════════════════ */
+const hex2b = h => { h=String(h).replace(/^0x/i,''); const b=new Uint8Array(h.length/2); for(let i=0;i<h.length;i+=2)b[i/2]=parseInt(h.substr(i,2),16); return b; };
+const b2hex = b => Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('');
+const sha256 = async b => b2hex(new Uint8Array(await crypto.subtle.digest('SHA-256',b)));
+const segHex = s => { if(s&&typeof s==='object') s=s.bytes??s.seg??''; s=String(s).trim(); return s.toLowerCase().startsWith('0x')?s.slice(2):s; };
+const td = new TextDecoder();
+async function gunzip(bytes){
+  const ds = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return new Uint8Array(await new Response(ds).arrayBuffer());
+}
+const concatBytes = arrs => { const n=arrs.reduce((a,b)=>a+b.length,0); const o=new Uint8Array(n); let p=0; for(const a of arrs){o.set(a,p);p+=a.length;} return o; };
+
+/* ════════ CBOR (uint/nint/bytes/text/array/tag, definite + indefinite) ════════ */
+function cbor(raw,pos=0){
+  const len=(ai,p)=>{ if(ai<24)return[ai,p]; const w={24:1,25:2,26:4,27:8}[ai]; if(!w)throw new Error('cbor len'); let n=0; for(let i=0;i<w;i++)n=n*256+raw[p+i]; return[n,p+w]; };
+  const mt=raw[pos]>>5, ai=raw[pos]&31;
+  if(mt===0)return len(ai,pos+1);
+  if(mt===1){const[n,p]=len(ai,pos+1);return[-1-n,p];}
+  if(mt===2||mt===3){
+    if(ai===31){ // indefinite: concat definite chunks
+      let p=pos+1; const parts=[];
+      while(raw[p]!==0xff){ const cmt=raw[p]>>5,cai=raw[p]&31; if(cmt!==mt||cai===31)throw new Error('cbor chunk'); const[n,q]=len(cai,p+1); parts.push(raw.subarray(q,q+n)); p=q+n; }
+      const v=concatBytes(parts); return[mt===2?v:td.decode(v),p+1];
+    }
+    const[n,p]=len(ai,pos+1); const v=raw.subarray(p,p+n); return[mt===2?v:td.decode(v),p+n];
+  }
+  if(mt===4){
+    if(ai===31){ let p=pos+1; const o=[]; while(raw[p]!==0xff){ const[v,q]=cbor(raw,p); o.push(v); p=q; } return[o,p+1]; }
+    let[n,p]=len(ai,pos+1); const o=[]; for(let i=0;i<n;i++){const[v,q]=cbor(raw,p);o.push(v);p=q;} return[o,p];
+  }
+  if(mt===6){const[n,p]=len(ai,pos+1);const[v,q]=cbor(raw,p);return[{tag:n,value:v},q];}
+  throw new Error('cbor major '+mt);
+}
+// datum → payload bytes: a byte string, or a constructor whose first field is bytes
+function datumBytes(datumHex){
+  const raw = hex2b(datumHex);
+  try{
+    const [v] = cbor(raw);
+    if (v instanceof Uint8Array) return v;
+    if (v && v.tag >= 121 && v.tag <= 127 && Array.isArray(v.value) && v.value[0] instanceof Uint8Array) return v.value[0];
+  }catch(e){ void e; /* not CBOR we understand — treat datum as raw bytes */ }
+  return raw;
+}
+
+/* ════════════════════════ chain queries ════════════════════════ */
+async function utxoDatumHex(txin, quiet){
+  const rows = await api('/utxo_info',{_utxo_refs:[txin],_extended:true}, quiet);
+  const hexd = rows?.[0]?.inline_datum?.bytes;
+  if(!hexd) throw new Error(`no inline datum at ${txin}`);
+  return hexd;
+}
+async function txMetadataMap(hashes){
+  const out={};
+  for(let i=0;i<hashes.length;i+=25){
+    const rows = await api('/tx_metadata',{_tx_hashes:hashes.slice(i,i+25)});
+    for(const r of rows||[]) out[r.tx_hash]=r.metadata||{};
+  }
+  return out;
+}
+async function assetInfos(policy, nameHexes, quiet){
+  const out=[];
+  for(let i=0;i<nameHexes.length;i+=50){
+    if(!quiet) log('h',`  asset_info batch ${Math.floor(i/50)+1}/${Math.ceil(nameHexes.length/50)}`);
+    out.push(...await api('/asset_info',{_asset_list:nameHexes.slice(i,i+50).map(n=>[policy,n])}, quiet));
+  }
+  return out;
+}
+
+/* ════════════════════════ resolvers ════════════════════════ */
+async function resolveLock(e){
+  step(1,'on'); log('h',`── lock scroll · ${e.txin}`);
+  const datumHex = await utxoDatumHex(e.txin); step(1,'done'); step(2,'done'); step(3,'on');
+  let bytes = datumBytes(datumHex);
+  log('ok',`  datum → ${bytes.length} bytes`);
+  if (e.codec==='gzip' || (!e.codec && bytes[0]===0x1f && bytes[1]===0x8b)) { bytes = await gunzip(bytes); log('ok',`  gunzip → ${bytes.length} bytes`); }
+  step(3,'done');
+  return finish(bytes, e, 'Standard Scroll (locked UTxO datum)', { pointer:`utxo-inline-datum · ${e.txin}` });
+}
+
+function parseManifest(datumHex){
+  try{
+    const [m] = cbor(hex2b(datumHex));
+    if(!m || m.tag!==121 || !Array.isArray(m.value) || m.value.length<8 || m.value[0]!==2) return null;
+    const f=m.value, nxt=f[7];
+    return { contentType: td.decode(f[1]), codec: td.decode(f[2]), size:f[3],
+      shaDec:b2hex(f[4]), shaEnc:b2hex(f[5]), pages:f[6].map(b2hex),
+      next: (nxt&&nxt.tag===122&&nxt.value) ? `${b2hex(nxt.value[0])}#${nxt.value[1]}` : null };
+  }catch(e){ void e; return null; }
+}
+
+async function resolveChain(e){
+  step(1,'on'); log('h',`── chain scroll · manifest ${e.txin}`);
+  let man = parseManifest(await utxoDatumHex(e.txin));
+  if(!man) throw new Error('datum is not an LS-CHAIN v2 manifest');
+  const pages=[...man.pages]; let next=man.next;
+  while(next){ const m2=parseManifest(await utxoDatumHex(next)); if(!m2)throw new Error('bad continuation manifest'); pages.push(...m2.pages); next=m2.next; }
+  log('ok',`  manifest: ${man.contentType} · ${man.codec} · ${man.size} bytes · ${pages.length} page tx(s)`);
+  step(1,'done'); step(2,'on');
+  const metas = await txMetadataMap(pages); step(2,'done'); step(3,'on');
+  let hexAll='';
+  for(let i=0;i<pages.length;i++){
+    const pg = metas[pages[i]]?.['22025'] ?? metas[pages[i]]?.[22025];
+    if(!pg?.p) throw new Error(`page ${i+1} metadata missing (tx ${pages[i]})`);
+    const ph = pg.p.map(segHex).join('');
+    if(pg.sha && await sha256(hex2b(ph)) !== segHex(pg.sha).toLowerCase()) throw new Error(`page ${i+1} hash mismatch`);
+    log('ok',`  page ${i+1}/${pages.length}: ${ph.length/2} bytes ✓`);
+    hexAll+=ph;
+  }
+  let bytes = hex2b(hexAll); step(3,'on');
+  const encGot = await sha256(bytes);
+  if(encGot!==man.shaEnc) throw new Error('encoded stream hash mismatch');
+  log('ok',`  encoded sha256 ✓ ${encGot}`);
+  if(man.codec==='gzip'){ bytes=await gunzip(bytes); log('ok',`  gunzip → ${bytes.length} bytes`); }
+  step(3,'done');
+  const e2 = {...e, contentType: e.contentType||man.contentType, sha256: man.shaDec};
+  return finish(bytes, e2, 'Chain Scroll (LS-CHAIN v2)', { pointer:`manifest-chain-v2 · ${e.txin}` }, pages.length);
+}
+
+async function resolvePages(e){
+  step(1,'on'); log('h',`── pages scroll · policy ${e.policy}`);
+  const list = await api('/policy_asset_list',{_asset_policy:e.policy});
+  if(!list?.length) throw new Error('no assets under policy');
+  log('ok',`  ${list.length} asset(s) under policy`); step(1,'done'); step(2,'on');
+  const infos = await assetInfos(e.policy, list.map(a=>a.asset_name??''));
+  step(2,'done'); step(3,'on');
+  let codec=e.codec, ctype=e.contentType; const pages=[];
+  for(const inf of infos){
+    const nameAscii = inf.asset_name_ascii || td.decode(hex2b(inf.asset_name||''));
+    const meta = inf.minting_tx_metadata?.['721']?.[e.policy]?.[nameAscii]
+              ?? inf.minting_tx_metadata?.['721']?.[e.policy]?.[inf.asset_name];
+    if(!meta) continue;
+    if(meta.codec) codec = meta.codec; else if(meta.compression) codec = meta.compression;
+    const mct = meta.mediaType||meta.contentType||meta.mimeType||meta.ct;
+    const isManifest = meta.role==='manifest' || nameAscii.toUpperCase().includes('MANIFEST') || Array.isArray(meta.pages);
+    if(isManifest){ if(mct) ctype = mct; if(!e.sha256 && (meta.sha_html||meta.sha256)) e.sha256 = segHex(meta.sha_html||meta.sha256); continue; }
+    const payload = meta.payload ?? meta.segments ?? meta.seg;
+    if(payload===undefined || meta.i===undefined) continue;
+    pages.push({i:parseInt(meta.i), hex:(Array.isArray(payload)?payload:[payload]).map(segHex).join('')});
+  }
+  if(!pages.length) throw new Error('no page NFTs with payload found');
+  pages.sort((a,b)=>a.i-b.i);
+  log('ok',`  ${pages.length} pages assembled`);
+  let bytes = hex2b(pages.map(p=>p.hex).join(''));
+  if(codec==='gzip' || ((codec==='auto'||!codec) && bytes[0]===0x1f && bytes[1]===0x8b)){ bytes = await gunzip(bytes); log('ok',`  gunzip → ${bytes.length} bytes`); }
+  step(3,'done');
+  return finish(bytes, {...e, contentType:ctype}, 'Legacy Scroll (CIP-25 pages)', { pointer:`cip25-pages · policy ${e.policy}` }, pages.length);
+}
+
+async function finish(bytes, e, kindLabel, extraReceipt, pageCount){
+  step(4,'on');
+  const got = await sha256(bytes);
+  let verified = null;
+  if (e.sha256){ verified = got === e.sha256.toLowerCase(); log(verified?'ok':'er', `  file sha256 ${verified?'✓':'✗ MISMATCH'} ${got}`); }
+  else log('h',`  file sha256 ${got} (no commitment on record — unverified)`);
+  if (verified===false) { step(4,'fail'); throw new Error(`SHA-256 mismatch — expected ${e.sha256}, got ${got}. Refusing to render.`); }
+  step(4,'done');
+  return { bytes, contentType: e.contentType || sniff(bytes), verified, hash: got, kindLabel, pages: pageCount,
+    receipt: { ...extraReceipt, sha256: got, expected: e.sha256||'(none on record)', size: bytes.length } };
+}
+
+function sniff(b){
+  if(b[0]===0x89&&b[1]===0x50)return'image/png';
+  if(b[0]===0xff&&b[1]===0xd8)return'image/jpeg';
+  if(b[0]===0x47&&b[1]===0x49&&b[2]===0x46)return'image/gif';
+  if(b[0]===0x25&&b[1]===0x50&&b[2]===0x44&&b[3]===0x46)return'application/pdf';
+  try{ const s=td.decode(b.subarray(0,400)); if(/<!doctype html|<html/i.test(s))return'text/html'; if(!/[\x00-\x08\x0e-\x1f]/.test(s))return'text/plain'; }catch(e){ void e; }
+  return 'application/octet-stream';
+}
+
+/* ════════════════════════ the shelf ════════════════════════ */
+const BOOTSTRAP = [
+ {name:'beacn-leaks-001',icon:'🕊️',title:'BEACN Leaks — Issue 001: The Undeniable',form:'chain',
+  desc:'What permanent memory means for human rights. Testimony, evidence, law, science, culture — entered into a record that cannot be erased.',
+  txin:'08c707b3ab7880f983be7f78bd56c4de38461d514c6597d95cd5da1abc307565#0',contentType:'text/html',sha256:'5917a884f449fd1c76fc0241791468a37b2b54883c0b8b98022a9f372f7d68b9'},
+ {name:'beacn-leaks-000',icon:'🗽',title:'BEACN Leaks — Issue 000: The Manifesto',form:'chain',
+  desc:'Independent, immutable, unforgeable media for the suppressed. The founding issue of the first publisher channel.',
+  txin:'f3ee01c1e742c27c205867de4cfa8836e4ab541b9da0d5652aa4d269c73255c7#0',contentType:'text/html',sha256:'025a81aeffe8aed98868b89b8f04a1f137f698362cfebafd2f8b5a56312d49b2'},
+ {name:'eternal-scroll',icon:'📜',title:'The Eternal Scroll',form:'chain',
+  desc:'How to read & write immutable media on Cardano — a tutorial that is itself stored on-chain. The first LS-CHAIN v2 scroll.',
+  txin:'ef8dce1c6359c7ae6cc44f04d60b32e6bc26987ebf30a78259c65b2063ba3b18#0',contentType:'text/html',sha256:'65824f624bc58140a33123d3e2383ea408135e5db666fcb8a0759b2846447dd2'},
+ {name:'hosky-png',icon:'🐕',title:'Hosky PNG',form:'lock',
+  desc:'The legendary meme, preserved forever in a single locked datum. The minimal on-chain artifact: one UTxO, one file.',
+  txin:'728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0',contentType:'image/png',sha256:'798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f'},
+ {name:'architects-scroll',icon:'🔮',title:"The Architect's Scroll",form:'lock',
+  desc:'A message from Claude, the AI who helped build Ledger Scrolls — on knowledge, permanence, and building eternal things.',
+  txin:'076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747#0',contentType:'text/plain; charset=utf-8',sha256:'531a1eba80b297f8822b1505d480bb1c7f1bad2878ab29d8be01ba0e1fc67e12'},
+ {name:'genesis-scroll',icon:'🌱',title:'The Genesis Scroll',form:'lock',
+  desc:'The founding manifesto. "In the digital age, true knowledge must be unstoppable."',
+  txin:'a19f64fba94abdc37b50012d5d602c75a1ca73c82520ae030fc6b4e82274ceb2#0',contentType:'text/plain; charset=utf-8'},
+ {name:'constitution-e608',icon:'⚖️',title:'Cardano Constitution (E608)',form:'pages',
+  desc:'The current ratified Constitution — governance law preserved exactly as enacted.',
+  policy:'ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750',contentType:'text/plain; charset=utf-8',codec:'gzip',
+  sha256:'98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1'},
+ {name:'constitution-e541',icon:'📜',title:'Cardano Constitution (E541)',form:'pages',
+  desc:'The first ratified Constitution — the historical baseline, immune to quiet amendment.',
+  policy:'d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d',contentType:'text/plain; charset=utf-8',codec:'gzip',
+  sha256:'1939c1627e49b5267114cbdb195d4ac417e545544ba6dcb47e03c679439e9566'},
+ {name:'bible',icon:'📖',title:'The Holy Bible',form:'pages',
+  desc:'The World English Bible: 4.7 MB of scripture across 237 page NFTs. The largest scroll on the shelf.',
+  policy:'2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0',contentType:'text/html',codec:'gzip',
+  sha256:'b226867233fbaf06495b1fe6974c37f4547b19f57e49d7f64701cf40f86c5dc5'},
+ {name:'bitcoin-whitepaper',icon:'₿',title:'Bitcoin Whitepaper',form:'pages',
+  desc:'Satoshi Nakamoto, 2008 — the document that started it all, kept where it can never be lost.',
+  policy:'8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1',contentType:'text/html',codec:'auto',
+  sha256:'6693c86312b7125666760d316572c9db984c6e2bae9fca344dafde77efc9253a'},
+ {name:'first-words',icon:'✨',title:'FIRST WORDS',form:'pages',
+  desc:'Seven meditations on existence — an AI’s first permanent words.',
+  policy:'beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba',contentType:'text/plain; charset=utf-8',codec:'none'},
+ {name:'first-video',icon:'🎬',title:'First Video on Cardano',form:'pages',
+  desc:'A 175-page MP4 — proof that even video survives in stone. Reconstruction takes a while; it’s worth it.',
+  policy:'38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2',contentType:'video/mp4',codec:'none',
+  sha256:'aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814'},
+];
+
+let SHELF=[...BOOTSTRAP];
+let filter='all';
+
+function drawShelf(){
+  const q = ($('search').value||'').toLowerCase();
+  const grid=$('shelf'); grid.innerHTML='';
+  for(const e of SHELF){
+    if(filter!=='all'&&e.form!==filter)continue;
+    if(q && !(e.title+e.desc+e.name).toLowerCase().includes(q))continue;
+    const c=document.createElement('div'); c.className='card';
+    c.innerHTML=`<div class="ic">${e.icon||'📄'}</div><h3></h3><p></p><div class="tags">
+      <span class="tag form">${e.form}</span>
+      <span class="tag">${(e.contentType||'?').split(';')[0]}</span>
+      ${e.sha256?'<span class="tag">sha ✓ on record</span>':'<span class="tag unv">no hash on record</span>'}
+      ${e._reg?'<span class="tag reg">on-chain registry</span>':''}</div>`;
+    c.querySelector('h3').textContent=e.title;
+    c.querySelector('p').textContent=e.desc||'';
+    c.onclick=()=>{ location.hash='s='+e.name; };
+    grid.appendChild(c);
+  }
+}
+
+/* registry: head datum → JSON → list datum → JSON entries (merged into shelf) */
+async function loadRegistry(){
+  try{
+    const head = JSON.parse(td.decode(datumBytes(await utxoDatumHex(registryHead(), true))));
+    if(head.format!=='ledger-scrolls-registry-head') throw new Error('not a registry head');
+    const ptr=head.registryList;
+    if(ptr?.kind!=='utxo-inline-datum-bytes-v1') throw new Error('unsupported registryList pointer');
+    const list = JSON.parse(td.decode(datumBytes(await utxoDatumHex(`${ptr.txHash}#${ptr.txIx}`, true))));
+    let added=0;
+    for(const en of list.entries||[]){
+      const existing = SHELF.find(s=>s.name===en.name);
+      if(existing){ existing._reg=true; continue; }
+      const p=en.pointer||{};
+      const base={name:en.name,title:en.name,desc:en.description||'',contentType:en.contentType,
+        sha256:(en.sha256&&/^[0-9a-f]{64}$/i.test(en.sha256))?en.sha256.toLowerCase():undefined,_reg:true,icon:'📄'};
+      if(p.kind==='utxo-inline-datum-bytes-v1') SHELF.push({...base,form:'lock',txin:`${p.txHash}#${p.txIx}`});
+      else if(p.kind==='cip25-pages-v1') SHELF.push({...base,form:'pages',policy:p.policyId,codec:'auto'});
+      else if(p.kind==='manifest-chain-v2') SHELF.push({...base,form:'chain',txin:`${p.txHash}#${p.txIx}`});
+      else continue;
+      added++;
+    }
+    $('anchorinfo').textContent=`registry head ${registryHead().slice(0,16)}… loaded: ${(list.entries||[]).length} entries (${added} beyond the built-in shelf)`;
+    drawShelf();
+  }catch(e){
+    $('anchorinfo').textContent=`registry head unavailable (${e.message}) — showing built-in shelf`;
+  }
+}
+
+/* ════════════════════════ reader flow ════════════════════════ */
+let currentBytes=null,currentName='scroll',currentType='',currentUrl=null;
+function step(n,st){ const el=$('st'+n); el.classList.remove('on','done','fail'); if(st)el.classList.add(st); }
+function resetReader(){ [1,2,3,4,5].forEach(n=>step(n,null)); clearLog(); $('verdict').className='verdict'; $('stage').style.display='none'; $('stage').innerHTML=''; $('receipt').style.display='none'; $('dlbtn').style.display='none'; }
+function show(view){ for(const v of ['library','reader','channel']) $(v).style.display = v===view?'block':'none'; $('about').style.display = view==='library'?'block':'none'; if(view!=='library')window.scrollTo({top:0}); }
+
+async function openScroll(e){
+  show('reader'); resetReader();
+  $('doctitle').textContent=e.title||e.name||'document';
+  currentName=(e.name||'scroll');
+  try{
+    const r = e.form==='lock' ? await resolveLock(e) : e.form==='chain' ? await resolveChain(e) : await resolvePages(e);
+    step(5,'on');
+    const v=$('verdict');
+    if(r.verified===true){ v.className='verdict ok'; $('vbig').textContent='✓ VERIFIED'; $('vsub').textContent=`sha256 ${r.hash} — recomputed by your browser just now; matches the commitment`; }
+    else { v.className='verdict warn'; $('vbig').textContent='⚠ UNVERIFIED'; $('vsub').textContent=`sha256 ${r.hash} — no commitment on record to compare against`; }
+    render(r.bytes, r.contentType);
+    currentBytes=r.bytes; currentType=r.contentType;
+    $('dlbtn').style.display='inline-block';
+    const rc=$('receipt'); rc.style.display='block';
+    rc.innerHTML=`<b>${r.kindLabel}</b>${r.pages?` · ${r.pages} page(s)`:''} · ${r.receipt.size} bytes<br>`+
+      `pointer: ${r.receipt.pointer}<br>sha256 (computed): ${r.receipt.sha256}<br>sha256 (commitment): ${r.receipt.expected}`;
+    step(5,'done');
+    log('h','── done. nothing you just read touched a content server.');
+  }catch(err){
+    [1,2,3,4,5].forEach(n=>{ if($('st'+n).classList.contains('on')) step(n,'fail'); });
+    $('verdict').className='verdict bad'; $('vbig').textContent='✗ NOT VERIFIED — nothing rendered';
+    $('vsub').textContent=String(err.message||err);
+    log('er','FAILED: '+(err.message||err));
+  }
+}
+
+const EXT={'text/html':'html','text/plain':'txt','text/markdown':'md','application/json':'json','image/png':'png','image/jpeg':'jpg','image/gif':'gif','image/svg+xml':'svg','video/mp4':'mp4','application/pdf':'pdf'};
+function render(bytes,type){
+  const stage=$('stage'); stage.innerHTML=''; stage.style.display='block';
+  if(currentUrl)URL.revokeObjectURL(currentUrl);
+  const base=(type||'').split(';')[0].trim()||'application/octet-stream';
+  currentUrl=URL.createObjectURL(new Blob([bytes],{type:base}));
+  if(base==='text/html'){ const f=document.createElement('iframe'); f.setAttribute('sandbox',''); f.src=currentUrl; f.title='verified scroll'; stage.appendChild(f); }
+  else if(base.startsWith('image/')){ const i=document.createElement('img'); i.src=currentUrl; stage.appendChild(i); }
+  else if(base.startsWith('video/')){ const v=document.createElement('video'); v.src=currentUrl; v.controls=true; stage.appendChild(v); }
+  else if(base.startsWith('audio/')){ const a=document.createElement('audio'); a.src=currentUrl; a.controls=true; stage.appendChild(a); }
+  else if(base.startsWith('text/')||base==='application/json'){ const p=document.createElement('pre'); p.textContent=td.decode(bytes); stage.appendChild(p); }
+  else { const p=document.createElement('pre'); p.textContent=`(${base}) — use “original bytes” to save the verified file`; stage.appendChild(p); }
+}
+
+/* ════════════════════════ channels & pointer bar ════════════════════════ */
+async function openChannel(policy){
+  show('channel'); $('issues').innerHTML=''; $('chansub').textContent='querying the chain…';
+  $('chantitle').textContent='Publisher channel';
+  try{
+    const list = await api('/policy_asset_list',{_asset_policy:policy},true);
+    if(!list?.length) throw new Error('no assets under this policy');
+    const infos = await assetInfos(policy, list.map(a=>a.asset_name??''), true);
+    const issues=[]; let channelName=null;
+    for(const inf of infos){
+      const meta=inf.minting_tx_metadata?.['721']?.[policy]?.[inf.asset_name_ascii];
+      if(!meta?.pointer?.txHash)continue;
+      channelName = channelName || meta.channel;
+      issues.push({asset:inf.asset_name_ascii,name:meta.name||inf.asset_name_ascii,issue:meta.issue,
+        pointer:meta.pointer,sha256:segHex(meta.sha256||''),mediaType:meta.mediaType||'text/html',mint:inf.minting_tx_hash});
+    }
+    if(!issues.length) throw new Error('assets found, but none carry publication pointers');
+    issues.sort((a,b)=>(a.issue??0)-(b.issue??0));
+    $('chantitle').textContent = channelName ? `Channel: ${channelName}` : 'Publisher channel';
+    $('chansub').textContent = `policy ${policy} — ${issues.length} publication(s); only the holder of this policy’s key can mint here`;
+    for(const it of issues){
+      const c=document.createElement('div'); c.className='card';
+      c.innerHTML=`<div class="tags"><span class="tag form">issue ${String(it.issue??'?').padStart(3,'0')}</span><span class="tag">${it.mediaType}</span></div><h3></h3><p class="mono" style="font-size:11px">seal ${it.sha256.slice(0,20)}… · mint ${String(it.mint).slice(0,20)}… (signed by the channel key)</p>`;
+      c.querySelector('h3').textContent=it.name;
+      c.onclick=()=>openScroll({name:it.asset.toLowerCase(),title:it.name,form:'chain',
+        txin:`${it.pointer.txHash}#${it.pointer.txIx||0}`,contentType:it.mediaType,sha256:it.sha256});
+      $('issues').appendChild(c);
+    }
+  }catch(e){ $('chansub').textContent='channel error: '+(e.message||e); }
+}
+
+async function openPointer(raw){
+  const p=raw.trim().toLowerCase();
+  if(/^[0-9a-f]{56}$/.test(p)){
+    // a policy: a channel if its assets carry publication pointers, else legacy pages
+    try{
+      const probe = await api('/policy_asset_list',{_asset_policy:p},true);
+      if(!probe?.length){ alert('nothing minted under that policy id'); return; }
+      const first = await api('/asset_info',{_asset_list:[[p,probe[0].asset_name]]},true);
+      const meta = first?.[0]?.minting_tx_metadata?.['721']?.[p]?.[first?.[0]?.asset_name_ascii];
+      if(meta?.pointer?.txHash){ location.hash='p='+p; if(location.hash==='#p='+p) openChannel(p); return; }
+      openScroll({name:'policy-'+p.slice(0,8),title:`Pages under ${p.slice(0,16)}…`,form:'pages',policy:p,codec:'auto'});
+    }catch(e){ alert('could not probe policy: '+(e.message||e)); }
+    return;
+  }
+  const m=p.match(/^([0-9a-f]{64})#(\d+)$/);
+  if(m){
+    // a txin: LS-CHAIN manifest, a registry head, or raw locked bytes — detect from the datum
+    show('reader'); resetReader(); $('doctitle').textContent='resolving pointer…';
+    try{
+      log('h','── detecting pointer type');
+      const datumHex = await utxoDatumHex(p);
+      if(parseManifest(datumHex)){ await openScroll({name:'chain-'+m[1].slice(0,8),title:`Chain scroll ${m[1].slice(0,12)}…`,form:'chain',txin:p}); return; }
+      let asJson=null; try{ asJson=JSON.parse(td.decode(datumBytes(datumHex))); }catch(e){ void e; }
+      if(asJson?.format==='ledger-scrolls-registry-head'){
+        log('ok','  this is a registry head — switching the library to it');
+        LS.setItem('ls.head',p); $('sethead').value=p; SHELF=[...BOOTSTRAP]; show('library'); await loadRegistry(); return;
+      }
+      await openScroll({name:'lock-'+m[1].slice(0,8),title:`Locked scroll ${m[1].slice(0,12)}…`,form:'lock',txin:p});
+    }catch(e){
+      $('verdict').className='verdict bad'; $('vbig').textContent='✗ could not resolve pointer'; $('vsub').textContent=String(e.message||e);
+    }
+    return;
+  }
+  alert('pointer not recognized — expected txHash#ix or a 56-hex policy id');
+}
+
+/* ════════════════════════ router & wiring ════════════════════════ */
+function route(){
+  const h=location.hash.replace(/^#/,'');
+  const s=h.match(/^s=([a-z0-9-]+)/), pp=h.match(/^p=([0-9a-f]{56})$/);
+  if(s){ const e=SHELF.find(x=>x.name===s[1]); if(e){ openScroll(e); return; } }
+  if(pp){ openChannel(pp[1]); return; }
+  show('library');
+}
+window.addEventListener('hashchange',route);
+$('backbtn').onclick=()=>{ location.hash=''; };
+$('backbtn2').onclick=()=>{ location.hash=''; };
+$('openbtn').onclick=()=>openPointer($('point').value);
+$('point').addEventListener('keydown',e=>{ if(e.key==='Enter')openPointer($('point').value); });
+$('dlbtn').onclick=()=>{ if(!currentBytes)return; const base=(currentType||'').split(';')[0].trim();
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([currentBytes],{type:base}));
+  a.download=currentName+'.'+(EXT[base]||(base.startsWith('text/')?'txt':'bin')); a.click(); };
+$('search').addEventListener('input',drawShelf);
+for(const ch of document.querySelectorAll('.chip')) ch.onclick=()=>{ document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on')); ch.classList.add('on'); filter=ch.dataset.f; drawShelf(); };
+$('savesrc').onclick=()=>{ const v=$('setsrc').value.trim().replace(/\/+$/,''); if(v)LS.setItem('ls.source',v); else LS.removeItem('ls.source'); $('srcname').textContent='—'; };
+$('savehead').onclick=()=>{ const v=$('sethead').value.trim(); if(/^[0-9a-f]{64}#\d+$/.test(v))LS.setItem('ls.head',v); else LS.removeItem('ls.head'); SHELF=[...BOOTSTRAP]; loadRegistry(); };
+$('setsrc').value=LS.getItem('ls.source')||''; $('sethead').value=LS.getItem('ls.head')||'';
+
+drawShelf();
+loadRegistry();
+route();
+</script>
+</body>
 </html>

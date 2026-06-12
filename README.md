@@ -28,7 +28,8 @@ Ledger Scrolls supports two storage styles:
 
 | Viewer | Best For | Requirements | Path |
 |--------|----------|--------------|------|
-| **Web Viewer** | Browsing & downloading any scroll | Browser (Koios or Blockfrost) | `/index.html` |
+| **Web Viewer (The Library)** | Browsing & verifying any scroll, channel, or registry | Any modern browser — single dependency-free HTML file | `/index.html` |
+| **BEACN Leaks player** | Publisher channels | Any modern browser — single file | `/leaks.html` |
 | **Constitution** | Cardano Constitution (E608/E541) | Browser | `/constitution.html` |
 | **Holy Bible** | World English Bible (66 books) | Browser | `/bible.html` |
 | **First Video** | First video stored on Cardano | Browser | `/first-video.html` |
@@ -526,35 +527,32 @@ sha256sum hosky.png onchain.png
 
 ## Running the Viewer
 
-The viewer is a modern web application that runs entirely in your browser. No installation required!
+The viewer ("The Library") is **one self-contained HTML file** — no build
+step, no npm, no CDN, no framework. It obeys the same ethos as the scrolls
+it reads: save it to a USB stick and it still works.
+(First-principles rationale: `docs/APP_CONCEPT.md`.)
 
 ### Quick Start
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/BEACNpool/ledger-scrolls.git
-   cd ledger-scrolls
-   ```
-
-2. Open `index.html` in any modern browser
-
-3. Click **Settings** (⚙️) and choose your data source:
-   - **Koios** (default) — No API key required
-   - **Blockfrost** — Enter your API key from [blockfrost.io](https://blockfrost.io)
-
-4. Click **Connect to Cardano**
-
-5. Select any scroll from the library to view it!
+1. Open https://beacnpool.github.io/ledger-scrolls/ — or clone the repo and
+   open `index.html` from disk; they are the same file.
+2. Pick a scroll from The Stacks, or paste **any pointer** into the bar:
+   a `txHash#ix`, a 56-hex policy ID (channel or legacy pages), or a
+   registry head txin to switch the whole catalog to someone else's
+   registry.
+3. Watch the trust log: every chain request is shown as it happens, every
+   hash is recomputed locally, and nothing renders unless it verifies.
 
 ### Features
 
-- 🎨 Modern, responsive UI with dark/light themes
-- 📖 Browse and search the scroll library
-- 🔍 Reconstruct and verify on-chain content
-- ⬇️ Download original files
-- ✅ SHA-256 hash verification
-- 🔄 Support for both Standard and Legacy scroll formats
-- 🌐 Works with Blockfrost or Koios (no API key needed for Koios)
+- 📖 Catalog loaded from the **on-chain registry** (built-in shelf as fallback)
+- 🔍 Universal pointer bar — anyone's scrolls, channels, and registries
+- ✅ SHA-256 verification on every read; mismatch = nothing rendered
+- 🧾 Live trust log + step tracker (POINT → FETCH → REBUILD → VERIFY → RENDER)
+- 🔒 HTML scrolls render fully sandboxed (hash-verified ≠ safe-to-execute)
+- ⬇️ Download the verified original bytes
+- ⚙️ Reader-chosen trust anchors: data source and registry head, persisted locally
+- 🪶 All three forms: LS-LOCK datums, LS-CHAIN v2, legacy CIP-25 pages
 
 ---
 
@@ -598,33 +596,26 @@ You can:
 
 ```
 ledger-scrolls/
-├── index.html              # Built web viewer (GitHub Pages entry; source in app/)
-├── assets/                 # Built JS/CSS bundle (from app/dist)
-├── app/                    # React/Vite viewer source
-│   └── src/
-│       ├── components/     # UI components
-│       ├── hooks/          # useBlockchain hook
-│       └── utils/          # blockchain.js, reconstruct.js, scrolls.js
+├── index.html              # THE LIBRARY — the main app, one dependency-free file (source = deployment)
+├── leaks.html              # BEACN Leaks channel player (single file)
 ├── bible.html              # Standalone legacy viewers (Bible, Constitution, …)
 ├── constitution.html
 ├── first-video.html
 ├── conformance/            # Protocol conformance fixtures + JS/Python runners
 ├── registry/               # Registry spec, JSON schemas, examples, tooling
-│   ├── spec/
+│   ├── spec/               # incl. manifest-chain-v2, publisher-channel-v1
 │   ├── schemas/
 │   ├── examples/
 │   └── tooling/            # lsr-verify / lsr-hash (Python)
 ├── koios-viewer/           # Python viewer/reconstructor (lsview)
+├── tools/lschain/          # LS-CHAIN v2 writer (prepare / make_manifest / mint)
 ├── viewers/koios-cli/      # Zero-dependency Python CLI readers
 ├── scripts/                # CLI minting & verification tools
-│   ├── mint-standard-scroll.sh
-│   └── verify-scroll.sh
 ├── mint/                   # Architect's Scroll mint artifacts
 ├── templates/              # Templates for new scrolls
-│   ├── standard-scroll/
-│   └── legacy-scroll/
-├── docs/                   # Documentation + audits
-└── examples/               # Example scroll documentation
+├── docs/                   # Documentation + audits + APP_CONCEPT.md
+├── examples/               # Every live scroll with receipts
+└── archived/               # Prior art (React app, P2P experiment)
 ```
 
 ---
