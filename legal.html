@@ -64,17 +64,24 @@ button:disabled{background:#777;cursor:wait}
 <div class="head">
  <h1>&#9878; Ledger Docket</h1>
  <div class="sub">recorded instruments on the Cardano blockchain — executed by signature, sealed by hash, dated by consensus</div>
- <div class="docketid">DOCKET POLICY: <b id="dpol">97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4</b><br>
- only the holder of the docket key can record here — every instrument below is provably theirs</div>
+ <div class="docketid">only the holder of a docket's key can record under its policy —<br>every instrument this terminal pulls is provably its signatory's</div>
 </div>
 
 <main>
+ <div class="lookup" style="margin-bottom:2px">
+  <label>Docket</label>
+  <select id="docksel" style="font-family:var(--mono);font-size:12px;padding:10px;border:1.5px solid var(--ink);background:#fff;max-width:420px">
+   <option value="97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4">BEACN Ledger Docket — 97d3659d…4d95e4 (demo)</option>
+   <option value="">my own docket (paste policy id)…</option>
+  </select>
+  <input id="dockcustom" placeholder="56-hex policy id of YOUR docket" style="display:none;width:340px;font-size:12px;text-align:left;letter-spacing:0">
+ </div>
  <div class="lookup">
   <label>Document No.</label>
   <input id="docno" placeholder="0001" inputmode="numeric" maxlength="6">
   <button id="pull">Pull Record</button>
  </div>
- <p class="hint">enter a docket number (e.g. <b>1</b>) — this terminal stores nothing; the record is fetched from the blockchain and verified in your browser</p>
+ <p class="hint">this terminal stores nothing and favors no one — paste <b>your own</b> docket policy above and pull <b>your own</b> documents by number; the BEACN docket is only the demonstration (try doc no. <b>1</b>)</p>
 
  <div class="cert" id="cert">
   <div class="certhead">CERTIFICATE OF RECORD — COMPILED FROM PUBLIC LEDGER DATA, JUST NOW</div>
@@ -99,9 +106,14 @@ button:disabled{background:#777;cursor:wait}
   ordinary identity act — see Article V of document 0001), evidentiary
   treatment varies by jurisdiction, and this terminal is a demonstration,
   not legal advice. Everything else, the mathematics handles.</p>
-  <p style="margin-top:10px">Run your own docket: the protocol, tools and this
-  terminal are open source — <a href="https://github.com/BEACNpool/ledger-scrolls">github.com/BEACNpool/ledger-scrolls</a>.
-  Point this page at any docket with <span style="font-family:var(--mono)">#docket=&lt;policy-id&gt;</span>.</p>
+  <h2 style="margin-top:18px">Run your own docket</h2>
+  <ul>
+   <li>Create a minting policy keyed to your wallet (<span style="font-family:var(--mono)">{"type":"all","scripts":[{"type":"sig","keyHash":&lt;yours&gt;}]}</span>) — its policy ID is your docket number-plate, forever.</li>
+   <li>Record each instrument as a Ledger Scroll, then mint <span style="font-family:var(--mono)">LEGAL_0001, LEGAL_0002, …</span> under your policy with the scroll pointer + SHA-256 in the token metadata (full recipe &amp; receipts: <a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/examples/legal-0001">examples/legal-0001</a>).</li>
+   <li>Paste your policy ID above — or share a direct link: <span style="font-family:var(--mono)">legal.html#docket=&lt;your-policy&gt;&amp;doc=1</span>. This terminal treats your docket exactly as it treats BEACN's.</li>
+  </ul>
+  <p style="margin-top:8px">Protocol, tools and this page are open source —
+  <a href="https://github.com/BEACNpool/ledger-scrolls">github.com/BEACNpool/ledger-scrolls</a>.</p>
  </div>
 </main>
 
@@ -138,22 +150,49 @@ function cbor(raw,pos=0){const len=(ai,p)=>{if(ai<24)return[ai,p];const w={24:1,
 
 let bytesOut=null,urlOut=null,nameOut='document';
 
+function currentDocket(){
+  const v=($('docksel').value || $('dockcustom').value).trim().toLowerCase();
+  return /^[0-9a-f]{56}$/.test(v)?v:null;
+}
+
+// Find document N: try the LEGAL_NNNN convention first; otherwise scan the
+// docket for an asset whose 721 metadata declares doc == N.
+async function findRecord(policy,num){
+  const asset='LEGAL_'+String(num).padStart(4,'0');
+  const nameHex=b2hex(new TextEncoder().encode(asset));
+  let infos=await api('/asset_info',{_asset_list:[[policy,nameHex]]}).catch(()=>[]);
+  if(infos?.length){
+    const meta=infos[0].minting_tx_metadata?.['721']?.[policy]?.[asset];
+    if(meta?.pointer?.txHash) return {inf:infos[0],meta,asset};
+  }
+  st('ok',`  ${asset} not found by name — scanning the docket for doc ${num}…`);
+  const list=await api('/policy_asset_list',{_asset_policy:policy});
+  if(!list?.length) throw new Error('nothing recorded under this docket policy');
+  for(let i=0;i<list.length;i+=50){
+    const batch=await api('/asset_info',{_asset_list:list.slice(i,i+50).map(a=>[policy,a.asset_name])});
+    for(const inf of batch||[]){
+      const nm=inf.asset_name_ascii;
+      const meta=inf.minting_tx_metadata?.['721']?.[policy]?.[nm];
+      if(meta?.pointer?.txHash && Number(meta.doc)===num) return {inf,meta,asset:nm};
+    }
+  }
+  throw new Error(`no document ${num} recorded in this docket (${list.length} asset(s) checked)`);
+}
+
 async function pull(){
   const raw=($('docno').value||'').replace(/[^0-9]/g,'');
   if(!raw){alert('enter a document number');return;}
+  const policy=currentDocket();
+  if(!policy){alert('that is not a 56-hex docket policy id');return;}
+  DOCKET=policy;
   const num=parseInt(raw,10);
-  const asset='LEGAL_'+String(num).padStart(4,'0');
   $('pull').disabled=true;
   $('status').innerHTML='';$('status').style.display='block';
   $('cert').style.display='none';$('stage').style.display='none';$('stage').innerHTML='';$('actions').style.display='none';
+  history.replaceState(null,'',`#docket=${DOCKET}&doc=${num}`);
   try{
-    st('ok',`── pulling ${asset} from docket ${DOCKET.slice(0,16)}…`);
-    const nameHex=b2hex(new TextEncoder().encode(asset));
-    const infos=await api('/asset_info',{_asset_list:[[DOCKET,nameHex]]});
-    if(!infos?.length) throw new Error(`no instrument recorded as ${asset} in this docket`);
-    const inf=infos[0];
-    const meta=inf.minting_tx_metadata?.['721']?.[DOCKET]?.[asset];
-    if(!meta?.pointer?.txHash) throw new Error('record exists but carries no instrument pointer');
+    st('ok',`── pulling document ${num} from docket ${DOCKET.slice(0,16)}…`);
+    const {inf,meta,asset}=await findRecord(DOCKET,num);
     const when=inf.creation_time?new Date((typeof inf.creation_time==='number'?inf.creation_time*1000:inf.creation_time)).toUTCString():'(pending)';
     st('ok',`  recording tx ${inf.minting_tx_hash}`);
     st('ok',`  date of record: ${when}`);
@@ -218,9 +257,15 @@ async function pull(){
 
 $('pull').onclick=pull;
 $('docno').addEventListener('keydown',e=>{if(e.key==='Enter')pull();});
+$('dockcustom').addEventListener('keydown',e=>{if(e.key==='Enter')pull();});
+$('docksel').onchange=()=>{ $('dockcustom').style.display=$('docksel').value?'none':'inline-block'; };
 $('dl').onclick=()=>{if(!bytesOut)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytesOut]));a.download=nameOut+'.html';a.click();};
 const mh=location.hash.match(/docket=([0-9a-fA-F]{56})/);
-if(mh){DOCKET=mh[1].toLowerCase();$('dpol').textContent=DOCKET;}
+if(mh){
+  const p=mh[1].toLowerCase(); DOCKET=p;
+  const opt=[...$('docksel').options].find(o=>o.value===p);
+  if(opt){$('docksel').value=p;}else{$('docksel').value='';$('dockcustom').style.display='inline-block';$('dockcustom').value=p;}
+}
 const md=location.hash.match(/doc=(\d+)/);
 if(md){$('docno').value=md[1];pull();}
 </script>
