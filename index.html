@@ -229,7 +229,10 @@ footer{text-align:center;color:var(--dim);font-size:13px;margin-top:50px;border-
 <script>
 "use strict";
 /* ════════════════════════ providers ════════════════════════ */
-const DEFAULT_SOURCES = ['https://api.koios.rest/api/v1','https://koios.beacn.workers.dev/api/v1'];
+// api.koios.rest does not send CORS headers to browsers (direct fetches
+// fail); the worker is a transparent Koios proxy that adds them. Bytes are
+// hash-verified locally regardless of endpoint; set your own in settings.
+const DEFAULT_SOURCES = ['https://koios.beacn.workers.dev/api/v1','https://api.koios.rest/api/v1'];
 const DEFAULT_HEAD = 'a9c56fb3d4d8b526fe7a0aa7c2416615154af30c2c09ce747a899a886ba8bad9#0';
 const LS = window.localStorage;
 const sources = () => { const c = LS.getItem('ls.source'); return c ? [c, ...DEFAULT_SOURCES.filter(s=>s!==c)] : [...DEFAULT_SOURCES]; };
