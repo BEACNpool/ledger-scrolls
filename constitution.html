@@ -1168,7 +1168,8 @@
     ];
 
     let activeGateway = null;
-    let currentEpoch = "608";
+    const requestedEpoch = new URLSearchParams(location.search).get('epoch');
+    let currentEpoch = requestedEpoch === "541" ? "541" : "608";
     let fetchedText = {};
 
     // ── Koios with Gateway Fallback ─────────────────────────────
@@ -1200,6 +1201,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         initDust();
         initVersionButtons();
+        document.querySelectorAll('.version-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(currentEpoch === '608' ? 'btnEpoch608' : 'btnEpoch541').classList.add('active');
         renderProvenance(currentEpoch);
         renderHeroStats(currentEpoch);
         fetchConstitution(currentEpoch);

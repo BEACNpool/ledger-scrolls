@@ -7,143 +7,110 @@
 <meta name="description" content="Publish legal documents with transaction-backed signatures, permanent timestamps, and independently verifiable SHA-256 proof.">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <style>
-:root{--ink:#101a2e;--navy:#08111f;--navy2:#101f36;--blue:#2563eb;--blue2:#60a5fa;
- --paper:#f7f8fb;--white:#fff;--line:#dce2ec;--muted:#637087;--good:#15803d;--bad:#b42318;
+:root{--ink:#101a2e;--navy:#07111f;--panel:#101d31;--blue:#2f6fed;--blue2:#72a7ff;
+ --white:#fff;--line:#2b3b55;--muted:#9cabc0;--good:#42d77d;--bad:#ff7b72;
  --sans:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55}
-a{color:var(--blue)}
-.nav{height:72px;display:flex;align-items:center;justify-content:space-between;max-width:1160px;margin:auto;padding:0 24px}
+body{background:radial-gradient(circle at 80% 10%,#193765 0,transparent 34%),var(--navy);color:#fff;font-family:var(--sans);font-size:16px;line-height:1.5;min-height:100vh}
+a{color:var(--blue2)}
+.nav{height:62px;display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:auto;padding:0 22px;border-bottom:1px solid rgba(255,255,255,.08)}
 .brand{color:var(--white);font-weight:750;letter-spacing:-.02em;text-decoration:none;font-size:19px}
 .brand span{color:var(--blue2)}
-.navlinks{display:flex;align-items:center;gap:24px;font-size:13px}
-.navlinks a{color:#aebbd0;text-decoration:none}.navlinks a:hover{color:#fff}
-.hero{background:radial-gradient(circle at 78% 5%,#19345e 0,transparent 34%),var(--navy);color:#fff;overflow:hidden}
-.hero-inner{max-width:1160px;margin:auto;padding:88px 24px 112px;display:grid;grid-template-columns:1.15fr .85fr;gap:72px;align-items:center}
-.eyebrow{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--blue2);margin-bottom:20px}
-h1{font-size:clamp(44px,6vw,72px);line-height:1.02;letter-spacing:-.055em;max-width:760px}
-.lead{font-size:20px;line-height:1.6;color:#b8c5d8;max-width:650px;margin:26px 0 34px}
-.cta{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-button,.button{font:700 14px var(--sans);border:0;border-radius:7px;padding:13px 20px;cursor:pointer;text-decoration:none;transition:.15s}
-button,.button.primary{background:var(--blue);color:#fff}.button.primary:hover,button:hover{background:#1d4ed8}
-.button.secondary{background:transparent;color:#dbe7f8;border:1px solid #40516c}.button.secondary:hover{border-color:#8aa0c0}
+.navlinks{display:flex;gap:20px;font-size:12px}.navlinks a{color:#aebbd0;text-decoration:none}
+.layout{max-width:1100px;margin:auto;padding:54px 22px 34px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--blue2);margin-bottom:15px}
+h1{font-size:clamp(42px,5vw,64px);line-height:1.02;letter-spacing:-.055em;max-width:620px}
+.lead{font-size:18px;line-height:1.55;color:#b7c4d7;max-width:580px;margin:20px 0 26px}
+.proofs{display:flex;gap:8px;flex-wrap:wrap}
+.proof{font:11px var(--mono);color:#c3d0e3;border:1px solid var(--line);border-radius:20px;padding:7px 10px}
+.proof b{color:var(--good)}
+button{font:700 14px var(--sans);border:0;border-radius:7px;padding:13px 18px;cursor:pointer;transition:.15s;background:var(--blue);color:#fff}
+button:hover{background:#245bc8}
 button:disabled{opacity:.55;cursor:wait}
-.proof-card{border:1px solid #30415d;border-radius:14px;padding:26px;background:rgba(12,25,44,.72);box-shadow:0 24px 70px rgba(0,0,0,.22)}
-.proof-card .label{font:11px var(--mono);letter-spacing:.14em;color:#8293ad;margin-bottom:16px}
-.proof-line{display:flex;gap:12px;padding:14px 0;border-top:1px solid #283953}
-.proof-line b{display:block;font-size:14px}.proof-line span{display:block;color:#92a2ba;font-size:12px;margin-top:2px}
-.check{color:#4ade80;font-weight:bold}
-.section{max-width:1160px;margin:auto;padding:90px 24px}
-.section-head{max-width:680px;margin-bottom:38px}.section-head h2{font-size:38px;letter-spacing:-.035em;line-height:1.15}
-.section-head p{color:var(--muted);font-size:17px;margin-top:14px}
-.benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.benefit{background:#fff;border:1px solid var(--line);border-radius:12px;padding:26px}
-.benefit .num{font:12px var(--mono);color:var(--blue);margin-bottom:25px}
-.benefit h3{font-size:19px;margin-bottom:9px}.benefit p{font-size:14px;color:var(--muted)}
-.console-wrap{background:#edf1f7;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.console{max-width:920px;margin:auto;padding:86px 24px}
-.console-box{background:#fff;border:1px solid #d5dce8;border-radius:16px;padding:32px;box-shadow:0 18px 55px rgba(25,42,70,.09)}
-.console-title{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:28px}
-.console-title h2{font-size:28px;letter-spacing:-.03em}.console-title p{color:var(--muted);font-size:14px;margin-top:7px}
-.live{font:11px var(--mono);color:var(--good);background:#edf9f0;border:1px solid #c8e8d0;border-radius:20px;padding:6px 10px;white-space:nowrap}
-.field{margin:14px 0}.field label{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:7px}
-.field label span{font-weight:400;color:var(--muted)}
-.field input{width:100%;border:1px solid #cfd7e4;border-radius:7px;background:#fafbfc;padding:13px 14px;font:12px var(--mono);color:var(--ink)}
-.field input:focus{outline:2px solid #bfdbfe;border-color:var(--blue)}
-.record-row{display:grid;grid-template-columns:1fr 170px;gap:12px}.record-row input{font-size:16px}
-.hint{font-size:12px;color:var(--muted);margin-top:11px}
-.hint button{background:none;color:var(--blue);padding:0;font-size:12px}.hint button:hover{text-decoration:underline;background:none}
-.cert{display:none;border:1px solid #cfd7e4;border-radius:10px;margin:24px 0 0;overflow:hidden;background:#fff}
-.cert .certhead{background:var(--navy);color:#fff;padding:10px 14px;font:10px var(--mono);letter-spacing:.16em}
+.console-box{background:rgba(14,28,48,.9);border:1px solid #334764;border-radius:14px;padding:25px;box-shadow:0 22px 60px rgba(0,0,0,.24)}
+.console-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.console-title h2{font-size:22px;letter-spacing:-.025em}.live{font:10px var(--mono);color:var(--good)}
+.field{margin:11px 0}.field label{display:block;font-size:11px;font-weight:700;color:#c6d1e1;margin-bottom:6px}
+.field input,.field select{width:100%;border:1px solid #3b4d68;border-radius:7px;background:#0b1728;padding:11px 12px;font:12px var(--mono);color:#eef4ff}
+.field select{font:13px var(--sans)}
+.field input:focus,.field select:focus{outline:2px solid #315f9e;border-color:var(--blue2)}
+.record-row{display:grid;grid-template-columns:1fr 155px;gap:10px}.record-row input{font-size:15px}
+.hint{font-size:11px;color:#8798b0;margin-top:9px}
+.hint button{background:none;color:var(--blue2);padding:0;font-size:11px}.hint button:hover{text-decoration:underline;background:none}
+.cert{display:none;border:1px solid #3b4d68;border-radius:9px;margin:18px auto 0;overflow:hidden;background:#f8fafc;color:var(--ink);max-width:1056px}
+.cert .certhead{background:#0b1728;color:#fff;padding:9px 13px;font:10px var(--mono);letter-spacing:.14em}
 .cert table{width:100%;border-collapse:collapse;font-size:13px}
 .cert td{border-bottom:1px solid #e6eaf0;padding:9px 14px;vertical-align:top;word-break:break-all}
 .cert td:first-child{font:10px var(--mono);letter-spacing:.08em;color:var(--muted);width:170px;white-space:nowrap}
 .cert td:last-child{font:12px var(--mono)}
 .cert .ok{color:var(--good);font-weight:bold}
 .cert .no{color:var(--bad);font-weight:bold}
-#status{font:11px var(--mono);background:#0b1423;color:#aebbd0;border-radius:8px;
- padding:12px 14px;margin:14px 0;display:none;max-height:200px;overflow-y:auto}
+#results{max-width:1056px;margin:0 auto;padding:0 22px 26px}
+#status{font:11px var(--mono);background:#050c16;color:#aebbd0;border-radius:8px;
+ padding:10px 13px;margin:12px 0;display:none;max-height:150px;overflow-y:auto}
 #status div{padding:1.5px 0;word-break:break-all}
 #status .er{color:#e08379}#status .ok{color:#8fc79f}
-.stage{display:none;border:1px solid #cfd7e4;border-radius:8px;overflow:hidden;background:#fff;margin:16px 0}
+.stage{display:none;border:1px solid #3b4d68;border-radius:8px;overflow:hidden;background:#fff;margin:12px 0}
 .stage iframe{width:100%;height:80vh;border:0;display:block;background:#fff}
 .stage pre{padding:24px;white-space:pre-wrap;font-family:var(--mono);font-size:13.5px;max-height:80vh;overflow:auto}
 .stage img{max-width:100%;display:block;margin:0 auto}
 .actions{display:none;gap:10px;justify-content:center;margin:10px 0}
-.actions button.alt{background:#fff;color:var(--ink);border:1px solid #cfd7e4}
-.bottom{background:var(--navy);color:#fff}.bottom-inner{max-width:1160px;margin:auto;padding:72px 24px;display:flex;justify-content:space-between;gap:40px;align-items:center}
-.bottom h2{font-size:34px;letter-spacing:-.035em;max-width:600px}.bottom p{color:#9fadc1;margin-top:10px;font-size:14px}
-.foot{background:#050b14;color:#74839a;text-align:center;font:11px var(--mono);padding:20px;line-height:2}
+.actions button.alt{background:transparent;color:#dbe7f8;border:1px solid #3b4d68}
+.foot{color:#71819a;text-align:center;font:10px var(--mono);padding:10px 20px 18px}
 .foot a{color:#aebbd0}
-@media(max-width:800px){.hero-inner{grid-template-columns:1fr;padding-top:60px;gap:44px}.benefits{grid-template-columns:1fr}.bottom-inner{display:block}.bottom .cta{margin-top:26px}}
-@media(max-width:560px){.navlinks a:not(:last-child){display:none}.hero-inner{padding-bottom:78px}.record-row{grid-template-columns:1fr}.console-box{padding:22px}.console-title{display:block}.live{display:inline-block;margin-top:12px}.cert td:first-child{width:110px;white-space:normal}}
+@media(max-width:800px){.layout{grid-template-columns:1fr;padding-top:38px;gap:34px}.lead{margin-bottom:20px}.navlinks a:first-child{display:none}}
+@media(max-width:560px){.navlinks a:first-child{display:none}.layout{padding-top:28px}.record-row{grid-template-columns:1fr}.console-box{padding:20px}.cert td:first-child{width:110px;white-space:normal}}
 </style>
 </head>
 <body>
-<div class="hero">
- <nav class="nav">
-  <a class="brand" href="./">Ledger <span>Scrolls</span> Legal</a>
-  <div class="navlinks">
-   <a href="#proof">Why it works</a>
-   <a href="#verify">Verify a document</a>
-   <a href="https://github.com/BEACNpool/ledger-scrolls">Open source</a>
-  </div>
- </nav>
- <div class="hero-inner">
-  <div>
-   <div class="eyebrow">Legal records, built for independent proof</div>
-   <h1>Documents that prove themselves.</h1>
-   <p class="lead">Publish a legal instrument with its signer's transaction, exact-file fingerprint, and permanent blockchain timestamp attached. Anyone can verify the proof. No account, private database, or trusted portal required.</p>
-   <div class="cta">
-    <a class="button primary" href="#verify">Verify the live record</a>
-    <a class="button secondary" href="https://github.com/BEACNpool/ledger-scrolls">Build with the technology</a>
-   </div>
-  </div>
-  <div class="proof-card" aria-label="Document proof summary">
-   <div class="label">DOCUMENT PROOF / LIVE ON CARDANO</div>
-   <div class="proof-line"><div class="check">✓</div><div><b>Transaction-signed</b><span>The docket key authorized the recording transaction.</span></div></div>
-   <div class="proof-line"><div class="check">✓</div><div><b>Hash-sealed</b><span>SHA-256 proves the exact document bytes are unchanged.</span></div></div>
-   <div class="proof-line"><div class="check">✓</div><div><b>Consensus-timestamped</b><span>The network fixes the document's date of record.</span></div></div>
-   <div class="proof-line"><div class="check">✓</div><div><b>Independently readable</b><span>Open-source software reconstructs the file from public ledger data.</span></div></div>
-  </div>
- </div>
-</div>
+<nav class="nav">
+ <a class="brand" href="./">Ledger <span>Scrolls</span> Legal</a>
+ <div class="navlinks"><a href="constitution.html">Constitutions</a><a href="https://github.com/BEACNpool/ledger-scrolls">Open source</a></div>
+</nav>
 
-<section class="section" id="proof">
- <div class="section-head">
-  <div class="eyebrow">Proof travels with the document</div>
-  <h2>A stronger record than “trust our database.”</h2>
-  <p>Ledger Scrolls turns a legal document into a portable, independently verifiable record.</p>
- </div>
- <div class="benefits">
-  <div class="benefit"><div class="num">01 / EXECUTION</div><h3>Signed by the recording transaction</h3><p>The policy requires the docket key's signature before a document record can be created.</p></div>
-  <div class="benefit"><div class="num">02 / INTEGRITY</div><h3>Verified byte for byte</h3><p>The viewer rebuilds the original file and checks its SHA-256 seal before displaying it.</p></div>
-  <div class="benefit"><div class="num">03 / PERMANENCE</div><h3>Dated on a public ledger</h3><p>The record, proof, and timestamp remain independently inspectable without our company in the middle.</p></div>
- </div>
-</section>
+<main class="layout">
+ <section>
+  <div class="eyebrow">Transaction-backed legal records</div>
+  <h1>Documents that prove themselves.</h1>
+  <p class="lead">Signed by the recording transaction. Sealed to the exact bytes. Timestamped on Cardano.</p>
+  <div class="proofs">
+   <div class="proof"><b>✓</b> SIGNED</div>
+   <div class="proof"><b>✓</b> HASH-VERIFIED</div>
+   <div class="proof"><b>✓</b> PERMANENT</div>
+  </div>
+ </section>
 
-<div class="console-wrap" id="verify">
-<section class="console">
  <div class="console-box">
   <div class="console-title">
-   <div><h2>Verify a legal record</h2><p>Use the live demonstration docket or replace it with any compatible 56-character policy ID.</p></div>
-   <div class="live">● LIVE LEDGER QUERY</div>
+   <h2>Verify a record</h2>
+   <div class="live">● LIVE ON-CHAIN</div>
   </div>
   <div class="field">
-   <label for="docket">Docket policy ID <span>editable for custom dockets</span></label>
+   <label for="example">Example</label>
+   <select id="example">
+    <option value="legal">Signed legal declaration</option>
+    <option value="constitution-608">Cardano Constitution — Epoch 608 (current)</option>
+    <option value="constitution-541">Cardano Constitution — Epoch 541 (historical)</option>
+    <option value="custom">Custom legal docket</option>
+   </select>
+  </div>
+  <div class="field" id="docketfield">
+   <label for="docket">Policy ID</label>
    <input id="docket" value="97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4" placeholder="56-hex policy ID" spellcheck="false">
   </div>
-  <div class="field">
+  <div class="field" id="docfield">
    <label for="docno">Document number</label>
    <div class="record-row">
     <input id="docno" value="1" placeholder="1" inputmode="numeric" maxlength="6">
     <button id="pull">Verify Document</button>
    </div>
   </div>
-  <p class="hint">Default: BEACN demonstration policy, document 1. <button type="button" id="resetdemo">Restore demo values</button></p>
+  <p class="hint" id="hint">Default live example. Choose custom to use another policy ID.</p>
+ </div>
+</main>
 
+<section id="results">
  <div class="cert" id="cert">
   <div class="certhead">CERTIFICATE OF RECORD / COMPILED FROM LIVE PUBLIC LEDGER DATA</div>
   <table id="certtbl"></table>
@@ -155,21 +122,11 @@ button:disabled{opacity:.55;cursor:wait}
   <button class="alt" id="prn" onclick="window.print()">&#128424; print</button>
  </div>
  <div class="stage" id="stage"></div>
- </div>
-</section>
-</div>
-
-<section class="bottom">
- <div class="bottom-inner">
-  <div><h2>Own the record. Keep the proof public.</h2><p>Ledger Scrolls is open-source read/write technology for permanent, transaction-backed documents.</p></div>
-  <div class="cta"><a class="button primary" href="https://github.com/BEACNpool/ledger-scrolls/tree/main/examples/legal-0001">See the implementation</a></div>
- </div>
 </section>
 
 <footer class="foot">
- LEDGER SCROLLS LEGAL &#183; OPEN-SOURCE BLOCKCHAIN DOCUMENT TECHNOLOGY<br>
- <a href="./">Ledger Scrolls</a> &#183; <a href="https://github.com/BEACNpool/ledger-scrolls">Source and protocol</a><br>
- Cryptographic proof supports authenticity and integrity; legal effect and identity binding depend on the agreement and jurisdiction.
+ OPEN-SOURCE READ/WRITE TECHNOLOGY &#183; <a href="https://github.com/BEACNpool/ledger-scrolls">SOURCE</a><br>
+ Proof of integrity and authorization; legal effect depends on identity, agreement, and jurisdiction.
 </footer>
 
 <script>
@@ -303,17 +260,43 @@ async function pull(){
   }finally{$('pull').disabled=false;}
 }
 
-$('pull').onclick=pull;
-$('docno').addEventListener('keydown',e=>{if(e.key==='Enter')pull();});
-$('docket').addEventListener('keydown',e=>{if(e.key==='Enter')pull();});
-$('resetdemo').onclick=()=>{$('docket').value='97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4';$('docno').value='1';};
+function setExample(){
+  const v=$('example').value;
+  const constitution=v.startsWith('constitution-');
+  $('docketfield').style.display=constitution?'none':'block';
+  $('docno').style.display=constitution?'none':'block';
+  $('pull').parentElement.style.gridTemplateColumns=constitution?'1fr':'1fr 155px';
+  $('pull').textContent=constitution?'Open & Verify':'Verify Document';
+  $('hint').textContent=constitution
+    ?'Opens the dedicated on-chain constitution verifier.'
+    :v==='custom'?'Enter any compatible docket policy and document number.':'Default live example. Choose custom to use another policy ID.';
+  if(v==='legal'){
+    $('docket').value='97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4';
+    $('docno').value='1';
+  }else if(v==='custom'&&$('docket').value==='97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4'){
+    $('docket').value='';$('docno').value='';
+  }
+}
+function verifySelected(){
+  const v=$('example').value;
+  if(v.startsWith('constitution-')){
+    location.href=`constitution.html?epoch=${v.split('-')[1]}`;
+    return;
+  }
+  pull();
+}
+$('pull').onclick=verifySelected;
+$('example').onchange=setExample;
+$('docno').addEventListener('keydown',e=>{if(e.key==='Enter')verifySelected();});
+$('docket').addEventListener('keydown',e=>{if(e.key==='Enter')verifySelected();});
 $('dl').onclick=()=>{if(!bytesOut)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytesOut]));a.download=nameOut+'.html';a.click();};
 const mh=location.hash.match(/docket=([0-9a-fA-F]{56})/);
 if(mh){
   const p=mh[1].toLowerCase(); DOCKET=p;$('docket').value=p;
+  if(p!=='97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4')$('example').value='custom';
 }
 const md=location.hash.match(/doc=(\d+)/);
-if(md){$('docno').value=md[1];pull();}
+if(md){$('docno').value=md[1];setExample();pull();}else setExample();
 </script>
 </body>
 </html>
