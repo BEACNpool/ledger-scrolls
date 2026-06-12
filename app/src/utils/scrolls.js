@@ -38,6 +38,28 @@ export let SCROLLS = [
       }
   },
   {
+      id: 'beacn-leaks-001',
+      title: 'BEACN Leaks — Issue 001',
+      description: 'The Undeniable: what permanent memory means for human rights. Testimony, evidence, law, science, and culture — entered into a record that cannot be erased.',
+      icon: '🕊️',
+      category: 'documents',
+      type: SCROLL_TYPES.CHAIN,
+      pointer: {
+          manifest_txin: '08c707b3ab7880f983be7f78bd56c4de38461d514c6597d95cd5da1abc307565#0',
+          content_type: 'text/html',
+          codec: 'gzip',
+          sha256: '5917a884f449fd1c76fc0241791468a37b2b54883c0b8b98022a9f372f7d68b9'
+      },
+      metadata: {
+          size: '~10KB',
+          pages: 1,
+          minted: 'June 11, 2026',
+          minted_by: 'BEACNpool',
+          channel_policy: '5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415',
+          channel_asset: 'BEACN_LEAKS_0001'
+      }
+  },
+  {
       id: 'eternal-scroll',
       title: 'The Eternal Scroll',
       description: 'How to read & write immutable media on Cardano — a tutorial that is itself stored on-chain. The first LS-CHAIN v2 scroll.',

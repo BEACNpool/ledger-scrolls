@@ -107,6 +107,10 @@ byline that only the publisher's key can ever write under.
 | **SHA-256 (Original)** | `025a81aeffe8aed98868b89b8f04a1f137f698362cfebafd2f8b5a56312d49b2` |
 | **Status** | 🟢 LIVE |
 
+**Issue 001 — The Undeniable** (human rights & permanent memory):
+`BEACN_LEAKS_0001`, manifest `08c707b3ab7880f983be7f78bd56c4de38461d514c6597d95cd5da1abc307565#0`,
+sha256 `5917a884f449fd1c76fc0241791468a37b2b54883c0b8b98022a9f372f7d68b9` — see `examples/beacn-leaks-001/`.
+
 ---
 
 ### 0) 📜 The Eternal Scroll — first LS-CHAIN v2 scroll

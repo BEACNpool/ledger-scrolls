@@ -71,6 +71,6 @@ Resolution and verification of the content follow the pointer's own spec.
 
 ## Live channels
 
-| Channel | Policy ID | First issue |
+| Channel | Policy ID | Issues |
 |---|---|---|
-| BEACN Leaks | `5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415` | `BEACN_LEAKS_0000` — Issue 000: The Manifesto (`examples/beacn-leaks-000/`) |
+| BEACN Leaks | `5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415` | `BEACN_LEAKS_0000` — Issue 000: The Manifesto (`examples/beacn-leaks-000/`) · `BEACN_LEAKS_0001` — Issue 001: The Undeniable (`examples/beacn-leaks-001/`) |

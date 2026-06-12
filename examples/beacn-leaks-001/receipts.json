@@ -1,0 +1,37 @@
+{
+  "format": "ls-chain-v2-receipts",
+  "title": "BEACN Leaks — Issue 001: The Undeniable",
+  "mintedAt": "2026-06-11",
+  "mintedBy": "BEACNpool",
+  "network": "mainnet",
+  "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "08c707b3ab7880f983be7f78bd56c4de38461d514c6597d95cd5da1abc307565",
+    "txIx": 0
+  },
+  "lockAddress": "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn",
+  "manifestLockedLovelace": 1439540,
+  "pageTxHashes": [
+    "6d6eb2a4419eb7c4f9f0e0e8f2bb53ba3e832a4788f2b52a3c3eb0a30ac91fb7"
+  ],
+  "feesLovelace": { "page1": 377361, "manifest": 176105, "channelNft": 200525 },
+  "contentType": "text/html",
+  "codec": "gzip",
+  "sizeDecoded": 9794,
+  "sizeEncoded": 4511,
+  "sha256Decoded": "5917a884f449fd1c76fc0241791468a37b2b54883c0b8b98022a9f372f7d68b9",
+  "sha256Encoded": "1c5b0185ca7dce0ab1a3e2f6f3bc14d404ac5100c8ca376ad48b240179a6e362",
+  "segmentsPerPage": 190,
+  "metadataLabel": 22025,
+  "publisherChannel": {
+    "name": "BEACN Leaks",
+    "policyId": "5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415",
+    "asset": "BEACN_LEAKS_0001",
+    "assetHex": "424541434e5f4c45414b535f30303031",
+    "mintTx": "f7439c3e4c5570adc3dd2ab06ebd07da8394e2bc545e7dd586b8c63834012345"
+  },
+  "verification": {
+    "python": "lsview reconstruct-chain --txin 08c707b3ab7880f983be7f78bd56c4de38461d514c6597d95cd5da1abc307565#0 --out issue001.html",
+    "result": "byte-for-byte match with source, verified 2026-06-11 via Koios"
+  }
+}
