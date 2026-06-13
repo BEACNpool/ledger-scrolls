@@ -3,68 +3,51 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ledger Scrolls Legal — Blockchain-Proven Documents</title>
-<meta name="description" content="Publish legal documents with transaction-backed signatures, permanent timestamps, and independently verifiable SHA-256 proof.">
+<title>Ledger Scrolls Legal — Verified Records</title>
+<meta name="description" content="Search and verify on-chain document registries by policy ID.">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <style>
-:root{--ink:#101a2e;--navy:#07111f;--panel:#101d31;--blue:#2f6fed;--blue2:#72a7ff;
- --white:#fff;--line:#2b3b55;--muted:#9cabc0;--good:#42d77d;--bad:#ff7b72;
- --sans:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+:root{--ink:#101828;--blue:#175cd3;--paper:#f5f7fa;--line:#d9e0e8;--muted:#667085;
+ --good:#067647;--bad:#b42318;--sans:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:radial-gradient(circle at 80% 10%,#193765 0,transparent 34%),var(--navy);color:#fff;font-family:var(--sans);font-size:16px;line-height:1.5;min-height:100vh}
-a{color:var(--blue2)}
-.nav{height:62px;display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:auto;padding:0 22px;border-bottom:1px solid rgba(255,255,255,.08)}
-.brand{color:var(--white);font-weight:750;letter-spacing:-.02em;text-decoration:none;font-size:19px}
-.brand span{color:var(--blue2)}
-.navlinks{display:flex;gap:20px;font-size:12px}.navlinks a{color:#aebbd0;text-decoration:none}
-.layout{max-width:1100px;margin:auto;padding:54px 22px 34px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
-.eyebrow{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--blue2);margin-bottom:15px}
-h1{font-size:clamp(42px,5vw,64px);line-height:1.02;letter-spacing:-.055em;max-width:620px}
-.lead{font-size:18px;line-height:1.55;color:#b7c4d7;max-width:580px;margin:20px 0 26px}
-.proofs{display:flex;gap:8px;flex-wrap:wrap}
-.proof{font:11px var(--mono);color:#c3d0e3;border:1px solid var(--line);border-radius:20px;padding:7px 10px}
-.proof b{color:var(--good)}
-button{font:700 14px var(--sans);border:0;border-radius:7px;padding:13px 18px;cursor:pointer;transition:.15s;background:var(--blue);color:#fff}
-button:hover{background:#245bc8}
-button:disabled{opacity:.55;cursor:wait}
-.console-box{background:rgba(14,28,48,.9);border:1px solid #334764;border-radius:14px;padding:25px;box-shadow:0 22px 60px rgba(0,0,0,.24)}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;min-height:100vh}
+a{color:var(--blue)}
+.nav{height:64px;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid var(--line);padding:0 max(24px,calc((100% - 1120px)/2))}
+.brand{color:var(--ink);font-weight:750;letter-spacing:-.025em;text-decoration:none;font-size:18px}.brand span{color:var(--blue)}
+.navlinks{display:flex;gap:22px;font-size:12px}.navlinks a{color:#475467;text-decoration:none}
+.layout{max-width:1120px;margin:auto;padding:48px 24px 26px}
+.pagehead{margin-bottom:22px}.eyebrow{font-size:10px;font-weight:750;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin-bottom:8px}
+h1{font-size:38px;line-height:1.08;letter-spacing:-.04em}.pagehead p{font-size:13px;color:var(--muted);margin-top:7px}
+button{font:700 13px var(--sans);border:0;border-radius:6px;padding:12px 18px;cursor:pointer;background:var(--blue);color:#fff}
+button:hover{background:#1849a9}button:disabled{opacity:.55;cursor:wait}
+.console-box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:22px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
 .console-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.console-title h2{font-size:22px;letter-spacing:-.025em}.live{font:10px var(--mono);color:var(--good)}
-.field{margin:11px 0}.field label{display:block;font-size:11px;font-weight:700;color:#c6d1e1;margin-bottom:6px}
-.field input,.field select{width:100%;border:1px solid #3b4d68;border-radius:7px;background:#0b1728;padding:11px 12px;font:12px var(--mono);color:#eef4ff}
-.field select{font:13px var(--sans)}
-.field input:focus,.field select:focus{outline:2px solid #315f9e;border-color:var(--blue2)}
-.search-row{display:grid;grid-template-columns:1fr 130px;gap:10px}.search-row input{font-size:12px}
-.hint{font-size:11px;color:#8798b0;margin-top:9px}
-.hint button{background:none;color:var(--blue2);padding:0;font-size:11px}.hint button:hover{text-decoration:underline;background:none}
-.summary{display:none;color:#dbe7f8;font-size:14px;margin:16px 0 10px}.summary b{color:var(--good)}
+.console-title h2{font-size:17px;letter-spacing:-.015em}.live{font:10px var(--mono);color:var(--good)}
+.fields{display:grid;grid-template-columns:280px 1fr;gap:12px;align-items:end}
+.field label{display:block;font-size:11px;font-weight:700;color:#344054;margin-bottom:6px}
+.field input,.field select{width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff;padding:11px 12px;font:12px var(--mono);color:var(--ink)}
+.field select{font:13px var(--sans)}.field input:focus,.field select:focus{outline:3px solid #d1e0ff;border-color:var(--blue)}
+.search-row{display:grid;grid-template-columns:1fr 110px;gap:10px}.hint{font-size:11px;color:var(--muted);margin-top:12px}
+.summary{display:none;color:#344054;font-size:13px;margin:22px 0 10px}.summary b{color:var(--ink)}
 .doclist{display:none;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:9px;margin:10px 0}
-.doc{background:#101d31;border:1px solid #334764;border-radius:8px;padding:12px;text-align:left;color:#fff}
-.doc:hover{border-color:var(--blue2);background:#14243c}.doc b{display:block;font-size:13px}.doc span{display:block;color:#8fa0b8;font:10px var(--mono);margin-top:4px}
-.cert{display:none;border:1px solid #3b4d68;border-radius:9px;margin:18px auto 0;overflow:hidden;background:#f8fafc;color:var(--ink);max-width:1056px}
-.cert .certhead{background:#0b1728;color:#fff;padding:9px 13px;font:10px var(--mono);letter-spacing:.14em}
-.cert table{width:100%;border-collapse:collapse;font-size:13px}
-.cert td{border-bottom:1px solid #e6eaf0;padding:9px 14px;vertical-align:top;word-break:break-all}
-.cert td:first-child{font:10px var(--mono);letter-spacing:.08em;color:var(--muted);width:170px;white-space:nowrap}
-.cert td:last-child{font:12px var(--mono)}
-.cert .ok{color:var(--good);font-weight:bold}
-.cert .no{color:var(--bad);font-weight:bold}
-#results{max-width:1056px;margin:0 auto;padding:0 22px 26px}
-#status{font:11px var(--mono);background:#050c16;color:#aebbd0;border-radius:8px;
- padding:10px 13px;margin:12px 0;display:none;max-height:150px;overflow-y:auto}
-#status div{padding:1.5px 0;word-break:break-all}
-#status .er{color:#e08379}#status .ok{color:#8fc79f}
-.stage{display:none;border:1px solid #3b4d68;border-radius:8px;overflow:hidden;background:#fff;margin:12px 0}
-.stage iframe{width:100%;height:80vh;border:0;display:block;background:#fff}
-.stage pre{padding:24px;white-space:pre-wrap;font-family:var(--mono);font-size:13.5px;line-height:1.65;color:var(--ink);background:#fff;max-height:80vh;overflow:auto}
-.stage img{max-width:100%;display:block;margin:0 auto}
-.actions{display:none;gap:10px;justify-content:center;margin:10px 0}
-.actions button.alt{background:transparent;color:#dbe7f8;border:1px solid #3b4d68}
-.foot{color:#71819a;text-align:center;font:10px var(--mono);padding:10px 20px 18px}
-.foot a{color:#aebbd0}
-@media(max-width:800px){.layout{grid-template-columns:1fr;padding-top:38px;gap:34px}.lead{margin-bottom:20px}}
-@media(max-width:560px){.navlinks a:last-child{display:none}.layout{padding-top:28px}.search-row{grid-template-columns:1fr}.console-box{padding:20px}.cert td:first-child{width:110px;white-space:normal}}
+.doc{background:#fff;border:1px solid var(--line);border-radius:7px;padding:12px;text-align:left;color:var(--ink)}
+.doc:hover{border-color:#84adff;background:#f9fbff}.doc b{display:block;font-size:13px}.doc span{display:block;color:var(--muted);font:10px var(--mono);margin-top:4px}
+#results{max-width:1120px;margin:0 auto;padding:0 24px 36px}
+.cert,.technical{display:none;border:1px solid var(--line);border-radius:7px;background:#fff;margin:10px 0;overflow:hidden}
+.cert summary,.technical summary{cursor:pointer;padding:11px 13px;font-size:11px;font-weight:700;color:#475467;list-style-position:inside}
+.cert table{width:100%;border-collapse:collapse;font-size:13px}.cert td{border-top:1px solid #e6eaf0;padding:9px 14px;vertical-align:top;word-break:break-all}
+.cert td:first-child{font:10px var(--mono);letter-spacing:.08em;color:var(--muted);width:160px;white-space:nowrap}.cert td:last-child{font:12px var(--mono)}
+.cert .ok{color:var(--good);font-weight:bold}.cert .no{color:var(--bad);font-weight:bold}
+#status{font:11px var(--mono);background:#f8fafc;color:#475467;border-top:1px solid var(--line);padding:10px 13px;display:none;max-height:150px;overflow-y:auto}
+#status div{padding:1.5px 0;word-break:break-all}#status .er{color:var(--bad)}#status .ok{color:var(--good)}
+.stage{display:none;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:#fff;margin:12px 0;box-shadow:0 1px 3px rgba(16,24,40,.08)}
+.stage iframe{width:100%;height:80vh;border:0;display:block;background:#fff}.stage pre{padding:24px;white-space:pre-wrap;font:13.5px/1.65 var(--mono);color:var(--ink);background:#fff;max-height:80vh;overflow:auto}
+.stage img{max-width:100%;display:block;margin:0 auto}.actions{display:none;gap:10px;justify-content:flex-end;margin:10px 0}
+.actions button.alt{background:#fff;color:#344054;border:1px solid #cbd5e1}
+.foot{color:#98a2b3;text-align:center;font:10px var(--mono);padding:8px 20px 20px}.foot a{color:#667085}
+@media(max-width:760px){.fields{grid-template-columns:1fr}.layout{padding-top:32px}}
+@media(max-width:560px){.navlinks a:last-child{display:none}.search-row{grid-template-columns:1fr}.console-box{padding:18px}.cert td:first-child{width:110px;white-space:normal}h1{font-size:32px}}
 </style>
 </head>
 <body>
@@ -77,51 +60,51 @@ button:disabled{opacity:.55;cursor:wait}
 </nav>
 
 <main class="layout">
- <section>
-  <div class="eyebrow">Transaction-backed legal records</div>
-  <h1>Documents that prove themselves.</h1>
-  <p class="lead">Signed by the recording transaction. Sealed to the exact bytes. Timestamped on Cardano.</p>
-  <div class="proofs">
-   <div class="proof"><b>✓</b> SIGNED</div>
-   <div class="proof"><b>✓</b> HASH-VERIFIED</div>
-   <div class="proof"><b>✓</b> PERMANENT</div>
-  </div>
- </section>
+ <header class="pagehead">
+  <div class="eyebrow">Ledger records</div>
+  <h1>Verified documents</h1>
+  <p>Search by policy ID.</p>
+ </header>
 
  <div class="console-box">
   <div class="console-title">
-   <h2>Verify a record</h2>
-   <div class="live">● LIVE ON-CHAIN</div>
+   <h2>Document registry</h2>
+   <div class="live">● ON-CHAIN</div>
   </div>
-  <div class="field">
-   <label for="example">Example</label>
-   <select id="example">
-    <option value="97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4">Signed legal declaration</option>
-    <option value="ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750">Cardano Constitution — Epoch 608</option>
-    <option value="d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d">Cardano Constitution — Epoch 541</option>
-    <option value="">Custom policy ID</option>
-   </select>
-  </div>
-  <div class="field">
-   <label for="docket">Policy ID</label>
-   <div class="search-row">
-    <input id="docket" value="97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4" placeholder="56-hex policy ID" spellcheck="false">
-    <button id="pull">Read Policy</button>
+  <div class="fields">
+   <div class="field">
+    <label for="example">Registry</label>
+    <select id="example">
+     <option value="97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4">Legal declaration</option>
+     <option value="ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750">Constitution — Epoch 608</option>
+     <option value="d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d">Constitution — Epoch 541</option>
+     <option value="">Custom policy</option>
+    </select>
+   </div>
+   <div class="field">
+    <label for="docket">Policy ID</label>
+    <div class="search-row">
+     <input id="docket" value="97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4" placeholder="56-hex policy ID" spellcheck="false">
+     <button id="pull">Search</button>
+    </div>
    </div>
   </div>
-  <p class="hint">Discovers documents and page counts from on-chain metadata. <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/CREATING_LEGAL_RECORDS.md">Technical creation guide →</a></p>
+  <p class="hint"><a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/CREATING_LEGAL_RECORDS.md">Create a registry →</a></p>
  </div>
 </main>
 
 <section id="results">
  <div class="summary" id="summary"></div>
  <div class="doclist" id="doclist"></div>
- <div class="cert" id="cert">
-  <div class="certhead">CERTIFICATE OF RECORD / COMPILED FROM LIVE PUBLIC LEDGER DATA</div>
+ <details class="cert" id="cert">
+  <summary>Record certificate</summary>
   <table id="certtbl"></table>
- </div>
+ </details>
 
- <div id="status"></div>
+ <details class="technical" id="technical">
+  <summary>Verification details</summary>
+  <div id="status"></div>
+ </details>
  <div class="actions" id="actions">
   <button class="alt" id="dl">&#11015; download original bytes</button>
   <button class="alt" id="prn" onclick="window.print()">&#128424; print</button>
@@ -130,8 +113,7 @@ button:disabled{opacity:.55;cursor:wait}
 </section>
 
 <footer class="foot">
- OPEN-SOURCE READ/WRITE TECHNOLOGY &#183; <a href="https://github.com/BEACNpool/ledger-scrolls">SOURCE</a><br>
- Proof of integrity and authorization; legal effect depends on identity, agreement, and jurisdiction.
+ <a href="https://github.com/BEACNpool/ledger-scrolls">Ledger Scrolls</a>
 </footer>
 
 <script>
@@ -140,7 +122,7 @@ const SOURCES=['https://koios.beacn.workers.dev/api/v1','https://api.koios.rest/
 let DOCKET='97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const st=(cls,m)=>{const s=$('status');s.style.display='block';const d=document.createElement('div');d.className=cls;d.textContent=m;s.appendChild(d);s.scrollTop=1e9;};
+const st=(cls,m)=>{const s=$('status'),t=$('technical');t.style.display='block';if(cls==='er')t.open=true;s.style.display='block';const d=document.createElement('div');d.className=cls;d.textContent=m;s.appendChild(d);s.scrollTop=1e9;};
 const hex2b=h=>{h=String(h).replace(/^0x/i,'');const b=new Uint8Array(h.length/2);for(let i=0;i<h.length;i+=2)b[i/2]=parseInt(h.substr(i,2),16);return b;};
 const b2hex=b=>Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('');
 const sha256=async b=>b2hex(new Uint8Array(await crypto.subtle.digest('SHA-256',b)));
@@ -165,10 +147,10 @@ const KNOWN={
 };
 
 function resetResults(){
-  $('status').innerHTML='';$('status').style.display='block';
+  $('status').innerHTML='';$('status').style.display='block';$('technical').style.display='none';$('technical').open=false;
   $('summary').style.display='none';$('summary').innerHTML='';
   $('doclist').style.display='none';$('doclist').innerHTML='';
-  $('cert').style.display='none';$('certtbl').innerHTML='';
+  $('cert').style.display='none';$('cert').open=false;$('certtbl').innerHTML='';
   $('stage').style.display='none';$('stage').innerHTML='';
   $('actions').style.display='none';
 }
@@ -225,7 +207,7 @@ function certificate(rows){
   $('cert').style.display='block';
 }
 async function openPointerDoc(doc,policy){
-  $('status').innerHTML='';$('status').style.display='block';$('cert').style.display='none';$('stage').style.display='none';$('actions').style.display='none';
+  $('status').innerHTML='';$('technical').style.display='none';$('technical').open=false;$('status').style.display='block';$('cert').style.display='none';$('cert').open=false;$('stage').style.display='none';$('actions').style.display='none';
   try{
     st('ok',`── opening ${doc.title}`);
     const man=doc.manifest||await manifestInfo(doc.txin);
