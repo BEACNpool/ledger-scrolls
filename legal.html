@@ -35,9 +35,13 @@ button:disabled{opacity:.55;cursor:wait}
 .field input,.field select{width:100%;border:1px solid #3b4d68;border-radius:7px;background:#0b1728;padding:11px 12px;font:12px var(--mono);color:#eef4ff}
 .field select{font:13px var(--sans)}
 .field input:focus,.field select:focus{outline:2px solid #315f9e;border-color:var(--blue2)}
-.record-row{display:grid;grid-template-columns:1fr 155px;gap:10px}.record-row input{font-size:15px}
+.search-row{display:grid;grid-template-columns:1fr 130px;gap:10px}.search-row input{font-size:12px}
 .hint{font-size:11px;color:#8798b0;margin-top:9px}
 .hint button{background:none;color:var(--blue2);padding:0;font-size:11px}.hint button:hover{text-decoration:underline;background:none}
+.summary{display:none;color:#dbe7f8;font-size:14px;margin:16px 0 10px}.summary b{color:var(--good)}
+.doclist{display:none;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:9px;margin:10px 0}
+.doc{background:#101d31;border:1px solid #334764;border-radius:8px;padding:12px;text-align:left;color:#fff}
+.doc:hover{border-color:var(--blue2);background:#14243c}.doc b{display:block;font-size:13px}.doc span{display:block;color:#8fa0b8;font:10px var(--mono);margin-top:4px}
 .cert{display:none;border:1px solid #3b4d68;border-radius:9px;margin:18px auto 0;overflow:hidden;background:#f8fafc;color:var(--ink);max-width:1056px}
 .cert .certhead{background:#0b1728;color:#fff;padding:9px 13px;font:10px var(--mono);letter-spacing:.14em}
 .cert table{width:100%;border-collapse:collapse;font-size:13px}
@@ -53,20 +57,20 @@ button:disabled{opacity:.55;cursor:wait}
 #status .er{color:#e08379}#status .ok{color:#8fc79f}
 .stage{display:none;border:1px solid #3b4d68;border-radius:8px;overflow:hidden;background:#fff;margin:12px 0}
 .stage iframe{width:100%;height:80vh;border:0;display:block;background:#fff}
-.stage pre{padding:24px;white-space:pre-wrap;font-family:var(--mono);font-size:13.5px;max-height:80vh;overflow:auto}
+.stage pre{padding:24px;white-space:pre-wrap;font-family:var(--mono);font-size:13.5px;line-height:1.65;color:var(--ink);background:#fff;max-height:80vh;overflow:auto}
 .stage img{max-width:100%;display:block;margin:0 auto}
 .actions{display:none;gap:10px;justify-content:center;margin:10px 0}
 .actions button.alt{background:transparent;color:#dbe7f8;border:1px solid #3b4d68}
 .foot{color:#71819a;text-align:center;font:10px var(--mono);padding:10px 20px 18px}
 .foot a{color:#aebbd0}
 @media(max-width:800px){.layout{grid-template-columns:1fr;padding-top:38px;gap:34px}.lead{margin-bottom:20px}.navlinks a:first-child{display:none}}
-@media(max-width:560px){.navlinks a:first-child{display:none}.layout{padding-top:28px}.record-row{grid-template-columns:1fr}.console-box{padding:20px}.cert td:first-child{width:110px;white-space:normal}}
+@media(max-width:560px){.navlinks a:first-child{display:none}.layout{padding-top:28px}.search-row{grid-template-columns:1fr}.console-box{padding:20px}.cert td:first-child{width:110px;white-space:normal}}
 </style>
 </head>
 <body>
 <nav class="nav">
  <a class="brand" href="./">Ledger <span>Scrolls</span> Legal</a>
- <div class="navlinks"><a href="constitution.html">Constitutions</a><a href="https://github.com/BEACNpool/ledger-scrolls">Open source</a></div>
+ <div class="navlinks"><a href="https://github.com/BEACNpool/ledger-scrolls">Open source</a></div>
 </nav>
 
 <main class="layout">
@@ -89,28 +93,26 @@ button:disabled{opacity:.55;cursor:wait}
   <div class="field">
    <label for="example">Example</label>
    <select id="example">
-    <option value="legal">Signed legal declaration</option>
-    <option value="constitution-608">Cardano Constitution — Epoch 608 (current)</option>
-    <option value="constitution-541">Cardano Constitution — Epoch 541 (historical)</option>
-    <option value="custom">Custom legal docket</option>
+    <option value="97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4">Signed legal declaration</option>
+    <option value="ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750">Cardano Constitution — Epoch 608</option>
+    <option value="d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d">Cardano Constitution — Epoch 541</option>
+    <option value="">Custom policy ID</option>
    </select>
   </div>
-  <div class="field" id="docketfield">
+  <div class="field">
    <label for="docket">Policy ID</label>
-   <input id="docket" value="97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4" placeholder="56-hex policy ID" spellcheck="false">
-  </div>
-  <div class="field" id="docfield">
-   <label for="docno">Document number</label>
-   <div class="record-row">
-    <input id="docno" value="1" placeholder="1" inputmode="numeric" maxlength="6">
-    <button id="pull">Verify Document</button>
+   <div class="search-row">
+    <input id="docket" value="97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4" placeholder="56-hex policy ID" spellcheck="false">
+    <button id="pull">Read Policy</button>
    </div>
   </div>
-  <p class="hint" id="hint">Default live example. Choose custom to use another policy ID.</p>
+  <p class="hint">The reader discovers documents and page counts directly from on-chain metadata.</p>
  </div>
 </main>
 
 <section id="results">
+ <div class="summary" id="summary"></div>
+ <div class="doclist" id="doclist"></div>
  <div class="cert" id="cert">
   <div class="certhead">CERTIFICATE OF RECORD / COMPILED FROM LIVE PUBLIC LEDGER DATA</div>
   <table id="certtbl"></table>
@@ -153,69 +155,83 @@ function cbor(raw,pos=0){const len=(ai,p)=>{if(ai<24)return[ai,p];const w={24:1,
  if(mt===6){const[n,p]=len(ai,pos+1);const[v,q]=cbor(raw,p);return[{tag:n,value:v},q];}
  throw new Error('cbor major '+mt);}
 
-let bytesOut=null,urlOut=null,nameOut='document';
+let bytesOut=null,urlOut=null,nameOut='document',typeOut='application/octet-stream';
+const KNOWN={
+  ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750:{title:'Cardano Constitution — Epoch 608',type:'text/plain; charset=utf-8',sha:'98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1'},
+  d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d:{title:'Cardano Constitution — Epoch 541',type:'text/plain; charset=utf-8',sha:'1939c1627e49b5267114cbdb195d4ac417e545544ba6dcb47e03c679439e9566'}
+};
 
-function currentDocket(){
-  const v=$('docket').value.trim().toLowerCase();
-  return /^[0-9a-f]{56}$/.test(v)?v:null;
-}
-
-// Find document N: try the LEGAL_NNNN convention first; otherwise scan the
-// docket for an asset whose 721 metadata declares doc == N.
-async function findRecord(policy,num){
-  const asset='LEGAL_'+String(num).padStart(4,'0');
-  const nameHex=b2hex(new TextEncoder().encode(asset));
-  let infos=await api('/asset_info',{_asset_list:[[policy,nameHex]]}).catch(()=>[]);
-  if(infos?.length){
-    const meta=infos[0].minting_tx_metadata?.['721']?.[policy]?.[asset];
-    if(meta?.pointer?.txHash) return {inf:infos[0],meta,asset};
-  }
-  st('ok',`  ${asset} not found by name — scanning the docket for doc ${num}…`);
-  const list=await api('/policy_asset_list',{_asset_policy:policy});
-  if(!list?.length) throw new Error('nothing recorded under this docket policy');
-  for(let i=0;i<list.length;i+=50){
-    const batch=await api('/asset_info',{_asset_list:list.slice(i,i+50).map(a=>[policy,a.asset_name])});
-    for(const inf of batch||[]){
-      const nm=inf.asset_name_ascii;
-      const meta=inf.minting_tx_metadata?.['721']?.[policy]?.[nm];
-      if(meta?.pointer?.txHash && Number(meta.doc)===num) return {inf,meta,asset:nm};
-    }
-  }
-  throw new Error(`no document ${num} recorded in this docket (${list.length} asset(s) checked)`);
-}
-
-async function pull(){
-  const raw=($('docno').value||'').replace(/[^0-9]/g,'');
-  if(!raw){alert('enter a document number');return;}
-  const policy=currentDocket();
-  if(!policy){alert('that is not a 56-hex docket policy id');return;}
-  DOCKET=policy;
-  const num=parseInt(raw,10);
-  $('pull').disabled=true;
+function resetResults(){
   $('status').innerHTML='';$('status').style.display='block';
-  $('cert').style.display='none';$('stage').style.display='none';$('stage').innerHTML='';$('actions').style.display='none';
-  history.replaceState(null,'',`#docket=${DOCKET}&doc=${num}`);
+  $('summary').style.display='none';$('summary').innerHTML='';
+  $('doclist').style.display='none';$('doclist').innerHTML='';
+  $('cert').style.display='none';$('certtbl').innerHTML='';
+  $('stage').style.display='none';$('stage').innerHTML='';
+  $('actions').style.display='none';
+}
+async function assetInfos(policy,names){
+  const out=[];
+  for(let i=0;i<names.length;i+=50){
+    st('ok',`  reading asset metadata ${Math.min(i+50,names.length)}/${names.length}`);
+    out.push(...await api('/asset_info',{_asset_list:names.slice(i,i+50).map(n=>[policy,n])}));
+  }
+  return out;
+}
+function policyMeta(inf,policy){
+  const data=inf.minting_tx_metadata?.['721']?.[policy];
+  if(!data||typeof data!=='object')return null;
+  const ascii=inf.asset_name_ascii||td.decode(hex2b(inf.asset_name||''));
+  return data[ascii]??data[inf.asset_name]??null;
+}
+function parseManifest(dHex){
+  const[m]=cbor(hex2b(dHex));
+  if(!m||m.tag!==121||!Array.isArray(m.value)||m.value[0]!==2)throw new Error('invalid LS-CHAIN manifest');
+  const f=m.value,n=f[7];
+  return{ct:td.decode(f[1]),codec:td.decode(f[2]),size:f[3],shaDec:b2hex(f[4]),shaEnc:b2hex(f[5]),
+    pages:f[6].map(b2hex),next:n&&n.tag===122?`${b2hex(n.value[0])}#${n.value[1]}`:null};
+}
+async function manifestInfo(txin){
+  let rows=await api('/utxo_info',{_utxo_refs:[txin],_extended:true});
+  let man=parseManifest(rows?.[0]?.inline_datum?.bytes||'');
+  const pages=[...man.pages];let next=man.next;
+  while(next){
+    rows=await api('/utxo_info',{_utxo_refs:[next],_extended:true});
+    const more=parseManifest(rows?.[0]?.inline_datum?.bytes||'');
+    pages.push(...more.pages);next=more.next;
+  }
+  return{...man,pages};
+}
+function sniff(b){
+  if(b[0]===0x25&&b[1]===0x50&&b[2]===0x44&&b[3]===0x46)return'application/pdf';
+  if(b[0]===0x89&&b[1]===0x50)return'image/png';
+  try{const s=td.decode(b.subarray(0,400));if(/<!doctype html|<html/i.test(s))return'text/html';if(!/[\x00-\x08\x0e-\x1f]/.test(s))return'text/plain';}catch(e){void e;}
+  return'application/octet-stream';
+}
+function renderBytes(bytes,type,name){
+  bytesOut=bytes;typeOut=(type||sniff(bytes)).split(';')[0].trim();nameOut=name||'document';
+  if(urlOut)URL.revokeObjectURL(urlOut);
+  urlOut=URL.createObjectURL(new Blob([bytes],{type:typeOut}));
+  const stage=$('stage');stage.innerHTML='';stage.style.display='block';
+  if(typeOut==='text/html'||typeOut==='application/pdf'){const fr=document.createElement('iframe');fr.setAttribute('sandbox','');fr.src=urlOut;fr.title='verified legal document';stage.appendChild(fr);}
+  else if(typeOut.startsWith('image/')){const im=document.createElement('img');im.src=urlOut;stage.appendChild(im);}
+  else{const pre=document.createElement('pre');pre.textContent=typeOut.startsWith('text/')?td.decode(bytes):`(${typeOut}) — download to view`;stage.appendChild(pre);}
+  $('actions').style.display='flex';
+}
+function certificate(rows){
+  $('certtbl').innerHTML=rows.map(([k,v,raw])=>`<tr><td>${esc(k)}</td><td>${raw?v:esc(v)}</td></tr>`).join('');
+  $('cert').style.display='block';
+}
+async function openPointerDoc(doc,policy){
+  $('status').innerHTML='';$('status').style.display='block';$('cert').style.display='none';$('stage').style.display='none';$('actions').style.display='none';
   try{
-    st('ok',`── pulling document ${num} from docket ${DOCKET.slice(0,16)}…`);
-    const {inf,meta,asset}=await findRecord(DOCKET,num);
-    const when=inf.creation_time?new Date((typeof inf.creation_time==='number'?inf.creation_time*1000:inf.creation_time)).toUTCString():'(pending)';
-    st('ok',`  recording tx ${inf.minting_tx_hash}`);
-    st('ok',`  date of record: ${when}`);
-    // reconstruct the instrument (LS-CHAIN v2)
-    const ptr=`${meta.pointer.txHash}#${meta.pointer.txIx||0}`;
-    const rows=await api('/utxo_info',{_utxo_refs:[ptr],_extended:true});
-    const dHex=rows?.[0]?.inline_datum?.bytes;
-    if(!dHex)throw new Error('instrument manifest not found');
-    const[m]=cbor(hex2b(dHex));
-    if(m.tag!==121)throw new Error('not an instrument manifest');
-    const f=m.value;
-    const man={ct:td.decode(f[1]),codec:td.decode(f[2]),shaDec:b2hex(f[4]),shaEnc:b2hex(f[5]),pages:f[6].map(b2hex)};
-    st('ok',`  manifest: ${man.ct} · ${man.codec} · ${man.pages.length} page(s)`);
-    const metaRows=await api('/tx_metadata',{_tx_hashes:man.pages});
-    const byTx={};for(const r of metaRows)byTx[r.tx_hash]=r.metadata||{};
+    st('ok',`── opening ${doc.title}`);
+    const man=doc.manifest||await manifestInfo(doc.txin);
+    st('ok',`  ${man.pages.length} on-chain page(s)`);
+    const rows=await api('/tx_metadata',{_tx_hashes:man.pages});
+    const byTx={};for(const r of rows||[])byTx[r.tx_hash]=r.metadata||{};
     let hexAll='';
     for(let i=0;i<man.pages.length;i++){
-      const pg=byTx[man.pages[i]]?.['22025'];
+      const pg=byTx[man.pages[i]]?.['22025']??byTx[man.pages[i]]?.[22025];
       if(!pg?.p)throw new Error(`page ${i+1} missing`);
       const ph=pg.p.map(segHex).join('');
       if(pg.sha&&await sha256(hex2b(ph))!==segHex(pg.sha).toLowerCase())throw new Error(`page ${i+1} seal mismatch`);
@@ -225,78 +241,94 @@ async function pull(){
     if(await sha256(bytes)!==man.shaEnc)throw new Error('encoded seal mismatch');
     if(man.codec==='gzip')bytes=await gunzip(bytes);
     const got=await sha256(bytes);
-    const sealOk=got===man.shaDec && (!meta.sha256||got===segHex(meta.sha256).toLowerCase());
-    if(!sealOk)throw new Error('SEAL MISMATCH — instrument not rendered');
-    st('ok',`  seal verified ✓ ${got}`);
-    // certificate
-    const rowsHtml=[
-      ['DOCUMENT NO.',esc(asset.replace('_','-'))],
-      ['TITLE',esc(meta.name||'(untitled)')],
-      ['STATUS','<span class="ok">RECORDED · SEAL VERIFIED ✓</span>'],
-      ['DATE OF RECORD',esc(when+' (block time, network consensus)')],
-      ['RECORDING TX',esc(inf.minting_tx_hash+' — its Ed25519 signature is the execution')],
-      ['EXECUTED BY',esc('holder of key '+(meta.signerKeyHash||'(see docket policy)'))],
-      ['DOCKET POLICY',esc(DOCKET)],
-      ['SEAL (SHA-256)',esc(got)],
-      ['INSTRUMENT POINTER',esc('manifest-chain-v2 · '+ptr)],
-    ].map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');
-    $('certtbl').innerHTML=rowsHtml;
-    $('cert').style.display='block';
-    // render
-    bytesOut=bytes;nameOut=asset.toLowerCase();
-    if(urlOut)URL.revokeObjectURL(urlOut);
-    const base=(meta.mediaType||man.ct||'text/html').split(';')[0].trim();
-    urlOut=URL.createObjectURL(new Blob([bytes],{type:base}));
-    const stage=$('stage');stage.style.display='block';
-    if(base==='text/html'){const fr=document.createElement('iframe');fr.setAttribute('sandbox','');fr.src=urlOut;fr.title='recorded instrument';stage.appendChild(fr);}
-    else if(base.startsWith('image/')){const im=document.createElement('img');im.src=urlOut;stage.appendChild(im);}
-    else{const pre=document.createElement('pre');pre.textContent=base.startsWith('text/')?td.decode(bytes):`(${base}) — download to view`;stage.appendChild(pre);}
-    $('actions').style.display='flex';
-    st('ok','── record pulled, verified, and rendered. no clerk was involved.');
+    const expected=segHex(doc.meta.sha256||man.shaDec).toLowerCase();
+    if(got!==expected)throw new Error('document seal mismatch');
+    st('ok',`  SHA-256 verified ✓ ${got}`);
+    const when=doc.inf.creation_time?new Date((typeof doc.inf.creation_time==='number'?doc.inf.creation_time*1000:doc.inf.creation_time)).toUTCString():'(pending)';
+    certificate([
+      ['DOCUMENT',doc.title],['STATUS','<span class="ok">RECORDED · HASH VERIFIED ✓</span>',true],
+      ['ON-CHAIN PAGES',String(man.pages.length)],['DATE OF RECORD',when],
+      ['RECORDING TX',doc.inf.minting_tx_hash],['POLICY ID',policy],['SHA-256',got],['POINTER',doc.txin]
+    ]);
+    renderBytes(bytes,doc.meta.mediaType||man.ct,doc.asset.toLowerCase());
+  }catch(e){st('er','FAILED: '+(e.message||e));certificate([['STATUS',`<span class="no">✗ ${esc(e.message||e)}</span>`,true]]);}
+}
+async function openLegacy(policy,infos){
+  let codec='auto',ctype=KNOWN[policy]?.type,expected='',title=KNOWN[policy]?.title||`Document under ${policy.slice(0,12)}…`;
+  const pages=[];
+  for(const inf of infos){
+    const meta=policyMeta(inf,policy);if(!meta)continue;
+    const ascii=inf.asset_name_ascii||td.decode(hex2b(inf.asset_name||''));
+    if(meta.codec)codec=meta.codec;else if(meta.compression)codec=meta.compression;
+    const mt=meta.mediaType||meta.contentType||meta.mimeType||meta.ct;
+    const isManifest=meta.role==='manifest'||ascii.toUpperCase().includes('MANIFEST')||Array.isArray(meta.pages);
+    if(isManifest){
+      if(mt)ctype=mt;if(meta.name)title=meta.name;
+      expected=segHex(meta.sha_html||meta.sha256||expected).toLowerCase();continue;
+    }
+    const payload=meta.payload??meta.segments??meta.seg;
+    if(payload===undefined||meta.i===undefined)continue;
+    const hex=(Array.isArray(payload)?payload:[payload]).map(segHex).join('');
+    if(meta.sha&&await sha256(hex2b(hex))!==segHex(meta.sha).toLowerCase())throw new Error(`page ${meta.i} hash mismatch`);
+    pages.push({i:parseInt(meta.i),hex});
+  }
+  if(!pages.length)throw new Error('no readable document pages found under this policy');
+  pages.sort((a,b)=>a.i-b.i);
+  $('summary').innerHTML=`<b>1 document</b> · ${pages.length} on-chain page${pages.length===1?'':'s'}`;$('summary').style.display='block';
+  st('ok',`── reconstructing ${pages.length} on-chain pages`);
+  let bytes=hex2b(pages.map(p=>p.hex).join(''));
+  if(codec==='gzip'||((codec==='auto'||!codec)&&bytes[0]===0x1f&&bytes[1]===0x8b))bytes=await gunzip(bytes);
+  const got=await sha256(bytes);
+  expected=expected||KNOWN[policy]?.sha||'';
+  if(expected&&got!==expected)throw new Error(`document hash mismatch: expected ${expected}, got ${got}`);
+  st('ok',`  SHA-256 ${expected?'verified ✓':'computed'} ${got}`);
+  certificate([
+    ['DOCUMENT',title],['STATUS',expected?'<span class="ok">ON-CHAIN PAGES · HASH VERIFIED ✓</span>':'<span class="ok">ON-CHAIN PAGES RECONSTRUCTED ✓</span>',true],
+    ['ON-CHAIN PAGES',String(pages.length)],['POLICY ID',policy],['SHA-256',got]
+  ]);
+  renderBytes(bytes,ctype,title.toLowerCase().replace(/[^a-z0-9]+/g,'-'));
+}
+async function readPolicy(){
+  const policy=$('docket').value.trim().toLowerCase();
+  if(!/^[0-9a-f]{56}$/.test(policy)){alert('enter a 56-character policy ID');return;}
+  DOCKET=policy;$('pull').disabled=true;resetResults();history.replaceState(null,'',`#policy=${policy}`);
+  try{
+    st('ok',`── searching policy ${policy}`);
+    const list=await api('/policy_asset_list',{_asset_policy:policy});
+    if(!list?.length)throw new Error('no assets found under this policy');
+    st('ok',`  ${list.length} on-chain asset(s) found`);
+    const infos=await assetInfos(policy,list.map(a=>a.asset_name??''));
+    const docs=[];
+    for(const inf of infos){
+      const meta=policyMeta(inf,policy);
+      if(meta?.pointer?.txHash)docs.push({inf,meta,asset:inf.asset_name_ascii||inf.asset_name,
+        title:meta.name||inf.asset_name_ascii||'Untitled document',txin:`${meta.pointer.txHash}#${meta.pointer.txIx||0}`});
+    }
+    if(docs.length){
+      await Promise.all(docs.map(async d=>{d.manifest=await manifestInfo(d.txin);}));
+      const total=docs.reduce((n,d)=>n+d.manifest.pages.length,0);
+      $('summary').innerHTML=`<b>${docs.length} document${docs.length===1?'':'s'}</b> · ${total} on-chain page${total===1?'':'s'}`;$('summary').style.display='block';
+      $('doclist').style.display='grid';
+      for(const doc of docs){
+        const b=document.createElement('button');b.className='doc';
+        b.innerHTML=`<b></b><span>${doc.manifest.pages.length} on-chain page${doc.manifest.pages.length===1?'':'s'}</span>`;
+        b.querySelector('b').textContent=doc.title;b.onclick=()=>openPointerDoc(doc,policy);$('doclist').appendChild(b);
+      }
+      await openPointerDoc(docs[0],policy);
+    }else await openLegacy(policy,infos);
   }catch(e){
-    st('er','FAILED: '+(e.message||e));
-    $('certtbl').innerHTML=`<tr><td>STATUS</td><td><span class="no">✗ ${esc(e.message||e)}</span></td></tr>`;
-    $('cert').style.display='block';
+    st('er','FAILED: '+(e.message||e));certificate([['STATUS',`<span class="no">✗ ${esc(e.message||e)}</span>`,true]]);
   }finally{$('pull').disabled=false;}
 }
 
-function setExample(){
-  const v=$('example').value;
-  const constitution=v.startsWith('constitution-');
-  $('docketfield').style.display=constitution?'none':'block';
-  $('docno').style.display=constitution?'none':'block';
-  $('pull').parentElement.style.gridTemplateColumns=constitution?'1fr':'1fr 155px';
-  $('pull').textContent=constitution?'Open & Verify':'Verify Document';
-  $('hint').textContent=constitution
-    ?'Opens the dedicated on-chain constitution verifier.'
-    :v==='custom'?'Enter any compatible docket policy and document number.':'Default live example. Choose custom to use another policy ID.';
-  if(v==='legal'){
-    $('docket').value='97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4';
-    $('docno').value='1';
-  }else if(v==='custom'&&$('docket').value==='97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4'){
-    $('docket').value='';$('docno').value='';
-  }
-}
-function verifySelected(){
-  const v=$('example').value;
-  if(v.startsWith('constitution-')){
-    location.href=`constitution.html?epoch=${v.split('-')[1]}`;
-    return;
-  }
-  pull();
-}
-$('pull').onclick=verifySelected;
-$('example').onchange=setExample;
-$('docno').addEventListener('keydown',e=>{if(e.key==='Enter')verifySelected();});
-$('docket').addEventListener('keydown',e=>{if(e.key==='Enter')verifySelected();});
-$('dl').onclick=()=>{if(!bytesOut)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytesOut]));a.download=nameOut+'.html';a.click();};
-const mh=location.hash.match(/docket=([0-9a-fA-F]{56})/);
-if(mh){
-  const p=mh[1].toLowerCase(); DOCKET=p;$('docket').value=p;
-  if(p!=='97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4')$('example').value='custom';
-}
-const md=location.hash.match(/doc=(\d+)/);
-if(md){$('docno').value=md[1];setExample();pull();}else setExample();
+$('pull').onclick=readPolicy;
+$('example').onchange=()=>{const v=$('example').value;$('docket').value=v;if(!v)$('docket').focus();};
+$('docket').addEventListener('input',()=>{if($('example').value!==$('docket').value)$('example').value='';});
+$('docket').addEventListener('keydown',e=>{if(e.key==='Enter')readPolicy();});
+$('dl').onclick=()=>{if(!bytesOut)return;const ext={'text/html':'html','text/plain':'txt','application/pdf':'pdf','image/png':'png'}[typeOut]||'bin';
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytesOut],{type:typeOut}));a.download=nameOut+'.'+ext;a.click();};
+const mh=location.hash.match(/policy=([0-9a-fA-F]{56})/);
+if(mh){$('docket').value=mh[1].toLowerCase();$('example').value=[...$('example').options].some(o=>o.value===$('docket').value)?$('docket').value:'';readPolicy();}
 </script>
 </body>
 </html>
