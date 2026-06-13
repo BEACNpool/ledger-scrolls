@@ -63,14 +63,17 @@ button:disabled{opacity:.55;cursor:wait}
 .actions button.alt{background:transparent;color:#dbe7f8;border:1px solid #3b4d68}
 .foot{color:#71819a;text-align:center;font:10px var(--mono);padding:10px 20px 18px}
 .foot a{color:#aebbd0}
-@media(max-width:800px){.layout{grid-template-columns:1fr;padding-top:38px;gap:34px}.lead{margin-bottom:20px}.navlinks a:first-child{display:none}}
-@media(max-width:560px){.navlinks a:first-child{display:none}.layout{padding-top:28px}.search-row{grid-template-columns:1fr}.console-box{padding:20px}.cert td:first-child{width:110px;white-space:normal}}
+@media(max-width:800px){.layout{grid-template-columns:1fr;padding-top:38px;gap:34px}.lead{margin-bottom:20px}}
+@media(max-width:560px){.navlinks a:last-child{display:none}.layout{padding-top:28px}.search-row{grid-template-columns:1fr}.console-box{padding:20px}.cert td:first-child{width:110px;white-space:normal}}
 </style>
 </head>
 <body>
 <nav class="nav">
  <a class="brand" href="./">Ledger <span>Scrolls</span> Legal</a>
- <div class="navlinks"><a href="https://github.com/BEACNpool/ledger-scrolls">Open source</a></div>
+ <div class="navlinks">
+  <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/CREATING_LEGAL_RECORDS.md">Create a legal record</a>
+  <a href="https://github.com/BEACNpool/ledger-scrolls">GitHub</a>
+ </div>
 </nav>
 
 <main class="layout">
@@ -106,7 +109,7 @@ button:disabled{opacity:.55;cursor:wait}
     <button id="pull">Read Policy</button>
    </div>
   </div>
-  <p class="hint">The reader discovers documents and page counts directly from on-chain metadata.</p>
+  <p class="hint">Discovers documents and page counts from on-chain metadata. <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/CREATING_LEGAL_RECORDS.md">Technical creation guide →</a></p>
  </div>
 </main>
 

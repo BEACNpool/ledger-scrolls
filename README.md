@@ -46,6 +46,11 @@ See **docs/VIEWERS.md** for a quick overview.
 publishing every media type (text, images, HTML, PDF, audio, video, data):
 format selection, preparation, costs, minting checklists, and verification.
 
+**[docs/CREATING_LEGAL_RECORDS.md](docs/CREATING_LEGAL_RECORDS.md)** — complete
+technical walkthrough for creating a signature-controlled legal docket,
+publishing a document with LS-CHAIN v2, minting its numbered docket token,
+and verifying it in the policy reader.
+
 ## Project Direction (June 2026)
 
 - **[Technical Audit](docs/AUDIT_LEDGER_SCROLLS_2026-06.md)** — repo health, security findings, what was fixed

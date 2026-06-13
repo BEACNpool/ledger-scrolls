@@ -33,7 +33,7 @@
     "note": "The Ed25519 witness on the recording tx is the execution; its block time is the date of record."
   },
   "verification": {
-    "terminal": "legal.html#doc=1",
+    "terminal": "legal.html#policy=97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4",
     "python": "lsview reconstruct-chain --txin ceced54b2bd462b1ed41864f2583309666010ce1fb96b9f3dc9968174d958bc9#0 --out legal-0001.html",
     "result": "seal verified byte-for-byte from mainnet, 2026-06-12"
   }
