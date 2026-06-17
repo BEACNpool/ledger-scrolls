@@ -2,230 +2,434 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Ledger Scrolls — A Library That Cannot Burn</title>
 <meta name="description" content="Read and verify immutable media stored on the Cardano blockchain. This site hosts nothing: your browser queries the chain, rebuilds the bytes, and verifies every hash.">
+<meta name="theme-color" content="#f6f5f1">
+<meta property="og:title" content="Ledger Scrolls — A Library That Cannot Burn">
+<meta property="og:description" content="Immutable media on Cardano. Your browser queries the chain, rebuilds the bytes, and verifies every hash before a single word is shown.">
+<meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <style>
-/* ── The reading room: charcoal walls, parchment documents, brass plaques ── */
+/* ════════════════════════════════════════════════════════════════════
+   Ledger Scrolls — digital meets analog.
+   Warm paper canvas + blueprint grid. Serif (the archive) meets sans
+   (the interface) meets mono (the chain). Zero dependencies, one file.
+   ════════════════════════════════════════════════════════════════════ */
 :root{
- --wall:#16140f;--wall2:#1d1a13;--edge:#34301f;--brass:#b08d3e;--brass2:#d8b35c;
- --parch:#f4ecd8;--parch2:#e9dfc4;--ink:#2b2419;--txt:#d8d2bf;--dim:#8d8670;
- --good:#5fae74;--bad:#c4554a;--warn:#cf9f43;
- --serif:Georgia,'Times New Roman',serif;--mono:ui-monospace,Menlo,Consolas,'Courier New',monospace}
+  /* palette — bright, futuristic, analog-meets-digital */
+  --bg:#f6f5f1; --bg-2:#efece4;
+  --surface:#ffffff; --surface-2:#fbfaf6;
+  --ink:#14161b; --ink-2:#3a4049; --muted:#6b7280; --faint:#9aa1ab;
+  --line:#e6e3da; --line-2:#dbd6ca;
+  --accent:#2f53ff; --accent-ink:#0d228f; --accent-soft:#ebefff;
+  --amber:#b27a1e; --amber-soft:#f6eedd;
+  --ok:#0a8f5b; --ok-soft:#e7f6ef;
+  --bad:#d8383d; --bad-soft:#fdecec;
+  --warn:#a9760f; --warn-soft:#f8f1dc;
+  --radius:16px; --radius-sm:10px; --pill:999px;
+  --sh-sm:0 1px 2px rgba(20,22,27,.05),0 1px 3px rgba(20,22,27,.04);
+  --sh:0 6px 20px -6px rgba(20,22,27,.12),0 2px 6px rgba(20,22,27,.05);
+  --sh-lg:0 28px 60px -18px rgba(13,34,143,.20),0 8px 24px -10px rgba(20,22,27,.12);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,system-ui,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{background:var(--wall);color:var(--txt);font:16px/1.65 var(--serif)}
-.wrap{max-width:1080px;margin:0 auto;padding:0 16px 80px}
-a{color:var(--brass2)}
-code,.mono{font-family:var(--mono)}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);color:var(--ink);
+  font:400 16px/1.65 var(--sans);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+/* blueprint grid + glow — the "digital" substrate under the paper */
+.bg-grid{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 78% -8%,rgba(47,83,255,.10),transparent 60%),
+    radial-gradient(760px 460px at 6% 4%,rgba(178,122,30,.08),transparent 60%),
+    linear-gradient(to right,rgba(20,22,27,.035) 1px,transparent 1px),
+    linear-gradient(to bottom,rgba(20,22,27,.035) 1px,transparent 1px),
+    var(--bg);
+  background-size:100% 100%,100% 100%,46px 46px,46px 46px;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 60%,transparent 100%);
+          mask-image:linear-gradient(to bottom,#000 0%,#000 60%,transparent 100%);
+}
+.container{max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+.section{padding:clamp(36px,6vw,64px) 0}
+a{color:var(--accent-ink);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 30%,transparent);transition:color .15s,border-color .15s}
+a:hover{color:var(--accent);border-color:var(--accent)}
+.mono,code{font-family:var(--mono)}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:6px}
+::selection{background:var(--accent-soft)}
 
-/* header */
-header{border-bottom:1px solid var(--edge);padding:30px 0 20px;text-align:center}
-.brand{font-size:40px;letter-spacing:.04em;color:var(--parch);font-variant:small-caps}
-.brand .b{color:var(--brass2)}
-.motto{font-style:italic;color:var(--dim);margin-top:2px}
-.trustline{margin-top:14px;display:inline-block;font-family:var(--mono);font-size:11.5px;color:var(--dim);
- border:1px solid var(--edge);border-radius:20px;padding:5px 14px}
-.trustline b{color:var(--brass2);font-weight:normal}
-.ethos{max-width:760px;margin:18px auto 0;font-size:15px;color:var(--txt)}
-.ethos b{color:var(--parch)}
+/* ── buttons ── */
+button{font-family:var(--sans);cursor:pointer;border:0;font-size:15px}
+.btn,#openbtn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:48px;padding:0 26px;border-radius:var(--pill);
+  background:var(--accent);color:#fff;font-weight:600;letter-spacing:.01em;
+  box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 8px 22px -8px rgba(47,83,255,.6);
+  transition:transform .15s var(--ease),box-shadow .2s,background .15s;
+}
+.btn:hover,#openbtn:hover{background:#1f44ff;transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 12px 28px -8px rgba(47,83,255,.65)}
+.btn:active,#openbtn:active{transform:translateY(0)}
+button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transform:none}
+.ghost{
+  display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:0 16px;
+  background:var(--surface);color:var(--ink-2);border:1px solid var(--line-2);
+  border-radius:var(--pill);font-weight:500;box-shadow:var(--sh-sm);transition:.15s var(--ease);
+}
+.ghost:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
 
-/* point bar */
-.pointbar{display:flex;gap:10px;max-width:760px;margin:26px auto 8px;flex-wrap:wrap}
-.pointbar input{flex:1;min-width:260px;background:var(--wall2);border:1px solid var(--edge);border-radius:4px;
- color:var(--txt);font-family:var(--mono);font-size:13.5px;padding:12px 14px}
-.pointbar input::placeholder{color:#5d5742}
-button{font-family:var(--serif);font-size:15px;background:var(--brass);color:#1c1708;border:0;border-radius:4px;
- padding:11px 22px;cursor:pointer;letter-spacing:.04em}
-button:hover{background:var(--brass2)}
-button:disabled{background:#4a4534;color:#8a8268;cursor:wait}
-button.quiet{background:transparent;border:1px solid var(--edge);color:var(--txt)}
-button.quiet:hover{border-color:var(--brass);color:var(--brass2);background:transparent}
-.pointhint{max-width:760px;margin:0 auto;text-align:center;font-size:12.5px;color:var(--dim)}
+/* ── header ── */
+.site-header{
+  position:sticky;top:0;z-index:50;
+  background:color-mix(in srgb,var(--bg) 82%,transparent);
+  backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-row{display:flex;align-items:center;gap:16px;min-height:64px;flex-wrap:wrap}
+.brand{display:inline-flex;align-items:center;gap:11px;border:0;margin-right:auto}
+.brand:hover{color:inherit}
+.brand-mark{
+  font-size:20px;width:38px;height:38px;display:grid;place-items:center;border-radius:11px;
+  background:linear-gradient(145deg,var(--surface),var(--amber-soft));
+  border:1px solid var(--line-2);box-shadow:var(--sh-sm);
+}
+.brand-name{font:700 21px/1 var(--sans);letter-spacing:-.01em;color:var(--ink)}
+.brand-name .b{background:linear-gradient(90deg,var(--accent),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+.trustline{
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);
+  border:1px solid var(--line-2);border-radius:var(--pill);padding:6px 14px;background:var(--surface-2);
+  display:inline-flex;gap:7px;align-items:center;
+}
+.trustline::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}
+.trustline b{color:var(--ink-2);font-weight:600}
 
-/* library */
-.shelftools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:34px 0 18px}
-.shelftools h2{font-variant:small-caps;letter-spacing:.08em;color:var(--parch);font-size:22px;margin-right:auto}
-.chip{font-size:13px;padding:5px 14px;border:1px solid var(--edge);border-radius:20px;color:var(--dim);cursor:pointer;background:none}
-.chip.on{border-color:var(--brass);color:var(--brass2)}
-#search{background:var(--wall2);border:1px solid var(--edge);border-radius:20px;color:var(--txt);
- font-family:var(--mono);font-size:13px;padding:6px 14px;width:170px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.card{background:var(--wall2);border:1px solid var(--edge);border-radius:6px;padding:18px 18px 14px;cursor:pointer;
- transition:border-color .15s;display:flex;flex-direction:column;gap:7px}
-.card:hover{border-color:var(--brass)}
-.card .ic{font-size:26px}
-.card h3{color:var(--parch);font-size:18.5px;font-weight:normal}
-.card p{font-size:13.5px;color:var(--dim);flex:1}
-.card .tags{display:flex;gap:6px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px}
-.tag{border:1px solid var(--edge);border-radius:3px;padding:2px 7px;color:var(--dim)}
-.tag.form{color:var(--brass2);border-color:#5a4a25}
-.tag.reg{color:#7fae8f;border-color:#2e4a36}
-.tag.unv{color:var(--warn);border-color:#5a4a25}
+/* ── hero ── */
+.hero{position:relative;padding:clamp(44px,8vw,88px) 0 clamp(28px,5vw,44px)}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;font:600 12.5px/1 var(--sans);
+  letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink);
+  background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);
+  padding:7px 14px;border-radius:var(--pill);
+}
+.hero-title{
+  font:400 clamp(40px,8vw,76px)/1.02 var(--serif);letter-spacing:-.02em;color:var(--ink);
+  margin:20px 0 0;max-width:16ch;
+}
+.hero-title em{font-style:italic;background:linear-gradient(95deg,var(--accent) 10%,var(--amber) 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-lede{font-size:clamp(16px,2.1vw,19px);color:var(--ink-2);max-width:62ch;margin-top:22px;line-height:1.7}
+.hero-lede b{color:var(--ink);font-weight:600}
 
-/* reader */
-.reader{display:none}
-.docbar{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:30px 0 6px}
-.docbar h2{color:var(--parch);font-size:26px;font-weight:normal;margin-right:auto}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:16px 0}
-.step{background:var(--wall2);border:1px solid var(--edge);border-radius:5px;padding:9px;text-align:center;
- font-family:var(--mono);font-size:11px;color:var(--dim)}
-.step b{display:block;font-size:12px;color:var(--txt);margin-bottom:2px;font-weight:normal;letter-spacing:.1em}
-.step.on{border-color:var(--warn)}.step.on b{color:var(--warn)}
-.step.done{border-color:var(--good)}.step.done b{color:var(--good)}
-.step.fail{border-color:var(--bad)}.step.fail b{color:var(--bad)}
-details.logbox{background:#100f0b;border:1px solid var(--edge);border-radius:5px;margin:10px 0;font-family:var(--mono);font-size:12px}
-details.logbox summary{padding:9px 14px;cursor:pointer;color:var(--dim);letter-spacing:.06em}
-#log{max-height:260px;overflow-y:auto;padding:4px 14px 10px}
-#log div{padding:2px 0;border-bottom:1px dotted #221f15;white-space:pre-wrap;word-break:break-all}
-#log .q{color:var(--warn)}#log .ok{color:var(--good)}#log .er{color:#e08379}#log .h{color:#9aa7c4}
-.verdict{display:none;gap:14px;align-items:center;border-radius:5px;padding:13px 18px;margin:12px 0;font-family:var(--mono)}
-.verdict.ok{display:flex;border:1px solid var(--good);background:rgba(95,174,116,.07)}
-.verdict.bad{display:flex;border:1px solid var(--bad);background:rgba(196,85,74,.08)}
-.verdict.warn{display:flex;border:1px solid var(--warn);background:rgba(207,159,67,.07)}
-.verdict .v{font-size:17px}
-.verdict.ok .v{color:var(--good)}.verdict.bad .v{color:var(--bad)}.verdict.warn .v{color:var(--warn)}
-.verdict .d{font-size:11px;color:var(--dim);word-break:break-all}
-.stage{display:none;background:var(--parch);border-radius:6px;overflow:hidden;margin:8px 0}
-.stage iframe{width:100%;height:80vh;border:0;display:block;background:var(--parch)}
+/* ── resolver bar ── */
+.resolver{margin-top:30px;max-width:720px}
+.resolver-field{
+  display:flex;align-items:center;gap:8px;padding:8px;
+  background:var(--surface);border:1px solid var(--line-2);border-radius:var(--pill);
+  box-shadow:var(--sh);transition:box-shadow .2s,border-color .2s;
+}
+.resolver-field:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft),var(--sh-lg)}
+.resolver-ic{flex:none;margin-left:12px;color:var(--faint);display:grid;place-items:center}
+#point{
+  flex:1;min-width:0;border:0;background:transparent;outline:0;
+  font:14px/1.4 var(--mono);color:var(--ink);padding:12px 4px;
+}
+#point::placeholder{color:var(--faint)}
+.resolver-hint{font-size:13px;color:var(--muted);margin-top:12px;padding-left:6px}
+
+/* ── trust strip ── */
+.trust-strip{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:34px}
+.trust-strip li{display:flex;gap:12px;align-items:flex-start;padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sh-sm)}
+.trust-strip .ti{font-size:18px;line-height:1;flex:none;margin-top:1px}
+.trust-strip b{display:block;font:600 14.5px/1.3 var(--sans);color:var(--ink)}
+.trust-strip span{font-size:13px;color:var(--muted);line-height:1.5}
+
+/* ── section headings ── */
+.section-title{font:400 clamp(26px,4vw,34px)/1.1 var(--serif);letter-spacing:-.01em;color:var(--ink)}
+.section-sub{color:var(--muted);font-size:15px;margin-top:6px}
+
+/* ── library toolbar ── */
+.shelftools{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:26px}
+.shelftools .head{margin-right:auto}
+.shelftools-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#search{
+  background:var(--surface);border:1px solid var(--line-2);border-radius:var(--pill);
+  color:var(--ink);font:14px var(--mono);padding:11px 16px;width:200px;box-shadow:var(--sh-sm);transition:.18s var(--ease);
+}
+#search:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft);outline:0}
+.chips{display:flex;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--pill);padding:4px}
+.chip{
+  font:500 13.5px var(--sans);padding:8px 16px;border:0;border-radius:var(--pill);
+  color:var(--muted);background:transparent;transition:.15s var(--ease);min-height:38px;
+}
+.chip:hover{color:var(--ink)}
+.chip.on{background:var(--accent);color:#fff;box-shadow:0 6px 16px -6px rgba(47,83,255,.55)}
+
+/* ── cards / grid (markup generated by script) ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}
+.card{
+  position:relative;display:flex;flex-direction:column;gap:10px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px 22px 18px;cursor:pointer;box-shadow:var(--sh-sm);overflow:hidden;
+  transition:transform .2s var(--ease),box-shadow .2s,border-color .2s;
+}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--accent),var(--amber));opacity:0;transition:opacity .2s}
+.card:hover{transform:translateY(-4px);box-shadow:var(--sh-lg);border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+.card:hover::before{opacity:1}
+.card .ic{
+  font-size:24px;width:50px;height:50px;display:grid;place-items:center;border-radius:13px;
+  background:linear-gradient(150deg,var(--accent-soft),var(--amber-soft));border:1px solid var(--line);
+}
+.card h3{color:var(--ink);font:600 18px/1.3 var(--sans);letter-spacing:-.01em}
+.card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.55}
+.card p.mono{font-family:var(--mono);font-size:11.5px;word-break:break-all}
+.card .tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:2px}
+.tag{font:600 10.5px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--line-2);border-radius:var(--pill);padding:5px 9px;color:var(--muted);background:var(--surface-2)}
+.tag.form{color:var(--accent-ink);border-color:color-mix(in srgb,var(--accent) 30%,transparent);background:var(--accent-soft)}
+.tag.reg{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft)}
+.tag.unv{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 35%,transparent);background:var(--warn-soft)}
+
+/* ── reader ── */
+.reader,.channel{display:none}
+.docbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:24px}
+.docbar h2{font:400 clamp(22px,3.6vw,30px)/1.15 var(--serif);color:var(--ink);margin-right:auto;letter-spacing:-.01em;word-break:break-word}
+.docbar h2#chantitle{margin-right:auto}
+
+/* step pipeline */
+.steps{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px;margin:0 0 18px}
+.step{
+  position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:14px 14px 12px;box-shadow:var(--sh-sm);transition:.2s var(--ease);
+}
+.step b{display:flex;align-items:center;gap:8px;font:600 13px/1 var(--sans);color:var(--ink-2);letter-spacing:.02em}
+.step b::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--line-2);flex:none;transition:.2s}
+.step span{display:block;font-size:11.5px;color:var(--faint);margin-top:6px;font-family:var(--mono)}
+.step.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.step.on b{color:var(--accent-ink)} .step.on b::before{background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft);animation:pulse 1.3s var(--ease) infinite}
+.step.done{border-color:color-mix(in srgb,var(--ok) 45%,var(--line));background:var(--ok-soft)}
+.step.done b{color:var(--ok)} .step.done b::before{background:var(--ok);box-shadow:none}
+.step.fail{border-color:color-mix(in srgb,var(--bad) 50%,var(--line));background:var(--bad-soft)}
+.step.fail b{color:var(--bad)} .step.fail b::before{background:var(--bad)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 var(--accent-soft)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+
+/* trust log — the dark "console", a deliberate digital counterpoint */
+.logbox{background:#0e1118;border:1px solid #1d2433;border-radius:14px;margin:0 0 16px;overflow:hidden;box-shadow:var(--sh)}
+.logbox summary{padding:13px 18px;cursor:pointer;color:#9fb0d6;font:600 12.5px var(--sans);letter-spacing:.04em;list-style:none;display:flex;align-items:center;gap:9px}
+.logbox summary::-webkit-details-marker{display:none}
+.logbox summary::before{content:"";width:8px;height:8px;border-radius:50%;background:#3a7bff;box-shadow:0 0 8px #3a7bff}
+#log{max-height:280px;overflow-y:auto;padding:6px 18px 14px;font:12px/1.7 var(--mono)}
+#log div{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05);white-space:pre-wrap;word-break:break-all;color:#c9d4ec}
+#log .q{color:#e3b341}#log .ok{color:#56d6a0}#log .er{color:#ff7a85}#log .h{color:#8aa0c9}
+
+/* verdict */
+.verdict{display:none;gap:16px;align-items:center;border-radius:14px;padding:16px 20px;margin:0 0 16px}
+.verdict.ok{display:flex;border:1px solid color-mix(in srgb,var(--ok) 45%,transparent);background:var(--ok-soft)}
+.verdict.bad{display:flex;border:1px solid color-mix(in srgb,var(--bad) 50%,transparent);background:var(--bad-soft)}
+.verdict.warn{display:flex;border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);background:var(--warn-soft)}
+.verdict .v{font:700 16px var(--sans);letter-spacing:.01em;flex:none}
+.verdict.ok .v{color:var(--ok)}.verdict.bad .v{color:var(--bad)}.verdict.warn .v{color:var(--warn)}
+.verdict .d{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);word-break:break-all;line-height:1.6}
+
+/* stage — rendered, verified content */
+.stage{display:none;background:#fff;border:1px solid var(--line-2);border-radius:16px;overflow:hidden;margin:0 0 16px;box-shadow:var(--sh-lg)}
+.stage iframe{width:100%;height:80vh;border:0;display:block;background:#fff}
 .stage img{max-width:100%;display:block;margin:0 auto}
-.stage video,.stage audio{width:100%;display:block}
-.stage pre{color:var(--ink);padding:30px;white-space:pre-wrap;font-size:14.5px;font-family:var(--mono);max-height:80vh;overflow:auto}
-.receipt{display:none;background:var(--wall2);border:1px solid var(--edge);border-radius:5px;padding:14px 18px;
- font-family:var(--mono);font-size:11.5px;color:var(--dim);word-break:break-all;line-height:1.9}
-.receipt b{color:var(--txt);font-weight:normal}
+.stage video,.stage audio{width:100%;display:block;background:#000}
+.stage pre{color:var(--ink);padding:clamp(18px,4vw,34px);white-space:pre-wrap;font:14.5px/1.7 var(--mono);max-height:80vh;overflow:auto}
 
-/* channel view */
-.channel{display:none}
-.issues{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin:18px 0}
+/* receipt */
+.receipt{display:none;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:16px 20px;font-family:var(--mono);font-size:12px;color:var(--muted);word-break:break-all;line-height:2}
+.receipt b{color:var(--ink);font-weight:600}
 
-/* about */
-.about{border-top:1px solid var(--edge);margin-top:60px;padding-top:34px}
-.about h2{font-variant:small-caps;color:var(--parch);font-size:22px;margin-bottom:12px;letter-spacing:.08em}
-.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px;margin-top:8px}
-.cols h3{color:var(--brass2);font-size:16px;font-weight:normal;font-variant:small-caps;letter-spacing:.08em;margin-bottom:6px}
-.cols p,.cols li{font-size:14px;color:var(--txt)}
-.cols ul{margin:6px 0 6px 20px}
-.setrow{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}
-.setrow input{flex:1;min-width:200px;background:var(--wall);border:1px solid var(--edge);border-radius:4px;
- color:var(--txt);font-family:var(--mono);font-size:12px;padding:8px 10px}
-footer{text-align:center;color:var(--dim);font-size:13px;margin-top:50px;border-top:1px solid var(--edge);padding-top:24px;line-height:2}
-@media(max-width:600px){.brand{font-size:28px}}
+/* channel */
+.issues{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:20px}
+.chansub{color:var(--muted);font-size:14px;line-height:1.6;word-break:break-word}
+
+/* ── about ── */
+.about{background:var(--surface);border-top:1px solid var(--line);padding:clamp(44px,6vw,72px) 0}
+.about .section-title{margin-bottom:8px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-top:28px}
+.cols .col{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);padding:22px 22px 20px}
+.cols h3{color:var(--ink);font:600 16px/1.3 var(--sans);margin-bottom:10px;display:flex;align-items:center;gap:9px}
+.cols h3 .dot{width:9px;height:9px;border-radius:3px;background:linear-gradient(135deg,var(--accent),var(--amber))}
+.cols p,.cols li{font-size:14px;color:var(--ink-2);line-height:1.6}
+.cols ul{margin:8px 0 0 2px;list-style:none}
+.cols ul li{padding-left:18px;position:relative;margin-bottom:8px}
+.cols ul li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:var(--amber)}
+.cols ul li b{color:var(--ink)}
+.setlabel{font-size:12.5px;color:var(--muted);margin:14px 0 6px}
+.setrow{display:flex;gap:8px;flex-wrap:wrap}
+.setrow input{flex:1;min-width:180px;background:var(--surface);border:1px solid var(--line-2);border-radius:10px;color:var(--ink);font:12px var(--mono);padding:11px 13px}
+.setrow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);outline:0}
+#anchorinfo{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6;word-break:break-all}
+
+/* ── footer ── */
+.site-footer{border-top:1px solid var(--line);padding:36px 0 48px;text-align:center;color:var(--muted);font-size:13.5px;line-height:2}
+.footnav{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin:6px 0 14px}
+.footnav a{color:var(--ink-2);border:0;font-weight:500}
+.footnav a:hover{color:var(--accent)}
+.site-footer .meta{font-family:var(--mono);font-size:12px;color:var(--faint)}
+
+@media (max-width:680px){
+  .header-row{min-height:58px}
+  .trustline{display:none}
+  .resolver-field{flex-wrap:wrap;border-radius:18px;padding:10px}
+  #point{flex-basis:100%;padding:8px 10px}
+  #openbtn{width:100%}
+  .shelftools-controls{width:100%}
+  #search{flex:1;width:auto}
+  .docbar h2{order:-1;flex-basis:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="bg-grid" aria-hidden="true"></div>
 
-<header>
- <div class="brand">&#128220; Ledger <span class="b">Scrolls</span></div>
- <div class="motto">a library that cannot burn</div>
- <div class="trustline" id="trustline">source: <b id="srcname">—</b> &#183; proof: indexer + local SHA-256 &#183; render: sandboxed</div>
- <p class="ethos"><b>This site hosts nothing.</b> Every document below lives
- inside the Cardano blockchain. Your browser queries the public ledger,
- rebuilds the bytes, and <b>verifies every hash</b> before showing you a
- single word — and shows you each request it makes while doing it.</p>
- <div class="pointbar">
-  <input id="point" placeholder="open any pointer: txHash#ix · 56-hex policy id · registry head txin" spellcheck="false">
-  <button id="openbtn">Open</button>
+<header class="site-header">
+ <div class="container header-row">
+  <a class="brand" href="#" aria-label="Ledger Scrolls home">
+   <span class="brand-mark">&#128220;</span>
+   <span class="brand-name">Ledger<span class="b">Scrolls</span></span>
+  </a>
+  <div class="trustline" id="trustline">source <b id="srcname">&mdash;</b> &middot; indexer + local SHA-256 &middot; sandboxed render</div>
  </div>
- <p class="pointhint">the library is not a walled garden — anyone's scrolls, channels, and registries resolve here</p>
 </header>
 
+<main>
+
+<!-- HERO -->
+<section class="hero">
+ <div class="container">
+  <span class="eyebrow">Immutable media on Cardano</span>
+  <h1 class="hero-title">A library that <em>cannot burn</em></h1>
+  <p class="hero-lede"><b>This site hosts nothing.</b> Every document below lives inside the Cardano blockchain. Your browser queries the public ledger, rebuilds the bytes, and <b>verifies every hash</b> before showing you a single word &mdash; and shows you each request it makes while doing it.</p>
+
+  <div class="resolver">
+   <div class="resolver-field">
+    <span class="resolver-ic" aria-hidden="true">
+     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    </span>
+    <input id="point" placeholder="open any pointer:  txHash#ix  ·  56-hex policy id  ·  registry head" spellcheck="false" autocomplete="off" autocapitalize="off">
+    <button id="openbtn">Open</button>
+   </div>
+   <p class="resolver-hint">Not a walled garden &mdash; anyone&rsquo;s scrolls, channels, and registries resolve here.</p>
+  </div>
+
+  <ul class="trust-strip">
+   <li><span class="ti">&#128269;</span><div><b>Verify, don&rsquo;t trust</b><span>SHA-256 recomputed locally against an on-chain commitment.</span></div></li>
+   <li><span class="ti">&#127760;</span><div><b>Hosts nothing</b><span>The page is a lens. Your browser does the querying.</span></div></li>
+   <li><span class="ti">&#9889;</span><div><b>Zero dependencies</b><span>One self-contained file. No build, no CDN, no servers of record.</span></div></li>
+  </ul>
+ </div>
+</section>
+
 <!-- LIBRARY -->
-<section id="library">
+<section id="library" class="container section">
  <div class="shelftools">
-  <h2>The Stacks</h2>
-  <input id="search" placeholder="search…">
-  <button class="chip on" data-f="all">all</button>
-  <button class="chip" data-f="lock">lock</button>
-  <button class="chip" data-f="chain">chain</button>
-  <button class="chip" data-f="pages">pages</button>
+  <div class="head">
+   <h2 class="section-title">The Stacks</h2>
+   <p class="section-sub">The on-chain catalog, merged with a built-in shelf of known scrolls.</p>
+  </div>
+  <div class="shelftools-controls">
+   <input id="search" placeholder="search the stacks&hellip;" autocomplete="off">
+   <div class="chips" role="tablist" aria-label="Filter by storage form">
+    <button class="chip on" data-f="all">All</button>
+    <button class="chip" data-f="lock">Lock</button>
+    <button class="chip" data-f="chain">Chain</button>
+    <button class="chip" data-f="pages">Pages</button>
+   </div>
+  </div>
  </div>
  <div class="grid" id="shelf"></div>
 </section>
 
 <!-- READER -->
-<section class="reader" id="reader">
+<section class="reader container section" id="reader">
  <div class="docbar">
+  <button class="ghost" id="backbtn">&#8592; The Stacks</button>
   <h2 id="doctitle"></h2>
-  <button class="quiet" id="dlbtn" style="display:none">&#11015; original bytes</button>
-  <button class="quiet" id="backbtn">&#8592; the stacks</button>
+  <button class="ghost" id="dlbtn" style="display:none">&#11015; Original bytes</button>
  </div>
- <div class="steps">
-  <div class="step" id="st1"><b>POINT</b>locate on chain</div>
-  <div class="step" id="st2"><b>FETCH</b>pull raw data</div>
-  <div class="step" id="st3"><b>REBUILD</b>assemble bytes</div>
-  <div class="step" id="st4"><b>VERIFY</b>SHA-256 seal</div>
-  <div class="step" id="st5"><b>RENDER</b>only if proven</div>
- </div>
- <details class="logbox" open><summary>trust log — every request this page makes</summary><div id="log"></div></details>
+ <ol class="steps">
+  <li class="step" id="st1"><b>Point</b><span>locate on chain</span></li>
+  <li class="step" id="st2"><b>Fetch</b><span>pull raw data</span></li>
+  <li class="step" id="st3"><b>Rebuild</b><span>assemble bytes</span></li>
+  <li class="step" id="st4"><b>Verify</b><span>SHA-256 seal</span></li>
+  <li class="step" id="st5"><b>Render</b><span>only if proven</span></li>
+ </ol>
+ <details class="logbox" open><summary>Trust log &mdash; every request this page makes</summary><div id="log"></div></details>
  <div class="verdict" id="verdict"><div class="v" id="vbig"></div><div class="d" id="vsub"></div></div>
  <div class="stage" id="stage"></div>
  <div class="receipt" id="receipt"></div>
 </section>
 
 <!-- CHANNEL -->
-<section class="channel" id="channel">
+<section class="channel container section" id="channel">
  <div class="docbar">
+  <button class="ghost" id="backbtn2">&#8592; The Stacks</button>
   <h2 id="chantitle">Publisher channel</h2>
-  <button class="quiet" id="backbtn2">&#8592; the stacks</button>
  </div>
- <p class="pointhint" style="text-align:left" id="chansub"></p>
+ <p class="chansub" id="chansub"></p>
  <div class="issues" id="issues"></div>
 </section>
 
 <!-- ABOUT -->
-<section class="about" id="about">
- <h2>How this room works</h2>
- <div class="cols">
-  <div>
-   <h3>verify, don't trust</h3>
-   <p>Each scroll carries an on-chain SHA-256 commitment. This page
-   recomputes it from the reconstructed bytes, locally, every time. A
-   mismatch renders nothing. HTML scrolls open in a fully sandboxed frame:
-   hash-verified is not the same as safe-to-execute, so scripts never run.</p>
-  </div>
-  <div>
-   <h3>three forms of stone</h3>
-   <ul>
-    <li><b>lock</b> — the whole file in one unspendable UTxO datum; in the live ledger state forever.</li>
-    <li><b>chain</b> — any size, as bare metadata transactions listed by a locked manifest. <a href="registry/spec/manifest-chain-v2.md">spec</a></li>
-    <li><b>pages</b> — the original CIP-25 page NFTs (the Bible, the Constitutions); read forever, superseded for writing.</li>
-   </ul>
-  </div>
-  <div>
-   <h3>write your own</h3>
-   <p>The protocol is open, tested, and implementable by strangers:
-   <a href="https://github.com/BEACNpool/ledger-scrolls">the repository</a> —
-   minting tools, spec, conformance vectors. Start with the
-   <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/CREATING_SCROLLS.md">per-media-type guide</a>,
-   read the tutorial scroll above (it lives on-chain), or launch a
-   <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/publisher-channel-v1.md">publisher channel</a>
-   like <a href="leaks.html">BEACN Leaks</a> — a byline nobody can forge.</p>
-  </div>
-  <div>
-   <h3>your trust anchors</h3>
-   <p class="pointhint" style="text-align:left">data source (Koios-compatible base URL; first that answers wins)</p>
-   <div class="setrow"><input id="setsrc" placeholder="https://api.koios.rest/api/v1"><button class="quiet" id="savesrc">set</button></div>
-   <p class="pointhint" style="text-align:left">registry head (the on-chain catalog this library reads)</p>
-   <div class="setrow"><input id="sethead" placeholder="txHash#ix"><button class="quiet" id="savehead">set</button></div>
-   <p class="pointhint" style="text-align:left" id="anchorinfo"></p>
+<section id="about" class="about">
+ <div class="container">
+  <h2 class="section-title">How this room works</h2>
+  <p class="section-sub">The trust model is part of the interface &mdash; nothing here asks you to take its word for it.</p>
+  <div class="cols">
+   <div class="col">
+    <h3><span class="dot"></span>Verify, don&rsquo;t trust</h3>
+    <p>Each scroll carries an on-chain SHA-256 commitment. This page recomputes it from the reconstructed bytes, locally, every time. A mismatch renders nothing. HTML scrolls open in a fully sandboxed frame: hash-verified is not the same as safe-to-execute, so scripts never run.</p>
+   </div>
+   <div class="col">
+    <h3><span class="dot"></span>Three forms of stone</h3>
+    <ul>
+     <li><b>Lock</b> &mdash; the whole file in one unspendable UTxO datum; in the live ledger state forever.</li>
+     <li><b>Chain</b> &mdash; any size, as bare metadata transactions listed by a locked manifest. <a href="registry/spec/manifest-chain-v2.md">spec</a></li>
+     <li><b>Pages</b> &mdash; the original CIP-25 page NFTs (the Bible, the Constitutions); read forever, superseded for writing.</li>
+    </ul>
+   </div>
+   <div class="col">
+    <h3><span class="dot"></span>Write your own</h3>
+    <p>The protocol is open, tested, and implementable by strangers: <a href="https://github.com/BEACNpool/ledger-scrolls">the repository</a> &mdash; minting tools, spec, conformance vectors. Start with the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/CREATING_SCROLLS.md">per-media-type guide</a>, read the tutorial scroll above (it lives on-chain), or launch a <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/publisher-channel-v1.md">publisher channel</a> like <a href="leaks.html">BEACN Leaks</a> &mdash; a byline nobody can forge.</p>
+   </div>
+   <div class="col">
+    <h3><span class="dot"></span>Your trust anchors</h3>
+    <p class="setlabel">Data source (Koios-compatible base URL; first that answers wins)</p>
+    <div class="setrow"><input id="setsrc" placeholder="https://api.koios.rest/api/v1"><button class="ghost" id="savesrc">Set</button></div>
+    <p class="setlabel">Registry head (the on-chain catalog this library reads)</p>
+    <div class="setrow"><input id="sethead" placeholder="txHash#ix"><button class="ghost" id="savehead">Set</button></div>
+    <p id="anchorinfo"></p>
+   </div>
   </div>
  </div>
 </section>
 
-<footer>
- open source &#183; open protocol &#183; no keys, no accounts, no servers of record<br>
- <a href="https://github.com/BEACNpool/ledger-scrolls">github.com/BEACNpool/ledger-scrolls</a>
- &#183; <a href="leaks.html">BEACN Leaks</a>
- &#183; <a href="bible.html">Bible</a>
- &#183; <a href="constitution.html">Constitution</a>
- &#183; <a href="first-video.html">First Video</a><br>
- maintained by BEACN &#183; verified by you
+</main>
+
+<footer class="site-footer">
+ <div class="container">
+  <nav class="footnav">
+   <a href="https://github.com/BEACNpool/ledger-scrolls">GitHub</a>
+   <a href="leaks.html">BEACN Leaks</a>
+   <a href="bible.html">Bible</a>
+   <a href="constitution.html">Constitution</a>
+   <a href="first-video.html">First Video</a>
+  </nav>
+  <div class="meta">open source &middot; open protocol &middot; no keys, no accounts, no servers of record</div>
+  <div class="meta">maintained by BEACN &middot; verified by you</div>
+ </div>
 </footer>
 
-</div>
 <script>
 "use strict";
 /* ════════════════════════ providers ════════════════════════ */
