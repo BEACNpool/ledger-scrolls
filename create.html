@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Create a Scroll — Ledger Scrolls</title>
+<meta name="description" content="How to put a file on Cardano forever: costs (ADA per KB), how data is packed into each transaction so a reader can rebuild the maximum bytes, and a step-by-step mint workflow.">
+<meta name="theme-color" content="#f6f5f1">
+<meta property="og:title" content="Create a Scroll — Ledger Scrolls">
+<meta property="og:description" content="Costs, data packing, and a step-by-step workflow for minting immutable media on Cardano.">
+<meta property="og:type" content="article">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<style>
+/* ════════════════════════════════════════════════════════════════════
+   Create a Scroll — same digital-meets-analog system as the main viewer.
+   Warm paper canvas + blueprint grid. Serif / sans / mono. One file, zero deps.
+   ════════════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#f6f5f1; --bg-2:#efece4;
+  --surface:#ffffff; --surface-2:#fbfaf6;
+  --ink:#14161b; --ink-2:#3a4049; --muted:#6b7280; --faint:#9aa1ab;
+  --line:#e6e3da; --line-2:#dbd6ca;
+  --accent:#2f53ff; --accent-ink:#0d228f; --accent-soft:#ebefff;
+  --amber:#b27a1e; --amber-soft:#f6eedd;
+  --ok:#0a8f5b; --ok-soft:#e7f6ef;
+  --bad:#d8383d; --bad-soft:#fdecec;
+  --warn:#a9760f; --warn-soft:#f8f1dc;
+  --radius:16px; --radius-sm:10px; --pill:999px;
+  --sh-sm:0 1px 2px rgba(20,22,27,.05),0 1px 3px rgba(20,22,27,.04);
+  --sh:0 6px 20px -6px rgba(20,22,27,.12),0 2px 6px rgba(20,22,27,.05);
+  --sh-lg:0 28px 60px -18px rgba(13,34,143,.20),0 8px 24px -10px rgba(20,22,27,.12);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,system-ui,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.65 var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden}
+.bg-grid{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 78% -8%,rgba(47,83,255,.10),transparent 60%),
+    radial-gradient(760px 460px at 6% 4%,rgba(178,122,30,.08),transparent 60%),
+    linear-gradient(to right,rgba(20,22,27,.035) 1px,transparent 1px),
+    linear-gradient(to bottom,rgba(20,22,27,.035) 1px,transparent 1px),
+    var(--bg);
+  background-size:100% 100%,100% 100%,46px 46px,46px 46px;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 70%,transparent 100%);
+          mask-image:linear-gradient(to bottom,#000 0%,#000 70%,transparent 100%);
+}
+.container{max-width:920px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+.section{padding:clamp(30px,5vw,52px) 0;border-top:1px solid var(--line)}
+.section:first-of-type{border-top:0}
+a{color:var(--accent-ink);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 30%,transparent);transition:color .15s,border-color .15s}
+a:hover{color:var(--accent);border-color:var(--accent)}
+.mono,code{font-family:var(--mono)}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:6px}
+::selection{background:var(--accent-soft)}
+h2{font:700 clamp(22px,3.4vw,30px)/1.2 var(--sans);letter-spacing:-.02em;margin:0 0 6px}
+h3{font:600 18px/1.35 var(--sans);letter-spacing:-.01em;margin:22px 0 8px;color:var(--ink)}
+p{margin:10px 0;color:var(--ink-2)}
+ul,ol{margin:10px 0 10px 22px;color:var(--ink-2)}
+li{margin:6px 0}
+strong{color:var(--ink)}
+.lead{font-size:18px;color:var(--ink-2)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font:600 12.5px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);padding:7px 14px;border-radius:var(--pill)}
+
+/* header */
+.site-header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--line)}
+.header-row{display:flex;align-items:center;gap:16px;min-height:64px;flex-wrap:wrap;max-width:920px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+.brand{display:inline-flex;align-items:center;gap:11px;border:0;margin-right:auto}
+.brand:hover{color:inherit}
+.brand-mark{font-size:20px;width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(145deg,var(--surface),var(--amber-soft));border:1px solid var(--line-2);box-shadow:var(--sh-sm)}
+.brand-name{font:700 21px/1 var(--sans);letter-spacing:-.01em;color:var(--ink)}
+.brand-name .b{background:linear-gradient(90deg,var(--accent),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ghost{display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:0 16px;background:var(--surface);color:var(--ink-2);border:1px solid var(--line-2);border-radius:var(--pill);font-weight:500;box-shadow:var(--sh-sm);transition:.15s var(--ease)}
+.ghost:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+
+/* hero */
+.hero{padding:clamp(36px,6vw,64px) 0 clamp(20px,4vw,32px)}
+.hero-title{font:800 clamp(32px,6vw,52px)/1.04 var(--serif);letter-spacing:-.02em;margin:18px 0 14px;color:var(--ink)}
+.hero-title em{font-style:italic;color:var(--accent-ink)}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.toc a{font:600 13px/1 var(--sans);color:var(--ink-2);background:var(--surface);border:1px solid var(--line-2);border-radius:var(--pill);padding:9px 14px;box-shadow:var(--sh-sm)}
+.toc a:hover{border-color:var(--accent);color:var(--accent)}
+
+/* cards / callouts */
+.note{border:1px solid var(--line-2);border-left:3px solid var(--accent);background:var(--surface);border-radius:var(--radius-sm);padding:14px 16px;margin:16px 0;box-shadow:var(--sh-sm)}
+.note.amber{border-left-color:var(--amber);background:var(--amber-soft)}
+.note.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.note.bad{border-left-color:var(--bad);background:var(--bad-soft)}
+.note p{margin:6px 0}
+.note b{color:var(--ink)}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--line-2);border-radius:var(--radius-sm);box-shadow:var(--sh-sm)}
+table{border-collapse:collapse;width:100%;background:var(--surface);font-size:14.5px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font:600 12px/1.3 var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--surface-2)}
+td{color:var(--ink-2)}
+tr:last-child td{border-bottom:0}
+td strong,th strong{color:var(--ink)}
+.tbl-wrap.pref tr:nth-child(2){background:var(--accent-soft)}
+
+/* code */
+pre{background:#15171d;color:#e9ecf4;border-radius:var(--radius-sm);padding:14px 16px;overflow-x:auto;font:13px/1.6 var(--mono);margin:12px 0;box-shadow:var(--sh)}
+pre .c{color:#7f8aa3}
+pre .k{color:#9ec1ff}
+pre .s{color:#b6e3a7}
+code:not(pre code){background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13.5px;color:var(--accent-ink)}
+
+/* segment / page diagram */
+.diagram{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:18px;margin:16px 0;box-shadow:var(--sh-sm);font-family:var(--mono);font-size:12.5px;color:var(--ink-2);line-height:1.9}
+.seg{display:inline-block;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);color:var(--accent-ink);border-radius:6px;padding:2px 7px;margin:2px;font-size:11.5px}
+.seg.amber{background:var(--amber-soft);border-color:color-mix(in srgb,var(--amber) 35%,transparent);color:var(--amber)}
+
+/* estimator */
+.calc{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);padding:20px;box-shadow:var(--sh);margin:18px 0}
+.calc-row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:160px}
+.field label{font:600 12px/1 var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.field select,.field input{font:500 15px/1 var(--sans);padding:11px 12px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--ink)}
+.field select:focus,.field input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.calc-out{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+.stat{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px;text-align:center}
+.stat .v{font:800 26px/1 var(--sans);color:var(--accent-ink);letter-spacing:-.02em}
+.stat .l{font:600 11px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:6px}
+.calc-note{font-size:12.5px;color:var(--faint);margin-top:12px;font-family:var(--mono)}
+@media(max-width:560px){.calc-out{grid-template-columns:1fr}}
+
+/* footer */
+.site-footer{border-top:1px solid var(--line);padding:36px 0 48px;text-align:center;color:var(--muted);font-size:13.5px;line-height:2}
+.footnav{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 20px;margin-bottom:14px}
+.site-footer .meta{font-family:var(--mono);font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<header class="site-header">
+ <div class="header-row">
+  <a class="brand" href="index.html" aria-label="Ledger Scrolls home">
+   <span class="brand-mark">&#128220;</span>
+   <span class="brand-name">Ledger<span class="b">Scrolls</span></span>
+  </a>
+  <a class="ghost" href="index.html">&larr; Library</a>
+  <a class="ghost" href="https://github.com/BEACNpool/ledger-scrolls">GitHub</a>
+ </div>
+</header>
+
+<main class="container">
+
+ <!-- HERO -->
+ <section class="hero">
+  <span class="eyebrow">&#9874; Builder's Guide</span>
+  <h1 class="hero-title">Put a file on Cardano <em>forever</em>.</h1>
+  <p class="lead">A scroll is any file written straight onto the blockchain &mdash; no server, no IPFS, no link that can rot. Your reader rebuilds the exact bytes from chain data and checks the hash. This page covers what it costs, how the bytes are packed so a reader can recover the maximum data per transaction, and the steps to mint one.</p>
+  <div class="toc">
+   <a href="#what">What is a scroll</a>
+   <a href="#cost">Costs &amp; ADA/KB</a>
+   <a href="#estimator">Cost estimator</a>
+   <a href="#format">Pick a format</a>
+   <a href="#packing">How data is packed</a>
+   <a href="#optimize">Optimize your file</a>
+   <a href="#mint">Mint it</a>
+   <a href="#rules">Safety rules</a>
+  </div>
+ </section>
+
+ <!-- WHAT -->
+ <section class="section" id="what">
+  <h2>What is a scroll?</h2>
+  <p>An immutable file stored <em>in</em> the Cardano ledger itself. There are two ways the bytes live on-chain:</p>
+  <ul>
+   <li><strong>Standard Scroll (LS-LOCK):</strong> the whole file sits in one transaction's inline datum, locked at an "always-fail" script address that can never be spent. One query to read. Best for tiny files (&le;~14&nbsp;KB).</li>
+   <li><strong>LS-CHAIN v2:</strong> the file is split across many plain "page" transactions (no NFTs, nothing locked per page), anchored by a single <em>manifest</em> datum that lists them in order and carries the hashes. This is the format for anything larger &mdash; documents, audio, video, datasets.</li>
+  </ul>
+  <p>A reader fetches the manifest, pulls the listed pages, concatenates them, verifies every hash, and &mdash; only if it all matches &mdash; renders the file. Nothing is trusted that isn't proven against a hash.</p>
+  <div class="note"><p>An older format, <b>CIP-25 "pages"</b> (LS-PAGES), mints one NFT per page. Every legacy scroll is still read that way, but it costs ~6&times; more and locks ADA in an NFT per page &mdash; <b>don't use it for new scrolls.</b></p></div>
+ </section>
+
+ <!-- COST -->
+ <section class="section" id="cost">
+  <h2>What it costs &mdash; ADA per KB</h2>
+  <p>On-chain storage is priced by the <strong>byte</strong>. Two components:</p>
+  <ul>
+   <li><strong>A one-time floor of ~1.5&ndash;2 ADA</strong> per scroll &mdash; the locked manifest (LS-CHAIN) or the locked datum UTxO (Standard). Doesn't grow with file size.</li>
+   <li><strong>~0.06 ADA per KB</strong> of content on top (transaction fees for the page txs).</li>
+  </ul>
+  <p>Rule of thumb: <code>ADA &approx; 1.5 + (fileKB &times; 0.06)</code>. The three formats compared (mainnet params, 2026):</p>
+  <div class="tbl-wrap pref">
+   <table>
+    <tr><th>Format</th><th>Cost</th><th>Locked per page</th><th>Use for</th></tr>
+    <tr><td><strong>LS-CHAIN v2</strong></td><td><strong>~0.06 ADA/KB</strong></td><td><strong>nothing</strong></td><td>anything &gt; ~14&nbsp;KB (preferred)</td></tr>
+    <tr><td>Standard (LS-LOCK)</td><td>~4&ndash;4.4 ADA/KB (locked)</td><td>n/a (one UTxO)</td><td>tiny files &le;~14&nbsp;KB</td></tr>
+    <tr><td>Legacy CIP-25 pages</td><td>~0.35 ADA/KB</td><td>~1.4 ADA per NFT</td><td>legacy / wallet-visible NFTs only</td></tr>
+   </table>
+  </div>
+
+  <h3>What different budgets buy</h3>
+  <div class="tbl-wrap">
+   <table>
+    <tr><th>Budget</th><th>Usable content</th><th>Realistic media</th></tr>
+    <tr><td><strong>~1 ADA</strong></td><td>&lt;1&nbsp;KB (Standard only)</td><td>A text message, poem or manifesto (~150&ndash;180 words); a tiny pixel-art/icon PNG</td></tr>
+    <tr><td><strong>~5 ADA</strong></td><td>~55&nbsp;KB</td><td>A short story; an optimized 480&ndash;720p photo; ~15&ndash;18&nbsp;s of Opus speech; a 2&ndash;3&nbsp;s tightly-compressed clip</td></tr>
+    <tr><td><strong>~10 ADA</strong></td><td>~140&nbsp;KB</td><td>A ~1080p photo; ~45&nbsp;s of speech (or ~12&nbsp;s music); a 5&nbsp;s aggressive-codec clip (~2&nbsp;s at good 480p)</td></tr>
+    <tr><td><strong>~20 ADA</strong></td><td>~300&nbsp;KB</td><td>A high-quality photo (or several); ~100&nbsp;s speech / ~25&nbsp;s music; a 5&nbsp;s good-quality 480p MP4 (or 10&ndash;15&nbsp;s heavily compressed)</td></tr>
+   </table>
+  </div>
+
+  <h3>Per-second rates (handy for audio &amp; video)</h3>
+  <div class="tbl-wrap">
+   <table>
+    <tr><th>Medium</th><th>Bitrate</th><th>Data rate</th><th>Cost</th></tr>
+    <tr><td>Opus speech</td><td>24&nbsp;kbps mono</td><td>~3&nbsp;KB/s</td><td>~0.18 ADA/s (~11 ADA/min)</td></tr>
+    <tr><td>Opus music</td><td>96&nbsp;kbps</td><td>~12&nbsp;KB/s</td><td>~0.72 ADA/s (~43 ADA/min)</td></tr>
+    <tr><td>Video &mdash; aggressive</td><td>~200&nbsp;kbps (360p AV1/VP9)</td><td>~25&nbsp;KB/s</td><td>~1.5&ndash;2 ADA/s</td></tr>
+    <tr><td>Video &mdash; good</td><td>~600&nbsp;kbps (480p H.264)</td><td>~75&nbsp;KB/s</td><td>~4.5&ndash;6 ADA/s</td></tr>
+   </table>
+  </div>
+  <div class="note amber"><p><b>This is spent ADA.</b> Page-transaction fees are gone; the manifest/datum min-UTxO is locked forever at the always-fail address (not recoverable). Estimate, then add ~15% headroom.</p></div>
+ </section>
+
+ <!-- ESTIMATOR -->
+ <section class="section" id="estimator">
+  <h2>Cost estimator</h2>
+  <p>Pick what you're minting and how much. Numbers update live.</p>
+  <div class="calc">
+   <div class="calc-row">
+    <div class="field">
+     <label for="media">Media</label>
+     <select id="media">
+      <option value="raw">File size (KB) &mdash; enter directly</option>
+      <option value="text">Plain text (characters)</option>
+      <option value="speech">Opus speech &mdash; 24 kbps (seconds)</option>
+      <option value="music">Opus music &mdash; 96 kbps (seconds)</option>
+      <option value="vid_a">Video, aggressive 360p (seconds)</option>
+      <option value="vid_g">Video, good 480p (seconds)</option>
+     </select>
+    </div>
+    <div class="field">
+     <label for="amount" id="amountLabel">Size in KB</label>
+     <input id="amount" type="number" min="0" step="1" value="55">
+    </div>
+   </div>
+   <div class="calc-out">
+    <div class="stat"><div class="v" id="outKB">&mdash;</div><div class="l">KB on-chain</div></div>
+    <div class="stat"><div class="v" id="outPages">&mdash;</div><div class="l">page txs</div></div>
+    <div class="stat"><div class="v" id="outADA">&mdash;</div><div class="l">~ADA total</div></div>
+   </div>
+   <p class="calc-note">model: pages = ceil(bytes / 12,160) &middot; ADA &approx; 1.5 floor + KB &times; 0.06 &middot; estimate only</p>
+  </div>
+ </section>
+
+ <!-- FORMAT -->
+ <section class="section" id="format">
+  <h2>Pick a format</h2>
+  <pre><span class="c">  &le; ~14 KB after gzip</span>   &#8594;  STANDARD SCROLL   <span class="c">(one locked UTxO; simplest, strongest)</span>
+<span class="c">  anything larger</span>       &#8594;  LS-CHAIN v2       <span class="c">(bare metadata pages + manifest)</span></pre>
+  <p>That's the whole decision. If gzip gets your file under ~14&nbsp;KB, a Standard Scroll is the strongest guarantee the protocol offers. Otherwise reach for LS-CHAIN v2.</p>
+ </section>
+
+ <!-- PACKING -->
+ <section class="section" id="packing">
+  <h2>How the data is packed (so a reader recovers the maximum)</h2>
+  <p>This is the part that decides how much file you fit per transaction. The Cardano ledger has two hard limits you build around:</p>
+  <ul>
+   <li><strong>Each metadata byte string is capped at 64 bytes.</strong> So your file's bytes are chopped into <strong>64-byte segments</strong> (128 hex characters each).</li>
+   <li><strong>Each transaction is capped at 16,384 bytes.</strong> So segments are grouped into <strong>pages</strong> sized to sit safely under that limit.</li>
+  </ul>
+  <p>The recommended packing &mdash; <strong>190 segments &times; 64 bytes = 12,160 bytes of file per page transaction</strong> &mdash; keeps each tx comfortably under 16&nbsp;KB with room for the rest of the transaction. That is the "maximum data per NFT/tx" number: pack to 190&times;64 and you minimize the page count (and therefore the fees) for any file.</p>
+
+  <h3>What one page transaction carries</h3>
+  <p>Each page is a plain self-send transaction with metadata under <strong>label 22025</strong>:</p>
+  <pre>{ <span class="k">"22025"</span>: {
+    <span class="k">"v"</span>: 2,                 <span class="c">// format version</span>
+    <span class="k">"i"</span>: 1,                 <span class="c">// 1-based page index</span>
+    <span class="k">"n"</span>: 47,                <span class="c">// total pages</span>
+    <span class="k">"sha"</span>: <span class="s">"0x&lt;32 bytes&gt;"</span>,  <span class="c">// SHA-256 of THIS page's payload</span>
+    <span class="k">"p"</span>: [ <span class="s">"0x&lt;64B&gt;"</span>, <span class="s">"0x&lt;64B&gt;"</span>, &hellip; ]  <span class="c">// up to 190 segments</span>
+} }</pre>
+  <div class="diagram">
+   your file &rarr; gzip (if it helps) &rarr; hex<br>
+   &nbsp;&nbsp;&darr; split into 64-byte segments<br>
+   page 1 &nbsp;[ <span class="seg">seg 1</span><span class="seg">seg 2</span><span class="seg">&hellip;</span><span class="seg">seg 190</span> ] &nbsp;= 12,160 B<br>
+   page 2 &nbsp;[ <span class="seg">seg 191</span><span class="seg">&hellip;</span><span class="seg">seg 380</span> ] &nbsp;= 12,160 B<br>
+   &nbsp;&nbsp;&hellip;<br>
+   manifest [ <span class="seg amber">page&nbsp;1&nbsp;txhash</span><span class="seg amber">page&nbsp;2&nbsp;txhash</span><span class="seg amber">&hellip;</span> ] + hashes + content-type
+  </div>
+  <p>A page's payload is just its segments concatenated in order. The whole file's encoded stream is the page payloads concatenated in <strong>manifest order</strong> &mdash; so page boundaries are arbitrary; <code>i</code> and <code>n</code> are integrity aids.</p>
+
+  <h3>The manifest &mdash; the index that makes it parseable</h3>
+  <p>The manifest is one locked inline datum (valid Plutus Data, <code>Constr 0</code>) that lets a reader rebuild the file deterministically in one query, with no guessing:</p>
+  <pre><span class="k">version</span>        <span class="c">// 2</span>
+<span class="k">contentType</span>    <span class="c">// MIME, e.g. "video/mp4"</span>
+<span class="k">codec</span>          <span class="c">// "gzip" | "none"</span>
+<span class="k">sizeDecoded</span>    <span class="c">// byte length of the original file</span>
+<span class="k">sha256Decoded</span>  <span class="c">// hash of the original file</span>
+<span class="k">sha256Encoded</span>  <span class="c">// hash of the encoded (gzipped) stream</span>
+<span class="k">pageTxHashes</span>   <span class="c">// ordered list of page transaction hashes</span>
+<span class="k">next</span>           <span class="c">// link to a continuation manifest, or none</span></pre>
+  <p>Because pages are listed by <strong>explicit transaction hash</strong>, a reader never has to scan a policy or guess which tx is which &mdash; it fetches exactly the listed pages, batched, and verifies each against the manifest's hashes. (One manifest holds ~400 page hashes &asymp; ~4.8&nbsp;MB; bigger files chain manifests via <code>next</code>.)</p>
+
+  <h3>How a reader rebuilds it</h3>
+  <ol>
+   <li>Read the manifest datum (one UTxO query).</li>
+   <li>Collect <code>pageTxHashes</code> (following <code>next</code> links).</li>
+   <li>Batch-fetch the page metadata (label 22025) for all those tx hashes.</li>
+   <li>Concatenate each page's segments, in manifest order &rarr; the encoded stream. Verify each page's <code>sha</code> and the stream's <code>sha256Encoded</code>.</li>
+   <li>If <code>codec = gzip</code>, gunzip. Verify <code>sha256Decoded</code>.</li>
+   <li>Only then render, by <code>contentType</code> (HTML is always fully sandboxed).</li>
+  </ol>
+  <p class="lead" style="font-size:15px"><a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/manifest-chain-v2.md">Full LS-CHAIN v2 spec &rarr;</a></p>
+ </section>
+
+ <!-- OPTIMIZE -->
+ <section class="section" id="optimize">
+  <h2>Optimize your file (this is where the ADA is)</h2>
+  <p>Cost is bytes, so shrink the file <em>before</em> it touches the chain, then declare the encoding honestly. <code>codec: gzip</code> helps only uncompressed data (text, HTML, SVG, JSON); media is already compressed &mdash; declare <code>none</code>.</p>
+  <div class="tbl-wrap">
+   <table>
+    <tr><th>Media</th><th>content_type</th><th>codec</th><th>Tips</th></tr>
+    <tr><td>Text / Markdown</td><td><code>text/plain; charset=utf-8</code></td><td>gzip if &gt;~8&nbsp;KB</td><td>UTF-8, <code>\n</code> endings</td></tr>
+    <tr><td>Image</td><td><code>image/png</code>, <code>image/jpeg</code></td><td>none</td><td>optimize, <strong>strip EXIF</strong></td></tr>
+    <tr><td>SVG</td><td><code>image/svg+xml</code></td><td>gzip</td><td>minify; no scripts/external refs</td></tr>
+    <tr><td>HTML doc</td><td><code>text/html</code></td><td>gzip</td><td>self-contained, <strong>no JavaScript</strong></td></tr>
+    <tr><td>Audio</td><td><code>audio/ogg; codecs=opus</code></td><td>none</td><td>Opus 24&ndash;32&nbsp;kbps speech, 64&ndash;96 music</td></tr>
+    <tr><td>Video (+ audio)</td><td><code>video/mp4</code> / <code>video/webm</code></td><td>none</td><td>one file, both tracks &mdash; see below</td></tr>
+   </table>
+  </div>
+  <p><strong>Audio and video together is just one file</strong> &mdash; a normal MP4 or WebM with both a video and an audio track and a single <code>content_type</code>. The viewer plays picture and sound from one element; there is no separate "audio scroll."</p>
+  <h3>Video: pick your codec by priority</h3>
+  <p>Maximum future-proof (plays anywhere) &mdash; H.264 + AAC:</p>
+  <pre>ffmpeg -i in.mov -c:v libx264 -crf 30 -preset veryslow \
+  -vf scale=-2:480 -c:a aac -b:a 64k -movflags +faststart out.mp4</pre>
+  <p>Smallest bytes (~30&ndash;50% less, plays in modern browsers) &mdash; AV1/VP9 + Opus:</p>
+  <pre>ffmpeg -i in.mov -c:v libsvtav1 -crf 38 -preset 5 \
+  -vf scale=-2:480 -c:a libopus -b:a 64k out.webm</pre>
+  <p>The real levers are <strong>resolution, duration and bitrate</strong> &mdash; not the container. Avoid HEVC/H.265 (patent + spotty playback). Codec choice alone roughly doubles your seconds-per-ADA.</p>
+ </section>
+
+ <!-- MINT -->
+ <section class="section" id="mint">
+  <h2>Mint it &mdash; the workflow</h2>
+  <h3>1 &middot; Hash your original</h3>
+  <pre>sha256sum myfile        <span class="c"># record this &mdash; your permanent commitment</span></pre>
+  <h3>2 &middot; Rehearse on testnet (free)</h3>
+  <p>The bytes are identical on Preview testnet; the mistakes are free. Run the full pipeline there first.</p>
+  <h3>3 &middot; Mint</h3>
+  <p><strong>Standard Scroll</strong> (tiny files):</p>
+  <pre>cd scripts
+./mint-standard-scroll.sh myfile payment.skey payment.addr</pre>
+  <p><strong>LS-CHAIN v2</strong> (everything larger):</p>
+  <pre><span class="c"># prepare: gzip-if-it-helps, hash, split into 190&times;64-byte pages</span>
+python3 tools/lschain/prepare.py myfile --out build/
+<span class="c"># mint the page txs, then build + lock the manifest datum</span>
+tools/lschain/mint.sh build/ payment.skey payment.addr</pre>
+  <h3>4 &middot; Verify from chain (do not skip)</h3>
+  <pre>cd koios-viewer &amp;&amp; python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -r requirements.txt
+python3 -m lsview reconstruct-chain --txin &lt;MANIFEST_TX&gt;#0 --out check.bin
+sha256sum check.bin     <span class="c"># must equal the hash from step 1</span></pre>
+  <h3>5 &middot; Register &amp; share</h3>
+  <p>Add a registry entry with your pointer and the required <code>sha256</code>, open a PR to the repo, and post it with <strong>#LedgerScrolls</strong>:</p>
+  <pre>{ <span class="k">"name"</span>: <span class="s">"my-scroll"</span>,
+  <span class="k">"pointer"</span>: { <span class="k">"kind"</span>: <span class="s">"manifest-chain-v2"</span>, <span class="k">"txHash"</span>: <span class="s">"&lt;manifest tx&gt;"</span>, <span class="k">"txIx"</span>: 0 },
+  <span class="k">"contentType"</span>: <span class="s">"video/mp4"</span>,
+  <span class="k">"sha256"</span>: <span class="s">"&hellip;"</span>,
+  <span class="k">"description"</span>: <span class="s">"&hellip;"</span> }</pre>
+  <p>The registry is <strong>forkable</strong> &mdash; you can run your own head or get listed in BEACN's public one.</p>
+ </section>
+
+ <!-- RULES -->
+ <section class="section" id="rules">
+  <h2>Three rules before you spend a single ADA</h2>
+  <div class="note bad"><p><b>1 &middot; It is permanent and public.</b> No edit, no delete, no takedown. Never put in secrets, private keys, personal data, or anything you might regret.</p></div>
+  <div class="note"><p><b>2 &middot; Hash before, verify after.</b> Record the SHA-256 before minting and rebuild it from chain afterward &mdash; the hashes must match <em>before</em> you announce anything.</p></div>
+  <div class="note ok"><p><b>3 &middot; Self-contained only.</b> No external images, fonts, CDNs or IPFS links. A scroll is rendered offline; anything pointing outward is broken forever. Inline everything.</p></div>
+  <p style="margin-top:20px">Ready? Start with the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">Your First Scroll quickstart</a>, study the worked <a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/examples">examples</a> (the eternal-scroll-tutorial is itself an on-chain LS-CHAIN scroll), or ask in <a href="https://github.com/BEACNpool/ledger-scrolls/discussions">Discussions</a>.</p>
+ </section>
+
+</main>
+
+<footer class="site-footer">
+ <div class="container">
+  <nav class="footnav">
+   <a href="index.html">Library</a>
+   <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/CREATING_SCROLLS.md">Creating Scrolls</a>
+   <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/manifest-chain-v2.md">LS-CHAIN spec</a>
+   <a href="https://github.com/BEACNpool/ledger-scrolls">GitHub</a>
+  </nav>
+  <div class="meta">Mint deliberately. The library cannot burn &mdash; and it cannot forget.</div>
+ </div>
+</footer>
+
+<script>
+// ── Cost estimator ──────────────────────────────────────────────
+// Model: pages = ceil(bytes / 12160); ADA ≈ 1.5 floor + KB × 0.06.
+// Per-second data rates match the rates table above.
+(function(){
+  var PAGE_BYTES = 12160, FLOOR_ADA = 1.5, ADA_PER_KB = 0.06;
+  // KB produced per unit of input, by media type
+  var RATE = {
+    raw:    { perUnit: 1,            label: 'Size in KB',                step: 1,   val: 55 },
+    text:   { perUnit: 1/1024,       label: 'Characters',               step: 100, val: 2000 },
+    speech: { perUnit: 3,            label: 'Seconds of speech',         step: 1,   val: 30 },
+    music:  { perUnit: 12,           label: 'Seconds of music',          step: 1,   val: 30 },
+    vid_a:  { perUnit: 25,           label: 'Seconds of video',          step: 1,   val: 5 },
+    vid_g:  { perUnit: 75,           label: 'Seconds of video',          step: 1,   val: 5 }
+  };
+  var media = document.getElementById('media'),
+      amount = document.getElementById('amount'),
+      amountLabel = document.getElementById('amountLabel'),
+      outKB = document.getElementById('outKB'),
+      outPages = document.getElementById('outPages'),
+      outADA = document.getElementById('outADA');
+
+  function fmt(n){ return n >= 100 ? Math.round(n) : Math.round(n*10)/10; }
+
+  function recalc(){
+    var r = RATE[media.value], amt = parseFloat(amount.value);
+    if (!isFinite(amt) || amt < 0) amt = 0;
+    var kb = amt * r.perUnit;
+    var bytes = kb * 1024;
+    var pages = Math.max(kb > 0 ? 1 : 0, Math.ceil(bytes / PAGE_BYTES));
+    var ada = kb > 0 ? FLOOR_ADA + kb * ADA_PER_KB : 0;
+    outKB.textContent = kb > 0 ? fmt(kb) : '—';
+    outPages.textContent = pages > 0 ? pages : '—';
+    outADA.textContent = ada > 0 ? '≈ ' + fmt(ada) : '—';
+  }
+  function onMediaChange(){
+    var r = RATE[media.value];
+    amountLabel.textContent = r.label;
+    amount.step = r.step;
+    amount.value = r.val;
+    recalc();
+  }
+  media.addEventListener('change', onMediaChange);
+  amount.addEventListener('input', recalc);
+  recalc();
+})();
+</script>
+</body>
+</html>

@@ -42,6 +42,14 @@ See **docs/VIEWERS.md** for a quick overview.
 
 ## Create Your Own Scroll
 
+**[Create a Scroll guide (`create.html`)](https://beacnpool.github.io/ledger-scrolls/create.html)**
+— the friendly web how-to: costs (ADA per KB), an interactive cost estimator, how
+data is packed into each transaction so a reader recovers the maximum bytes, and
+the full mint workflow. Start here.
+
+**[docs/YOUR_FIRST_SCROLL.md](docs/YOUR_FIRST_SCROLL.md)** — the 10-minute
+command-line quickstart.
+
 **[docs/CREATING_SCROLLS.md](docs/CREATING_SCROLLS.md)** — best practices for
 publishing every media type (text, images, HTML, PDF, audio, video, data):
 format selection, preparation, costs, minting checklists, and verification.
