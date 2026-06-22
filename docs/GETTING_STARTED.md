@@ -18,7 +18,8 @@ This guide will help you set up everything you need to create your own permanent
 3. **A funded wallet**
    - Payment signing key (`.skey`)
    - Payment address with ADA
-   - Minimum: ~3 ADA for a Standard Scroll, ~10+ ADA for Legacy Scrolls
+   - Minimum: ~3 ADA for a Standard Scroll; for LS-CHAIN v2 budget ~0.06 ADA/KB
+     of file (e.g. a 500 KB clip ≈ ~30 ADA, nothing locked)
 
 4. **Basic command-line knowledge**
    - Comfortable with bash/terminal
@@ -69,23 +70,32 @@ cardano-cli query utxo --address $(cat payment.addr) --mainnet
 
 ### Standard Scroll (LS-LOCK v1)
 **Use when:**
-- File is under ~16KB
+- File is under ~14KB (after gzip)
 - You want the simplest approach
-- Content is text, small image, or short document
+- Content is text, a small image, or a short document
 
 **Cost:** ~2-5 ADA (locked in the UTxO forever)
 
 **Permanence:** The UTxO is locked by an always-fail script — literally impossible to spend.
 
-### Legacy Scroll (LS-PAGES v1)
+### LS-CHAIN v2 — the preferred format for anything larger
 **Use when:**
-- File is larger than 16KB
-- You're inscribing a multi-page document
-- You want NFTs that can be held in a wallet
+- File is larger than one datum (documents, audio, video, datasets)
+- You want the cheapest on-chain storage with nothing locked
 
-**Cost:** ~2-3 ADA per page + policy registration
+**Cost:** ~0.06 ADA/KB, **nothing locked per page** (bare metadata transactions
+anchored by a Class-A manifest datum — no NFTs to custody).
 
-**Permanence:** Time-locked minting policy ensures no new pages can be added after deadline.
+**Permanence:** The manifest is a locked always-fail UTxO; pages are immutable
+chain history, listed by explicit tx hash. Spec:
+[registry/spec/manifest-chain-v2.md](../registry/spec/manifest-chain-v2.md);
+tooling in `tools/lschain/`.
+
+### Legacy Scroll (LS-PAGES v1 / CIP-25) — legacy, read-only
+The original large-file format: one CIP-25 NFT per page. Every legacy scroll is
+still read this way, but it is **no longer recommended for new scrolls** — it
+costs ~6× more than LS-CHAIN v2 and locks ~1.4 ADA in an NFT per page. Reach for
+it only if you specifically need wallet-visible per-page NFTs.
 
 ---
 
@@ -114,15 +124,28 @@ The script will:
 
 ---
 
-## Quick Mint (Legacy Scroll)
+## Quick Mint (LS-CHAIN v2 — large files)
 
-> **Note:** Legacy Scroll automated tooling is still in development. For now, follow the manual process in `docs/LEGACY_SCROLLS.md`.
+For anything bigger than a Standard Scroll, use the `tools/lschain/` pipeline:
 
-The general process involves:
-1. Splitting your document into ~14KB chunks
-2. Creating a time-locked minting policy
-3. Minting each chunk as a CIP-25 NFT with sequential indices
-4. Minting a manifest NFT that references all pages
+```bash
+# 1. Prepare: gzip (if it helps), hash, and split into page payloads
+python3 tools/lschain/prepare.py /path/to/your-file --out build/
+
+# 2. Mint the page transactions, then build + lock the manifest datum
+tools/lschain/mint.sh build/ /path/to/payment.skey /path/to/payment.addr
+
+# 3. Read it back from chain and confirm both hashes BEFORE announcing
+cd koios-viewer && python3 -m lsview reconstruct-chain --txin <MANIFEST_TX>#0 --out check.bin
+```
+
+The manifest records the content type, codec, decoded/encoded hashes, and the
+ordered page tx hashes — reconstruction is one manifest query plus a batched
+`tx_metadata` lookup. Full write algorithm:
+[registry/spec/manifest-chain-v2.md](../registry/spec/manifest-chain-v2.md).
+
+> **Legacy CIP-25 pages:** to read or maintain an older page-based scroll, see
+> `docs/LEGACY_SCROLLS.md`. Not recommended for new scrolls.
 
 ---
 
@@ -204,8 +227,11 @@ cardano-cli query utxo --address $(cat payment.addr) --mainnet
 
 ## Next Steps
 
+- 🚀 [Your First Scroll](YOUR_FIRST_SCROLL.md) — the 10-minute creator quickstart
+- 📖 [Creating Scrolls](CREATING_SCROLLS.md) — best practices by media type
 - 📖 [Standard Scrolls Guide](STANDARD_SCROLLS.md) — Deep dive into LS-LOCK v1
-- 📖 [Legacy Scrolls Guide](LEGACY_SCROLLS.md) — Deep dive into LS-PAGES v1
+- 📖 [LS-CHAIN v2 spec](../registry/spec/manifest-chain-v2.md) — large-file format (preferred)
+- 📖 [Legacy Scrolls Guide](LEGACY_SCROLLS.md) — LS-PAGES v1 (legacy / read-only)
 - 📖 [Examples](EXAMPLES.md) — Learn from real minted scrolls
 
 ---

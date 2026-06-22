@@ -50,13 +50,19 @@ Good documentation is crucial! You can help by:
 - Translating to other languages
 - Writing tutorials
 
-### Sharing Scrolls
+### Creating & Sharing Scrolls
+
+Anyone can mint their own scroll — you don't need to be a developer. Start with
+the **[Your First Scroll quickstart](docs/YOUR_FIRST_SCROLL.md)**: pick a format
+(Standard for tiny files, **LS-CHAIN v2** for anything larger), optimize the
+file, mint, verify from chain, and register it.
 
 Minted something cool? Share it!
 
-- Add your scroll to `js/scrolls.js`
-- Document it in `examples/`
-- Share on social media with #LedgerScrolls
+- Add a registry entry (pointer + required `sha256`) and open a PR
+- Document it in `examples/` with your `receipts.json`
+- Share on social media with **#LedgerScrolls** and tag
+  [@BEACNpool](https://x.com/BEACNpool)
 
 ## 📝 Code Style
 
