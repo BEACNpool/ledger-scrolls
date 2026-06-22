@@ -1001,18 +1001,26 @@ document.addEventListener('DOMContentLoaded', () => {
 // ═══════════════════════════════════════════════════════
 // BLOCKCHAIN API
 // ═══════════════════════════════════════════════════════
-async function koios(endpoint, body = null) {
+async function koios(endpoint, body = null, maxRetries = 4) {
+    const opts = {
+        method: body ? 'POST' : 'GET',
+        headers: body ? { 'Content-Type': 'application/json' } : {},
+        body: body ? JSON.stringify(body) : null
+    };
     for (const base of CFG.endpoints) {
-        try {
-            const opts = {
-                method: body ? 'POST' : 'GET',
-                headers: body ? { 'Content-Type': 'application/json' } : {},
-                body: body ? JSON.stringify(body) : null
-            };
-            const r = await fetch(`${base}${endpoint}`, opts);
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            return await r.json();
-        } catch(e) { continue; }
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const r = await fetch(`${base}${endpoint}`, opts);
+                if (r.status === 429) {
+                    const retryAfter = parseInt(r.headers.get('Retry-After') || '2', 10);
+                    if (attempt < maxRetries) { await new Promise(s => setTimeout(s, retryAfter * 1000)); continue; }
+                }
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return await r.json();
+            } catch(e) {
+                if (attempt < maxRetries) { await new Promise(s => setTimeout(s, (attempt + 1) * 500)); continue; }
+            }
+        }
     }
     throw new Error('All Koios endpoints unreachable. The blockchain may be temporarily unavailable.');
 }
@@ -1063,26 +1071,45 @@ async function startReconstruction() {
         }
         setProgress(8, 0);
 
-        // Fetch NFTs
+        // Fetch NFTs. asset_info carries the CIP-721 page payload inline, so we
+        // read it straight from the batched response — no per-asset round-trip and
+        // no separate tx_metadata call. 50 assets per POST, a few POSTs in parallel.
+        const pageAssets = assets
+            .map(a => a.asset_name || '')
+            .filter(name => hexToAscii(name).startsWith('CM_PAGE'));
+
+        const batchSize = 50;
+        const concurrency = 4;
+        const batches = [];
+        for (let i = 0; i < pageAssets.length; i += batchSize) {
+            batches.push(pageAssets.slice(i, i + batchSize));
+        }
+
         const pages = [];
         let done = 0;
-        for (const asset of assets) {
-            const name = asset.asset_name || '';
-            const ascii = hexToAscii(name);
-            if (!ascii.startsWith('CM_PAGE')) continue;
-
-            done++;
-            setProgress(10 + Math.floor((done/CFG.expected)*72), done);
-
+        const fetchBatch = async (batch) => {
             try {
-                const info = await koios('/asset_info', { _asset_list: [[CFG.policyId, name]] });
-                if (!info?.[0]) continue;
-                const meta = info[0].minting_tx_metadata?.[721]?.[CFG.policyId]?.[ascii];
-                if (!meta || meta.payload===undefined || meta.i===undefined) continue;
-                pages.push({ index: parseInt(meta.i), payload: meta.payload });
-            } catch(e) { console.warn(`Skip ${ascii}:`, e); }
-            await new Promise(r=>setTimeout(r,50));
-        }
+                const info = await koios('/asset_info', { _asset_list: batch.map(name => [CFG.policyId, name]) });
+                if (Array.isArray(info)) {
+                    for (const row of info) {
+                        const ascii = row.asset_name_ascii || hexToAscii(row.asset_name || '');
+                        const meta = row.minting_tx_metadata?.[721]?.[CFG.policyId]?.[ascii];
+                        if (!meta || meta.payload===undefined || meta.i===undefined) continue;
+                        pages.push({ index: parseInt(meta.i), payload: meta.payload });
+                    }
+                }
+            } catch(e) { console.warn('Batch failed:', e); }
+            done += batch.length;
+            setProgress(10 + Math.floor((done/Math.max(pageAssets.length,1))*72), pages.length);
+        };
+
+        let cursor = 0;
+        const worker = async () => {
+            while (cursor < batches.length) {
+                await fetchBatch(batches[cursor++]);
+            }
+        };
+        await Promise.all(Array.from({ length: Math.min(concurrency, batches.length) }, worker));
 
         if (pages.length===0) throw new Error('No page data found on the blockchain');
 

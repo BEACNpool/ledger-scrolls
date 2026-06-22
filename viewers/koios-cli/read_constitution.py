@@ -92,14 +92,25 @@ def extract_cip721(meta: Any) -> Dict[str, Any] | None:
 
 
 def fetch_policy_assets(policy_id: str) -> List[Dict[str, Any]]:
-    return koios_post("policy_asset_list", {"_policy_id": policy_id}) or []
+    # Koios v1 names this parameter _asset_policy (NOT _policy_id).
+    return koios_post("policy_asset_list", {"_asset_policy": policy_id}) or []
 
 
-def fetch_asset_info(policy_id: str, asset_name: str) -> Dict[str, Any]:
-    rows = koios_post("asset_info", {"_asset_list": [[policy_id, asset_name]]})
-    if not rows:
-        raise KoiosError(f"asset_info empty for {policy_id}.{asset_name}")
-    return rows[0]
+def fetch_asset_info_batch(policy_id: str, asset_name_hexes: List[str], chunk_size: int = 50) -> List[Dict[str, Any]]:
+    """One asset_info POST per chunk; rows carry minting_tx_metadata inline."""
+    out: List[Dict[str, Any]] = []
+    for i in range(0, len(asset_name_hexes), chunk_size):
+        chunk = asset_name_hexes[i : i + chunk_size]
+        rows = koios_post("asset_info", {"_asset_list": [[policy_id, h] for h in chunk]}) or []
+        out.extend(rows)
+    return out
+
+
+def clean_seg(seg: Any) -> str:
+    if isinstance(seg, dict):
+        seg = seg.get("bytes") or seg.get("seg") or ""
+    s = str(seg).strip()
+    return s[2:] if s.lower().startswith("0x") else s
 
 
 def fetch_tx_metadata(tx_hashes: List[str]) -> Dict[str, Any]:
@@ -112,56 +123,52 @@ def fetch_tx_metadata(tx_hashes: List[str]) -> Dict[str, Any]:
     return out
 
 
-def reconstruct(policy_id: str, expected_sha256: str, rate_limit: float = 0.2) -> Tuple[bytes, str]:
+def reconstruct(policy_id: str, expected_sha256: str) -> Tuple[bytes, str]:
     assets = fetch_policy_assets(policy_id)
     if not assets:
         raise KoiosError("No assets returned for policy.")
 
-    asset_info: Dict[str, Dict[str, Any]] = {}
-    mint_txs: List[str] = []
+    # One asset_info POST per 50 assets; CIP-721 payload is inline in each row.
+    name_hexes = [a["asset_name"] for a in assets if a.get("asset_name")]
+    rows = fetch_asset_info_batch(policy_id, name_hexes)
 
-    for a in assets:
-        asset_name = a.get("asset_name")
+    info_by_asset: Dict[str, Dict[str, Any]] = {}
+    fallback_txs: List[str] = []
+    for info in rows:
+        asset_name = info.get("asset_name")
         if not asset_name:
             continue
-        info = fetch_asset_info(policy_id, asset_name)
-        asset_ascii = info.get("asset_name_ascii") or hex_to_ascii(asset_name)
         mint_tx = info.get("minting_tx_hash")
-        asset_info[asset_name] = {
-            "ascii": asset_ascii,
+        mint_meta = info.get("minting_tx_metadata")
+        info_by_asset[asset_name] = {
+            "ascii": info.get("asset_name_ascii") or hex_to_ascii(asset_name),
             "mint_tx": mint_tx,
+            "mint_meta": mint_meta,
         }
-        if mint_tx:
-            mint_txs.append(mint_tx)
-        time.sleep(rate_limit)
-
-    mint_txs = sorted(set(mint_txs))
+        if mint_tx and not mint_meta:
+            fallback_txs.append(str(mint_tx))
 
     tx_meta: Dict[str, Any] = {}
-    for batch in batched(mint_txs, 5):
+    for batch in batched(sorted(set(fallback_txs)), 25):
         tx_meta.update(fetch_tx_metadata(batch))
-        time.sleep(rate_limit)
 
-    pages: List[Tuple[int, List[str]]] = []
+    pages: List[Tuple[int, List[Any]]] = []
 
-    for asset_name, info in asset_info.items():
-        tx_hash = info.get("mint_tx")
-        if not tx_hash:
-            continue
-        meta = tx_meta.get(tx_hash)
+    for info in info_by_asset.values():
+        meta = info.get("mint_meta") or tx_meta.get(str(info.get("mint_tx")))
         cip721 = extract_cip721(meta)
-        if not cip721:
+        if not cip721 or not isinstance(cip721, dict):
             continue
-        policy_meta = cip721.get(policy_id) if isinstance(cip721, dict) else None
-        if not policy_meta:
+        policy_meta = cip721.get(policy_id)
+        if not isinstance(policy_meta, dict):
             continue
 
         asset_ascii = info.get("ascii")
-        asset_meta = policy_meta.get(asset_ascii)
-        if not asset_meta:
+        asset_meta = policy_meta.get(asset_ascii) if asset_ascii else None
+        if not isinstance(asset_meta, dict):
             continue
 
-        if "MANIFEST" in (asset_ascii or ""):
+        if "MANIFEST" in (asset_ascii or "").upper():
             continue
 
         if "payload" in asset_meta and "i" in asset_meta:
@@ -177,7 +184,7 @@ def reconstruct(policy_id: str, expected_sha256: str, rate_limit: float = 0.2) -
         raise KoiosError("No pages found in metadata.")
 
     pages.sort(key=lambda x: x[0])
-    hex_blob = "".join("".join(seg for seg in payload) for _, payload in pages)
+    hex_blob = "".join("".join(clean_seg(seg) for seg in payload) for _, payload in pages)
     raw = bytes.fromhex(hex_blob)
 
     if raw.startswith(b"\x1f\x8b"):

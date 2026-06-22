@@ -1911,20 +1911,24 @@
 
             updateLoading(`Found ${assets.length} assets. Fetching pages…`, 10);
 
-            // Step 2: Batch fetch asset info
+            // Step 2: Batch fetch asset info.
+            // asset_info returns CIP-721 metadata inline, so the payload is read
+            // straight from each row — no separate tx_metadata round-trip. We send
+            // 50 assets per POST and run a few POSTs in parallel (Koios accepts it,
+            // and koiosRequest already backs off on 429).
             const assetList = assets.map(a => [BIBLE_SCROLL.policy_id, a.asset_name || '']);
-            const batchSize = 12;
+            const batchSize = 50;
+            const concurrency = 4;
             let pages = [];
             let fetchedCount = 0;
+            let completedBatches = 0;
 
+            const batches = [];
             for (let i = 0; i < assetList.length; i += batchSize) {
-                const batch = assetList.slice(i, i + batchSize);
-                const progress = 10 + (i / assetList.length) * 70;
-                updateLoading(
-                    `Fetching page data ${Math.min(i + batchSize, assetList.length)} / ${assetList.length}…`,
-                    progress
-                );
+                batches.push(assetList.slice(i, i + batchSize));
+            }
 
+            const fetchBatch = async (batch) => {
                 try {
                     const infoResp = await koiosRequest('/asset_info', {
                         method: 'POST',
@@ -1941,11 +1945,11 @@
                             if (!policyData || typeof policyData !== 'object') continue;
 
                             for (const [assetName, assetData] of Object.entries(policyData)) {
-                                if (assetData && typeof assetData === 'object' && 
+                                if (assetData && typeof assetData === 'object' &&
                                     'i' in assetData && 'payload' in assetData) {
                                     const idx = parseInt(assetData.i);
                                     let payload = '';
-                                    
+
                                     if (Array.isArray(assetData.payload)) {
                                         for (const item of assetData.payload) {
                                             if (typeof item === 'string') {
@@ -1967,12 +1971,27 @@
                         }
                     }
                 } catch (batchErr) {
-                    console.warn(`Batch ${i} failed:`, batchErr.message);
+                    console.warn('Batch failed:', batchErr.message);
                 }
 
-                // Rate limiting
-                await new Promise(r => setTimeout(r, 100));
-            }
+                completedBatches++;
+                updateLoading(
+                    `Fetching page data… ${Math.min(completedBatches * batchSize, assetList.length)} / ${assetList.length}`,
+                    10 + (completedBatches / batches.length) * 70
+                );
+            };
+
+            // Bounded-concurrency worker pool over the batch queue.
+            let cursor = 0;
+            const worker = async () => {
+                while (cursor < batches.length) {
+                    const batch = batches[cursor++];
+                    await fetchBatch(batch);
+                }
+            };
+            await Promise.all(
+                Array.from({ length: Math.min(concurrency, batches.length) }, worker)
+            );
 
             if (pages.length === 0) {
                 throw new Error('No page payloads found');

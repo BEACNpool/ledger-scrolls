@@ -146,14 +146,22 @@ def extract_cip721(meta: Any) -> Dict[str, Any] | None:
 
 
 def fetch_policy_assets(policy_id: str, *, koios_base: str) -> List[Dict[str, Any]]:
-    return koios_post("policy_asset_list", {"_policy_id": policy_id}, koios_base=koios_base) or []
+    # Koios v1 names this parameter _asset_policy (NOT _policy_id).
+    return koios_post("policy_asset_list", {"_asset_policy": policy_id}, koios_base=koios_base) or []
 
 
-def fetch_asset_info(policy_id: str, asset_name: str, *, koios_base: str) -> Dict[str, Any]:
-    rows = koios_post("asset_info", {"_asset_list": [[policy_id, asset_name]]}, koios_base=koios_base)
-    if not rows:
-        raise KoiosError(f"asset_info empty for {policy_id}.{asset_name}")
-    return rows[0]
+def fetch_asset_info_batch(policy_id: str, asset_name_hexes: List[str], *, chunk_size: int = 50, koios_base: str) -> List[Dict[str, Any]]:
+    """Fetch asset_info rows for many assets in one POST per chunk (vs one per page).
+
+    Each row already carries minting_tx_metadata, so the CIP-721 page payload is
+    available here directly — no separate tx_metadata round-trip needed.
+    """
+    out: List[Dict[str, Any]] = []
+    for i in range(0, len(asset_name_hexes), chunk_size):
+        chunk = asset_name_hexes[i : i + chunk_size]
+        rows = koios_post("asset_info", {"_asset_list": [[policy_id, h] for h in chunk]}, koios_base=koios_base) or []
+        out.extend(rows)
+    return out
 
 
 def fetch_tx_metadata(tx_hashes: List[str], *, koios_base: str) -> Dict[str, Any]:
@@ -177,58 +185,61 @@ def fetch_utxo_datum(txin: str, *, koios_base: str) -> bytes:
     return bytes.fromhex(datum_bytes)
 
 
+def _clean_seg(seg: Any) -> str:
+    """A payload segment is a bare hex string, a '0x'-prefixed string, or {'bytes': '<hex>'}."""
+    if isinstance(seg, dict):
+        seg = seg.get("bytes") or seg.get("seg") or ""
+    s = str(seg).strip()
+    return s[2:] if s.lower().startswith("0x") else s
+
+
 def reconstruct_legacy(policy_id: str, manifest_asset: str | None = None, expected_sha256: str | None = None, koios_base: str = DEFAULT_KOIOS) -> Tuple[bytes, str]:
     assets = fetch_policy_assets(policy_id, koios_base=koios_base)
     if not assets:
         raise KoiosError("No assets returned for policy.")
 
-    asset_info: Dict[str, Dict[str, Any]] = {}
-    mint_txs: List[str] = []
+    # One asset_info POST per 50 assets; rows carry minting_tx_metadata inline.
+    name_hexes = [a["asset_name"] for a in assets if a.get("asset_name")]
+    rows = fetch_asset_info_batch(policy_id, name_hexes, koios_base=koios_base)
 
-    for a in assets:
-        asset_name = a.get("asset_name")
+    # Only rows whose asset_info lacked metadata need a tx_metadata fallback.
+    info_by_asset: Dict[str, Dict[str, Any]] = {}
+    fallback_txs: List[str] = []
+    for info in rows:
+        asset_name = info.get("asset_name")
         if not asset_name:
             continue
-        info = fetch_asset_info(policy_id, asset_name, koios_base=koios_base)
-        asset_ascii = info.get("asset_name_ascii") or hex_to_ascii(asset_name)
         mint_tx = info.get("minting_tx_hash")
-        asset_info[asset_name] = {
-            "ascii": asset_ascii,
+        mint_meta = info.get("minting_tx_metadata")
+        info_by_asset[asset_name] = {
+            "ascii": info.get("asset_name_ascii") or hex_to_ascii(asset_name),
             "mint_tx": mint_tx,
+            "mint_meta": mint_meta,
         }
-        if mint_tx:
-            mint_txs.append(mint_tx)
-        time.sleep(0.15)
-
-    mint_txs = sorted(set(mint_txs))
+        if mint_tx and not mint_meta:
+            fallback_txs.append(str(mint_tx))
 
     tx_meta: Dict[str, Any] = {}
-    for batch in batched(mint_txs, 5):
+    for batch in batched(sorted(set(fallback_txs)), 25):
         tx_meta.update(fetch_tx_metadata(batch, koios_base=koios_base))
-        time.sleep(0.2)
 
-    pages: List[Tuple[int, List[str]]] = []
+    pages: List[Tuple[int, List[Any]]] = []
 
-    for asset_name, info in asset_info.items():
-        tx_hash = info.get("mint_tx")
-        if not tx_hash:
-            continue
-        meta = tx_meta.get(tx_hash)
+    for info in info_by_asset.values():
+        meta = info.get("mint_meta") or tx_meta.get(str(info.get("mint_tx")))
         cip721 = extract_cip721(meta)
-        if not cip721:
+        if not cip721 or not isinstance(cip721, dict):
             continue
-        policy_meta = cip721.get(policy_id) if isinstance(cip721, dict) else None
-        if not policy_meta:
+        policy_meta = cip721.get(policy_id)
+        if not isinstance(policy_meta, dict):
             continue
 
         asset_ascii = info.get("ascii")
-        asset_meta = policy_meta.get(asset_ascii)
-        if not asset_meta:
+        asset_meta = policy_meta.get(asset_ascii) if asset_ascii else None
+        if not isinstance(asset_meta, dict):
             continue
 
-        if (asset_ascii and "MANIFEST" in asset_ascii) or asset_meta.get("role") == "manifest":
-            if manifest_asset and asset_ascii != manifest_asset:
-                continue
+        if (asset_ascii and "MANIFEST" in asset_ascii.upper()) or asset_meta.get("role") == "manifest":
             continue
 
         page_idx = asset_meta.get("i") or asset_meta.get("index")
@@ -255,7 +266,7 @@ def reconstruct_legacy(policy_id: str, manifest_asset: str | None = None, expect
         raise KoiosError("No pages found in metadata.")
 
     pages.sort(key=lambda x: x[0])
-    hex_blob = "".join("".join(seg for seg in payload) for _, payload in pages)
+    hex_blob = "".join("".join(_clean_seg(seg) for seg in payload) for _, payload in pages)
     raw = bytes.fromhex(hex_blob)
 
     if raw.startswith(b"\x1f\x8b"):
