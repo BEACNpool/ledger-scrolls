@@ -31,3 +31,6 @@ node_modules/
 # Logs
 *.log
 lschain-work/
+
+# Local scratch
+tmp/
