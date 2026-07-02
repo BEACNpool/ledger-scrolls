@@ -34,6 +34,7 @@ each guide is backed by scrolls live on mainnet today.
 
 | Read this | To learn |
 |---|---|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | How the stack fits together — and which layers are allowed to die |
 | [PROTOCOL_V1_PROPOSAL.md](PROTOCOL_V1_PROPOSAL.md) | The normative spec: pointer kinds, encoding, verification, failure semantics |
 | [STANDARD_SCROLLS.md](STANDARD_SCROLLS.md) | Standard Scrolls: one file in one locked UTxO datum (small files, strongest guarantee) |
 | [../registry/spec/manifest-chain-v2.md](../registry/spec/manifest-chain-v2.md) | Chain Scrolls: any size, bare metadata pages + manifest (the standard write format) |

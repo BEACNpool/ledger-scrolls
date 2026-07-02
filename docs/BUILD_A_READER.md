@@ -69,7 +69,8 @@ is why our readers speak it. Your options, most independent first:
 2. **Any Koios-compatible provider** — same API, your choice of operator.
 3. **The public `api.koios.rest`** — keyless and great for scripts/CLI.
    ⚠ As of mid-2026 its **browser** CORS policy only answers its own
-   website, so web readers need option 1, 2, or 4.
+   website, so web readers need option 1, 2, 4 — or a CORS mirror you
+   deploy yourself in two minutes: [`tools/cors-mirror/`](../tools/cors-mirror/).
 4. **Blockfrost with your own free key** — different API, proper browser
    CORS; `reader.html` supports it natively.
 

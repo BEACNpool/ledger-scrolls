@@ -435,9 +435,10 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
 "use strict";
 /* ════════════════════════ providers ════════════════════════ */
 // api.koios.rest does not send CORS headers to browsers (direct fetches
-// fail); the worker is a transparent Koios proxy that adds them. Bytes are
-// hash-verified locally regardless of endpoint; set your own in settings.
-const DEFAULT_SOURCES = ['https://api.koios.rest/api/v1'];
+// fail); the fallback is a transparent Koios mirror running the open recipe
+// in tools/cors-mirror/ — deploy your own and set it in settings. Bytes are
+// hash-verified locally regardless of endpoint.
+const DEFAULT_SOURCES = ['https://api.koios.rest/api/v1','https://koios.beacn.workers.dev/api/v1'];
 const DEFAULT_HEAD = 'a9c56fb3d4d8b526fe7a0aa7c2416615154af30c2c09ce747a899a886ba8bad9#0';
 const LS = window.localStorage;
 const sources = () => { const c = LS.getItem('ls.source'); return c ? [c, ...DEFAULT_SOURCES.filter(s=>s!==c)] : [...DEFAULT_SOURCES]; };
@@ -632,6 +633,9 @@ function sniff(b){
 
 /* ════════════════════════ the shelf ════════════════════════ */
 const BOOTSTRAP = [
+ {name:'the-reader',icon:'👓',title:'The Reader',form:'chain',
+  desc:'The minimal one-file reader, minted as the thing it reads. Hand it its own pointer and it rebuilds itself from the chain — the library holds its own glasses.',
+  txin:'9a564165ebdc4e0c4a2e1163b5cf9355604ecb8e163b425d834570e5b9007de2#0',contentType:'text/html',sha256:'a824298dc5ced0aad1954c7d8d40bb6dda09debf402f062ab402dcebbb6a9215'},
  {name:'legal-0001',icon:'⚖️',title:'LEGAL-0001 — Declaration of Record',form:'chain',
   desc:'A recorded legal instrument: executed by the signature on its minting tx, dated by block time, sealed by hash. Pull it by number in the Ledger Docket terminal.',
   txin:'ceced54b2bd462b1ed41864f2583309666010ce1fb96b9f3dc9968174d958bc9#0',contentType:'text/html',sha256:'8c95db4bb4248d82d3d5c4bb49dfe0200d779f4b6905cd3b5649fcb847378bc1'},

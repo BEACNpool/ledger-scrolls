@@ -48,7 +48,8 @@ technology it teaches. Full list with hashes and receipts:
 | [Cost Calculator](https://beacnpool.github.io/ledger-scrolls/calculator.html) | Drop any file → what forever costs: one number, ADA + live USD, with a metadata builder |
 | [BEACN Leaks player](https://beacnpool.github.io/ledger-scrolls/leaks.html) | Publisher-channel player — point at a policy ID; this site hosts nothing |
 | [Ledger Docket](https://beacnpool.github.io/ledger-scrolls/legal.html) | Legal-records terminal — pull a recorded instrument by document number |
-| [Constitution](https://beacnpool.github.io/ledger-scrolls/constitution.html) · [Bible](https://beacnpool.github.io/ledger-scrolls/bible.html) · [First Video](https://beacnpool.github.io/ledger-scrolls/first-video.html) · [Latest](https://beacnpool.github.io/ledger-scrolls/latest.html) · [Testnet PoC](https://beacnpool.github.io/ledger-scrolls/preview.html) | Standalone viewers |
+| [Constitution](https://beacnpool.github.io/ledger-scrolls/constitution.html) · [Bible](https://beacnpool.github.io/ledger-scrolls/bible.html) · [First Video](https://beacnpool.github.io/ledger-scrolls/first-video.html) · [Latest](https://beacnpool.github.io/ledger-scrolls/latest.html) | Permanent links — each opens its scroll in The Library |
+| [Testnet PoC](https://beacnpool.github.io/ledger-scrolls/preview.html) | Preview-testnet rehearsal viewer (bring a Blockfrost preview key) |
 
 ---
 
@@ -193,12 +194,14 @@ BEACN's public one. Spec and schemas: [registry/](registry/).
 ```
 ledger-scrolls/
 ├── index.html              # THE LIBRARY — the app, one dependency-free file (source = deployment)
-├── create.html / leaks.html / legal.html / …   # standalone site pages (GitHub Pages serves this repo root)
+├── reader.html             # THE READER — minimal reader, minted on-chain (frozen copy in examples/)
+├── create.html / leaks.html / legal.html / calculator.html   # site pages (Pages serves repo root)
 ├── docs/                   # All guides — start at docs/README.md
 │   └── history/            # Past audits & design reviews
 ├── registry/               # Registry + protocol specs, JSON schemas, examples, tooling
 ├── conformance/            # Protocol test vectors + Python/Node runners
 ├── tools/lschain/          # Chain Scroll writer (prepare / mint)
+├── tools/cors-mirror/      # deploy-your-own Koios CORS mirror (~25 lines)
 ├── scripts/                # Standard Scroll minting & verification
 ├── viewers/koios-cli/      # Zero-dependency Python readers
 ├── koios-viewer/           # Full Python viewer/reconstructor (lsview)
@@ -208,7 +211,8 @@ ledger-scrolls/
 ```
 
 The viewer obeys the same ethos as the scrolls it reads: one dependency-free
-HTML file — save it to a USB stick and it still works.
+HTML file — save it to a USB stick and it still works. How the layers fit
+(and which ones are allowed to die): **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
 ---
 
