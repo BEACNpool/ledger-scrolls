@@ -4,7 +4,7 @@ Audited: 2026-06-11 · Repo: `BEACNpool/ledger-scrolls` @ `ca8e5ba` · Auditor: 
 
 Companion documents:
 
-- [PROTOCOL_V1_PROPOSAL.md](PROTOCOL_V1_PROPOSAL.md) — canonical protocol surface for v1
+- [PROTOCOL_V1_PROPOSAL.md](../PROTOCOL_V1_PROPOSAL.md) — canonical protocol surface for v1
 - [RECONSTRUCTION_PLAN.md](RECONSTRUCTION_PLAN.md) — phased repo reconstruction plan
 
 ## Executive Verdict

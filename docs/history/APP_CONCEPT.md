@@ -76,7 +76,7 @@ in a terminal-rendered screenshot, printable.
 
 ## Supersession
 
-This replaces the React/Vite app (archived in `archived/react-app-2026/`)
+This replaces the React/Vite app (removed from the tree; preserved in git history)
 and the dist-to-root deploy ritual. The root `index.html` is now source,
 not build output. The standalone viewers (`bible.html`,
 `constitution.html`, `first-video.html`, `leaks.html`) are unaffected.

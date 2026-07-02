@@ -1,6 +1,6 @@
 # Ledger Scrolls Reconstruction Plan
 
-2026-06-11 · Companion to [AUDIT_LEDGER_SCROLLS_2026-06.md](AUDIT_LEDGER_SCROLLS_2026-06.md) and [PROTOCOL_V1_PROPOSAL.md](PROTOCOL_V1_PROPOSAL.md)
+2026-06-11 · Companion to [AUDIT_LEDGER_SCROLLS_2026-06.md](AUDIT_LEDGER_SCROLLS_2026-06.md) and [PROTOCOL_V1_PROPOSAL.md](../PROTOCOL_V1_PROPOSAL.md)
 
 Goal: turn a working prototype into **the** open-source read/writer for
 immutable media on Cardano — implementable by strangers, verifiable by
@@ -55,7 +55,7 @@ Don't physically move everything on day one — adopt the layout as code is
 - `app/dist` + root `assets/` committed bundles — replace with a GitHub
   Actions Pages deploy; the repo should not carry build output (root
   `bible.html` etc. stay until rebuilt as SDK shells).
-- `archived/experimental-p2p-viewer/` — keep, clearly labeled prior art.
+- Prior art (P2P viewer experiment, 2026 React app) was removed from the tree 2026-07-02; it remains in git history (see `main` before `clean-main`).
 
 ## Phases
 

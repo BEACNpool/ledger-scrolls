@@ -1,6 +1,6 @@
 # Ledger Scrolls Protocol v1 — Proposal
 
-Status: DRAFT · 2026-06-11 · Companion to [AUDIT_LEDGER_SCROLLS_2026-06.md](AUDIT_LEDGER_SCROLLS_2026-06.md)
+Status: DRAFT · 2026-06-11 · Companion to [AUDIT_LEDGER_SCROLLS_2026-06.md](history/AUDIT_LEDGER_SCROLLS_2026-06.md)
 
 This document defines the smallest protocol surface a third party needs to
 read and write Ledger Scrolls without reading this repository's history. It
