@@ -11,6 +11,7 @@ each guide is backed by scrolls live on mainnet today.
 | [Create a Scroll (web guide)](https://beacnpool.github.io/ledger-scrolls/create.html) | The friendly browser version: costs, an interactive estimator, the full workflow |
 | [Cost Calculator](https://beacnpool.github.io/ledger-scrolls/calculator.html) | Drop a file in your browser → one price to make it permanent, exact hashes, metadata builder |
 | [VIEWERS.md](VIEWERS.md) | The ways to read scrolls — browser, CLI, Python |
+| [BUILD_A_READER.md](BUILD_A_READER.md) | Write your own reader — the whole protocol is two queries and a hash |
 
 ## ✍️ Creating scrolls
 

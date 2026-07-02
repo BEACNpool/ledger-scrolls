@@ -13,6 +13,18 @@ preserve?).
 
 ---
 
+## 👓 The Reader
+
+*The reader, stored as a scroll — the library holds its own glasses.*
+
+The minimal one-file reader, minted as the thing it reads. Hand it its own
+pointer and it rebuilds itself from the chain, verifies its own fingerprint,
+and renders a working reader inside the reader. If every website vanishes, a
+decoder for the library remains carved into the library.
+
+→ [`examples/the-reader/`](../examples/the-reader/) ·
+[build your own reader](BUILD_A_READER.md)
+
 ## 🗽 BEACN Leaks — Issues 000 & 001
 
 *The first publisher channel: an unforgeable byline.*

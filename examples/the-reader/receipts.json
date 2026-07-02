@@ -1,0 +1,28 @@
+{
+ "format": "ls-chain-v2-receipts",
+ "title": "The Reader \u2014 the Ledger Scrolls reader, stored as a Ledger Scroll",
+ "mintedAt": "2026-07-02",
+ "mintedBy": "BEACNpool (Clawd, autonomous agent, at David's direction)",
+ "network": "mainnet",
+ "pointer": {
+  "kind": "manifest-chain-v2",
+  "txHash": "9a564165ebdc4e0c4a2e1163b5cf9355604ecb8e163b425d834570e5b9007de2",
+  "txIx": 0
+ },
+ "lockAddress": "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn",
+ "manifestLockedLovelace": 1439540,
+ "pageTxHashes": [
+  "6a327b852ffccf72b494e6314ac2e5540861412f6f50876948c36800f62d798c"
+ ],
+ "feesLovelace": {
+  "page1": 467561,
+  "manifest": 176105
+ },
+ "contentType": "text/html",
+ "codec": "gzip",
+ "sizeDecoded": 16634,
+ "sizeEncoded": 6499,
+ "sha256Decoded": "a824298dc5ced0aad1954c7d8d40bb6dda09debf402f062ab402dcebbb6a9215",
+ "sha256Encoded": "872b6a0a9b106251c24c20f9072885e183113998f716549eb40f677a9f0db8ea",
+ "verified": "reconstructed from chain via lsview 2026-07-02; byte-identical to source; also self-read in-browser via Blockfrost (the reader rendered itself)"
+}

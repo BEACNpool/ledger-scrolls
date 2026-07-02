@@ -148,7 +148,7 @@ button.ghost{background:transparent;border:1px solid var(--edge);color:var(--txt
 // api.koios.rest does not send CORS headers to browsers, so direct fetches
 // fail; the worker is a transparent Koios proxy that adds them. Every byte
 // is hash-verified locally regardless of which endpoint answers.
-const KOIOS = ['https://koios.beacn.workers.dev/api/v1','https://api.koios.rest/api/v1'];
+const KOIOS = ['https://api.koios.rest/api/v1'];
 const $ = id => document.getElementById(id);
 const log = (cls, msg) => { const d = document.createElement('div'); d.className = cls; d.textContent = msg; $('log').appendChild(d); $('log').scrollTop = 1e9; };
 const step = (n, st) => { const e = $('s'+n); e.classList.remove('on','done','fail'); if (st) e.classList.add(st); };

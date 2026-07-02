@@ -7,6 +7,26 @@ also has a folder in [`examples/`](../examples/) with its exact source and
 
 ---
 
+## 000) 👓 The Reader — the reader, stored as a scroll
+
+The minimal Ledger Scrolls reader (`reader.html`) minted **as a Ledger
+Scroll**: hand it its own pointer and it rebuilds itself from the chain and
+renders a working copy of itself. The library permanently contains its own
+pair of glasses. See [`examples/the-reader/`](../examples/the-reader/).
+
+| Field | Value |
+|-------|-------|
+| **ID** | `the-reader` |
+| **Type** | `manifest-chain-v2` (Chain Scroll) |
+| **Manifest TxIn** | `9a564165ebdc4e0c4a2e1163b5cf9355604ecb8e163b425d834570e5b9007de2#0` |
+| **Pages** | 1 (metadata label 22025) |
+| **Content-Type** | `text/html` |
+| **Codec** | `gzip` |
+| **SHA-256 (Original)** | `a824298dc5ced0aad1954c7d8d40bb6dda09debf402f062ab402dcebbb6a9215` |
+| **Status** | 🟢 LIVE — manifest UTxO must remain UNSPENT (always-fail script) |
+
+---
+
 ## 00) 🗽 BEACN Leaks — Issue 000: The Manifesto
 
 A freedom-of-speech manifesto: Ledger Scrolls as independent, immutable,

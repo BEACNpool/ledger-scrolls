@@ -3,7 +3,8 @@
 **"A library that cannot burn."**
 
 Ledger Scrolls is the free, open-source **reader and writer for immutable,
-forever media**. It puts files **inside the Cardano blockchain itself** — not a
+forever media**. That is the whole job — one job. It puts files **inside the
+Cardano blockchain itself** — not a
 link to a file, not a hash of a file kept somewhere else. The actual bytes,
 inside transactions, on a ledger replicated by thousands of independent
 computers around the world.
@@ -42,6 +43,7 @@ technology it teaches. Full list with hashes and receipts:
 | Site | What it is |
 |---|---|
 | [The Library](https://beacnpool.github.io/ledger-scrolls/) | Main viewer — browse and verify any scroll, channel, or registry |
+| [The Reader](https://beacnpool.github.io/ledger-scrolls/reader.html) | The minimal reader — one file, zero dependencies, itself minted on-chain |
 | [Create a Scroll](https://beacnpool.github.io/ledger-scrolls/create.html) | The friendly how-to: costs, estimator, full workflow |
 | [Cost Calculator](https://beacnpool.github.io/ledger-scrolls/calculator.html) | Drop any file → what forever costs: one number, ADA + live USD, with a metadata builder |
 | [BEACN Leaks player](https://beacnpool.github.io/ledger-scrolls/leaks.html) | Publisher-channel player — point at a policy ID; this site hosts nothing |
@@ -119,9 +121,19 @@ sha256sum scroll.html   # must match the manifest's declared hash
 ```
 
 A protocol simple enough to re-implement from its spec in an afternoon is a
-protocol that survives its creators. The [conformance suite](conformance/)
+protocol that survives its creators. **[docs/BUILD_A_READER.md](docs/BUILD_A_READER.md)**
+is the complete guide to writing your own reader; the [conformance suite](conformance/)
 ships test vectors so your thirty lines and ours can prove they agree:
 `python3 conformance/run_conformance.py` or `node conformance/run_conformance.mjs`.
+
+And the minimal reader — **[reader.html](reader.html)**, one dependency-free
+file that speaks the open Koios API (any endpoint you choose) or Blockfrost
+with your own key — **is itself minted on Cardano as a scroll**
+(`9a564165ebdc4e0c4a2e1163b5cf9355604ecb8e163b425d834570e5b9007de2#0`,
+receipts in [examples/the-reader/](examples/the-reader/)). The library holds
+its own pair of glasses: even if every website disappears, a working reader
+can be rebuilt from the chain it reads — which then reads every other
+scroll, including itself.
 
 ---
 

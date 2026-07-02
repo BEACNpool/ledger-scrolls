@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ledger Scrolls Reader</title>
+<style>
+:root{--bg:#f6f5f1;--ink:#14161b;--ink2:#3a4049;--mut:#6b7280;--line:#dbd6ca;--acc:#2f53ff;--ok:#0a8f5b;--bad:#d8383d;--mono:ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 Georgia,'Times New Roman',serif;padding:20px 12px}
+main{max-width:780px;margin:0 auto}
+h1{font:700 26px/1.2 -apple-system,system-ui,sans-serif;letter-spacing:-.01em}
+h1 span{color:var(--acc)}
+p.sub{color:var(--mut);font-size:14.5px;margin:6px 0 18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0}
+label{display:block;font:600 12.5px/1 -apple-system,system-ui,sans-serif;color:var(--ink2);margin:10px 0 5px;text-transform:uppercase;letter-spacing:.06em}
+input,select{width:100%;font:14px/1.4 var(--mono);color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:7px;padding:10px 12px}
+button{font:600 15px/1 -apple-system,system-ui,sans-serif;background:var(--acc);color:#fff;border:0;border-radius:999px;padding:12px 22px;margin-top:14px;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}
+#log{font:12.5px/1.7 var(--mono);color:var(--ink2);white-space:pre-wrap;word-break:break-all}
+#log .ok{color:var(--ok)}#log .bad{color:var(--bad)}
+#verdict{display:none;font:700 15px/1.4 -apple-system,system-ui,sans-serif;border-radius:8px;padding:12px 16px;margin:12px 0}
+#verdict.ok{display:block;background:#e7f6ef;color:var(--ok);border:1px solid var(--ok)}
+#verdict.bad{display:block;background:#fdecec;color:var(--bad);border:1px solid var(--bad)}
+#out{display:none}
+#out iframe{width:100%;height:75vh;border:1px solid var(--line);border-radius:8px;background:#fff}
+#out img,#out video{max-width:100%;border-radius:8px}
+#out audio{width:100%}
+#out pre{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;overflow:auto;max-height:70vh;font:13px/1.6 var(--mono);white-space:pre-wrap;word-break:break-word}
+a.dl{display:inline-block;margin:10px 0;font:600 14px/1 -apple-system,system-ui,sans-serif;color:var(--acc)}
+footer{color:var(--mut);font-size:13px;margin:26px 0 10px;border-top:1px solid var(--line);padding-top:14px}
+.small{font-size:12.5px;color:var(--mut)}
+</style>
+</head>
+<body>
+<main>
+<h1>📜 Ledger Scrolls <span>Reader</span></h1>
+<p class="sub">Rebuild any file stored on Cardano and verify it, byte for byte, before it renders.
+One HTML file, no dependencies, no server, no gatekeeper. Save it to a USB stick — it still works.</p>
+
+<div class="card">
+  <label for="ptr">Scroll pointer — the manifest transaction (txHash#index)</label>
+  <input id="ptr" placeholder="ef8dce1c6359c7ae6cc44f04d60b32e6bc26987ebf30a78259c65b2063ba3b18#0" spellcheck="false">
+  <label for="ep">Chain data source (any Cardano indexer with the Koios API)</label>
+  <select id="epsel">
+    <option value="https://api.koios.rest/api/v1">Koios API — api.koios.rest (public; browser access currently restricted)</option>
+    <option value="custom">Koios API — your own endpoint (koios-lite, provider, local)</option>
+    <option value="blockfrost">Blockfrost — your own free project key</option>
+  </select>
+  <input id="ep" style="display:none;margin-top:8px" placeholder="https://your-koios-endpoint/api/v1" spellcheck="false">
+  <input id="bfkey" style="display:none;margin-top:8px" placeholder="Blockfrost project_id (free at blockfrost.io — sent only to Blockfrost)" spellcheck="false">
+  <label for="exp">Expected SHA-256 (optional — pin the exact file you were promised)</label>
+  <input id="exp" placeholder="leave empty to trust the manifest's own fingerprint" spellcheck="false">
+  <button id="go">Read &amp; verify</button>
+</div>
+
+<div class="card"><div id="log">Ready. The chain is the library; this page is only a pair of glasses.</div></div>
+<div id="verdict"></div>
+<div id="out" class="card"></div>
+
+<footer>
+  <b>Trust nothing, verify everything:</b> this reader fetches raw chain data, reassembles it,
+  and refuses to render unless the SHA-256 matches. The Koios API it speaks is
+  <a href="https://koios.rest">open source</a> and run by the Cardano community — or point it at
+  your own instance above. Protocol spec &amp; tools:
+  <a href="https://github.com/BEACNpool/ledger-scrolls">github.com/BEACNpool/ledger-scrolls</a>.
+  <div class="small" style="margin-top:8px">This file is itself a Ledger Scroll: handed its own
+  pointer, it will rebuild an exact copy of itself from the chain it reads. A library that cannot
+  burn, holding the glasses you read it with.</div>
+</footer>
+</main>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+$("epsel").addEventListener("change",e=>{
+  $("ep").style.display=e.target.value==="custom"?"block":"none";
+  $("bfkey").style.display=e.target.value==="blockfrost"?"block":"none"});
+const log=(m,c)=>{$("log").innerHTML+=`\n<span class="${c||""}">${m}</span>`};
+const clearUI=()=>{$("log").textContent="";$("out").style.display="none";$("out").innerHTML="";$("verdict").className="";$("verdict").style.display=""};
+
+/* ---- minimal CBOR: uint/bytes/text/array/tag (all a scroll manifest needs) ---- */
+function cbor(buf){
+  const v=new DataView(buf);let p=0;
+  const u8=()=>v.getUint8(p++);
+  function len(ai){if(ai<24)return ai;if(ai===24)return u8();if(ai===25){const x=v.getUint16(p);p+=2;return x}
+    if(ai===26){const x=v.getUint32(p);p+=4;return x}if(ai===27){const x=v.getBigUint64(p);p+=8;return Number(x)}return -1}
+  function item(){
+    const b=u8(),mt=b>>5,ai=b&31;
+    if(mt===0)return len(ai);
+    if(mt===1)return -1-len(ai);
+    if(mt===2){ // bytes (definite or indefinite chunks)
+      if(ai===31){const parts=[];while(v.getUint8(p)!==0xff){const c=item();parts.push(c)}p++;
+        const n=parts.reduce((a,c)=>a+c.length,0),out=new Uint8Array(n);let o=0;for(const c of parts){out.set(c,o);o+=c.length}return out}
+      const n=len(ai),out=new Uint8Array(buf,p,n).slice();p+=n;return out}
+    if(mt===3){const n=len(ai),out=new TextDecoder().decode(new Uint8Array(buf,p,n));p+=n;return out}
+    if(mt===4){const n=len(ai),arr=[];if(ai===31){while(v.getUint8(p)!==0xff)arr.push(item());p++}else for(let i=0;i<n;i++)arr.push(item());return arr}
+    if(mt===5){const n=len(ai),map={};if(ai===31){while(v.getUint8(p)!==0xff){const k=item();map[k]=item()}p++}
+      else for(let i=0;i<n;i++){const k=item();map[k]=item()}return map}
+    if(mt===6){const t=len(ai);return{tag:t,value:item()}}
+    throw new Error("unsupported CBOR (major type "+mt+")")}
+  return item();
+}
+const hex2buf=h=>{h=h.replace(/^0x/i,"");const o=new Uint8Array(h.length/2);for(let i=0;i<o.length;i++)o[i]=parseInt(h.substr(i*2,2),16);return o};
+const buf2hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+const sha256=async b=>buf2hex(await crypto.subtle.digest("SHA-256",b));
+const txt=b=>new TextDecoder().decode(b);
+
+const CORS_HINT="\n  The endpoint refused a browser request (CORS). api.koios.rest currently only\n  answers its own website. Fix: pick \u201cyour own endpoint\u201d and paste any Koios-compatible\n  URL you run or rent \u2014 or pick Blockfrost mode with a free project key. Command-line\n  verification (viewers/koios-cli, lsview) is unaffected and always keyless.";
+async function jfetch(url,opts,what){
+  let r;
+  try{ r=await fetch(url,opts); }
+  catch(e){ throw new Error(`${what} failed: ${e.message}${e instanceof TypeError?CORS_HINT:""}`); }
+  if(!r.ok)throw new Error(`${what} failed: HTTP ${r.status}${r.status===403||r.status===402?" (check the project key / quota)":""}`);
+  return r;
+}
+async function koios(base,path,body){
+  return (await jfetch(base+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)},"chain query "+path)).json();
+}
+const BF="https://cardano-mainnet.blockfrost.io/api/v0";
+const bf=async(path,key)=>(await jfetch(BF+path,{headers:{project_id:key}},"Blockfrost "+path)).json();
+/* source-neutral accessors */
+function source(){
+  const mode=$("epsel").value;
+  if(mode==="blockfrost"){
+    const key=$("bfkey").value.trim();
+    if(!key)throw new Error("paste your Blockfrost project_id (free account at blockfrost.io)");
+    return {
+      name:"Blockfrost (your key)",
+      async datum(txh,ix){
+        const us=await bf(`/txs/${txh}/utxos`,key);
+        const o=(us.outputs||[]).find(o=>o.output_index===ix);
+        return o&&o.inline_datum;
+      },
+      async pages(hashes){
+        const out={};
+        for(const h of hashes){
+          const md=await bf(`/txs/${h}/metadata/cbor`,key);
+          const row=md.find(m=>String(m.label)==="22025");
+          const hexes=row&&(row.metadata||row.cbor_metadata);
+          if(!hexes){out[h]=null;continue}
+          const top=cbor(hex2buf(String(hexes).replace(/^\\x/,"")).buffer);
+          out[h]=top&&(top["22025"]||top[22025]);
+        }
+        return out;
+      }
+    };
+  }
+  const base=(mode==="custom"?$("ep").value.trim():mode).replace(/\/+$/,"");
+  if(!/^https?:\/\//.test(base))throw new Error("enter a Koios-compatible endpoint URL");
+  return {
+    name:base,
+    async datum(txh,ix){
+      const info=await koios(base,"/utxo_info",{_utxo_refs:[`${txh}#${ix}`],_extended:true});
+      const u=info&&info[0];
+      return u&&u.inline_datum&&u.inline_datum.bytes;
+    },
+    async pages(hashes){
+      const meta=await koios(base,"/tx_metadata",{_tx_hashes:hashes});
+      const out={};
+      for(const t of meta)out[t.tx_hash]=t.metadata&&(t.metadata["22025"]||t.metadata[22025]);
+      return out;
+    }
+  };
+}
+async function gunzip(bytes){
+  const ds=new DecompressionStream("gzip");
+  const ab=await new Response(new Blob([bytes]).stream().pipeThrough(ds)).arrayBuffer();
+  return new Uint8Array(ab);
+}
+
+/* accept segment encodings: "0x<hex>", bare hex, or {bytes:"<hex>"} (spec §pages) */
+function segBytes(s){
+  if(s instanceof Uint8Array)return s;
+  if(s&&typeof s==="object"&&"bytes"in s)s=s.bytes;
+  if(typeof s!=="string")throw new Error("bad payload segment");
+  if(/^(0x)?[0-9a-fA-F]*$/.test(s))return hex2buf(s);
+  return new TextEncoder().encode(s); // pathological indexer: raw text
+}
+
+async function readScroll(){
+  clearUI();$("go").disabled=true;
+  try{
+    const src=source();
+    const m=$("ptr").value.trim().match(/^([0-9a-fA-F]{64})#(\d+)$/);
+    if(!m)throw new Error("pointer must look like <64-hex txhash>#<index>");
+    const [_,txh,ixs]=m,ix=+ixs;
+
+    log(`→ POINT  ${txh}#${ix}`);
+    log(`→ FETCH  manifest datum via ${src.name}`);
+    const datumHex=await src.datum(txh,ix);
+    if(!datumHex)throw new Error("no inline datum at that output — is the pointer right, and unspent?");
+    const datum=cbor(hex2buf(datumHex).buffer);
+
+    let bytes,ct="application/octet-stream",declared=null,declaredEnc=null,codec="none";
+    if(datum&&datum.tag===121&&Array.isArray(datum.value)&&datum.value[0]===2){
+      /* chain manifest: [2, contentType, codec, sizeDecoded, shaDecoded, shaEncoded, [pages], next] */
+      let pages=[],cur=datum.value;
+      ct=txt(cur[1]);codec=txt(cur[2]);
+      declared=buf2hex(cur[4]);declaredEnc=buf2hex(cur[5]);
+      while(true){
+        pages.push(...cur[6].map(h=>buf2hex(h)));
+        const nxt=cur[7];
+        if(nxt&&nxt.tag===122&&Array.isArray(nxt.value)){
+          const nh=buf2hex(nxt.value[0]),ni=nxt.value[1];
+          log(`→ CHAIN  following continuation manifest ${nh.slice(0,16)}…#${ni}`);
+          const nd=await src.datum(nh,ni);
+          if(!nd)throw new Error("continuation manifest missing");
+          cur=cbor(hex2buf(nd).buffer).value;
+        }else break;
+      }
+      log(`→ MANIFEST  ${ct} · ${codec} · ${pages.length} page${pages.length>1?"s":""} · sha256 ${declared.slice(0,16)}…`);
+      log(`→ FETCH  ${pages.length} page transaction${pages.length>1?"s":""}`);
+      const byHash=await src.pages(pages);
+      const parts=[];
+      for(const ph of pages){
+        const pg=byHash[ph];
+        if(!pg)throw new Error(`page ${ph.slice(0,12)}… has no scroll metadata`);
+        const segs=(pg.p||pg.payload||[]).map(segBytes);
+        const payload=new Uint8Array(segs.reduce((a,s)=>a+s.length,0));
+        let o=0;for(const s of segs){payload.set(s,o);o+=s.length}
+        if(pg.sha){const want=pg.sha instanceof Uint8Array?buf2hex(pg.sha):String(pg.sha).replace(/^0x/,"").toLowerCase();
+          const got=await sha256(payload);
+          if(got!==want)throw new Error(`page ${pg.i} corrupt: hash mismatch`)}
+        parts.push(payload);
+      }
+      let enc=new Uint8Array(parts.reduce((a,s)=>a+s.length,0));
+      {let o=0;for(const s of parts){enc.set(s,o);o+=s.length}}
+      log(`→ REBUILD  ${enc.length.toLocaleString()} encoded bytes`);
+      const gotEnc=await sha256(enc);
+      if(gotEnc!==declaredEnc)throw new Error(`encoded stream hash mismatch\n  expected ${declaredEnc}\n  computed ${gotEnc}`);
+      log(`✓ encoded stream verified`,"ok");
+      bytes=codec==="gzip"?await gunzip(enc):enc;
+    }else if(datum instanceof Uint8Array){
+      /* standard scroll: the datum IS the file */
+      bytes=datum;
+      if(bytes[0]===0x1f&&bytes[1]===0x8b){codec="gzip";bytes=await gunzip(bytes)}
+      ct=sniff(bytes);
+      log(`→ SINGLE-COIN SCROLL  ${bytes.length.toLocaleString()} bytes · looks like ${ct}`);
+    }else if(datum&&datum.tag===121&&datum.value&&datum.value[0]instanceof Uint8Array&&datum.value[0].length>4){
+      bytes=datum.value[0];ct=sniff(bytes);
+      log(`→ SINGLE-COIN SCROLL (wrapped)  ${bytes.length.toLocaleString()} bytes`);
+    }else throw new Error("datum is not a scroll manifest or scroll bytes");
+
+    const got=await sha256(bytes);
+    log(`→ SHA-256  ${got}`);
+    const pinned=$("exp").value.trim().toLowerCase();
+    let verdictTxt,okAll=true;
+    if(declared){
+      if(got!==declared){okAll=false;verdictTxt=`✗ HASH MISMATCH — the manifest promises ${declared.slice(0,20)}…, the bytes are ${got.slice(0,20)}…`}
+    }
+    if(okAll&&pinned&&got!==pinned){okAll=false;verdictTxt=`✗ HASH MISMATCH against your pinned fingerprint`}
+    if(!okAll){
+      $("verdict").className="bad";$("verdict").textContent=verdictTxt;
+      log("✗ verification FAILED — nothing will be rendered","bad");return;
+    }
+    $("verdict").className="ok";
+    $("verdict").textContent=`✓ VERIFIED ${declared?"against the on-chain manifest":(pinned?"against your pinned fingerprint":"(single-coin scroll — pin a fingerprint above for a hard guarantee)")} · sha256 ${got.slice(0,20)}…`;
+    log(`✓ verified — rendering`,"ok");
+    show(bytes,ct);
+  }catch(e){
+    log(`✗ ${e.message}`,"bad");
+    $("verdict").className="bad";$("verdict").textContent="✗ "+e.message;
+  }finally{$("go").disabled=false}
+}
+
+function sniff(b){
+  if(b[0]===0x89&&b[1]===0x50)return"image/png";
+  if(b[0]===0xff&&b[1]===0xd8)return"image/jpeg";
+  if(b[0]===0x47&&b[1]===0x49)return"image/gif";
+  if(b[0]===0x25&&b[1]===0x50)return"application/pdf";
+  const head=txt(b.slice(0,256)).toLowerCase();
+  if(head.includes("<!doctype html")||head.includes("<html"))return"text/html";
+  try{new TextDecoder("utf-8",{fatal:true}).decode(b.slice(0,4096));return"text/plain"}catch(_){return"application/octet-stream"}
+}
+
+function show(bytes,ct){
+  const out=$("out");out.style.display="block";out.innerHTML="";
+  const blob=new Blob([bytes],{type:ct}),url=URL.createObjectURL(blob);
+  const dl=document.createElement("a");dl.className="dl";dl.href=url;dl.download="scroll";dl.textContent="⬇ download the verified original bytes";
+  out.appendChild(dl);
+  const base=ct.split(";")[0].trim();
+  if(base==="text/html"){
+    const f=document.createElement("iframe");f.setAttribute("sandbox","");f.src=url;out.appendChild(f);
+  }else if(base.startsWith("image/")){const i=new Image();i.src=url;out.appendChild(i)}
+  else if(base.startsWith("video/")){const v=document.createElement("video");v.controls=true;v.src=url;out.appendChild(v)}
+  else if(base.startsWith("audio/")){const a=document.createElement("audio");a.controls=true;a.src=url;out.appendChild(a)}
+  else if(base.startsWith("text/")||base==="application/json"){const p=document.createElement("pre");p.textContent=txt(bytes);out.appendChild(p)}
+  else{const p=document.createElement("p");p.className="small";p.textContent="Binary content — use the download link above.";out.appendChild(p)}
+}
+
+$("go").addEventListener("click",readScroll);
+$("ptr").addEventListener("keydown",e=>{if(e.key==="Enter")readScroll()});
+</script>
+</body>
+</html>
