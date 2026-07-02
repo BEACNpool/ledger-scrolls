@@ -8,6 +8,7 @@ each guide is backed by scrolls live on mainnet today.
 | Read this | To learn |
 |---|---|
 | [YOUR_FIRST_SCROLL.md](YOUR_FIRST_SCROLL.md) | The 10-minute path from "I have a file" to "it's on-chain, verified, forever" |
+| [FAQ.md](FAQ.md) | Every question, answered straight — costs, trust, IPFS/Arweave, objections |
 | [Create a Scroll (web guide)](https://beacnpool.github.io/ledger-scrolls/create.html) | The friendly browser version: costs, an interactive estimator, the full workflow |
 | [Cost Calculator](https://beacnpool.github.io/ledger-scrolls/calculator.html) | Drop a file in your browser → one price to make it permanent, exact hashes, metadata builder |
 | [VIEWERS.md](VIEWERS.md) | The ways to read scrolls — browser, CLI, Python |

@@ -166,7 +166,8 @@ tools/lschain/mint.sh build/ payment.skey payment.addr   # mints pages + manifes
    images, fonts, scripts — is a future broken promise. Inline everything.
 
 Media-specific best practices (text, images, HTML, PDF, audio, video, data):
-**[docs/CREATING_SCROLLS.md](docs/CREATING_SCROLLS.md)**.
+**[docs/CREATING_SCROLLS.md](docs/CREATING_SCROLLS.md)**. Every skeptic's
+question, answered straight: **[docs/FAQ.md](docs/FAQ.md)**.
 
 ---
 

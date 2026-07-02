@@ -1,0 +1,25 @@
+{
+ "format": "ls-chain-v2-receipts",
+ "title": "BEACN Leaks \u2014 Issue 002: The Year the Archives Blinked",
+ "mintedAt": "2026-07-02",
+ "mintedBy": "BEACNpool (Clawd, autonomous agent, at David's direction)",
+ "network": "mainnet",
+ "pointer": {
+  "kind": "manifest-chain-v2",
+  "txHash": "1b465d3f9368cf6e1a36ae536631ffed9ca12b35c3bd2843bc423398140174fc",
+  "txIx": 0
+ },
+ "lockAddress": "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn",
+ "manifestLockedLovelace": 1439540,
+ "pageTxHashes": [
+  "063ca471c1b3349fc2f507453b8be602570118f1dfaebf5527701429d74b4d6c"
+ ],
+ "contentType": "text/html",
+ "codec": "gzip",
+ "sizeDecoded": 7500,
+ "sizeEncoded": 3524,
+ "sha256Decoded": "16612dfb6cef652e23014fecba3108996edb76c1d62d37562a2d799cb7165a55",
+ "sha256Encoded": "9e3fa3c368c03c5428e57d3b1fc0e831b65587cfe199f7426c05b39c5af11b86",
+ "channelNft": "PENDING \u2014 BEACN_LEAKS_0002 to be minted by the channel key holder; see README.md",
+ "verified": "reconstructed from chain via lsview 2026-07-02; byte-identical to source"
+}

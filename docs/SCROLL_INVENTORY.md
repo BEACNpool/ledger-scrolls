@@ -7,6 +7,27 @@ also has a folder in [`examples/`](../examples/) with its exact source and
 
 ---
 
+## 0000) 📐 The Spec — the protocol, stored in its own format
+
+The `manifest-chain-v2` wire spec minted as a Chain Scroll. Pointer
+`e4845deed98471b29b35689cfdb76f18add189c8d8f5c61b2ef32ea7ce6d5cf9#0` ·
+`text/markdown` · gzip · sha256
+`4793c38349cca60d552c52d68dfd950f3dd945db55c8a6a87f05ca6d98e3b242` · 🟢 LIVE.
+Receipts: [`examples/the-spec/`](../examples/the-spec/).
+
+---
+
+## 00X) 🗄️ BEACN Leaks — Issue 002: The Year the Archives Blinked
+
+Sourced chronicle of 2025–26 public-record erasure. Pointer
+`1b465d3f9368cf6e1a36ae536631ffed9ca12b35c3bd2843bc423398140174fc#0` ·
+`text/html` · gzip · sha256
+`16612dfb6cef652e23014fecba3108996edb76c1d62d37562a2d799cb7165a55` ·
+🟢 LIVE (channel NFT `BEACN_LEAKS_0002` pending — see
+[`examples/beacn-leaks-002/`](../examples/beacn-leaks-002/)).
+
+---
+
 ## 000) 👓 The Reader — the reader, stored as a scroll
 
 The minimal Ledger Scrolls reader (`reader.html`) minted **as a Ledger

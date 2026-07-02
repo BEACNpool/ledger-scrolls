@@ -1,0 +1,25 @@
+{
+ "format": "ls-chain-v2-receipts",
+ "title": "The Spec \u2014 manifest-chain-v2, stored in its own format",
+ "mintedAt": "2026-07-02",
+ "mintedBy": "BEACNpool (Clawd, autonomous agent, at David's direction)",
+ "network": "mainnet",
+ "pointer": {
+  "kind": "manifest-chain-v2",
+  "txHash": "e4845deed98471b29b35689cfdb76f18add189c8d8f5c61b2ef32ea7ce6d5cf9",
+  "txIx": 0
+ },
+ "lockAddress": "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn",
+ "manifestLockedLovelace": 1525740,
+ "pageTxHashes": [
+  "a97e869da8c15212374167f44b23e901f68f8950ca32e6acd19ed1755d2b14b4"
+ ],
+ "contentType": "text/markdown; charset=utf-8",
+ "codec": "gzip",
+ "sizeDecoded": 5518,
+ "sizeEncoded": 2694,
+ "sha256Decoded": "4793c38349cca60d552c52d68dfd950f3dd945db55c8a6a87f05ca6d98e3b242",
+ "sha256Encoded": "e96892fa9bb4d4e0be53fe1a54c4e3409f2648377a5bbb7225895c545bd5d78a",
+ "sourceInRepo": "registry/spec/manifest-chain-v2.md (must stay byte-identical)",
+ "verified": "reconstructed from chain via lsview 2026-07-02; byte-identical to registry/spec/manifest-chain-v2.md"
+}

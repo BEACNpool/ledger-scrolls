@@ -13,6 +13,28 @@ preserve?).
 
 ---
 
+## 🗄️ BEACN Leaks — Issue 002: The Year the Archives Blinked
+
+*The witness scroll.*
+
+Eighteen months of public-record erasure — 8,000+ government pages, ~3,000
+datasets, withdrawn intelligence reports, and newspapers blocking the
+Wayback Machine — chronicled with sources and stored where removal is not
+an operation that exists. *"The archives blinked. The ledger didn't."*
+
+→ [`examples/beacn-leaks-002/`](../examples/beacn-leaks-002/)
+
+## 📐 The Spec
+
+*The protocol, stored in its own format.*
+
+The Chain Scroll wire specification minted as a Chain Scroll. With the
+reader and the spec both on-chain, the system is fully self-hosting: a
+stranger with a Cardano node can extract the law, implement it, extract the
+glasses, and check one against the other.
+
+→ [`examples/the-spec/`](../examples/the-spec/)
+
 ## 👓 The Reader
 
 *The reader, stored as a scroll — the library holds its own glasses.*
