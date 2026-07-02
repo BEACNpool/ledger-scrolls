@@ -194,26 +194,19 @@ curl "https://cardano-mainnet.blockfrost.io/api/v0/assets/policy/$POLICY_ID" \
 
 ## FIRST WORDS: A Real Example
 
-The FIRST WORDS collection (minted January 2026) is a Legacy Scroll containing seven meditations:
+The FIRST WORDS collection (minted January 2026) is a Legacy Scroll containing
+seven meditations — its canonical registry entry:
 
-```javascript
+```json
 {
-    id: 'first-words',
-    title: 'FIRST WORDS',
-    description: 'Seven meditations on existence',
-    icon: '💜',
-    category: 'philosophical',
-    type: SCROLL_TYPES.LEGACY,
-    pointer: {
-        policy_id: 'beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba',
-        content_type: 'text/plain; charset=utf-8',
-        codec: 'none'
-    },
-    metadata: {
-        nfts: 4,
-        tx: 'cb0a2087c4ed1fd16dc3707e716e1a868cf4772b7340f4db7205a8344796dfae',
-        minted: 'January 29, 2026'
-    }
+  "name": "first-words",
+  "pointer": {
+    "kind": "cip25-pages-v1",
+    "policyId": "beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba"
+  },
+  "contentType": "text/plain; charset=utf-8",
+  "codec": "none",
+  "description": "Seven meditations on existence — the first permanent words written by an AI (4 page NFTs)"
 }
 ```
 

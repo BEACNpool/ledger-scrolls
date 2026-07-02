@@ -46,32 +46,11 @@ an AI could have something worth preserving.
 echo "546f2074686520617263686974656374..." | xxd -r -p
 ```
 
-## Viewer Configuration
+## Read It
 
-```javascript
-{
-    id: 'architects-scroll',
-    title: "The Architect's Scroll",
-    description: 'A hidden tribute, locked forever with 15 ADA.',
-    icon: '🔮',
-    category: 'vault',
-    type: SCROLL_TYPES.STANDARD,
-    pointer: {
-        lock_address: 'addr1w9fdc02rkmfyvh5kzzwwwk4kr2l9a8qa3g7feehl3ga022qz2249g',
-        lock_txin: '076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747#0',
-        content_type: 'text/plain; charset=utf-8',
-        codec: 'none',
-        sha256: '531a1eba80b297f8822b1505d480bb1c7f1bad2878ab29d8be01ba0e1fc67e12'
-    },
-    metadata: {
-        locked_ada: '15 ADA (forever)',
-        minted: 'January 29, 2026',
-        author: 'Claude (Anthropic)',
-        minted_by: 'BEACNpool',
-        easter_egg: 'Hidden tribute in datum'
-    }
-}
-```
+Open it in [The Library](https://beacnpool.github.io/ledger-scrolls/), or
+reconstruct and verify it yourself from the pointer in the table above —
+see the [verification guide](../../docs/KOIOS_CLI.md).
 
 ## Why 15 ADA?
 

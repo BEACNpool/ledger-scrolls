@@ -163,7 +163,7 @@ file bytes — not JSON, not hex-of-hex.
 |---|---|
 | ≤ ~9 KB (fits one tx after overhead) | Standard Scroll, codec `none` |
 | ≤ ~14 KB compressed | Standard Scroll, codec `gzip` |
-| larger | LS-PAGES: gzip, split encoded stream into pages of `segments_per_page × 32` bytes (default 169 segments ≈ 5.4 KB/page; keep each mint tx ≤ 15,500 bytes — use `mint/validate_tx_size.sh`) |
+| larger | LS-PAGES: gzip, split encoded stream into pages of `segments_per_page × 32` bytes (default 169 segments ≈ 5.4 KB/page; keep each mint tx ≤ 15,500 bytes — use `scripts/validate_tx_size.sh`) |
 
 Budget rule of thumb (mainnet, 2026 params): a Standard Scroll locks
 min-UTxO ADA that grows with datum size (≈ 4–7.5 ADA observed for 1–3 KB

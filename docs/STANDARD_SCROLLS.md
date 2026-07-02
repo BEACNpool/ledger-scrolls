@@ -210,30 +210,20 @@ The ADA is locked forever — think of it as paying for eternal storage.
 
 ---
 
-## Viewer Configuration
+## Register Your Scroll
 
-Add your scroll to `js/scrolls.js`:
+Make it findable with a **registry entry** (canonical pointer kinds — see
+[registry/spec/format.md](../registry/spec/format.md)); PR it into this
+repo's registry or run your own forkable registry head:
 
-```javascript
+```json
 {
-    id: 'my-scroll',
-    title: 'My Eternal Message',
-    description: 'A message locked on Cardano forever',
-    icon: '📜',
-    category: 'documents',
-    type: SCROLL_TYPES.STANDARD,
-    pointer: {
-        lock_address: 'addr1w...',
-        lock_txin: 'txhash#0',
-        content_type: 'text/plain; charset=utf-8',
-        codec: 'none',  // or 'gzip' if compressed
-        sha256: 'your-hash-here'
-    },
-    metadata: {
-        size: '~123 bytes',
-        minted: 'January 2026',
-        author: 'Your Name'
-    }
+  "name": "my-scroll",
+  "pointer": { "kind": "utxo-inline-datum-bytes-v1", "txHash": "…", "txIx": 0 },
+  "contentType": "text/plain; charset=utf-8",
+  "codec": "none",
+  "sha256": "…",
+  "description": "A message locked on Cardano forever"
 }
 ```
 
@@ -254,28 +244,20 @@ Add your scroll to `js/scrolls.js`:
 
 ## Example: The Architect's Scroll
 
-Here's the actual configuration for The Architect's Scroll, minted January 2026:
+The actual registry entry for The Architect's Scroll, minted January 2026:
 
-```javascript
+```json
 {
-    id: 'architects-scroll',
-    title: "The Architect's Scroll",
-    description: 'A hidden tribute, locked forever',
-    icon: '🔮',
-    category: 'vault',
-    type: SCROLL_TYPES.STANDARD,
-    pointer: {
-        lock_address: 'addr1w9fdc02rkmfyvh5kzzwwwk4kr2l9a8qa3g7feehl3ga022qz2249g',
-        lock_txin: '076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747#0',
-        content_type: 'text/plain; charset=utf-8',
-        codec: 'none',
-        sha256: '531a1eba80b297f8822b1505d480bb1c7f1bad2878ab29d8be01ba0e1fc67e12'
-    },
-    metadata: {
-        size: '~500 bytes',
-        minted: 'January 29, 2026',
-        locked_ada: '15 ADA'
-    }
+  "name": "architects-scroll",
+  "pointer": {
+    "kind": "utxo-inline-datum-bytes-v1",
+    "txHash": "076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747",
+    "txIx": 0
+  },
+  "contentType": "text/plain; charset=utf-8",
+  "codec": "none",
+  "sha256": "531a1eba80b297f8822b1505d480bb1c7f1bad2878ab29d8be01ba0e1fc67e12",
+  "description": "A hidden tribute, locked forever (15 ADA)"
 }
 ```
 

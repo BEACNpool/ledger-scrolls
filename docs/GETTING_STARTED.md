@@ -163,44 +163,29 @@ cardano-cli query utxo --address <lock_address> --mainnet
 
 ---
 
-## Adding to the Viewer
+## Register Your Scroll
 
-Once minted, add your scroll to `js/scrolls.js`:
+Once minted and verified, make it findable: write a **registry entry** with
+your pointer and hash (the canonical form — see
+[registry/spec/format.md](../registry/spec/format.md)):
 
-```javascript
-// Standard Scroll
+```json
 {
-    id: 'my-scroll',
-    title: 'My Scroll Title',
-    description: 'What this scroll contains',
-    icon: '📜',
-    category: 'documents',
-    type: SCROLL_TYPES.STANDARD,
-    pointer: {
-        lock_address: 'addr1w...',
-        lock_txin: 'txhash#0',
-        content_type: 'text/plain',
-        codec: 'none',  // or 'gzip'
-        sha256: '...'
-    }
-}
-
-// Legacy Scroll
-{
-    id: 'my-legacy-scroll',
-    title: 'My Large Document',
-    description: 'A multi-page document',
-    icon: '📖',
-    category: 'documents',
-    type: SCROLL_TYPES.LEGACY,
-    pointer: {
-        policy_id: 'abc123...',
-        content_type: 'application/pdf',
-        codec: 'gzip'
-    },
-    metadata: { pages: 50 }
+  "name": "my-scroll",
+  "pointer": { "kind": "utxo-inline-datum-bytes-v1", "txHash": "…", "txIx": 0 },
+  "contentType": "text/plain; charset=utf-8",
+  "codec": "none",
+  "sha256": "…",
+  "description": "…"
 }
 ```
+
+For LS-CHAIN v2 scrolls the pointer is
+`{ "kind": "manifest-chain-v2", "txHash": "<manifest tx>", "txIx": 0 }`.
+
+The registry is **forkable by design**: open a PR adding your entry (and your
+`receipts.json`) to this repo, or run your own registry head — see
+[registry/](../registry/).
 
 ---
 

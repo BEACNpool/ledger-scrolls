@@ -25,7 +25,7 @@ each guide is backed by scrolls live on mainnet today.
 | Read this | To learn |
 |---|---|
 | [KOIOS_CLI.md](KOIOS_CLI.md) | Zero-dependency verification with plain Python |
-| [EXAMPLES.md](EXAMPLES.md) | Detailed breakdowns of real mainnet scrolls |
+| [EXAMPLES.md](EXAMPLES.md) | The gallery — every live scroll's story, with links to source + receipts |
 | [SCROLL_INVENTORY.md](SCROLL_INVENTORY.md) | Every live scroll: pointers, hashes, policy IDs, proof walkthrough |
 
 ## 🔬 The protocol (for implementers)

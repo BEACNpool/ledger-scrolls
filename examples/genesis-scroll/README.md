@@ -25,29 +25,11 @@ The Genesis Scroll contains the founding manifesto establishing the core princip
 
 This was the first scroll minted using the Ledger Scrolls system, declaring the project's purpose: to create a library that cannot burn.
 
-## Viewer Configuration
+## Read It
 
-```javascript
-{
-    id: 'genesis-scroll',
-    title: 'The Genesis Scroll',
-    description: 'The founding manifesto of Ledger Scrolls — establishing the principle that true knowledge must be unstoppable.',
-    icon: '📜',
-    category: 'historical',
-    type: SCROLL_TYPES.STANDARD,
-    pointer: {
-        lock_address: 'addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn',
-        lock_txin: 'a19f64fba94abdc37b50012d5d602c75a1ca73c82520ae030fc6b4e82274ceb2#0',
-        content_type: 'text/plain; charset=utf-8',
-        codec: 'none'
-    },
-    metadata: {
-        minted: 'January 29, 2026',
-        minted_by: 'BEACNpool',
-        significance: 'First Ledger Scroll ever minted'
-    }
-}
-```
+Open it in [The Library](https://beacnpool.github.io/ledger-scrolls/), or
+reconstruct and verify it yourself from the pointer in the table above —
+see the [verification guide](../../docs/KOIOS_CLI.md).
 
 ## Significance
 

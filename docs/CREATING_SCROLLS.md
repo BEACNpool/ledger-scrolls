@@ -285,7 +285,7 @@ from one that needs forensics (all learned from scrolls live today):
 1. **Segments: 32 bytes (64 hex chars) max** — the ledger caps metadata
    strings at 64 bytes. **Pages: ~169 segments (~5.4 KB)** keeps each mint
    tx safely under the 16 KB limit. Validate each tx with
-   [`mint/validate_tx_size.sh`](../mint/validate_tx_size.sh) before signing.
+   [`scripts/validate_tx_size.sh`](../scripts/validate_tx_size.sh) before signing.
 2. **Page metadata MUST have:** integer `i` (page index, 1-based), `payload`
    (array of hex segment strings), `role: "page"`, and ideally `n` (total)
    and `sha` (page hash). Use **plain hex strings** for segments. `0x`

@@ -2,7 +2,8 @@
 
 **"A library that cannot burn."**
 
-Ledger Scrolls puts files **inside the Cardano blockchain itself** — not a
+Ledger Scrolls is the free, open-source **reader and writer for immutable,
+forever media**. It puts files **inside the Cardano blockchain itself** — not a
 link to a file, not a hash of a file kept somewhere else. The actual bytes,
 inside transactions, on a ledger replicated by thousands of independent
 computers around the world.
@@ -189,7 +190,6 @@ ledger-scrolls/
 ├── viewers/koios-cli/      # Zero-dependency Python readers
 ├── koios-viewer/           # Full Python viewer/reconstructor (lsview)
 ├── templates/              # Datum + policy templates (incl. the always-fail script)
-├── mint/                   # Mint artifacts & tx-size validator
 ├── examples/               # Every live scroll: exact source + receipts.json
 └── media/                  # Assets used by the standalone viewers
 ```

@@ -13,6 +13,26 @@ Before contributing, please understand our core values:
 
 ## 🤝 How Can I Contribute?
 
+### Mint a Scroll (the contribution that matters most)
+
+The most valuable thing you can add to this project is not code — it is a
+scroll worth preserving. Every new scroll makes the library more real and
+shows the next person what this technology is for.
+
+### Creating & Sharing Scrolls
+
+Anyone can mint their own scroll — you don't need to be a developer. Start with
+the **[Your First Scroll quickstart](docs/YOUR_FIRST_SCROLL.md)**: pick a format
+(Standard for tiny files, **LS-CHAIN v2** for anything larger), optimize the
+file, mint, verify from chain, and register it.
+
+Minted something cool? Share it!
+
+- Add a registry entry (pointer + required `sha256`) and open a PR
+- Document it in `examples/` with your `receipts.json`
+- Share on social media with **#LedgerScrolls** and tag
+  [@BEACNpool](https://x.com/BEACNpool)
+
 ### Reporting Bugs
 
 Found something broken? [Open an issue](https://github.com/BEACNpool/ledger-scrolls/issues/new) with:
@@ -50,20 +70,6 @@ Good documentation is crucial! You can help by:
 - Translating to other languages
 - Writing tutorials
 
-### Creating & Sharing Scrolls
-
-Anyone can mint their own scroll — you don't need to be a developer. Start with
-the **[Your First Scroll quickstart](docs/YOUR_FIRST_SCROLL.md)**: pick a format
-(Standard for tiny files, **LS-CHAIN v2** for anything larger), optimize the
-file, mint, verify from chain, and register it.
-
-Minted something cool? Share it!
-
-- Add a registry entry (pointer + required `sha256`) and open a PR
-- Document it in `examples/` with your `receipts.json`
-- Share on social media with **#LedgerScrolls** and tag
-  [@BEACNpool](https://x.com/BEACNpool)
-
 ## 📝 Code Style
 
 ### JavaScript
@@ -91,10 +97,13 @@ Minted something cool? Share it!
 
 Before submitting:
 
-1. **Test the viewer** — Open `index.html` in multiple browsers
-2. **Test scripts** — Run on a testnet first if possible
-3. **Check responsiveness** — Test on mobile viewports
-4. **Verify links** — All documentation links should work
+1. **Run the conformance suite** — `python3 conformance/run_conformance.py`
+   and `node conformance/run_conformance.mjs` must both pass. This is the
+   protocol's contract; changes to reading/writing behavior need a fixture.
+2. **Test the viewer** — Open `index.html` in multiple browsers
+3. **Test scripts** — Run on a testnet first if possible
+4. **Check responsiveness** — Test on mobile viewports
+5. **Verify links** — All documentation links should work
 
 ## 📋 Pull Request Process
 
