@@ -170,7 +170,7 @@ function policyMeta(inf,policy){
 }
 function parseManifest(dHex){
   const[m]=cbor(hex2b(dHex));
-  if(!m||m.tag!==121||!Array.isArray(m.value)||m.value[0]!==2)throw new Error('invalid LS-CHAIN manifest');
+  if(!m||m.tag!==121||!Array.isArray(m.value)||m.value[0]!==2)throw new Error('invalid scroll manifest');
   const f=m.value,n=f[7];
   return{ct:td.decode(f[1]),codec:td.decode(f[2]),size:f[3],shaDec:b2hex(f[4]),shaEnc:b2hex(f[5]),
     pages:f[6].map(b2hex),next:n&&n.tag===122?`${b2hex(n.value[0])}#${n.value[1]}`:null};

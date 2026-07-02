@@ -9,7 +9,7 @@ each guide is backed by scrolls live on mainnet today.
 |---|---|
 | [YOUR_FIRST_SCROLL.md](YOUR_FIRST_SCROLL.md) | The 10-minute path from "I have a file" to "it's on-chain, verified, forever" |
 | [Create a Scroll (web guide)](https://beacnpool.github.io/ledger-scrolls/create.html) | The friendly browser version: costs, an interactive estimator, the full workflow |
-| [Cost Calculator](https://beacnpool.github.io/ledger-scrolls/calculator.html) | Drop a file in your browser → pages/NFTs, exact hashes, ADA + USD cost, metadata builder |
+| [Cost Calculator](https://beacnpool.github.io/ledger-scrolls/calculator.html) | Drop a file in your browser → one price to make it permanent, exact hashes, metadata builder |
 | [VIEWERS.md](VIEWERS.md) | The ways to read scrolls — browser, CLI, Python |
 
 ## ✍️ Creating scrolls
@@ -34,9 +34,9 @@ each guide is backed by scrolls live on mainnet today.
 | Read this | To learn |
 |---|---|
 | [PROTOCOL_V1_PROPOSAL.md](PROTOCOL_V1_PROPOSAL.md) | The normative spec: pointer kinds, encoding, verification, failure semantics |
-| [STANDARD_SCROLLS.md](STANDARD_SCROLLS.md) | LS-LOCK: one file in one locked UTxO datum (small files, strongest guarantee) |
-| [../registry/spec/manifest-chain-v2.md](../registry/spec/manifest-chain-v2.md) | LS-CHAIN v2: any size, bare metadata pages + manifest (the current write format) |
-| [LEGACY_SCROLLS.md](LEGACY_SCROLLS.md) | LS-PAGES: CIP-25 page NFTs (how the historical scrolls are read) |
+| [STANDARD_SCROLLS.md](STANDARD_SCROLLS.md) | Standard Scrolls: one file in one locked UTxO datum (small files, strongest guarantee) |
+| [../registry/spec/manifest-chain-v2.md](../registry/spec/manifest-chain-v2.md) | Chain Scrolls: any size, bare metadata pages + manifest (the standard write format) |
+| [LEGACY_SCROLLS.md](LEGACY_SCROLLS.md) | Original NFT pages (how the historical scrolls are read) |
 | [../registry/spec/publisher-channel-v1.md](../registry/spec/publisher-channel-v1.md) | Publisher channels: a minting policy as an unforgeable byline |
 | [../registry/](../registry/) | Registry spec, pointer schemas, tooling |
 | [../conformance/](../conformance/) | Test vectors — run `python3 conformance/run_conformance.py` or `node conformance/run_conformance.mjs` |

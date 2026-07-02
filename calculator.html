@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Scroll Cost Calculator — Ledger Scrolls</title>
-<meta name="description" content="Drop any file and see exactly what it costs to store it on Cardano forever: page transactions, NFTs, bytes per page, ADA fees, and live USD — computed locally, nothing uploaded.">
+<meta name="description" content="Drop any file and see exactly what it costs to store it on Cardano forever — one number, one time, no subscriptions. Computed locally; nothing is uploaded.">
 <meta name="theme-color" content="#f6f5f1">
 <meta property="og:title" content="Scroll Cost Calculator — Ledger Scrolls">
-<meta property="og:description" content="How many transactions or NFTs will your file take? Drop it in and find out — with live ADA/USD pricing and a metadata builder.">
+<meta property="og:description" content="What does forever cost? Drop a file in and find out — live ADA/USD pricing and a metadata builder included.">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <style>
@@ -102,40 +102,18 @@ textarea{width:100%;resize:vertical;font-family:var(--sans)}
 .kv dd{font-family:var(--mono);font-size:13px;word-break:break-all;color:var(--ink-2)}
 .reco{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:12px 16px;border-radius:var(--radius-sm);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);font-size:14.5px;color:var(--accent-ink)}
 
-/* lanes */
-.lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
-@media(max-width:760px){.lanes{grid-template-columns:1fr}}
-.lane{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--sh-sm);padding:18px;position:relative;border-top:4px solid var(--lane-c,var(--line-2))}
-.lane.chain{--lane-c:var(--accent)}
-.lane.std{--lane-c:var(--amber)}
-.lane.legacy{--lane-c:var(--violet)}
-.lane h3{font:700 16px/1.3 var(--sans);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.lane .tag{font:600 10.5px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;border-radius:var(--pill);padding:4px 8px}
-.lane.chain .tag{color:var(--accent-ink);background:var(--accent-soft)}
-.lane.std .tag{color:var(--amber-ink);background:var(--amber-soft)}
-.lane.legacy .tag{color:var(--violet-ink);background:var(--violet-soft)}
-.lane .sub{font-size:12.5px;color:var(--muted);margin:4px 0 12px}
-.stat{margin:10px 0}
-.stat .n{font:700 clamp(22px,3vw,28px)/1.05 var(--mono);color:var(--ink);letter-spacing:-.02em}
-.stat .l{font:600 12px/1.3 var(--sans);color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
-.rows{border-top:1px solid var(--line);margin-top:12px;padding-top:10px;font-size:13.5px}
+/* result */
+.statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:640px){.statrow{grid-template-columns:1fr}}
+.rows{border-top:1px solid var(--line);margin-top:12px;padding-top:10px;font-size:14px}
 .rows div{display:flex;justify-content:space-between;gap:10px;padding:3px 0;color:var(--ink-2)}
 .rows .mono{color:var(--ink)}
 .rows .tot{border-top:1px solid var(--line);margin-top:6px;padding-top:8px;font-weight:700;color:var(--ink)}
-.lane .na{color:var(--muted);font-size:14px;padding:16px 0}
+.stat{margin:6px 0}
+.stat .n{font:700 clamp(24px,3.4vw,32px)/1.05 var(--mono);color:var(--ink);letter-spacing:-.02em}
+.stat .l{font:600 12px/1.3 var(--sans);color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:4px}
+.method{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line-2);font-size:14px;color:var(--ink-2)}
 .usd{color:var(--ok);font-weight:600}
-
-/* comparison bars */
-.bars{margin-top:8px}
-.barrow{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;margin:10px 0}
-@media(max-width:560px){.barrow{grid-template-columns:110px 1fr}}
-.barrow .bl{font:600 13px/1.3 var(--sans);color:var(--ink-2);text-align:right}
-.bartrack{position:relative;height:26px}
-.bar{height:22px;border-radius:0 4px 4px 0;min-width:2px;position:relative;top:2px}
-.bar.chain{background:var(--accent)}
-.bar.std{background:var(--amber)}
-.bar.legacy{background:var(--violet)}
-.barval{position:absolute;left:calc(var(--w) + 8px);top:3px;font:600 13px/1.6 var(--mono);color:var(--ink);white-space:nowrap}
 
 /* packing */
 .pack{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
@@ -151,9 +129,6 @@ textarea{width:100%;resize:vertical;font-family:var(--sans)}
 .field label{font:600 13px/1 var(--sans);color:var(--ink-2)}
 .field .note{font-size:12px;color:var(--faint)}
 .field.wide{grid-column:1/-1}
-.chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{border:1px solid var(--line-2);background:var(--surface);border-radius:var(--pill);padding:7px 14px;font:600 13.5px/1 var(--sans);color:var(--ink-2);cursor:pointer}
-.chip[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
 .out{margin-top:16px}
 .out h4{font:700 14px/1.3 var(--sans);display:flex;align-items:center;gap:10px;margin-bottom:6px}
 pre{background:#181b22;color:#e6e3da;border-radius:var(--radius-sm);padding:14px 16px;overflow-x:auto;font:12.5px/1.55 var(--mono);border:1px solid #2a2f3a}
@@ -186,8 +161,8 @@ details.assump td,details.assump th{border-top:1px solid var(--line);padding:6px
   <span class="eyebrow">Cost Calculator</span>
   <h1>What will your scroll cost?</h1>
   <p class="lead">Drop in any file — a photo, a PDF, a song, a video, a manifesto — and see
-  exactly how it packs onto Cardano: how many transactions or NFTs, how many bytes per page,
-  and what it costs in ADA and dollars to make it permanent.</p>
+  what it costs to make it permanent on Cardano: one number, paid once. No subscriptions,
+  no renewals, no NFTs to babysit.</p>
   <p class="privacy">🔒 Everything runs in your browser. Your file is never uploaded anywhere.</p>
 </section>
 
@@ -224,85 +199,59 @@ details.assump td,details.assump th{border-top:1px solid var(--line);padding:6px
 </section>
 
 <section class="section" id="results" hidden>
-  <h2>The three ways bytes live on-chain</h2>
-  <p>Same file, three formats. <strong>LS-CHAIN v2 is the recommended format for anything that
-  doesn't fit in a single datum</strong> — its pages are plain transactions, so the answer to
-  "how many NFTs?" is <strong>zero</strong>. The legacy CIP-25 lane shows what the same file
-  would take in page NFTs, for comparison with older scrolls.</p>
-
-  <div class="lanes">
-    <div class="lane chain">
-      <h3>LS-CHAIN v2 <span class="tag">Recommended</span></h3>
-      <div class="sub">Bare metadata page txs + one locked manifest · no NFTs, nothing locked per page</div>
-      <div id="chainbody"></div>
-    </div>
-    <div class="lane std">
-      <h3>Standard Scroll <span class="tag">Small files</span></h3>
-      <div class="sub">Whole file in one locked UTxO datum · the strongest guarantee (≤ ~14 KB)</div>
-      <div id="stdbody"></div>
-    </div>
-    <div class="lane legacy">
-      <h3>Legacy CIP-25 Pages <span class="tag">Read-only era</span></h3>
-      <div class="sub">One NFT per page + manifest NFT · how the Bible &amp; Constitutions were minted</div>
-      <div id="legacybody"></div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:18px">
-    <h2 style="font-size:19px">Total cost, side by side</h2>
-    <div class="bars" id="bars" role="img" aria-label="Total ADA cost per format"></div>
+  <div class="card">
+    <h2>Your scroll, priced</h2>
+    <div id="resultbody"></div>
   </div>
 
   <div class="share" id="share"></div>
 
   <div class="card" style="margin-top:18px">
-    <h2 style="font-size:19px">How the bytes pack</h2>
+    <h2 style="font-size:19px">How a Ledger Scroll works</h2>
+    <p style="font-size:15px">Your file is written <strong>byte-for-byte into Cardano
+    transactions</strong> and sealed by a manifest that no one — including you — can ever
+    spend, edit, or delete. Readers rebuild the file from the chain and verify its SHA-256
+    fingerprint before a single byte is shown.</p>
     <div class="pack">
-      <div class="packcard"><b>LS-CHAIN v2 page tx</b>
-        <span class="m">190 segments × 64 bytes<br>= 12,160 bytes / page</span><br>
-        Payload rides in tx metadata (label 22025) as raw CBOR byte strings. Pages are listed
-        in the manifest by explicit tx hash — no scanning, no guessing.</div>
-      <div class="packcard"><b>Standard Scroll datum</b>
-        <span class="m">one inline datum ≤ ~14,336 bytes<br>(64-byte CBOR chunks)</span><br>
-        The whole file lives in the UTxO set at an always-fail address — one query, any node,
-        forever.</div>
-      <div class="packcard"><b>Legacy CIP-25 page NFT</b>
-        <span class="m">169 segments × 32 bytes<br>= 5,408 bytes / NFT</span><br>
-        Payload is hex text in token metadata — 2 metadata bytes per payload byte, plus a
-        min-UTxO locked with every page NFT. That's why it costs ~6× more.</div>
+      <div class="packcard"><b>Pages</b>
+        <span class="m">12,160 bytes per transaction</span><br>
+        The file is split into pages riding in ordinary transactions. No tokens, nothing
+        locked per page — just bytes in the ledger's permanent history.</div>
+      <div class="packcard"><b>The manifest</b>
+        <span class="m">one small locked coin, forever</span><br>
+        Lists every page and seals the file's fingerprint. It sits at an address that can
+        never be spent, so every Cardano node carries it, always. Tiny files skip the pages
+        entirely — the whole file fits inside this one locked coin.</div>
+      <div class="packcard"><b>Zero tokens</b>
+        <span class="m">nothing to custody, move, or lose</span><br>
+        The very first scrolls (2026) carried pages in NFTs — still perfectly readable,
+        but ~6× the cost. Today's format needs no tokens at all.</div>
     </div>
   </div>
 
   <details class="assump">
     <summary>Assumptions &amp; formulas (tap to open)</summary>
     <p style="margin-top:10px">Estimates use Cardano mainnet parameters (2026):
-    fee = 0.155381 ADA + 0.000044 ADA/byte of transaction; min-UTxO ≈ 0.00431 ADA per byte of
-    output+datum. Real costs vary a few percent with wallet UTxO layout — the mint tools print
-    the exact price before you sign. Gzip here is your browser's; the mint pipeline uses
+    fee = 0.155381 ADA + 0.000044 ADA per byte of transaction; a locked coin carries
+    ≈ 0.00431 ADA per byte of datum. Pages hold 12,160 bytes each
+    (<code>ceil(encoded ÷ 12,160)</code> transactions, plus one manifest per 400 pages).
+    Files that fit in a single datum (≤ ~14 KB) are priced as one locked coin when that's
+    cheaper. Real costs vary a few percent with wallet layout — the mint tools print the
+    exact price before you sign. Gzip here is your browser's; the mint pipeline uses
     deterministic gzip (<code>gzip -n -9</code>), which may differ by a few bytes.</p>
-    <table>
-      <tr><th>Lane</th><th>Pages</th><th>Fees</th><th>Locked forever</th></tr>
-      <tr><td>LS-CHAIN v2</td><td class="mono">ceil(encoded / 12160)</td><td>per-page tx fee + manifest fee</td><td>manifest min-UTxO only (~1.4–2 ADA per 400-page link)</td></tr>
-      <tr><td>Standard</td><td class="mono">1 tx</td><td>one tx fee</td><td>min-UTxO of the datum output (grows with file size)</td></tr>
-      <tr><td>Legacy CIP-25</td><td class="mono">ceil(encoded / 5408) NFTs + 1 manifest NFT</td><td>per-NFT mint tx fee (hex doubles the bytes)</td><td>~1.44 ADA in every page NFT + manifest NFT</td></tr>
-    </table>
     <p>Reference points from live scrolls: the on-chain tutorial (18 KB HTML → 7.4 KB gzip)
-    cost ~0.9 ADA in fees + ~1.6 ADA locked; the BEACN commercial video was 175 page NFTs on
-    the legacy path. Spec: <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/manifest-chain-v2.md">manifest-chain-v2</a>.</p>
+    cost ~0.9 ADA in fees + ~1.6 ADA locked. Full protocol details:
+    <a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/registry/spec">the specs</a>.</p>
   </details>
 </section>
+
 
 <section class="section" id="buildersec" hidden>
   <div class="card">
     <h2>Metadata builder</h2>
     <p>Answer a few questions and get copy-paste artifacts: your <strong>registry entry</strong>
     (with the file's real SHA-256 already computed), the <strong>mint commands</strong>, and —
-    if you're publishing under a channel — the <strong>CIP-25 issue metadata</strong>.</p>
-
-    <div class="chips" style="margin-top:12px" id="lanechips">
-      <button class="chip" data-lane="chain" aria-pressed="true">LS-CHAIN v2</button>
-      <button class="chip" data-lane="std" aria-pressed="false">Standard Scroll</button>
-    </div>
+    if you're publishing under a channel — the <strong>channel issue metadata</strong>.</p>
 
     <div class="builder-grid">
       <div class="field"><label for="b_name">Scroll id (kebab-case)</label>
@@ -323,7 +272,7 @@ details.assump td,details.assump th{border-top:1px solid var(--line);padding:6px
 
     <div class="out"><h4>Registry entry <button class="copy" data-for="o_reg">copy</button></h4><pre id="o_reg"></pre></div>
     <div class="out"><h4>Mint &amp; verify commands <button class="copy" data-for="o_cmd">copy</button></h4><pre id="o_cmd"></pre></div>
-    <div class="out" id="chanout" hidden><h4>Channel issue metadata (CIP-25) <button class="copy" data-for="o_chan">copy</button></h4><pre id="o_chan"></pre></div>
+    <div class="out" id="chanout" hidden><h4>Channel issue metadata <button class="copy" data-for="o_chan">copy</button></h4><pre id="o_chan"></pre></div>
 
     <div class="warnbox">⚠️ <strong>Before you mint:</strong> permanent means permanent — no
     edit, no delete, no takedown. Strip EXIF/document metadata, keep the file self-contained,
@@ -346,7 +295,7 @@ details.assump td,details.assump th{border-top:1px solid var(--line);padding:6px
 const P = {
   feeB: 0.155381, feeA: 0.000044,          // ADA; fee = feeB + feeA*txBytes
   utxoPerByte: 0.00431,                     // ADA per byte of output+datum
-  chainPage: 12160, chainSegs: 190,         // LS-CHAIN v2 page payload
+  chainPage: 12160, chainSegs: 190,         // page payload (spec: manifest-chain-v2)
   chainTxOverhead: 970,                     // skeleton + metadata framing
   chainPagesPerManifest: 400,
   manifestBase: 140, manifestPerPage: 34,   // manifest datum bytes
@@ -529,72 +478,42 @@ drop.addEventListener("drop", e => e.dataTransfer.files[0] && analyzeFile(e.data
 
 /* ══════════ render results ══════════ */
 function statHTML(big, label){ return `<div class="stat"><div class="n">${big}</div><div class="l">${label}</div></div>`; }
-function rows(o){
-  return `<div class="rows">
-    <div><span>Network fees</span><span class="mono">${fmtA(o.fees)} ADA</span></div>
-    <div><span>Locked forever</span><span class="mono">${fmtA(o.locked)} ADA</span></div>
-    <div class="tot"><span>Total</span><span class="mono">${fmtA(o.total)} ADA <span class="usd">${usd(o.total)}</span></span></div>
-  </div>`;
-}
 
 function render(){
   if(!S.enc){ return; }
   $("results").hidden = false;
   $("buildersec").hidden = false;
 
-  const ch = calcChain(S.enc), st = calcStandard(S.enc), lg = calcLegacy(S.enc);
+  const ch = calcChain(S.enc);
+  const st = calcStandard(S.enc);
+  const useStd = !!(st && st.total <= ch.total);
+  const best = useStd ? st : ch;
+  S.method = useStd ? "std" : "chain";
+  const txs = useStd ? 1 : ch.pages + ch.links;
 
-  $("chainbody").innerHTML =
-    statHTML(fmtN(ch.pages), ch.pages === 1 ? "page transaction" : "page transactions") +
-    statHTML("0", "NFTs — pages are plain txs") + rows(ch);
+  $("reco").innerHTML = `<span>&#128220;</span><span><strong>&approx; ${fmtA(best.total)} ADA
+    ${S.price ? `(${usd(best.total)})` : ""}, once.</strong> After that, your file lives on
+    Cardano for as long as the chain exists — no renewals, no pinning bill, no landlord.</span>`;
 
-  $("stdbody").innerHTML = st
-    ? statHTML("1", "transaction · 1 locked UTxO") + statHTML(fmtB(S.enc), "fits in one inline datum") + rows(st)
-    : `<div class="na">Too large for a single datum — a Standard Scroll holds ≤ ~14 KB
-       (yours is <b>${fmtB(S.enc)}</b> encoded). Tip: mint a 14 KB “poster” Standard Scroll
-       pointing at the full LS-CHAIN scroll.</div>`;
+  $("resultbody").innerHTML = `
+    <div class="statrow">
+      ${statHTML(fmtA(best.total) + " ADA", S.price ? "one-time total · " + usd(best.total) : "one-time total")}
+      ${statHTML(fmtN(txs), txs === 1 ? "transaction" : "transactions")}
+      ${statHTML("0", "NFTs · 0 subscriptions")}
+    </div>
+    <div class="rows">
+      <div><span>Network fees (paid once)</span><span class="mono">${fmtA(best.fees)} ADA</span></div>
+      <div><span>Sealed with the manifest (locked forever)</span><span class="mono">${fmtA(best.locked)} ADA</span></div>
+      <div class="tot"><span>Total</span><span class="mono">${fmtA(best.total)} ADA <span class="usd">${usd(best.total)}</span></span></div>
+    </div>
+    <div class="method">${useStd
+      ? "Written as a <b>single locked coin</b> — your whole file fits inside the manifest itself, readable from any Cardano node with one query, forever."
+      : `Written as <b>${fmtN(ch.pages)} page transaction${ch.pages > 1 ? "s" : ""}</b> plus ${ch.links > 1 ? fmtN(ch.links) + " locked manifests" : "one locked manifest"} that lists every page and seals the file's SHA-256 fingerprint.`}</div>`;
 
-  $("legacybody").innerHTML =
-    statHTML(`≈ ${fmtN(lg.nfts)}`, `NFTs (${fmtN(lg.pages)} pages + 1 manifest)`) +
-    statHTML(fmtB(P.legacyPage), "per page NFT") + rows(lg) +
-    `<div style="font-size:12.5px;color:var(--muted);margin-top:8px">Shown for comparison —
-     don't mint new scrolls this way.</div>`;
-
-  const reco = st
-    ? `<span>📜</span><span><strong>Recommended: Standard Scroll.</strong> Your file fits in a single
-       locked datum — one transaction, one query to read it back, the strongest permanence class.
-       Total ≈ <b>${fmtA(st.total)} ADA</b> ${usd(st.total)}.</span>`
-    : `<span>⛓️</span><span><strong>Recommended: LS-CHAIN v2.</strong> ${fmtN(ch.pages)} page
-       transaction${ch.pages>1?"s":""} + ${ch.links>1?fmtN(ch.links)+" chained manifests":"one locked manifest"},
-       zero NFTs to custody. Total ≈ <b>${fmtA(ch.total)} ADA</b> ${usd(ch.total)}.</span>`;
-  $("reco").innerHTML = reco;
-  if(!laneTouched){
-    builderLane = st ? "std" : "chain";
-    document.querySelectorAll("#lanechips .chip").forEach(x =>
-      x.setAttribute("aria-pressed", String(x.dataset.lane === builderLane)));
-  }
-
-  // comparison bars — direct-labeled, entity-colored
-  const items = [
-    { cls:"chain",  name:"LS-CHAIN v2",  v: ch.total },
-    ...(st ? [{ cls:"std", name:"Standard", v: st.total }] : []),
-    { cls:"legacy", name:"Legacy CIP-25", v: lg.total },
-  ];
-  const max = Math.max(...items.map(i=>i.v));
-  $("bars").innerHTML = items.map(i=>{
-    const w = Math.max(1.5, 100*i.v/max);
-    return `<div class="barrow"><div class="bl">${i.name}</div>
-      <div class="bartrack" style="--w:${w*0.72}%">
-        <div class="bar ${i.cls}" style="width:${w*0.72}%"></div>
-        <div class="barval">${fmtA(i.v)} ADA ${S.price?`<span style="color:var(--muted)">${usd(i.v)}</span>`:""}</div>
-      </div></div>`;
-  }).join("");
-
-  const best = st || ch;
   const what = S.name ? `“${esc(S.name)}” (${fmtB(S.raw)})` : `${fmtB(S.raw)} of ${esc(S.media.label)}`;
-  const lane = st ? "a single Standard Scroll" : `${fmtN(ch.pages)} LS-CHAIN page tx${ch.pages>1?"s":""} — 0 NFTs`;
-  $("share").innerHTML = `<span>📣 ${what} → <b>${lane}</b> → ≈ <b>${fmtA(best.total)} ADA</b>
-    ${S.price?`(~$${(best.total*S.price).toFixed(2)})`:""} to store on Cardano <b>forever</b>. #LedgerScrolls</span>
+  $("share").innerHTML = `<span>&#128226; ${what} &rarr; &approx; <b>${fmtA(best.total)} ADA</b>
+    ${S.price ? `(~$${(best.total * S.price).toFixed(2)})` : ""}, once, to live on Cardano
+    <b>forever</b>. 0 NFTs. 0 subscriptions. #LedgerScrolls</span>
     <button class="copy" id="sharecopy">copy</button>`;
   $("sharecopy")?.addEventListener("click", e => copyText(e.target, $("share").textContent.replace("copy","").trim()));
 
@@ -602,11 +521,6 @@ function render(){
 }
 
 /* ══════════ metadata builder ══════════ */
-let builderLane = "chain", laneTouched = false;
-document.querySelectorAll("#lanechips .chip").forEach(c => c.addEventListener("click", () => {
-  document.querySelectorAll("#lanechips .chip").forEach(x => x.setAttribute("aria-pressed","false"));
-  c.setAttribute("aria-pressed","true"); builderLane = c.dataset.lane; laneTouched = true; buildOutputs();
-}));
 ["b_name","b_title","b_desc","b_author","b_ct","b_channel","b_issue"].forEach(id =>
   $(id).addEventListener("input", buildOutputs));
 
@@ -630,7 +544,7 @@ function buildOutputs(){
   const ct = $("b_ct").value.trim() || S.ct || "application/octet-stream";
   const chan = $("b_channel").value.trim();
   const issue = $("b_issue").value;
-  const isStd = builderLane === "std";
+  const isStd = S.method === "std";
   const pointer = isStd
     ? { kind:"utxo-inline-datum-bytes-v1", txHash:"<LOCK_TX_HASH>", txIx:0 }
     : { kind:"manifest-chain-v2", txHash:"<MANIFEST_TX_HASH>", txIx:0 };

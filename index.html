@@ -554,7 +554,7 @@ function parseManifest(datumHex){
 async function resolveChain(e){
   step(1,'on'); log('h',`── chain scroll · manifest ${e.txin}`);
   let man = parseManifest(await utxoDatumHex(e.txin));
-  if(!man) throw new Error('datum is not an LS-CHAIN v2 manifest');
+  if(!man) throw new Error('datum is not a scroll manifest');
   const pages=[...man.pages]; let next=man.next;
   while(next){ const m2=parseManifest(await utxoDatumHex(next)); if(!m2)throw new Error('bad continuation manifest'); pages.push(...m2.pages); next=m2.next; }
   log('ok',`  manifest: ${man.contentType} · ${man.codec} · ${man.size} bytes · ${pages.length} page tx(s)`);
@@ -576,7 +576,7 @@ async function resolveChain(e){
   if(man.codec==='gzip'){ bytes=await gunzip(bytes); log('ok',`  gunzip → ${bytes.length} bytes`); }
   step(3,'done');
   const e2 = {...e, contentType: e.contentType||man.contentType, sha256: man.shaDec};
-  return finish(bytes, e2, 'Chain Scroll (LS-CHAIN v2)', { pointer:`manifest-chain-v2 · ${e.txin}` }, pages.length);
+  return finish(bytes, e2, 'Chain Scroll', { pointer:`manifest-chain-v2 · ${e.txin}` }, pages.length);
 }
 
 async function resolvePages(e){
@@ -642,7 +642,7 @@ const BOOTSTRAP = [
   desc:'Independent, immutable, unforgeable media for the suppressed. The founding issue of the first publisher channel.',
   txin:'f3ee01c1e742c27c205867de4cfa8836e4ab541b9da0d5652aa4d269c73255c7#0',contentType:'text/html',sha256:'025a81aeffe8aed98868b89b8f04a1f137f698362cfebafd2f8b5a56312d49b2'},
  {name:'eternal-scroll',icon:'📜',title:'The Eternal Scroll',form:'chain',
-  desc:'How to read & write immutable media on Cardano — a tutorial that is itself stored on-chain. The first LS-CHAIN v2 scroll.',
+  desc:'How to read & write immutable media on Cardano — a tutorial that is itself stored on-chain. The first Chain Scroll.',
   txin:'ef8dce1c6359c7ae6cc44f04d60b32e6bc26987ebf30a78259c65b2063ba3b18#0',contentType:'text/html',sha256:'65824f624bc58140a33123d3e2383ea408135e5db666fcb8a0759b2846447dd2'},
  {name:'hosky-png',icon:'🐕',title:'Hosky PNG',form:'lock',
   desc:'The legendary meme, preserved forever in a single locked datum. The minimal on-chain artifact: one UTxO, one file.',
@@ -821,7 +821,7 @@ async function openPointer(raw){
   }
   const m=p.match(/^([0-9a-f]{64})#(\d+)$/);
   if(m){
-    // a txin: LS-CHAIN manifest, a registry head, or raw locked bytes — detect from the datum
+    // a txin: scroll manifest, a registry head, or raw locked bytes — detect from the datum
     show('reader'); resetReader(); $('doctitle').textContent='resolving pointer…';
     try{
       log('h','── detecting pointer type');

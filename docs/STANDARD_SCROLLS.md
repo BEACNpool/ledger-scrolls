@@ -1,4 +1,4 @@
-# Standard Scrolls (LS-LOCK v1)
+# Standard Scrolls (the Standard Scroll format)
 
 > Choosing what and how to publish? Start with the per-media-type guide:
 > [CREATING_SCROLLS.md](CREATING_SCROLLS.md).

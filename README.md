@@ -43,7 +43,7 @@ technology it teaches. Full list with hashes and receipts:
 |---|---|
 | [The Library](https://beacnpool.github.io/ledger-scrolls/) | Main viewer — browse and verify any scroll, channel, or registry |
 | [Create a Scroll](https://beacnpool.github.io/ledger-scrolls/create.html) | The friendly how-to: costs, estimator, full workflow |
-| [Cost Calculator](https://beacnpool.github.io/ledger-scrolls/calculator.html) | Drop any file → transactions/NFTs needed, bytes per page, ADA + live USD, metadata builder |
+| [Cost Calculator](https://beacnpool.github.io/ledger-scrolls/calculator.html) | Drop any file → what forever costs: one number, ADA + live USD, with a metadata builder |
 | [BEACN Leaks player](https://beacnpool.github.io/ledger-scrolls/leaks.html) | Publisher-channel player — point at a policy ID; this site hosts nothing |
 | [Ledger Docket](https://beacnpool.github.io/ledger-scrolls/legal.html) | Legal-records terminal — pull a recorded instrument by document number |
 | [Constitution](https://beacnpool.github.io/ledger-scrolls/constitution.html) · [Bible](https://beacnpool.github.io/ledger-scrolls/bible.html) · [First Video](https://beacnpool.github.io/ledger-scrolls/first-video.html) · [Latest](https://beacnpool.github.io/ledger-scrolls/latest.html) · [Testnet PoC](https://beacnpool.github.io/ledger-scrolls/preview.html) | Standalone viewers |
@@ -76,14 +76,14 @@ queries, and arithmetic.
 
 | Format | How bytes live | Use it for |
 |---|---|---|
-| **Standard Scroll** (LS-LOCK) | Whole file in one locked UTxO datum | Small treasures ≤ ~14 KB: messages, poems, icons. Strongest guarantee Cardano can give. |
-| **Chain Scroll** (LS-CHAIN v2) | File split across plain tx metadata, anchored by a manifest | Everything else: books, images, PDFs, audio, video. ~0.06 ADA/KB, nothing locked per page. |
-| **Legacy Pages** (LS-PAGES) | CIP-25 NFTs carrying pages | Reading the historical scrolls (Bible, Constitutions). New scrolls use LS-CHAIN. |
+| **Standard Scroll** | Whole file in one locked UTxO datum | Small treasures ≤ ~14 KB: messages, poems, icons. Strongest guarantee Cardano can give. |
+| **Chain Scroll** | File split across plain tx metadata, anchored by a manifest | Everything else: books, images, PDFs, audio, video. ~0.06 ADA/KB, nothing locked per page. |
+| **Original NFT pages** | one NFT per page (2026, the first scrolls) | Reading the historical scrolls (Bible, Constitutions). New scrolls use the Chain Scroll format. |
 
 Specs: [Protocol v1](docs/PROTOCOL_V1_PROPOSAL.md) ·
-[LS-CHAIN v2](registry/spec/manifest-chain-v2.md) ·
+[Chain Scroll wire format](registry/spec/manifest-chain-v2.md) ·
 [Standard Scrolls](docs/STANDARD_SCROLLS.md) ·
-[Legacy Pages](docs/LEGACY_SCROLLS.md)
+[Original NFT pages](docs/LEGACY_SCROLLS.md)
 
 ---
 
@@ -134,7 +134,7 @@ quickstart. The short version:
 # Small file (≤ ~14 KB gzipped) → Standard Scroll:
 ./scripts/mint-standard-scroll.sh yourfile payment.skey payment.addr
 
-# Anything larger → LS-CHAIN v2:
+# Anything larger → Chain Scroll:
 python3 tools/lschain/prepare.py yourfile --out build/   # hashes, splits, prices it
 tools/lschain/mint.sh build/ payment.skey payment.addr   # mints pages + manifest
 ```
@@ -186,7 +186,7 @@ ledger-scrolls/
 │   └── history/            # Past audits & design reviews
 ├── registry/               # Registry + protocol specs, JSON schemas, examples, tooling
 ├── conformance/            # Protocol test vectors + Python/Node runners
-├── tools/lschain/          # LS-CHAIN v2 writer (prepare / mint)
+├── tools/lschain/          # Chain Scroll writer (prepare / mint)
 ├── scripts/                # Standard Scroll minting & verification
 ├── viewers/koios-cli/      # Zero-dependency Python readers
 ├── koios-viewer/           # Full Python viewer/reconstructor (lsview)

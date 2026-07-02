@@ -233,7 +233,7 @@ code:not(pre code){background:var(--surface-2);border:1px solid var(--line);bord
     <div class="tbl-wrap pref">
      <table>
       <tr><th>Your file is&hellip;</th><th>Use</th><th>Why</th></tr>
-      <tr><td><strong>bigger than ~14 KB</strong> (any photo, audio, video, long doc)</td><td><strong>LS-CHAIN v2</strong></td><td>cheapest (~0.06 ADA/KB), nothing locked per piece &mdash; the everyday choice</td></tr>
+      <tr><td><strong>bigger than ~14 KB</strong> (any photo, audio, video, long doc)</td><td><strong>Chain Scroll</strong></td><td>cheapest (~0.06 ADA/KB), nothing locked per piece &mdash; the everyday choice</td></tr>
       <tr><td>tiny (a short message, an icon)</td><td>Standard Scroll</td><td>the whole file fits in one transaction</td></tr>
      </table>
     </div>
@@ -296,7 +296,7 @@ code:not(pre code){background:var(--surface-2);border:1px solid var(--line);bord
      <span class="pc">1</span><span class="pc">2</span><span class="pc">3</span><span class="pc">4</span><span class="pc">5</span><span class="pc">&hellip;</span>
     </div>
     <p>A reader starts at the manifest, follows its list to grab every piece, glues them back together in order, and <strong>checks the fingerprints</strong>. If they all match, the file is provably the original &mdash; and only then is it shown. That's the whole magic: nothing is trusted that isn't verified against the manifest.</p>
-    <div class="note amber"><p><b>Heads-up on the word "NFT."</b> In the older, pricier format each piece was a minted NFT under one policy and the manifest was the first NFT &mdash; the exact picture you may have in mind. The modern format (LS-CHAIN v2) keeps the same idea but the pieces are plain transactions, not NFTs, so it's ~6&times; cheaper and locks no ADA. Same story, smaller bill.</p></div>
+    <div class="note amber"><p><b>Heads-up on the word "NFT."</b> In the older, pricier format each piece was a minted NFT under one policy and the manifest was the first NFT &mdash; the exact picture you may have in mind. The modern format (the Chain Scroll) keeps the same idea but the pieces are plain transactions, not NFTs, so it's ~6&times; cheaper and locks no ADA. Same story, smaller bill.</p></div>
    </div>
   </div>
  </section>
@@ -315,7 +315,7 @@ tools/lschain/mint.sh build/ payment.skey payment.addr
 <span class="c"># 3. rebuild from chain — the hash MUST match step 1 before you announce</span>
 cd koios-viewer &amp;&amp; python3 -m lsview reconstruct-chain --txin &lt;MANIFEST_TX&gt;#0 --out check.mp4
 sha256sum check.mp4</pre>
-  <p>Step-by-step with every command: the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">Your First Scroll quickstart</a>. Per-media tips (codecs, sizes): the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/CREATING_SCROLLS.md">Creating Scrolls guide</a>. The exact on-chain format: the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/manifest-chain-v2.md">LS-CHAIN v2 spec</a>.</p>
+  <p>Step-by-step with every command: the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">Your First Scroll quickstart</a>. Per-media tips (codecs, sizes): the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/CREATING_SCROLLS.md">Creating Scrolls guide</a>. The exact on-chain format: the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/manifest-chain-v2.md">chain-format spec</a>.</p>
  </section>
 
  <!-- RULES -->

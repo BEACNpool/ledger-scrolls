@@ -23,7 +23,7 @@ shows the next person what this technology is for.
 
 Anyone can mint their own scroll — you don't need to be a developer. Start with
 the **[Your First Scroll quickstart](docs/YOUR_FIRST_SCROLL.md)**: pick a format
-(Standard for tiny files, **LS-CHAIN v2** for anything larger), optimize the
+(a Standard Scroll for tiny files, a **Chain Scroll** for anything larger), optimize the
 file, mint, verify from chain, and register it.
 
 Minted something cool? Share it!

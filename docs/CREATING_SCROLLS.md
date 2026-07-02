@@ -4,7 +4,7 @@ A practical how-to for publishing immutable media on Cardano. This guide is
 organized by *what you're publishing*; the format mechanics live in
 [STANDARD_SCROLLS.md](STANDARD_SCROLLS.md) (single locked UTxO),
 [registry/spec/manifest-chain-v2.md](../registry/spec/manifest-chain-v2.md)
-(LS-CHAIN v2 — the preferred format for anything larger), and
+(Chain Scroll — the preferred format for anything larger), and
 [LEGACY_SCROLLS.md](LEGACY_SCROLLS.md) (CIP-25 pages, for reading legacy
 scrolls), with the normative rules in
 [PROTOCOL_V1_PROPOSAL.md](PROTOCOL_V1_PROPOSAL.md).
@@ -48,11 +48,11 @@ today — the worked examples are real, with receipts.
 ---
 
 > **June 2026 update:** large media now has a third, preferred lane —
-> **LS-CHAIN v2** (`registry/spec/manifest-chain-v2.md`): bare metadata page
+> **Chain Scroll** (`registry/spec/manifest-chain-v2.md`): bare metadata page
 > transactions anchored by a Class-A manifest datum. ~6× cheaper than the
 > CIP-25 pages described below, nothing locked per page, and no NFTs to
 > custody. Write with `tools/lschain/prepare.py` + `mint.sh`; read with
-> `lsview reconstruct-chain` or the web viewer. The first LS-CHAIN scroll —
+> `lsview reconstruct-chain` or the web viewer. The first Chain Scroll scroll —
 > a tutorial that is itself on-chain — lives in
 > `examples/eternal-scroll-tutorial/`. The CIP-25 pages guidance below
 > remains for reading legacy scrolls.
@@ -63,17 +63,17 @@ today — the worked examples are real, with receipts.
                  ┌─ ≤ ~9 KB raw, or ≤ ~14 KB after gzip ─▶  STANDARD SCROLL
  your file ──────┤                                           (one locked UTxO,
                  │                                            simplest, strongest)
-                 └─ anything larger ───────────────────────▶  LS-CHAIN v2
+                 └─ anything larger ───────────────────────▶  Chain Scroll
                                                               (bare metadata pages
                                                                + manifest datum)
 ```
 
-For anything that doesn't fit in a single datum, **LS-CHAIN v2 is the format
-to use.** CIP-25 pages (LS-PAGES) still exists and every legacy scroll is read
+For anything that doesn't fit in a single datum, **Chain Scroll is the format
+to use.** CIP-25 pages (the original NFT-page format) still exists and every legacy scroll is read
 the same way, but it is no longer the recommended way to *write* — it costs ~6×
 more and locks ~1.4 ADA in an NFT per page that you then have to custody.
 
-| | Standard (LS-LOCK) | **LS-CHAIN v2** (preferred for large) | Legacy CIP-25 pages (read-only) |
+| | Standard Scroll | **Chain Scroll** (preferred for large) | Legacy CIP-25 pages (read-only) |
 |---|---|---|---|
 | Capacity | ~14 KB compressed | Any size (1 tx per ~12 KB page; manifests chain) | Any size (1 tx per page) |
 | Cost | One tx; ~4–7.5 ADA locked forever (1–3 KB datum) | **~0.06 ADA/KB, nothing locked per page** | ~0.35 ADA/KB **+ ~1.4 ADA locked per page NFT** |
@@ -84,7 +84,7 @@ more and locks ~1.4 ADA in an NFT per page that you then have to custody.
 
 When in doubt: **gzip your file and check the size.** If it fits in one inline
 datum, use a Standard Scroll — the strongest guarantee this protocol offers
-(immutability Class A, no custody). Otherwise reach for LS-CHAIN v2. Full spec:
+(immutability Class A, no custody). Otherwise reach for a Chain Scroll. Full spec:
 [registry/spec/manifest-chain-v2.md](../registry/spec/manifest-chain-v2.md).
 
 ---
@@ -154,7 +154,7 @@ address `addr1w8qvv…0svn`, sha256 `798e3296…642f`.*
 - **content_type:** `image/png`, `image/jpeg`, `image/svg+xml`, `image/gif`
 - **codec:** `none` for PNG/JPEG/GIF (already compressed); `gzip` for SVG
   (XML text, compresses ~4:1)
-- **Format:** Standard if the *optimized* file fits; LS-CHAIN v2 otherwise
+- **Format:** Standard if the *optimized* file fits; Chain Scroll otherwise
 
 **Best practices:**
 
@@ -167,9 +167,9 @@ address `addr1w8qvv…0svn`, sha256 `798e3296…642f`.*
   - SVG: minify (`svgo`), then gzip. Ensure it contains **no scripts and no
     external references** — sandboxed viewers will strip/block them anyway.
 - Pick dimensions for the purpose. An icon or pixel-art piece at 512×512 is
-  a Standard Scroll; a full-resolution photograph is an LS-CHAIN v2 scroll —
+  a Standard Scroll; a full-resolution photograph is an Chain Scroll scroll —
   consider whether a 14 KB "archival thumbnail" Standard Scroll plus a
-  full-size LS-CHAIN v2 scroll serves readers better than one huge artifact.
+  full-size Chain Scroll scroll serves readers better than one huge artifact.
 
 ## Documents — HTML
 
@@ -189,7 +189,7 @@ rules:
    `content_type: text/html`.
 
 - **codec:** always `gzip` (HTML compresses 3–4:1)
-- **Format:** almost always LS-CHAIN v2 (HTML documents are rarely under
+- **Format:** almost always Chain Scroll (HTML documents are rarely under
   14 KB). The manifest records both the decoded and encoded hashes
   (`sha256Decoded` + `sha256Encoded`), so a reader verifies the gzip stream
   *and* the original HTML — the Bible (a legacy CIP-25 scroll) carries the
@@ -200,7 +200,7 @@ rules:
 - **content_type:** `application/pdf`
 - **codec:** usually `none` (PDF streams are already deflated; verify with
   the size check — some old PDFs do gzip well)
-- **Format:** LS-CHAIN v2, almost always
+- **Format:** Chain Scroll, almost always
 
 **Best practices:** linearize and shrink first
 (`qpdf --linearize --object-streams=generate in.pdf out.pdf`, or Ghostscript
@@ -227,13 +227,13 @@ meaning is noise in 20 years.
 
 - **content_type:** `audio/ogg; codecs=opus` (best) or `audio/mpeg` (MP3)
 - **codec:** `none` (audio codecs already compress — gzip buys nothing)
-- **Format:** **LS-CHAIN v2** (audio is just bytes + a MIME type; the viewer
+- **Format:** **Chain Scroll** (audio is just bytes + a MIME type; the viewer
   hands it to a native `<audio>` element)
 
 **Best practices:** **Opus is the most byte-efficient choice by a wide margin**
 — 24–32 kbps mono is excellent for speech, 64–96 kbps for music. Use MP3 128k
 only when you specifically want maximum legacy-player compatibility. Cost scales
-linearly with duration: at LS-CHAIN's ~0.06 ADA/KB, ~10 minutes of Opus speech
+linearly with duration: at ~0.06 ADA/KB, ~10 minutes of Opus speech
 (~1.4 MB) is **~85 ADA with nothing locked** — versus ~500+ ADA on the old CIP-25
 page path. Trim silence, normalize loudness, and ask whether an excerpt serves
 the archival goal better than the whole thing.
@@ -242,13 +242,13 @@ the archival goal better than the whole thing.
 
 *Live example: BEACN Commercial — a 175-page MP4 (policy `38fbd56…bed2`,
 manifest `CM_MANIFEST`, sha256 `aebd63a…5814`). It was minted on the older
-CIP-25 page path; new video should use LS-CHAIN v2.*
+CIP-25 page path; new video should use a Chain Scroll.*
 
 The most expensive medium, so this is where format choice matters most.
 
 - **content_type:** `video/mp4` (H.264/AAC) or `video/webm` (VP9 or AV1 + Opus)
 - **codec:** `none` (video is already entropy-coded; gzip does nothing)
-- **Format:** **LS-CHAIN v2**
+- **Format:** **Chain Scroll**
 
 **A scroll with sound is one file.** Video and audio together is just a normal
 MP4 or WebM with both a video and an audio track and a single `content_type`
@@ -267,7 +267,7 @@ one `<video>` element — there is no separate "audio scroll" to manage.
 - **The real levers are bytes, not the container:** drop resolution (≤480p),
   trim duration hard, raise CRF. Each KB is ~0.06 ADA on-chain — permanence is
   not a video host.
-- **Budget first:** pages ≈ `ceil(bytes / 12160)`; at LS-CHAIN's ~0.06 ADA/KB
+- **Budget first:** pages ≈ `ceil(bytes / 12160)`; at ~0.06 ADA/KB
   with **nothing locked**, a 5 MB clip ≈ **~310 ADA** (≈431 pages). The same clip
   on the old CIP-25 path was ~1,300 ADA plus ~1.4 ADA locked in each of ~925 NFTs.
 - Mint a Standard Scroll "poster" (title card or text description + the video's
@@ -328,7 +328,7 @@ A scroll nobody can find is not preserved. Do all three:
    }
    ```
 
-   For LS-CHAIN v2: `{ "kind": "manifest-chain-v2", "txHash": "<manifest tx>", "txIx": 0 }`.
+   For Chain Scroll: `{ "kind": "manifest-chain-v2", "txHash": "<manifest tx>", "txIx": 0 }`.
    For legacy pages: `{ "kind": "cip25-pages-v1", "policyId": "…", "manifestAsset": "…_MANIFEST" }`.
    The `sha256` field is **required** — an entry without it can never show
    "verified" in any viewer.
@@ -345,14 +345,14 @@ A scroll nobody can find is not preserved. Do all three:
 | Text / Markdown | `text/plain; charset=utf-8` / `text/markdown` | none (gzip if >8 KB) | Standard | UTF-8, `\n` endings |
 | PNG / JPEG / GIF | `image/png` etc. | none | Standard if optimized ≤14 KB | optimize, **strip EXIF** |
 | SVG | `image/svg+xml` | gzip | Standard | minify, no scripts/external refs |
-| HTML doc | `text/html` | gzip | LS-CHAIN v2 | self-contained, **no JS**, charset meta |
-| PDF | `application/pdf` | none | LS-CHAIN v2 | linearize/shrink, strip metadata |
-| JSON / CSV | `application/json` / `text/csv` | gzip | Standard if small, else LS-CHAIN | canonicalize before hashing |
-| Audio | `audio/ogg; codecs=opus` / `audio/mpeg` | none | LS-CHAIN v2 | Opus 24–32 kbps speech |
-| Video (+audio) | `video/mp4` / `video/webm` | none | LS-CHAIN v2 | H.264 or AV1/VP9, ≤480p, budget bytes first |
+| HTML doc | `text/html` | gzip | Chain Scroll | self-contained, **no JS**, charset meta |
+| PDF | `application/pdf` | none | Chain Scroll | linearize/shrink, strip metadata |
+| JSON / CSV | `application/json` / `text/csv` | gzip | Standard if small, else Chain Scroll | canonicalize before hashing |
+| Audio | `audio/ogg; codecs=opus` / `audio/mpeg` | none | Chain Scroll | Opus 24–32 kbps speech |
+| Video (+audio) | `video/mp4` / `video/webm` | none | Chain Scroll | H.264 or AV1/VP9, ≤480p, budget bytes first |
 
 **Cost rules of thumb (mainnet):** Standard ≈ 0.2 ADA fee + 2–15 ADA locked
-forever (scales with datum size). **LS-CHAIN v2 ≈ 0.06 ADA/KB, nothing locked**
+forever (scales with datum size). **Chain Scroll ≈ 0.06 ADA/KB, nothing locked**
 (`ceil(encoded_bytes / 12160)` page txs + one manifest). Legacy CIP-25 pages ≈
 (0.2 ADA fee + ~1.4 ADA locked min-UTxO) × `ceil(encoded_bytes / 5408)` pages —
 avoid for new scrolls.

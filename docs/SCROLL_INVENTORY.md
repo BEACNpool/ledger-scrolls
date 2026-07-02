@@ -17,7 +17,7 @@ a minting policy used as a byline that only the publisher's key can ever write u
 | Field | Value |
 |-------|-------|
 | **ID** | `beacn-leaks-000` |
-| **Type** | `manifest-chain-v2` (LS-CHAIN v2) |
+| **Type** | `manifest-chain-v2` (Chain Scroll) |
 | **Manifest TxIn** | `f3ee01c1e742c27c205867de4cfa8836e4ab541b9da0d5652aa4d269c73255c7#0` |
 | **Channel Policy** | `5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415` |
 | **Channel Asset** | `BEACN_LEAKS_0000` |
@@ -32,11 +32,11 @@ sha256 `5917a884f449fd1c76fc0241791468a37b2b54883c0b8b98022a9f372f7d68b9` — se
 
 ---
 
-## 0) 📜 The Eternal Scroll — first LS-CHAIN v2 scroll
+## 0) 📜 The Eternal Scroll — first Chain Scroll scroll
 
 A self-contained HTML tutorial on reading and writing Ledger Scrolls — the
 technology's own explainer, preserved by the technology. First scroll in the
-**LS-CHAIN v2** format: bare metadata page transactions (no NFTs, ~6×
+**Chain Scroll** format: bare metadata page transactions (no NFTs, ~6×
 cheaper than CIP-25 pages) anchored by a Class-A manifest datum. See
 [`registry/spec/manifest-chain-v2.md`](../registry/spec/manifest-chain-v2.md) and
 [`examples/eternal-scroll-tutorial/`](../examples/eternal-scroll-tutorial/).
@@ -44,7 +44,7 @@ cheaper than CIP-25 pages) anchored by a Class-A manifest datum. See
 | Field | Value |
 |-------|-------|
 | **ID** | `eternal-scroll` |
-| **Type** | `manifest-chain-v2` (LS-CHAIN v2 — Chain Scroll) |
+| **Type** | `manifest-chain-v2` (Chain Scroll) |
 | **Manifest TxIn** | `ef8dce1c6359c7ae6cc44f04d60b32e6bc26987ebf30a78259c65b2063ba3b18#0` |
 | **Pages** | 2 (metadata label 22025) |
 | **Content-Type** | `text/html` |
@@ -62,7 +62,7 @@ A viewer can reconstruct the exact image bytes from chain data.
 | Field | Value |
 |-------|-------|
 | **ID** | `hosky-png` |
-| **Type** | `utxo_datum_bytes_v1` (LS-LOCK v1 — Standard Scroll) |
+| **Type** | `utxo_datum_bytes_v1` (Standard Scroll) |
 | **Lock Address** | `addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn` |
 | **Locked UTxO (txin)** | `728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0` |
 | **Content-Type** | `image/png` |
@@ -85,7 +85,7 @@ permanently on-chain as a Standard Scroll.
 | Field | Value |
 |-------|-------|
 | **ID** | `architects-scroll` |
-| **Type** | `utxo_datum_bytes_v1` (LS-LOCK v1 — Standard Scroll) |
+| **Type** | `utxo_datum_bytes_v1` (Standard Scroll) |
 | **Lock Address** | `addr1w9fdc02rkmfyvh5kzzwwwk4kr2l9a8qa3g7feehl3ga022qz2249g` |
 | **Locked UTxO (txin)** | `076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747#0` |
 | **Content-Type** | `text/plain; charset=utf-8` |
@@ -106,7 +106,7 @@ Legacy Scroll.
 | Field | Value |
 |-------|-------|
 | **ID** | `constitution-e608` |
-| **Type** | `cip25_pages_v1` (LS-PAGES v1 — Legacy Scroll / CIP-721) |
+| **Type** | `cip25_pages_v1` (original NFT pages) |
 | **Policy ID** | `ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750` |
 | **Manifest Asset** | `CONSTITUTION_E608_MANIFEST` |
 | **Pages** | 11 |
@@ -127,7 +127,7 @@ record.
 | Field | Value |
 |-------|-------|
 | **ID** | `constitution-e541` |
-| **Type** | `cip25_pages_v1` (LS-PAGES v1 — Legacy Scroll / CIP-721) |
+| **Type** | `cip25_pages_v1` (original NFT pages) |
 | **Policy ID** | `d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d` |
 | **Manifest Asset** | `CONSTITUTION_E541_MANIFEST` |
 | **Pages** | 7 |
@@ -145,7 +145,7 @@ record.
 | Field | Value |
 |-------|-------|
 | **ID** | `bible` |
-| **Type** | `cip25_pages_v1` (LS-PAGES v1 — Legacy Scroll) |
+| **Type** | `cip25_pages_v1` (original NFT pages) |
 | **Policy ID** | `2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0` |
 | **Manifest TX Hash** | `cfda418ddc84888ac39116ffba691a4f90b3232f4c2633cd56f102cfebda0ee4` |
 | **Manifest Slot** | `175750638` |
@@ -165,7 +165,7 @@ record.
 | Field | Value |
 |-------|-------|
 | **ID** | `bitcoin-whitepaper` |
-| **Type** | `cip25_pages_v1` (LS-PAGES v1 — Legacy Scroll) |
+| **Type** | `cip25_pages_v1` (original NFT pages) |
 | **Policy ID** | `8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1` |
 | **Manifest TX Hash** | `2575347068f77b21cfe8d9c23d9082a68bfe4ef7ba7a96608af90515acbe228f` |
 | **Manifest Slot** | `176360887` |

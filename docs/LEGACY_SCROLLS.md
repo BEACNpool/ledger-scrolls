@@ -1,4 +1,4 @@
-# Legacy Scrolls (LS-PAGES v1)
+# Legacy Scrolls (the original NFT-page format)
 
 > Choosing what and how to publish? Start with the per-media-type guide:
 > [CREATING_SCROLLS.md](CREATING_SCROLLS.md).

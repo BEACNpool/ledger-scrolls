@@ -1,6 +1,6 @@
 # Legacy Scroll Template
 
-This template provides guidance for minting a Legacy Scroll (LS-PAGES v1) for large documents.
+This template provides guidance for minting a Legacy Scroll (the original NFT-page format) for large documents.
 
 > **Note:** Legacy Scroll tooling is still in development. The process below describes the manual approach. Automated scripts are planned for a future release.
 

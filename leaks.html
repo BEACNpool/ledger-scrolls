@@ -170,7 +170,7 @@ async function koios(path, body) {
   throw lastErr;
 }
 
-// Minimal CBOR decoder (uint/nint/bytes/text/array/tag) for LS-CHAIN manifests
+// Minimal CBOR decoder (uint/nint/bytes/text/array/tag) for scroll manifests
 function decodeCbor(raw, pos=0) {
   const len=(ai,p)=>{ if(ai<24)return[ai,p]; const w={24:1,25:2,26:4,27:8}[ai]; let n=0; for(let i=0;i<w;i++)n=n*256+raw[p+i]; return [n,p+w]; };
   const mt=raw[pos]>>5, ai=raw[pos]&31;
@@ -233,7 +233,7 @@ async function resolveIssue(it) {
     const datumHex = rows?.[0]?.inline_datum?.bytes;
     if (!datumHex) throw new Error('manifest UTxO not found or has no datum');
     const [m] = decodeCbor(hex2bytes(datumHex));
-    if (m.tag !== 121) throw new Error('not an LS-CHAIN manifest');
+    if (m.tag !== 121) throw new Error('not a scroll manifest');
     const f = m.value;
     const manifest = { contentType: new TextDecoder().decode(f[1]), codec: new TextDecoder().decode(f[2]),
       size: f[3], shaDec: bytes2hex(f[4]), shaEnc: bytes2hex(f[5]), pages: f[6].map(bytes2hex) };

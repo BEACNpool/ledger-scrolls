@@ -6,7 +6,7 @@ can discover from a policy ID.
 
 The design has two layers:
 
-1. **Document storage:** LS-CHAIN v2 stores the exact document bytes in
+1. **Document storage:** a Chain Scroll stores the exact document bytes in
    metadata page transactions and anchors their ordered hashes in a locked
    manifest UTxO.
 2. **Docket record:** a native asset such as `LEGAL_0001` is minted under a
@@ -62,7 +62,7 @@ jq . "$WORK/plan.json"
 
 Do not proceed if the hashes or page count are unexpected.
 
-## 3. Publish the LS-CHAIN document
+## 3. Publish the Chain Scroll document
 
 Select a dedicated pure-ADA UTxO. Passing it explicitly avoids accidentally
 spending a registry head, NFT-bearing output, or another important UTxO.
@@ -144,7 +144,7 @@ ASSET_HEX=$(printf '%s' "$ASSET_NAME" | xxd -p -c 256)
 TITLE='Example Agreement'
 ```
 
-Create the CIP-25 metadata that connects the docket token to the LS-CHAIN
+Create the CIP-25 metadata that connects the docket token to the Chain Scroll
 manifest:
 
 ```bash
@@ -270,7 +270,7 @@ Archive together:
 - exact source document
 - `plan.json`
 - page metadata files
-- LS-CHAIN `receipts.json`
+- Chain Scroll `receipts.json`
 - docket policy script and policy ID
 - docket metadata JSON
 - signed transaction body

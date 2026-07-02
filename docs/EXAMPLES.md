@@ -31,7 +31,7 @@ follow the publisher — forever.
 *The technology's own tutorial, preserved by the technology.*
 
 A self-contained HTML guide to reading and writing Ledger Scrolls — minted
-as the first LS-CHAIN v2 scroll. The document teaching you how scrolls work
+as the first Chain Scroll. The document teaching you how scrolls work
 **is one**, and its viewer verified it before you read a word.
 
 → [`examples/eternal-scroll-tutorial/`](../examples/eternal-scroll-tutorial/)

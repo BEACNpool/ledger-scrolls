@@ -27,10 +27,10 @@ and checked against a hash. If it verifies, it is exactly the file you minted.
 
 ```
   ≤ ~14 KB after gzip   ─▶  STANDARD SCROLL   (one locked UTxO; simplest, strongest)
-  anything larger       ─▶  LS-CHAIN v2       (bare metadata pages + manifest)
+  anything larger       ─▶  Chain Scroll       (bare metadata pages + manifest)
 ```
 
-That's the whole decision. **LS-CHAIN v2 is the format for everything that
+That's the whole decision. **Chain Scroll is the format for everything that
 doesn't fit in a single datum** — documents, audio, video, datasets. It costs
 ~0.06 ADA/KB and locks nothing. (The older CIP-25 "pages" format still works and
 is how legacy scrolls are read, but it costs ~6× more and locks ADA in an NFT per
@@ -81,7 +81,7 @@ cd scripts
 ./mint-standard-scroll.sh /path/to/yourfile /path/to/payment.skey /path/to/payment.addr
 ```
 
-**LS-CHAIN v2 (everything larger):**
+**Chain Scroll (everything larger):**
 
 ```bash
 # Prepare: gzip-if-it-helps, hash, split into page payloads
@@ -102,7 +102,7 @@ python3 -m venv .venv && source .venv/bin/activate && pip install -r requirement
 
 # Standard scroll
 python3 -m lsview reconstruct-utxo  --txin <TXHASH>#0 --out check.bin
-# LS-CHAIN v2 scroll
+# Chain Scroll scroll
 python3 -m lsview reconstruct-chain --txin <MANIFEST_TX>#0 --out check.bin
 
 sha256sum check.bin    # must equal the hash you recorded in Step 1
@@ -134,10 +134,10 @@ Make it discoverable — do all three:
 ## Stuck?
 
 - **Worked examples with receipts:** [`examples/`](../examples/) — the
-  `eternal-scroll-tutorial/` is itself an on-chain LS-CHAIN v2 scroll.
+  `eternal-scroll-tutorial/` is itself an on-chain Chain Scroll scroll.
 - **Full reference:** [CREATING_SCROLLS.md](CREATING_SCROLLS.md) ·
   [GETTING_STARTED.md](GETTING_STARTED.md) ·
-  [LS-CHAIN v2 spec](../registry/spec/manifest-chain-v2.md)
+  [Chain Scroll spec](../registry/spec/manifest-chain-v2.md)
 - **Ask:** open a [GitHub Discussion](https://github.com/BEACNpool/ledger-scrolls/discussions).
 
 *Mint deliberately. The library cannot burn — and it cannot forget.*

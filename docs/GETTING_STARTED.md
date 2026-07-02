@@ -18,7 +18,7 @@ This guide will help you set up everything you need to create your own permanent
 3. **A funded wallet**
    - Payment signing key (`.skey`)
    - Payment address with ADA
-   - Minimum: ~3 ADA for a Standard Scroll; for LS-CHAIN v2 budget ~0.06 ADA/KB
+   - Minimum: ~3 ADA for a Standard Scroll; for a Chain Scroll budget ~0.06 ADA/KB
      of file (e.g. a 500 KB clip ≈ ~30 ADA, nothing locked)
 
 4. **Basic command-line knowledge**
@@ -68,7 +68,7 @@ cardano-cli query utxo --address $(cat payment.addr) --mainnet
 
 ## Choosing Your Scroll Type
 
-### Standard Scroll (LS-LOCK v1)
+### Standard Scroll (the Standard Scroll format)
 **Use when:**
 - File is under ~14KB (after gzip)
 - You want the simplest approach
@@ -78,7 +78,7 @@ cardano-cli query utxo --address $(cat payment.addr) --mainnet
 
 **Permanence:** The UTxO is locked by an always-fail script — literally impossible to spend.
 
-### LS-CHAIN v2 — the preferred format for anything larger
+### Chain Scroll — the preferred format for anything larger
 **Use when:**
 - File is larger than one datum (documents, audio, video, datasets)
 - You want the cheapest on-chain storage with nothing locked
@@ -91,10 +91,10 @@ chain history, listed by explicit tx hash. Spec:
 [registry/spec/manifest-chain-v2.md](../registry/spec/manifest-chain-v2.md);
 tooling in `tools/lschain/`.
 
-### Legacy Scroll (LS-PAGES v1 / CIP-25) — legacy, read-only
+### Legacy Scroll (the original NFT-page format / CIP-25) — legacy, read-only
 The original large-file format: one CIP-25 NFT per page. Every legacy scroll is
 still read this way, but it is **no longer recommended for new scrolls** — it
-costs ~6× more than LS-CHAIN v2 and locks ~1.4 ADA in an NFT per page. Reach for
+costs ~6× more than a Chain Scroll and locks ~1.4 ADA in an NFT per page. Reach for
 it only if you specifically need wallet-visible per-page NFTs.
 
 ---
@@ -124,7 +124,7 @@ The script will:
 
 ---
 
-## Quick Mint (LS-CHAIN v2 — large files)
+## Quick Mint (Chain Scroll — large files)
 
 For anything bigger than a Standard Scroll, use the `tools/lschain/` pipeline:
 
@@ -180,7 +180,7 @@ your pointer and hash (the canonical form — see
 }
 ```
 
-For LS-CHAIN v2 scrolls the pointer is
+For Chain Scroll scrolls the pointer is
 `{ "kind": "manifest-chain-v2", "txHash": "<manifest tx>", "txIx": 0 }`.
 
 The registry is **forkable by design**: open a PR adding your entry (and your
@@ -214,9 +214,9 @@ cardano-cli query utxo --address $(cat payment.addr) --mainnet
 
 - 🚀 [Your First Scroll](YOUR_FIRST_SCROLL.md) — the 10-minute creator quickstart
 - 📖 [Creating Scrolls](CREATING_SCROLLS.md) — best practices by media type
-- 📖 [Standard Scrolls Guide](STANDARD_SCROLLS.md) — Deep dive into LS-LOCK v1
-- 📖 [LS-CHAIN v2 spec](../registry/spec/manifest-chain-v2.md) — large-file format (preferred)
-- 📖 [Legacy Scrolls Guide](LEGACY_SCROLLS.md) — LS-PAGES v1 (legacy / read-only)
+- 📖 [Standard Scrolls Guide](STANDARD_SCROLLS.md) — Deep dive into the Standard Scroll format
+- 📖 [Chain Scroll spec](../registry/spec/manifest-chain-v2.md) — large-file format (preferred)
+- 📖 [Legacy Scrolls Guide](LEGACY_SCROLLS.md) — the original NFT-page format (legacy / read-only)
 - 📖 [Examples](EXAMPLES.md) — Learn from real minted scrolls
 
 ---

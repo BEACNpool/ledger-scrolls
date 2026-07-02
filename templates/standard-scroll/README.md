@@ -1,6 +1,6 @@
 # Standard Scroll Template
 
-This template provides everything you need to mint a Standard Scroll (LS-LOCK v1).
+This template provides everything you need to mint a Standard Scroll (the Standard Scroll format).
 
 ## Files
 
