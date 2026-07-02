@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Scroll Cost Calculator — Ledger Scrolls</title>
+<meta name="description" content="Drop any file and see exactly what it costs to store it on Cardano forever: page transactions, NFTs, bytes per page, ADA fees, and live USD — computed locally, nothing uploaded.">
+<meta name="theme-color" content="#f6f5f1">
+<meta property="og:title" content="Scroll Cost Calculator — Ledger Scrolls">
+<meta property="og:description" content="How many transactions or NFTs will your file take? Drop it in and find out — with live ADA/USD pricing and a metadata builder.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<style>
+/* Same digital-meets-analog system as the main viewer & create.html.
+   Warm paper canvas + blueprint grid. One file, zero deps. */
+:root{
+  --bg:#f6f5f1; --bg-2:#efece4;
+  --surface:#ffffff; --surface-2:#fbfaf6;
+  --ink:#14161b; --ink-2:#3a4049; --muted:#6b7280; --faint:#9aa1ab;
+  --line:#e6e3da; --line-2:#dbd6ca;
+  --accent:#2f53ff; --accent-ink:#0d228f; --accent-soft:#ebefff;
+  --amber:#b27a1e; --amber-ink:#7c5510; --amber-soft:#f6eedd;
+  --violet:#7c3aed; --violet-ink:#581c9e; --violet-soft:#f1eafd;
+  --ok:#0a8f5b; --ok-soft:#e7f6ef;
+  --bad:#d8383d; --bad-soft:#fdecec;
+  --warn:#a9760f; --warn-soft:#f8f1dc;
+  --radius:16px; --radius-sm:10px; --pill:999px;
+  --sh-sm:0 1px 2px rgba(20,22,27,.05),0 1px 3px rgba(20,22,27,.04);
+  --sh:0 6px 20px -6px rgba(20,22,27,.12),0 2px 6px rgba(20,22,27,.05);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.bg-grid{position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 78% -8%,rgba(47,83,255,.10),transparent 60%),
+    radial-gradient(760px 460px at 6% 4%,rgba(178,122,30,.08),transparent 60%),
+    linear-gradient(to right,rgba(20,22,27,.035) 1px,transparent 1px),
+    linear-gradient(to bottom,rgba(20,22,27,.035) 1px,transparent 1px),
+    var(--bg);
+  background-size:100% 100%,100% 100%,46px 46px,46px 46px;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 70%,transparent 100%);
+          mask-image:linear-gradient(to bottom,#000 0%,#000 70%,transparent 100%);}
+.container{max-width:900px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+a{color:var(--accent-ink);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+a:hover{color:var(--accent);border-color:var(--accent)}
+code,.mono{font-family:var(--mono)}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:6px}
+::selection{background:var(--accent-soft)}
+h1{font:700 clamp(26px,4.4vw,38px)/1.15 var(--sans);letter-spacing:-.02em}
+h2{font:700 clamp(20px,3vw,26px)/1.25 var(--sans);letter-spacing:-.015em;margin:0 0 6px}
+p{color:var(--ink-2)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font:600 12px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);padding:7px 14px;border-radius:var(--pill)}
+.site-header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-row{display:flex;align-items:center;gap:12px;min-height:60px;flex-wrap:wrap;max-width:900px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+.brand{display:inline-flex;align-items:center;gap:10px;border:0;margin-right:auto;color:var(--ink)}
+.brand-mark{font-size:18px;width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:linear-gradient(145deg,var(--surface),var(--amber-soft));border:1px solid var(--line-2);box-shadow:var(--sh-sm)}
+.brand-name{font:700 19px/1 var(--sans);letter-spacing:-.01em}
+.brand-name .b{background:linear-gradient(90deg,var(--accent),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ghost{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 14px;background:var(--surface);color:var(--ink-2);border:1px solid var(--line-2);border-radius:var(--pill);font:500 14px/1 var(--sans);box-shadow:var(--sh-sm);transition:.15s var(--ease)}
+.ghost:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.section{padding:clamp(22px,4vw,36px) 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sh-sm);padding:clamp(16px,3vw,24px)}
+.hero{padding:clamp(30px,6vw,54px) 0 clamp(10px,2vw,18px)}
+.hero p.lead{font-size:18px;max-width:62ch;margin-top:10px}
+.privacy{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font:500 13.5px/1.4 var(--sans);color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 25%,transparent);border-radius:var(--pill);padding:7px 14px}
+
+/* drop zone */
+.drop{display:block;border:2px dashed var(--line-2);border-radius:var(--radius);background:var(--surface-2);padding:clamp(22px,5vw,40px);text-align:center;cursor:pointer;transition:.15s var(--ease)}
+.drop:hover,.drop.drag{border-color:var(--accent);background:var(--accent-soft)}
+.drop .big{font:600 18px/1.4 var(--sans);color:var(--ink)}
+.drop .hint{color:var(--muted);font-size:14px;margin-top:6px}
+.drop input{display:none}
+.orline{display:flex;align-items:center;gap:12px;color:var(--faint);font:600 12px/1 var(--sans);letter-spacing:.14em;margin:16px 0}
+.orline::before,.orline::after{content:"";flex:1;height:1px;background:var(--line)}
+.manual{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.manual label{font:600 13.5px/1 var(--sans);color:var(--ink-2)}
+input[type=number],input[type=text],select,textarea{font:500 15px/1.4 var(--sans);color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:9px 12px;min-height:40px}
+input[type=number]{width:110px}
+textarea{width:100%;resize:vertical;font-family:var(--sans)}
+.btn{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 16px;border-radius:var(--pill);border:1px solid var(--accent);background:var(--accent);color:#fff;font:600 14.5px/1 var(--sans);cursor:pointer;box-shadow:var(--sh-sm);transition:.15s var(--ease)}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--sh)}
+.btn.sub{background:var(--surface);color:var(--accent-ink);border-color:var(--line-2)}
+.btn.sub:hover{border-color:var(--accent)}
+
+/* price row */
+.pricebar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px;font-size:14px;color:var(--muted)}
+.pricebar .val{font:700 15px/1 var(--mono);color:var(--ink)}
+.pricebar input{width:120px}
+.badge{display:inline-flex;align-items:center;gap:5px;font:600 11.5px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;border-radius:var(--pill);padding:5px 10px}
+.badge.live{color:var(--ok);background:var(--ok-soft)}
+.badge.manual{color:var(--warn);background:var(--warn-soft)}
+
+/* file analysis */
+.analysis{display:none;margin-top:18px}
+.analysis.show{display:block}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;font-size:14px}
+.kv dt{color:var(--muted);font-weight:600}
+.kv dd{font-family:var(--mono);font-size:13px;word-break:break-all;color:var(--ink-2)}
+.reco{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:12px 16px;border-radius:var(--radius-sm);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);font-size:14.5px;color:var(--accent-ink)}
+
+/* lanes */
+.lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+@media(max-width:760px){.lanes{grid-template-columns:1fr}}
+.lane{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--sh-sm);padding:18px;position:relative;border-top:4px solid var(--lane-c,var(--line-2))}
+.lane.chain{--lane-c:var(--accent)}
+.lane.std{--lane-c:var(--amber)}
+.lane.legacy{--lane-c:var(--violet)}
+.lane h3{font:700 16px/1.3 var(--sans);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lane .tag{font:600 10.5px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;border-radius:var(--pill);padding:4px 8px}
+.lane.chain .tag{color:var(--accent-ink);background:var(--accent-soft)}
+.lane.std .tag{color:var(--amber-ink);background:var(--amber-soft)}
+.lane.legacy .tag{color:var(--violet-ink);background:var(--violet-soft)}
+.lane .sub{font-size:12.5px;color:var(--muted);margin:4px 0 12px}
+.stat{margin:10px 0}
+.stat .n{font:700 clamp(22px,3vw,28px)/1.05 var(--mono);color:var(--ink);letter-spacing:-.02em}
+.stat .l{font:600 12px/1.3 var(--sans);color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
+.rows{border-top:1px solid var(--line);margin-top:12px;padding-top:10px;font-size:13.5px}
+.rows div{display:flex;justify-content:space-between;gap:10px;padding:3px 0;color:var(--ink-2)}
+.rows .mono{color:var(--ink)}
+.rows .tot{border-top:1px solid var(--line);margin-top:6px;padding-top:8px;font-weight:700;color:var(--ink)}
+.lane .na{color:var(--muted);font-size:14px;padding:16px 0}
+.usd{color:var(--ok);font-weight:600}
+
+/* comparison bars */
+.bars{margin-top:8px}
+.barrow{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;margin:10px 0}
+@media(max-width:560px){.barrow{grid-template-columns:110px 1fr}}
+.barrow .bl{font:600 13px/1.3 var(--sans);color:var(--ink-2);text-align:right}
+.bartrack{position:relative;height:26px}
+.bar{height:22px;border-radius:0 4px 4px 0;min-width:2px;position:relative;top:2px}
+.bar.chain{background:var(--accent)}
+.bar.std{background:var(--amber)}
+.bar.legacy{background:var(--violet)}
+.barval{position:absolute;left:calc(var(--w) + 8px);top:3px;font:600 13px/1.6 var(--mono);color:var(--ink);white-space:nowrap}
+
+/* packing */
+.pack{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+@media(max-width:760px){.pack{grid-template-columns:1fr}}
+.packcard{border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px;background:var(--surface-2);font-size:13.5px;color:var(--ink-2)}
+.packcard b{display:block;color:var(--ink);margin-bottom:6px;font-size:14px}
+.packcard .m{font-family:var(--mono);font-size:12.5px}
+
+/* builder */
+.builder-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:700px){.builder-grid{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font:600 13px/1 var(--sans);color:var(--ink-2)}
+.field .note{font-size:12px;color:var(--faint)}
+.field.wide{grid-column:1/-1}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line-2);background:var(--surface);border-radius:var(--pill);padding:7px 14px;font:600 13.5px/1 var(--sans);color:var(--ink-2);cursor:pointer}
+.chip[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.out{margin-top:16px}
+.out h4{font:700 14px/1.3 var(--sans);display:flex;align-items:center;gap:10px;margin-bottom:6px}
+pre{background:#181b22;color:#e6e3da;border-radius:var(--radius-sm);padding:14px 16px;overflow-x:auto;font:12.5px/1.55 var(--mono);border:1px solid #2a2f3a}
+.copy{margin-left:auto;font:600 12px/1 var(--sans);border:1px solid var(--line-2);background:var(--surface);border-radius:var(--pill);padding:6px 12px;cursor:pointer;color:var(--ink-2)}
+.copy:hover{border-color:var(--accent);color:var(--accent)}
+details.assump{margin-top:16px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-2);padding:12px 16px;font-size:14px;color:var(--ink-2)}
+details.assump summary{cursor:pointer;font-weight:600;color:var(--ink)}
+details.assump table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+details.assump td,details.assump th{border-top:1px solid var(--line);padding:6px 8px;text-align:left}
+.share{margin-top:14px;padding:12px 16px;border:1px dashed var(--line-2);border-radius:var(--radius-sm);background:var(--surface-2);font-size:14.5px;color:var(--ink-2);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.footer{border-top:1px solid var(--line);margin-top:28px;padding:26px 0 44px;font-size:14px;color:var(--muted)}
+.warnbox{margin-top:14px;padding:12px 16px;border-radius:var(--radius-sm);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);color:#6d4d0a;font-size:14px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="bg-grid" aria-hidden="true"></div>
+
+<header class="site-header">
+  <div class="header-row">
+    <a class="brand" href="./index.html"><span class="brand-mark">📜</span><span class="brand-name">Ledger <span class="b">Scrolls</span></span></a>
+    <a class="ghost" href="./create.html">How it works</a>
+    <a class="ghost" href="./index.html">The Library</a>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="hero">
+  <span class="eyebrow">Cost Calculator</span>
+  <h1>What will your scroll cost?</h1>
+  <p class="lead">Drop in any file — a photo, a PDF, a song, a video, a manifesto — and see
+  exactly how it packs onto Cardano: how many transactions or NFTs, how many bytes per page,
+  and what it costs in ADA and dollars to make it permanent.</p>
+  <p class="privacy">🔒 Everything runs in your browser. Your file is never uploaded anywhere.</p>
+</section>
+
+<section class="section" id="inputsec">
+  <div class="card">
+    <label class="drop" id="drop">
+      <input type="file" id="file">
+      <div class="big">Drop a file here, or click to choose</div>
+      <div class="hint">HTML · PDF · JPG/PNG · TXT/MD · MP4/WebM · MP3/Opus · JSON/CSV — any file works</div>
+    </label>
+    <div class="orline">OR ESTIMATE WITHOUT A FILE</div>
+    <div class="manual">
+      <label for="msize">Size</label>
+      <input type="number" id="msize" min="0.001" step="any" placeholder="5">
+      <select id="munit" aria-label="Size unit"><option>KB</option><option selected>MB</option></select>
+      <label for="mtype">Media</label>
+      <select id="mtype" aria-label="Media type"></select>
+      <button class="btn sub" id="mgo">Estimate</button>
+    </div>
+    <div class="pricebar">
+      <span>ADA price:</span>
+      <span class="val" id="pricev">—</span>
+      <span class="badge manual" id="pricesrc">loading…</span>
+      <label for="pricein" class="sr">Override ADA/USD price</label>
+      <input type="number" id="pricein" min="0" step="any" placeholder="override $">
+      <button class="btn sub" id="pricere" title="Refresh from CoinGecko">↻</button>
+    </div>
+
+    <div class="analysis" id="analysis">
+      <dl class="kv" id="kv"></dl>
+      <div class="reco" id="reco"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="results" hidden>
+  <h2>The three ways bytes live on-chain</h2>
+  <p>Same file, three formats. <strong>LS-CHAIN v2 is the recommended format for anything that
+  doesn't fit in a single datum</strong> — its pages are plain transactions, so the answer to
+  "how many NFTs?" is <strong>zero</strong>. The legacy CIP-25 lane shows what the same file
+  would take in page NFTs, for comparison with older scrolls.</p>
+
+  <div class="lanes">
+    <div class="lane chain">
+      <h3>LS-CHAIN v2 <span class="tag">Recommended</span></h3>
+      <div class="sub">Bare metadata page txs + one locked manifest · no NFTs, nothing locked per page</div>
+      <div id="chainbody"></div>
+    </div>
+    <div class="lane std">
+      <h3>Standard Scroll <span class="tag">Small files</span></h3>
+      <div class="sub">Whole file in one locked UTxO datum · the strongest guarantee (≤ ~14 KB)</div>
+      <div id="stdbody"></div>
+    </div>
+    <div class="lane legacy">
+      <h3>Legacy CIP-25 Pages <span class="tag">Read-only era</span></h3>
+      <div class="sub">One NFT per page + manifest NFT · how the Bible &amp; Constitutions were minted</div>
+      <div id="legacybody"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h2 style="font-size:19px">Total cost, side by side</h2>
+    <div class="bars" id="bars" role="img" aria-label="Total ADA cost per format"></div>
+  </div>
+
+  <div class="share" id="share"></div>
+
+  <div class="card" style="margin-top:18px">
+    <h2 style="font-size:19px">How the bytes pack</h2>
+    <div class="pack">
+      <div class="packcard"><b>LS-CHAIN v2 page tx</b>
+        <span class="m">190 segments × 64 bytes<br>= 12,160 bytes / page</span><br>
+        Payload rides in tx metadata (label 22025) as raw CBOR byte strings. Pages are listed
+        in the manifest by explicit tx hash — no scanning, no guessing.</div>
+      <div class="packcard"><b>Standard Scroll datum</b>
+        <span class="m">one inline datum ≤ ~14,336 bytes<br>(64-byte CBOR chunks)</span><br>
+        The whole file lives in the UTxO set at an always-fail address — one query, any node,
+        forever.</div>
+      <div class="packcard"><b>Legacy CIP-25 page NFT</b>
+        <span class="m">169 segments × 32 bytes<br>= 5,408 bytes / NFT</span><br>
+        Payload is hex text in token metadata — 2 metadata bytes per payload byte, plus a
+        min-UTxO locked with every page NFT. That's why it costs ~6× more.</div>
+    </div>
+  </div>
+
+  <details class="assump">
+    <summary>Assumptions &amp; formulas (tap to open)</summary>
+    <p style="margin-top:10px">Estimates use Cardano mainnet parameters (2026):
+    fee = 0.155381 ADA + 0.000044 ADA/byte of transaction; min-UTxO ≈ 0.00431 ADA per byte of
+    output+datum. Real costs vary a few percent with wallet UTxO layout — the mint tools print
+    the exact price before you sign. Gzip here is your browser's; the mint pipeline uses
+    deterministic gzip (<code>gzip -n -9</code>), which may differ by a few bytes.</p>
+    <table>
+      <tr><th>Lane</th><th>Pages</th><th>Fees</th><th>Locked forever</th></tr>
+      <tr><td>LS-CHAIN v2</td><td class="mono">ceil(encoded / 12160)</td><td>per-page tx fee + manifest fee</td><td>manifest min-UTxO only (~1.4–2 ADA per 400-page link)</td></tr>
+      <tr><td>Standard</td><td class="mono">1 tx</td><td>one tx fee</td><td>min-UTxO of the datum output (grows with file size)</td></tr>
+      <tr><td>Legacy CIP-25</td><td class="mono">ceil(encoded / 5408) NFTs + 1 manifest NFT</td><td>per-NFT mint tx fee (hex doubles the bytes)</td><td>~1.44 ADA in every page NFT + manifest NFT</td></tr>
+    </table>
+    <p>Reference points from live scrolls: the on-chain tutorial (18 KB HTML → 7.4 KB gzip)
+    cost ~0.9 ADA in fees + ~1.6 ADA locked; the BEACN commercial video was 175 page NFTs on
+    the legacy path. Spec: <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/manifest-chain-v2.md">manifest-chain-v2</a>.</p>
+  </details>
+</section>
+
+<section class="section" id="buildersec" hidden>
+  <div class="card">
+    <h2>Metadata builder</h2>
+    <p>Answer a few questions and get copy-paste artifacts: your <strong>registry entry</strong>
+    (with the file's real SHA-256 already computed), the <strong>mint commands</strong>, and —
+    if you're publishing under a channel — the <strong>CIP-25 issue metadata</strong>.</p>
+
+    <div class="chips" style="margin-top:12px" id="lanechips">
+      <button class="chip" data-lane="chain" aria-pressed="true">LS-CHAIN v2</button>
+      <button class="chip" data-lane="std" aria-pressed="false">Standard Scroll</button>
+    </div>
+
+    <div class="builder-grid">
+      <div class="field"><label for="b_name">Scroll id (kebab-case)</label>
+        <input type="text" id="b_name" placeholder="my-first-scroll"></div>
+      <div class="field"><label for="b_title">Title</label>
+        <input type="text" id="b_title" placeholder="My First Scroll"></div>
+      <div class="field wide"><label for="b_desc">Description</label>
+        <textarea id="b_desc" rows="2" placeholder="What is this, for a reader in 2050?"></textarea></div>
+      <div class="field"><label for="b_author">Author / publisher</label>
+        <input type="text" id="b_author" placeholder="anonymous"></div>
+      <div class="field"><label for="b_ct">Content type</label>
+        <input type="text" id="b_ct" placeholder="text/plain; charset=utf-8"></div>
+      <div class="field"><label for="b_channel">Publisher channel <span class="note">(optional — unforgeable byline)</span></label>
+        <input type="text" id="b_channel" placeholder="MY_CHANNEL"></div>
+      <div class="field"><label for="b_issue">Issue number <span class="note">(if channel)</span></label>
+        <input type="number" id="b_issue" min="0" placeholder="0"></div>
+    </div>
+
+    <div class="out"><h4>Registry entry <button class="copy" data-for="o_reg">copy</button></h4><pre id="o_reg"></pre></div>
+    <div class="out"><h4>Mint &amp; verify commands <button class="copy" data-for="o_cmd">copy</button></h4><pre id="o_cmd"></pre></div>
+    <div class="out" id="chanout" hidden><h4>Channel issue metadata (CIP-25) <button class="copy" data-for="o_chan">copy</button></h4><pre id="o_chan"></pre></div>
+
+    <div class="warnbox">⚠️ <strong>Before you mint:</strong> permanent means permanent — no
+    edit, no delete, no takedown. Strip EXIF/document metadata, keep the file self-contained,
+    rehearse on testnet, and verify the reconstruction hash before announcing.
+    Read <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">Your First Scroll</a>.</div>
+  </div>
+</section>
+
+<footer class="footer container">
+  <p><strong>Ledger Scrolls</strong> — the free, open-source reader &amp; writer for immutable,
+  forever media. <a href="https://github.com/BEACNpool/ledger-scrolls">Source &amp; specs on GitHub</a> ·
+  <a href="./index.html">The Library</a> · <a href="./create.html">How it works</a></p>
+  <p style="margin-top:6px"><em>"A library that cannot burn."</em></p>
+</footer>
+</main>
+
+<script>
+"use strict";
+/* ══════════ cost model (pure — mirrored by tests) ══════════ */
+const P = {
+  feeB: 0.155381, feeA: 0.000044,          // ADA; fee = feeB + feeA*txBytes
+  utxoPerByte: 0.00431,                     // ADA per byte of output+datum
+  chainPage: 12160, chainSegs: 190,         // LS-CHAIN v2 page payload
+  chainTxOverhead: 970,                     // skeleton + metadata framing
+  chainPagesPerManifest: 400,
+  manifestBase: 140, manifestPerPage: 34,   // manifest datum bytes
+  outBase: 200,                             // output overhead for min-UTxO
+  legacyPage: 5408, legacySegs: 169,        // legacy page payload (32B segs)
+  legacyTxOverhead: 900,                    // mint + asset + JSON keys
+  legacyHexFactor: 2.12,                    // hex text + framing per payload byte
+  legacyNftLock: 1.44,                      // min-UTxO carried by each NFT
+  stdMax: 14336, stdTxOverhead: 500,
+};
+const fee = txBytes => P.feeB + P.feeA * txBytes;
+const minUtxo = datumBytes => (P.outBase + datumBytes) * P.utxoPerByte;
+
+function calcChain(enc){
+  const pages = Math.max(1, Math.ceil(enc / P.chainPage));
+  let fees = 0;
+  for(let i=0;i<pages;i++){
+    const payload = (i === pages-1) ? enc - P.chainPage*(pages-1) : P.chainPage;
+    fees += fee(payload + P.chainTxOverhead);
+  }
+  const links = Math.ceil(pages / P.chainPagesPerManifest);
+  let locked = 0;
+  for(let l=0;l<links;l++){
+    const inLink = Math.min(P.chainPagesPerManifest, pages - l*P.chainPagesPerManifest);
+    const datum = P.manifestBase + P.manifestPerPage * inLink;
+    fees += fee(datum + P.stdTxOverhead);
+    locked += minUtxo(datum);
+  }
+  return { pages, nfts: 0, links, fees, locked, total: fees + locked };
+}
+function calcStandard(enc){
+  if(enc > P.stdMax) return null;
+  const fees = fee(enc + P.stdTxOverhead);
+  const locked = minUtxo(enc);
+  return { pages: 1, nfts: 0, fees, locked, total: fees + locked };
+}
+function calcLegacy(enc){
+  const pages = Math.max(1, Math.ceil(enc / P.legacyPage));
+  let fees = 0;
+  for(let i=0;i<pages;i++){
+    const payload = (i === pages-1) ? enc - P.legacyPage*(pages-1) : P.legacyPage;
+    fees += fee(payload * P.legacyHexFactor + P.legacyTxOverhead);
+  }
+  fees += fee(1200);                        // manifest NFT mint
+  const nfts = pages + 1;
+  const locked = nfts * P.legacyNftLock;
+  return { pages, nfts, fees, locked, total: fees + locked };
+}
+
+/* ══════════ media knowledge ══════════ */
+const MEDIA = [
+  { label:"Plain text / Markdown", ct:"text/plain; charset=utf-8", gz:true,  exts:["txt","md","markdown"], tip:"The archival gold standard — readable in any century." },
+  { label:"HTML document",         ct:"text/html",                 gz:true,  exts:["html","htm"],          tip:"Self-contained only: inline CSS, data: images, no JavaScript." },
+  { label:"PNG image",             ct:"image/png",                 gz:false, exts:["png"],                 tip:"Optimize first (oxipng); strip metadata." },
+  { label:"JPEG image",            ct:"image/jpeg",                gz:false, exts:["jpg","jpeg"],          tip:"Re-encode q80–85 and strip EXIF — GPS becomes permanent public record." },
+  { label:"GIF image",             ct:"image/gif",                 gz:false, exts:["gif"],                 tip:"Consider a short WebM instead for animations." },
+  { label:"SVG image",             ct:"image/svg+xml",             gz:true,  exts:["svg"],                 tip:"Minify; no scripts or external references." },
+  { label:"PDF document",          ct:"application/pdf",           gz:false, exts:["pdf"],                 tip:"qpdf --linearize; strip author metadata; consider minting the plain text too." },
+  { label:"JSON / data",           ct:"application/json",          gz:true,  exts:["json"],                tip:"Canonicalize (sorted keys) before hashing." },
+  { label:"CSV dataset",           ct:"text/csv",                  gz:true,  exts:["csv"],                 tip:"Keep the header row — data without column meaning is noise in 20 years." },
+  { label:"Audio — Opus/OGG",      ct:"audio/ogg; codecs=opus",    gz:false, exts:["ogg","opus"],          tip:"Opus 24–32 kbps mono for speech, 64–96 kbps for music." },
+  { label:"Audio — MP3",           ct:"audio/mpeg",                gz:false, exts:["mp3"],                 tip:"Use only for maximum legacy-player compatibility." },
+  { label:"Audio — WAV (convert!)",ct:"audio/wav",                 gz:false, exts:["wav"],                 tip:"Uncompressed — convert to Opus first; ~10× smaller." },
+  { label:"Video — MP4 (H.264+AAC)",ct:"video/mp4",                gz:false, exts:["mp4","m4v","mov"],     tip:"≤480p, CRF 30, -movflags +faststart. Sound rides in the same file." },
+  { label:"Video — WebM (AV1/VP9+Opus)",ct:"video/webm",           gz:false, exts:["webm","mkv"],          tip:"~30–50% smaller than H.264; plays in modern browsers." },
+  { label:"Other / binary",        ct:"application/octet-stream",  gz:true,  exts:[],                      tip:"Stored byte-for-byte; downloads from the viewer." },
+];
+const mediaByExt = ext => MEDIA.find(m => m.exts.includes(ext)) || MEDIA[MEDIA.length-1];
+
+/* ══════════ state & helpers ══════════ */
+const $ = id => document.getElementById(id);
+const S = { raw:0, enc:0, codec:"none", ct:"", name:"", sha:"", shaEnc:"", price:null, priceSrc:"none", media:null };
+const fmtB = n => n >= 1048576 ? (n/1048576).toFixed(2)+" MB" : n >= 1024 ? (n/1024).toFixed(1)+" KB" : n+" B";
+const fmtA = n => n >= 1000 ? Math.round(n).toLocaleString("en-US") : n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2);
+const fmtN = n => n.toLocaleString("en-US");
+const usd  = a => S.price ? `≈ $${(a*S.price).toLocaleString("en-US",{maximumFractionDigits:2})}` : "";
+const esc  = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+
+MEDIA.forEach((m,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=m.label; $("mtype").appendChild(o); });
+
+/* ══════════ ADA price ══════════ */
+async function fetchPrice(){
+  $("pricesrc").textContent = "loading…";
+  try{
+    const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=cardano&vs_currencies=usd",{signal:AbortSignal.timeout(8000)});
+    const j = await r.json();
+    const p = j?.cardano?.usd;
+    if(typeof p === "number" && p > 0){
+      if(S.priceSrc === "manual"){ $("pricesrc").textContent = "manual (live: $"+p.toFixed(4)+")"; render(); return; }
+      S.price = p; S.priceSrc = "live";
+      $("pricev").textContent = `$${p.toFixed(4)}`;
+      $("pricesrc").textContent = "live · CoinGecko";
+      $("pricesrc").className = "badge live";
+      render(); return;
+    }
+    throw new Error("bad payload");
+  }catch(e){
+    S.priceSrc = "unavailable";
+    $("pricesrc").textContent = "offline — enter a price";
+    $("pricesrc").className = "badge manual";
+    if(!S.price) $("pricev").textContent = "—";
+    render();
+  }
+}
+$("pricere").addEventListener("click", fetchPrice);
+$("pricein").addEventListener("input", e=>{
+  const v = parseFloat(e.target.value);
+  if(v > 0){ S.price = v; S.priceSrc = "manual";
+    $("pricev").textContent = `$${v.toFixed(4)}`;
+    $("pricesrc").textContent = "manual"; $("pricesrc").className = "badge manual"; }
+  render();
+});
+
+/* ══════════ file intake ══════════ */
+async function sha256hex(buf){
+  const h = await crypto.subtle.digest("SHA-256", buf);
+  return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function gzipBytes(buf){
+  if(typeof CompressionStream === "undefined") return null;
+  const cs = new CompressionStream("gzip");
+  const stream = new Blob([buf]).stream().pipeThrough(cs);
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+async function analyzeFile(file){
+  const ext = (file.name.split(".").pop()||"").toLowerCase();
+  const media = mediaByExt(ext);
+  const buf = await file.arrayBuffer();
+  S.raw = buf.byteLength; S.name = file.name; S.media = media;
+  S.ct = file.type && !media.exts.length===false ? (media.ct || file.type) : (media.ct || file.type || "application/octet-stream");
+  S.sha = await sha256hex(buf);
+  S.codec = "none"; S.enc = S.raw; S.shaEnc = S.sha;
+  let gzNote = "not attempted (already-compressed format)";
+  if(media.gz){
+    const gz = await gzipBytes(buf);
+    if(gz && gz.byteLength < S.raw){
+      S.codec = "gzip"; S.enc = gz.byteLength;
+      S.shaEnc = await sha256hex(gz.buffer);
+      gzNote = `${fmtB(gz.byteLength)} (${Math.round(100-100*gz.byteLength/S.raw)}% smaller) — codec: gzip`;
+    } else gzNote = gz ? "gzip didn't help — codec: none" : "browser can't gzip — sizes shown uncompressed";
+  }
+  $("kv").innerHTML = `
+    <dt>File</dt><dd>${esc(file.name)}</dd>
+    <dt>Detected type</dt><dd>${esc(S.ct)} <span style="color:var(--faint)">· ${esc(media.tip)}</span></dd>
+    <dt>Original size</dt><dd>${fmtB(S.raw)} (${fmtN(S.raw)} bytes)</dd>
+    <dt>Gzip trial</dt><dd>${gzNote}</dd>
+    <dt>SHA-256 (original)</dt><dd>${S.sha}</dd>
+    ${S.codec==="gzip" ? `<dt>SHA-256 (gzip)</dt><dd>${S.shaEnc}</dd>` : ""}`;
+  $("analysis").classList.add("show");
+  $("b_ct").value = S.ct;
+  if(!$("b_name").value) $("b_name").value = file.name.replace(/\.[^.]+$/,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40) || "my-scroll";
+  render();
+}
+
+function analyzeManual(){
+  const v = parseFloat($("msize").value);
+  if(!(v > 0)) return;
+  const bytes = Math.round(v * ($("munit").value === "MB" ? 1048576 : 1024));
+  const media = MEDIA[+$("mtype").value];
+  S.raw = bytes; S.name = ""; S.media = media; S.ct = media.ct;
+  S.sha = ""; S.shaEnc = "";
+  if(media.gz){ S.codec = "gzip"; S.enc = Math.round(bytes * 0.33); }  // typical 3:1 for text
+  else { S.codec = "none"; S.enc = bytes; }
+  $("kv").innerHTML = `
+    <dt>Estimating</dt><dd>${fmtB(bytes)} of ${esc(media.label)}</dd>
+    <dt>Content type</dt><dd>${esc(media.ct)} <span style="color:var(--faint)">· ${esc(media.tip)}</span></dd>
+    ${media.gz ? `<dt>Gzip assumed</dt><dd>~3:1 → ${fmtB(S.enc)} on-chain (drop the real file in for exact numbers)</dd>` : ""}`;
+  $("analysis").classList.add("show");
+  $("b_ct").value = S.ct;
+  render();
+}
+$("mgo").addEventListener("click", analyzeManual);
+
+const drop = $("drop");
+$("file").addEventListener("change", e => e.target.files[0] && analyzeFile(e.target.files[0]));
+["dragover","dragenter"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("drag"); }));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("drag"); }));
+drop.addEventListener("drop", e => e.dataTransfer.files[0] && analyzeFile(e.dataTransfer.files[0]));
+
+/* ══════════ render results ══════════ */
+function statHTML(big, label){ return `<div class="stat"><div class="n">${big}</div><div class="l">${label}</div></div>`; }
+function rows(o){
+  return `<div class="rows">
+    <div><span>Network fees</span><span class="mono">${fmtA(o.fees)} ADA</span></div>
+    <div><span>Locked forever</span><span class="mono">${fmtA(o.locked)} ADA</span></div>
+    <div class="tot"><span>Total</span><span class="mono">${fmtA(o.total)} ADA <span class="usd">${usd(o.total)}</span></span></div>
+  </div>`;
+}
+
+function render(){
+  if(!S.enc){ return; }
+  $("results").hidden = false;
+  $("buildersec").hidden = false;
+
+  const ch = calcChain(S.enc), st = calcStandard(S.enc), lg = calcLegacy(S.enc);
+
+  $("chainbody").innerHTML =
+    statHTML(fmtN(ch.pages), ch.pages === 1 ? "page transaction" : "page transactions") +
+    statHTML("0", "NFTs — pages are plain txs") + rows(ch);
+
+  $("stdbody").innerHTML = st
+    ? statHTML("1", "transaction · 1 locked UTxO") + statHTML(fmtB(S.enc), "fits in one inline datum") + rows(st)
+    : `<div class="na">Too large for a single datum — a Standard Scroll holds ≤ ~14 KB
+       (yours is <b>${fmtB(S.enc)}</b> encoded). Tip: mint a 14 KB “poster” Standard Scroll
+       pointing at the full LS-CHAIN scroll.</div>`;
+
+  $("legacybody").innerHTML =
+    statHTML(`≈ ${fmtN(lg.nfts)}`, `NFTs (${fmtN(lg.pages)} pages + 1 manifest)`) +
+    statHTML(fmtB(P.legacyPage), "per page NFT") + rows(lg) +
+    `<div style="font-size:12.5px;color:var(--muted);margin-top:8px">Shown for comparison —
+     don't mint new scrolls this way.</div>`;
+
+  const reco = st
+    ? `<span>📜</span><span><strong>Recommended: Standard Scroll.</strong> Your file fits in a single
+       locked datum — one transaction, one query to read it back, the strongest permanence class.
+       Total ≈ <b>${fmtA(st.total)} ADA</b> ${usd(st.total)}.</span>`
+    : `<span>⛓️</span><span><strong>Recommended: LS-CHAIN v2.</strong> ${fmtN(ch.pages)} page
+       transaction${ch.pages>1?"s":""} + ${ch.links>1?fmtN(ch.links)+" chained manifests":"one locked manifest"},
+       zero NFTs to custody. Total ≈ <b>${fmtA(ch.total)} ADA</b> ${usd(ch.total)}.</span>`;
+  $("reco").innerHTML = reco;
+  if(!laneTouched){
+    builderLane = st ? "std" : "chain";
+    document.querySelectorAll("#lanechips .chip").forEach(x =>
+      x.setAttribute("aria-pressed", String(x.dataset.lane === builderLane)));
+  }
+
+  // comparison bars — direct-labeled, entity-colored
+  const items = [
+    { cls:"chain",  name:"LS-CHAIN v2",  v: ch.total },
+    ...(st ? [{ cls:"std", name:"Standard", v: st.total }] : []),
+    { cls:"legacy", name:"Legacy CIP-25", v: lg.total },
+  ];
+  const max = Math.max(...items.map(i=>i.v));
+  $("bars").innerHTML = items.map(i=>{
+    const w = Math.max(1.5, 100*i.v/max);
+    return `<div class="barrow"><div class="bl">${i.name}</div>
+      <div class="bartrack" style="--w:${w*0.72}%">
+        <div class="bar ${i.cls}" style="width:${w*0.72}%"></div>
+        <div class="barval">${fmtA(i.v)} ADA ${S.price?`<span style="color:var(--muted)">${usd(i.v)}</span>`:""}</div>
+      </div></div>`;
+  }).join("");
+
+  const best = st || ch;
+  const what = S.name ? `“${esc(S.name)}” (${fmtB(S.raw)})` : `${fmtB(S.raw)} of ${esc(S.media.label)}`;
+  const lane = st ? "a single Standard Scroll" : `${fmtN(ch.pages)} LS-CHAIN page tx${ch.pages>1?"s":""} — 0 NFTs`;
+  $("share").innerHTML = `<span>📣 ${what} → <b>${lane}</b> → ≈ <b>${fmtA(best.total)} ADA</b>
+    ${S.price?`(~$${(best.total*S.price).toFixed(2)})`:""} to store on Cardano <b>forever</b>. #LedgerScrolls</span>
+    <button class="copy" id="sharecopy">copy</button>`;
+  $("sharecopy")?.addEventListener("click", e => copyText(e.target, $("share").textContent.replace("copy","").trim()));
+
+  buildOutputs();
+}
+
+/* ══════════ metadata builder ══════════ */
+let builderLane = "chain", laneTouched = false;
+document.querySelectorAll("#lanechips .chip").forEach(c => c.addEventListener("click", () => {
+  document.querySelectorAll("#lanechips .chip").forEach(x => x.setAttribute("aria-pressed","false"));
+  c.setAttribute("aria-pressed","true"); builderLane = c.dataset.lane; laneTouched = true; buildOutputs();
+}));
+["b_name","b_title","b_desc","b_author","b_ct","b_channel","b_issue"].forEach(id =>
+  $(id).addEventListener("input", buildOutputs));
+
+function splitLines(s, max=64){
+  const out = []; let cur = "";
+  for(const w of s.split(/\s+/)){
+    const t = cur ? cur+" "+w : w;
+    if(new TextEncoder().encode(t).length <= max) cur = t;
+    else { if(cur) out.push(cur); cur = w.slice(0, max); }
+  }
+  if(cur) out.push(cur);
+  return out.length ? out : [""];
+}
+
+function buildOutputs(){
+  if($("buildersec").hidden) return;
+  const name = $("b_name").value.trim() || "my-scroll";
+  const title = $("b_title").value.trim();
+  const desc = $("b_desc").value.trim();
+  const author = $("b_author").value.trim();
+  const ct = $("b_ct").value.trim() || S.ct || "application/octet-stream";
+  const chan = $("b_channel").value.trim();
+  const issue = $("b_issue").value;
+  const isStd = builderLane === "std";
+  const pointer = isStd
+    ? { kind:"utxo-inline-datum-bytes-v1", txHash:"<LOCK_TX_HASH>", txIx:0 }
+    : { kind:"manifest-chain-v2", txHash:"<MANIFEST_TX_HASH>", txIx:0 };
+
+  const entry = { name, pointer, contentType: ct, codec: S.codec,
+    sha256: S.sha || "<sha256 of your original file — sha256sum yourfile>" };
+  if(desc) entry.description = desc;
+  const meta = {};
+  if(title) meta.title = title;
+  if(author) meta.author = author;
+  if(Object.keys(meta).length) entry.metadata = meta;
+  $("o_reg").textContent = JSON.stringify(entry, null, 2);
+
+  const fn = S.name || "yourfile";
+  $("o_cmd").textContent = isStd
+? `# 1. Rehearse on Preview testnet first (docs/PREVIEW_TESTNET_POC.md)
+# 2. Record your commitment hash
+sha256sum "${fn}"
+
+# 3. Mint the Standard Scroll (locks the datum at the always-fail address)
+./scripts/mint-standard-scroll.sh "${fn}" payment.skey payment.addr
+
+# 4. Verify from chain BEFORE announcing
+cd koios-viewer
+python3 -m lsview reconstruct-utxo --txin <LOCK_TX_HASH>#0 --out check.bin
+sha256sum check.bin   # must equal step 2`
+: `# 1. Rehearse on Preview testnet first (docs/PREVIEW_TESTNET_POC.md)
+# 2. Prepare: deterministic gzip, hashes, page split, honest cost quote
+python3 tools/lschain/prepare.py "${fn}" --content-type "${ct}" --out build/
+
+# 3. Mint pages + lock the manifest
+tools/lschain/mint.sh build/ payment.skey payment.addr
+
+# 4. Verify from chain BEFORE announcing
+cd koios-viewer
+python3 -m lsview reconstruct-chain --txin <MANIFEST_TX_HASH>#0 --out check.bin
+sha256sum check.bin   # must equal ${S.sha ? S.sha.slice(0,16)+"…" : "your recorded hash"}`;
+
+  if(chan){
+    $("chanout").hidden = false;
+    const nnnn = String(parseInt(issue||"0",10)).padStart(4,"0");
+    const asset = `${chan.toUpperCase().replace(/[^A-Z0-9]+/g,"_")}_${nnnn}`;
+    const chanMeta = { "721": { "<CHANNEL_POLICY_ID>": { [asset]: {
+      name: title || name, mediaType: ct,
+      ...(author ? { publisher: author } : {}),
+      channel: chan, issue: parseInt(issue||"0",10),
+      pointer, sha256: S.sha || "<sha256>",
+      description: splitLines(desc || title || name) } } } };
+    $("o_chan").textContent = JSON.stringify(chanMeta, null, 2);
+  } else $("chanout").hidden = true;
+}
+
+function copyText(btn, text){
+  navigator.clipboard?.writeText(text).then(()=>{
+    const old = btn.textContent; btn.textContent = "copied ✓";
+    setTimeout(()=>btn.textContent = old, 1400);
+  });
+}
+document.querySelectorAll(".copy[data-for]").forEach(b =>
+  b.addEventListener("click", () => copyText(b, $(b.dataset.for).textContent)));
+
+fetchPrice();
+</script>
+</body>
+</html>

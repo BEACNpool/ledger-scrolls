@@ -43,6 +43,7 @@ technology it teaches. Full list with hashes and receipts:
 |---|---|
 | [The Library](https://beacnpool.github.io/ledger-scrolls/) | Main viewer — browse and verify any scroll, channel, or registry |
 | [Create a Scroll](https://beacnpool.github.io/ledger-scrolls/create.html) | The friendly how-to: costs, estimator, full workflow |
+| [Cost Calculator](https://beacnpool.github.io/ledger-scrolls/calculator.html) | Drop any file → transactions/NFTs needed, bytes per page, ADA + live USD, metadata builder |
 | [BEACN Leaks player](https://beacnpool.github.io/ledger-scrolls/leaks.html) | Publisher-channel player — point at a policy ID; this site hosts nothing |
 | [Ledger Docket](https://beacnpool.github.io/ledger-scrolls/legal.html) | Legal-records terminal — pull a recorded instrument by document number |
 | [Constitution](https://beacnpool.github.io/ledger-scrolls/constitution.html) · [Bible](https://beacnpool.github.io/ledger-scrolls/bible.html) · [First Video](https://beacnpool.github.io/ledger-scrolls/first-video.html) · [Latest](https://beacnpool.github.io/ledger-scrolls/latest.html) · [Testnet PoC](https://beacnpool.github.io/ledger-scrolls/preview.html) | Standalone viewers |
