@@ -1,0 +1,37 @@
+{
+  "format": "ls-chain-v2-receipts",
+  "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "5fdadf5158f78afb70a74693b595889406652f3eeddb9a76f44e6f0d481a797e",
+    "txIx": 0
+  },
+  "lockAddress": "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn",
+  "pageTxHashes": [
+    "fc7396731bb118c29d94ca5892a12cae41ad427014da8ddd3f3391d743e052bf",
+    "b6b146ede497268a5809a8e3c4a4726610ad83561bf5073459fb06114a7f8bae",
+    "3f957020965ebd8b503663caddb3f225bcf30929554f596d0aaab40f7eec4cb6",
+    "e2ad7f6e3495779cd4febdc7bcc535ac2cd05b321cdf9b346c966d2eec5de3c2",
+    "252465ef6b06ffd21a6eceb0d808e7ef7e647f4d4391da8868140036c3072b45"
+  ],
+  "plan": {
+    "format": "ls-chain-v2-plan",
+    "sourceFile": "ledger-scrolls-one-pager.pdf",
+    "contentType": "application/pdf",
+    "codec": "gzip",
+    "sizeDecoded": 58946,
+    "sizeEncoded": 53771,
+    "sha256Decoded": "89de5c64b0d2a05b0199875399a47506a75554d0d8613b0d88889667d2122adb",
+    "sha256Encoded": "76ed4ee8c81ccbf72465d606f2ff4fc3168a3aa86902e58ee83ae49ad213c4ed",
+    "pages": 5,
+    "segmentBytes": 64,
+    "segmentsPerPage": 190,
+    "pageSha256": [
+      "d73c39d32a2260ab61e6c8660f525fb656c5f14181c65a8c3a317bf28f805961",
+      "22bffcbf19224908c4ff8b3e5057e2018ee9fda1b555dd6e5e096cdcbccc51c0",
+      "f770ad1c05e71602a338e1f6f9d3960aeefd525a8d7a37f63716958766b15da0",
+      "103df348022a38c1e2e82ccd7d4b2b34ba851ae5ab358b272626603682cdb9bb",
+      "d001dea9837f5bb36949e4b6e902e62ce296dc2e029472351a5c02d4ccbb1ea7"
+    ],
+    "metadataLabel": 22025
+  }
+}

@@ -7,6 +7,30 @@ also has a folder in [`examples/`](../examples/) with its exact source and
 
 ---
 
+## 📕 The Protocol on One Page — the first PDF scroll
+
+The whole protocol on a single printed page, minted as a Chain Scroll on
+2026-07-03. Pointer
+`5fdadf5158f78afb70a74693b595889406652f3eeddb9a76f44e6f0d481a797e#0` ·
+`application/pdf` · gzip · sha256
+`89de5c64b0d2a05b0199875399a47506a75554d0d8613b0d88889667d2122adb` ·
+58,946 bytes · 5 pages · 🟢 LIVE.
+Receipts: [`examples/protocol-one-pager/`](../examples/protocol-one-pager/).
+
+---
+
+## 🗂️ The Card Catalog — the library's index, as a dataset
+
+Every scroll's pointer, hash, and vital facts as one CSV, minted 2026-07-03.
+Pointer
+`358060520666d99793a9d68ccc85c68207d8c5032ea33d3a550d1461a6e8ee7e#0` ·
+`text/csv` · gzip · sha256
+`bd11925a30f925f065345717f5c504992564c24899695a9c1720a83fb7baf9fb` ·
+5,272 bytes · 1 page · 🟢 LIVE.
+Receipts: [`examples/card-catalog/`](../examples/card-catalog/).
+
+---
+
 ## 🔔 LEDGER_SCROLLS — Release 000: The Library Opens
 
 The project's release announcement, first issue of the **LEDGER_SCROLLS**

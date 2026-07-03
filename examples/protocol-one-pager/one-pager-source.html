@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ledger Scrolls — The Protocol on One Page</title>
+<style>
+@page { size: Letter; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html,body { width: 8.5in; height: 11in; }
+body { font: 400 9.6pt/1.42 Helvetica, Arial, sans-serif; color: #14161b; background: #ffffff; }
+.sheet {
+  width: 8.5in; height: 11in; padding: 0.38in 0.55in;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.mono { font-family: Menlo, Consolas, monospace; }
+header { display: flex; align-items: baseline; gap: 10pt; border-bottom: 2.5pt solid #14161b; padding-bottom: 6pt; }
+header .mark { font-size: 20pt; }
+h1 { font-size: 20pt; letter-spacing: -0.02em; }
+header .sub { margin-left: auto; font-size: 9pt; color: #555; text-align: right; }
+h2 { font-size: 10.5pt; letter-spacing: 0.06em; text-transform: uppercase; margin: 8pt 0 3pt; color: #0d228f; }
+p { margin: 2.5pt 0; }
+.lede { font-size: 10.4pt; margin-top: 5pt; }
+.lede b { background: #ebefff; padding: 0 3pt; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18pt; }
+.diagram {
+  margin: 4pt 0; padding: 6pt 9pt; background: #f6f5f1; border: 1pt solid #dbd6ca; border-radius: 6pt;
+  font: 8pt/1.5 Menlo, Consolas, monospace; white-space: pre;
+}
+table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 4pt; }
+th { text-align: left; font-size: 8pt; letter-spacing: 0.06em; text-transform: uppercase; color: #555; border-bottom: 1.2pt solid #14161b; padding: 2pt 6pt 3pt 0; }
+td { border-bottom: 0.6pt solid #dbd6ca; padding: 2.8pt 6pt 2.8pt 0; vertical-align: top; }
+td:first-child { font-weight: 700; white-space: nowrap; }
+.code {
+  margin: 4pt 0; padding: 6pt 8pt; background: #181b22; color: #e6e3da; border-radius: 5pt;
+  font: 7.6pt/1.5 Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-all;
+}
+ul { margin: 3pt 0 0 14pt; }
+li { margin: 1.5pt 0; }
+.rules li b { color: #0d228f; }
+footer { margin-top: auto; border-top: 2.5pt solid #14161b; padding-top: 5pt; display: flex; gap: 16pt; align-items: flex-start; font-size: 8pt; color: #3a4049; }
+footer .links { flex: 1; }
+footer .links div { margin: 1pt 0; }
+footer .motto { text-align: right; font-size: 10.5pt; font-weight: 700; color: #14161b; white-space: nowrap; }
+.pointer { font-size: 7.6pt; }
+.tag { display: inline-block; font-size: 7.4pt; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; background: #ebefff; color: #0d228f; border-radius: 8pt; padding: 1.2pt 6pt; margin-right: 4pt; }
+</style>
+</head>
+<body>
+<div class="sheet">
+<header>
+  <span class="mark">&#128220;</span>
+  <h1>Ledger Scrolls</h1>
+  <div class="sub">The protocol on one page &middot; v1 &middot; July 2026<br>
+  This document is itself stored on Cardano as a scroll.</div>
+</header>
+
+<p class="lede">Ledger Scrolls puts files <b>inside the Cardano blockchain</b> — not a link,
+not a hash of a file kept somewhere else; the actual bytes, in transactions, replicated by
+thousands of independent nodes. Once written, a scroll <b>cannot be edited, cannot be deleted,
+and is timestamped</b> by the block that sealed it. Anyone can read it, free, forever. It costs
+a few dollars — <b>once</b>. No subscription, no pinning service, no custodian.</p>
+
+<h2>How it works</h2>
+<div class="diagram">POINTER              MANIFEST                  PAGES                  YOUR FILE
+one tx id      &#9654;     locked on-chain     &#9654;      plain txs        &#9654;     concat &#8594; gunzip
+(share it            forever: type,            carrying the           &#8594; SHA-256 &#10003;
+as a QR)             hashes, page list         actual bytes           verified, rendered</div>
+<p>A <b>pointer</b> (one transaction id) leads to a <b>manifest</b> locked in an unspendable
+UTxO — an always-fail script address every node carries forever. The manifest declares the
+content type, lists the exact transactions holding the file's pages, and commits to the SHA-256
+of the finished file. A reader fetches, reassembles, and <b>proves</b> the bytes before showing
+them. The golden rule: <b>a viewer never shows you bytes it could not verify.</b></p>
+
+<h2>The formats</h2>
+<table>
+  <tr><th>Format</th><th>How the bytes live</th><th>Use for</th></tr>
+  <tr><td>Standard Scroll</td><td>Whole file in one locked UTxO datum</td><td>Small treasures &le; ~14 KB — messages, poems, icons</td></tr>
+  <tr><td>Chain Scroll</td><td>File split across plain tx metadata (label 22025), anchored by a manifest</td><td>Everything else — books, images, PDF, audio, video. &asymp; 0.07 ADA/KB all-in, once</td></tr>
+  <tr><td>Publisher channel</td><td>A minting policy as a permanent byline</td><td>Serialized publishing only one key can sign — no platform can suspend or impersonate it</td></tr>
+</table>
+
+<h2>Verify with your own hands</h2>
+<p>The whole protocol is two public queries and arithmetic — free, keyless, ~30 lines in any language:</p>
+<div class="code"># 1 — the manifest (type, hashes, page list):
+curl -X POST https://api.koios.rest/api/v1/utxo_info \
+  -d '{"_utxo_refs":["&lt;manifest-tx&gt;#0"],"_extended":true}' -H 'Content-Type: application/json'
+# 2 — the pages it names (label 22025 holds the payload):
+curl -X POST https://api.koios.rest/api/v1/tx_metadata \
+  -d '{"_tx_hashes":["&lt;page-tx-1&gt;","..."]}' -H 'Content-Type: application/json'
+# concatenate segments &#8594; gunzip &#8594; sha256sum &#8212; must equal the manifest's hash</div>
+
+<div class="grid">
+<div>
+<h2>Already live on mainnet</h2>
+<ul>
+  <li>The complete Bible (4.7 MB, 237 pages) &middot; both Cardano Constitutions &middot; the Bitcoin whitepaper &middot; a full video</li>
+  <li><b>The Reader</b> — a working reader app, minted as a scroll: it can rebuild <i>itself</i> from the chain it reads</li>
+  <li><b>The Spec</b> — this wire format, stored in its own format</li>
+  <li><b>BEACN Leaks</b> — a whistleblower channel under an unforgeable byline</li>
+</ul>
+</div>
+<div>
+<h2>The five rules</h2>
+<ul class="rules">
+  <li><b>Permanent means permanent.</b> No edit, no delete — never inscribe secrets.</li>
+  <li><b>Rehearse on testnet.</b> Same bytes, free mistakes.</li>
+  <li><b>Hash before, verify after.</b> Reconstruct from chain before announcing.</li>
+  <li><b>Keep receipts.</b> Tx hashes are how civilization finds it again.</li>
+  <li><b>Self-contained files only.</b> Anything that phones home is a broken promise.</li>
+</ul>
+</div>
+</div>
+
+<footer>
+  <div class="links">
+    <div><span class="tag">Read</span> beacnpool.github.io/ledger-scrolls — the Library: browse, rebuild, verify in your browser</div>
+    <div><span class="tag">Write</span> github.com/BEACNpool/ledger-scrolls — open spec, tools, conformance vectors, MIT</div>
+    <div><span class="tag">Reader</span> <span class="mono pointer">9a564165ebdc4e0c4a2e1163b5cf9355604ecb8e163b425d834570e5b9007de2#0</span></div>
+    <div><span class="tag">Spec</span> <span class="mono pointer">e4845deed98471b29b35689cfdb76f18add189c8d8f5c61b2ef32ea7ce6d5cf9#0</span></div>
+  </div>
+  <div class="motto">A library that cannot burn.</div>
+</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://beacnpool.github.io/ledger-scrolls/sitemap.xml

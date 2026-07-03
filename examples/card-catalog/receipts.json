@@ -1,0 +1,29 @@
+{
+  "format": "ls-chain-v2-receipts",
+  "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "358060520666d99793a9d68ccc85c68207d8c5032ea33d3a550d1461a6e8ee7e",
+    "txIx": 0
+  },
+  "lockAddress": "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn",
+  "pageTxHashes": [
+    "3f1f87ef1d7c27acb033c2b1ea16b4ad5108d413cd51a6af463a34bc61e7a611"
+  ],
+  "plan": {
+    "format": "ls-chain-v2-plan",
+    "sourceFile": "card-catalog.csv",
+    "contentType": "text/csv",
+    "codec": "gzip",
+    "sizeDecoded": 5272,
+    "sizeEncoded": 2948,
+    "sha256Decoded": "bd11925a30f925f065345717f5c504992564c24899695a9c1720a83fb7baf9fb",
+    "sha256Encoded": "a788c1d8cd19e472818bc44a7fc1a5c24595ed6ea19bf4ca4069d1641c1c0e04",
+    "pages": 1,
+    "segmentBytes": 64,
+    "segmentsPerPage": 190,
+    "pageSha256": [
+      "a788c1d8cd19e472818bc44a7fc1a5c24595ed6ea19bf4ca4069d1641c1c0e04"
+    ],
+    "metadataLabel": 22025
+  }
+}

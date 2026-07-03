@@ -10,6 +10,19 @@
 <meta property="og:description" content="Immutable media on Cardano. Your browser queries the chain, rebuilds the bytes, and verifies every hash before a single word is shown.">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="canonical" href="https://beacnpool.github.io/ledger-scrolls/">
+<meta property="og:url" content="https://beacnpool.github.io/ledger-scrolls/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Ledger Scrolls",
+  "alternateName": "A Library That Cannot Burn",
+  "url": "https://beacnpool.github.io/ledger-scrolls/",
+  "description": "Free, open-source reader and writer for immutable media stored inside the Cardano blockchain. Uncensorable, timestamped, verified on every read — one fee, no subscriptions.",
+  "publisher": { "@type": "Organization", "name": "BEACN", "url": "https://github.com/BEACNpool/ledger-scrolls" }
+}
+</script>
 <style>
 /* ════════════════════════════════════════════════════════════════════
    Ledger Scrolls — digital meets analog.
@@ -666,6 +679,12 @@ const BOOTSTRAP = [
  {name:'the-spec',icon:'📐',title:'The Spec (manifest-chain-v2)',form:'chain',
   desc:'The Chain Scroll wire specification, stored in its own format. The chain carries its own law next to its own reader.',
   txin:'e4845deed98471b29b35689cfdb76f18add189c8d8f5c61b2ef32ea7ce6d5cf9#0',contentType:'text/markdown; charset=utf-8',sha256:'4793c38349cca60d552c52d68dfd950f3dd945db55c8a6a87f05ca6d98e3b242'},
+ {name:'protocol-one-pager',icon:'📕',title:'The Protocol on One Page (PDF)',form:'chain',
+  desc:'The whole idea on a single printed page — the first PDF on the shelf, stored in the system it describes. Print it, hand it out; the original can never be lost.',
+  txin:'5fdadf5158f78afb70a74693b595889406652f3eeddb9a76f44e6f0d481a797e#0',contentType:'application/pdf',sha256:'89de5c64b0d2a05b0199875399a47506a75554d0d8613b0d88889667d2122adb'},
+ {name:'card-catalog',icon:'🗂️',title:'The Card Catalog',form:'chain',
+  desc:'The library\'s own index as a dataset: every scroll\'s pointer, hash, and vital facts in one CSV — the first dataset on the shelf, citable by hash.',
+  txin:'358060520666d99793a9d68ccc85c68207d8c5032ea33d3a550d1461a6e8ee7e#0',contentType:'text/csv',sha256:'bd11925a30f925f065345717f5c504992564c24899695a9c1720a83fb7baf9fb'},
  {name:'legal-0001',icon:'⚖️',title:'LEGAL-0001 — Declaration of Record',form:'chain',
   desc:'A recorded legal instrument: executed by the signature on its minting tx, dated by block time, sealed by hash. Pull it by number in the Ledger Docket terminal.',
   txin:'ceced54b2bd462b1ed41864f2583309666010ce1fb96b9f3dc9968174d958bc9#0',contentType:'text/html',sha256:'8c95db4bb4248d82d3d5c4bb49dfe0200d779f4b6905cd3b5649fcb847378bc1'},
@@ -719,6 +738,8 @@ const FACTS={
  'the-reader':{size:16634,pages:1,minted:'2026-07'},
  'beacn-leaks-002':{size:7500,pages:1,minted:'2026-07'},
  'the-spec':{size:5518,pages:1,minted:'2026-07'},
+ 'protocol-one-pager':{size:58946,pages:5,minted:'2026-07'},
+ 'card-catalog':{size:5272,pages:1,minted:'2026-07'},
  'legal-0001':{size:11192,pages:1,minted:'2026-06'},
  'beacn-leaks-001':{size:9794,pages:1,minted:'2026-06'},
  'beacn-leaks-000':{size:10304,pages:1,minted:'2026-06'},
@@ -736,14 +757,15 @@ const FACTS={
 const fmtSize=n=>n>=1e6?(n/1e6).toFixed(2)+' MB':n>=1000?(n/1000).toFixed(1)+' KB':n+' B';
 function mediaGroup(ct){
   const c=(ct||'').split(';')[0].trim();
-  if(c==='text/html')return '📄 Documents';
-  if(c.startsWith('text/')||c==='application/json')return '✍️ Plain Text & Markdown';
+  if(c==='text/html'||c==='application/pdf')return '📄 Documents';
+  if(c==='text/csv'||c==='application/json')return '🗂️ Data & Datasets';
+  if(c.startsWith('text/'))return '✍️ Plain Text & Markdown';
   if(c.startsWith('image/'))return '🖼️ Images';
   if(c.startsWith('video/'))return '🎬 Video';
   if(c.startsWith('audio/'))return '🎧 Audio';
   return '🗃️ Other';
 }
-const GROUP_ORDER=['📄 Documents','✍️ Plain Text & Markdown','🖼️ Images','🎬 Video','🎧 Audio','🗃️ Other'];
+const GROUP_ORDER=['📄 Documents','✍️ Plain Text & Markdown','🖼️ Images','🎬 Video','🎧 Audio','🗂️ Data & Datasets','🗃️ Other'];
 let filter='all';
 
 function cardFor(e){

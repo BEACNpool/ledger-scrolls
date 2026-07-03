@@ -45,6 +45,26 @@ glasses, and check one against the other.
 
 → [`examples/the-spec/`](../examples/the-spec/)
 
+## 📕 The Protocol on One Page
+
+*The first PDF on the shelf.*
+
+The whole idea on a single printed page — formats, verification queries,
+the five rules — as a PDF stored in the system it describes. Print it and
+hand it out; every copy can be checked against the chain to the byte.
+
+→ [`examples/protocol-one-pager/`](../examples/protocol-one-pager/)
+
+## 🗂️ The Card Catalog
+
+*The first dataset on the shelf.*
+
+The library's own index as one CSV: every scroll's pointer, hash, and vital
+facts, citable by hash. The state of the library on 2026-07-03 is now a
+permanent, timestamped fact — a catalog stored inside the library it lists.
+
+→ [`examples/card-catalog/`](../examples/card-catalog/)
+
 ## 👓 The Reader
 
 *The reader, stored as a scroll — the library holds its own glasses.*
