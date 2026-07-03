@@ -11,6 +11,7 @@ each guide is backed by scrolls live on mainnet today.
 | [FAQ.md](FAQ.md) | Every question, answered straight — costs, trust, IPFS/Arweave, objections |
 | [Create a Scroll (web guide)](https://beacnpool.github.io/ledger-scrolls/create.html) | The friendly browser version: costs, an interactive estimator, the full workflow |
 | [Cost Calculator](https://beacnpool.github.io/ledger-scrolls/calculator.html) | Drop a file in your browser → one price to make it permanent, exact hashes, metadata builder |
+| [Media Types (web guide)](https://beacnpool.github.io/ledger-scrolls/media.html) | What can live forever — every supported media type, prep tips, live proofs, prices |
 | [VIEWERS.md](VIEWERS.md) | The ways to read scrolls — browser, CLI, Python |
 | [BUILD_A_READER.md](BUILD_A_READER.md) | Write your own reader — the whole protocol is two queries and a hash |
 

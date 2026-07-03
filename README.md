@@ -46,6 +46,7 @@ technology it teaches. Full list with hashes and receipts:
 | [The Reader](https://beacnpool.github.io/ledger-scrolls/reader.html) | The minimal reader — one file, zero dependencies, itself minted on-chain |
 | [Create a Scroll](https://beacnpool.github.io/ledger-scrolls/create.html) | The friendly how-to: costs, estimator, full workflow |
 | [Cost Calculator](https://beacnpool.github.io/ledger-scrolls/calculator.html) | Drop any file → what forever costs: one number, ADA + live USD, with a metadata builder |
+| [Media Types](https://beacnpool.github.io/ledger-scrolls/media.html) | What can live forever — every media type that works, prep tips, live proof scrolls, prices |
 | [BEACN Leaks player](https://beacnpool.github.io/ledger-scrolls/leaks.html) | Publisher-channel player — point at a policy ID; this site hosts nothing |
 | [Ledger Docket](https://beacnpool.github.io/ledger-scrolls/legal.html) | Legal-records terminal — pull a recorded instrument by document number |
 | [Constitution](https://beacnpool.github.io/ledger-scrolls/constitution.html) · [Bible](https://beacnpool.github.io/ledger-scrolls/bible.html) · [First Video](https://beacnpool.github.io/ledger-scrolls/first-video.html) · [Latest](https://beacnpool.github.io/ledger-scrolls/latest.html) | Permanent links — each opens its scroll in The Library |
@@ -165,6 +166,8 @@ tools/lschain/mint.sh build/ payment.skey payment.addr   # mints pages + manifes
 5. **Self-contained files only.** Anything that phones home — external
    images, fonts, scripts — is a future broken promise. Inline everything.
 
+Which media types work, with live proof scrolls and prices:
+**[media.html](https://beacnpool.github.io/ledger-scrolls/media.html)**.
 Media-specific best practices (text, images, HTML, PDF, audio, video, data):
 **[docs/CREATING_SCROLLS.md](docs/CREATING_SCROLLS.md)**. Every skeptic's
 question, answered straight: **[docs/FAQ.md](docs/FAQ.md)**.
