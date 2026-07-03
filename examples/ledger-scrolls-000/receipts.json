@@ -1,0 +1,29 @@
+{
+ "format": "ls-chain-v2-receipts",
+ "title": "LEDGER_SCROLLS \u2014 Release 000: The Library Opens",
+ "mintedAt": "2026-07-02",
+ "mintedBy": "BEACNpool (Clawd, autonomous agent, at David's direction)",
+ "network": "mainnet",
+ "pointer": {
+  "kind": "manifest-chain-v2",
+  "txHash": "d8875be1a21dffca56252ddd22e701ae088645518e48c49f873449b87802e96d",
+  "txIx": 0
+ },
+ "lockAddress": "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn",
+ "manifestLockedLovelace": 1439540,
+ "pageTxHashes": [
+  "08faf12c29069f0ecc44938e536a8864850d9805463c5ed18acf92c470117bb8"
+ ],
+ "contentType": "text/html",
+ "codec": "gzip",
+ "sizeDecoded": 5055,
+ "sizeEncoded": 2593,
+ "sha256Decoded": "19ba8fccd3bd7e5ac997c3a4a0ff768a2699959bfd3bcf9db2ae073c09fe5013",
+ "sha256Encoded": "c48d3a9e58ae8376397860a17128a769a952e68818f87ef17322965028545f95",
+ "channel": {
+  "policyId": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+  "asset": "LEDGER_SCROLLS_0000",
+  "mintTx": "c4b0548c80a4c9bccf2c0361eef7630ee49bf54d21fcad8d612aead4e7fc25ae"
+ },
+ "verified": "reconstructed from chain via lsview 2026-07-02, byte-identical; channel NFT confirmed in UTxO set from the node"
+}

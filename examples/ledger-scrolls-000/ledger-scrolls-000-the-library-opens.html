@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LEDGER_SCROLLS — Release 000: The Library Opens</title>
+<style>
+:root{--bg:#f6f5f1;--ink:#14161b;--ink2:#3a4049;--mut:#6b7280;--line:#dbd6ca;--acc:#2f53ff;--accink:#0d228f;--amber:#b27a1e;--mono:ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:16.5px/1.6 Georgia,'Times New Roman',serif;padding:26px 12px}
+.doc{max-width:800px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 12px 50px rgba(20,22,27,.15)}
+.bar{background:var(--ink);color:#f6f5f1;text-align:center;padding:8px;letter-spacing:.3em;font:600 12px var(--mono)}
+header{padding:44px 42px 30px;border-bottom:3px double var(--amber);text-align:center}
+.k{font:600 12px/1 var(--mono);letter-spacing:.25em;color:var(--mut)}
+h1{font:700 40px/1.1 Georgia,serif;letter-spacing:-.01em;margin:12px 0 6px}
+h1 .b{color:var(--acc)}
+h2{font:700 20px/1.3 -apple-system,system-ui,sans-serif;margin:30px 0 10px;color:var(--accink)}
+main{padding:28px 42px 40px}
+p{margin:12px 0;color:var(--ink2)}
+.lead{font-size:18px;color:var(--ink)}
+.kv{font:12.5px/1.8 var(--mono);word-break:break-all;background:#16161a;color:#d7d3c4;padding:14px 16px;border-radius:6px;margin:14px 0}
+.kv b{color:#fff}
+blockquote{border-left:4px solid var(--amber);padding:8px 18px;margin:16px 0;background:rgba(178,122,30,.07);font-style:italic}
+ul{margin:10px 0 10px 24px;color:var(--ink2)}
+li{margin:7px 0}
+footer{border-top:3px double var(--amber);padding:24px 42px 34px;text-align:center;color:var(--mut);font-size:13.5px}
+.sig{font:600 15px/1 var(--mono);letter-spacing:.2em;color:var(--ink);margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="doc">
+<div class="bar">RELEASE 000 &#9642; MINTED, NOT POSTED</div>
+
+<header>
+ <div class="k">LEDGER_SCROLLS &#183; A PUBLIC RECORD OF THE PROJECT ITSELF</div>
+ <h1>The Library <span class="b">Opens</span></h1>
+ <div class="k">JULY 2026 &#183; CARDANO MAINNET</div>
+</header>
+
+<main>
+
+<p class="lead">Ledger Scrolls is the free, open-source reader and writer for
+immutable, forever media: files stored byte-for-byte inside the Cardano
+blockchain, rebuilt and hash-verified by anyone, deletable by no one. As of
+this release, the system is <b>fully self-hosting</b> — and this announcement
+is published the only way that would be honest: as a scroll.</p>
+
+<h2>What lives on the chain, tonight</h2>
+
+<div class="kv">
+<b>THE READER</b> — one dependency-free HTML file that rebuilds and verifies any scroll; handed its own pointer, it rebuilds itself<br>
+9a564165ebdc4e0c4a2e1163b5cf9355604ecb8e163b425d834570e5b9007de2#0<br><br>
+<b>THE SPEC</b> — the wire format, stored in its own format<br>
+e4845deed98471b29b35689cfdb76f18add189c8d8f5c61b2ef32ea7ce6d5cf9#0<br><br>
+<b>THE WITNESS</b> — "The Year the Archives Blinked," a sourced chronicle of 2025–26 public-record erasure<br>
+1b465d3f9368cf6e1a36ae536631ffed9ca12b35c3bd2843bc423398140174fc#0
+</div>
+
+<p>Alongside them: both Cardano Constitutions, the complete Bible, the
+Bitcoin whitepaper, the first video on Cardano, and the founding manifestos.
+Every one reconstructs from raw chain data and verifies against a SHA-256
+fingerprint before a single byte renders.</p>
+
+<blockquote>Delete the website, the repository, and everyone who built this —
+and a stranger with a Cardano node can extract the law, implement it in an
+afternoon, extract the glasses, and read every scroll ever written. The
+library holds its own pair of glasses and its own law.</blockquote>
+
+<h2>This channel</h2>
+
+<p>This document is Release 000 of the <b>LEDGER_SCROLLS</b> publisher
+channel — the project's permanent, unforgeable release feed. Anything minted
+under this policy ID was published by the holder of one key. No account, no
+platform, no handle to seize:</p>
+
+<div class="kv"><b>CHANNEL POLICY</b><br>8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80</div>
+
+<p>Follow it with one keyless query, forever — every release this project
+ever announces will appear under that ID, and nothing else can.</p>
+
+<h2>Use it</h2>
+
+<ul>
+ <li><b>Read:</b> beacnpool.github.io/ledger-scrolls — or any conforming reader, including the one on-chain</li>
+ <li><b>Verify:</b> two queries and a hash; the spec is at the pointer above</li>
+ <li><b>Write:</b> github.com/BEACNpool/ledger-scrolls — tools, guides, costs; eternity runs about 0.06 ADA per kilobyte, once</li>
+ <li><b>Build:</b> the protocol is deliberately small enough to re-implement in an afternoon; conformance vectors prove your reader agrees with ours</li>
+</ul>
+
+<p>Mint deliberately. Permanence keeps your mistakes too.</p>
+
+</main>
+
+<footer>
+ <div class="sig">&#128220; LEDGER_SCROLLS &#183; RELEASE 000</div>
+ free &#183; open source &#183; permissionless &#183; forever<br>
+ minted on Cardano mainnet &#183; July 2026 &#183; by BEACN [pool: BEACN]<br><br>
+ <em>A library that cannot burn — now with its own front door.</em>
+</footer>
+</div>
+</body>
+</html>

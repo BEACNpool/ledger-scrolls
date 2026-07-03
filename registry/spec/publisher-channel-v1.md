@@ -73,4 +73,5 @@ Resolution and verification of the content follow the pointer's own spec.
 
 | Channel | Policy ID | Issues |
 |---|---|---|
-| BEACN Leaks | `5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415` | `BEACN_LEAKS_0000` — Issue 000: The Manifesto (`examples/beacn-leaks-000/`) · `BEACN_LEAKS_0001` — Issue 001: The Undeniable (`examples/beacn-leaks-001/`) |
+| BEACN Leaks | `5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415` | `BEACN_LEAKS_0000` — Issue 000: The Manifesto (`examples/beacn-leaks-000/`) · `BEACN_LEAKS_0001` — Issue 001: The Undeniable (`examples/beacn-leaks-001/`) · Issue 002 scroll live, byline NFT pending (`examples/beacn-leaks-002/`) |
+| LEDGER_SCROLLS | `8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80` | `LEDGER_SCROLLS_0000` — Release 000: The Library Opens (`examples/ledger-scrolls-000/`) |

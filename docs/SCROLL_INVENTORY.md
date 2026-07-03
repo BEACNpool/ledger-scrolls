@@ -7,6 +7,18 @@ also has a folder in [`examples/`](../examples/) with its exact source and
 
 ---
 
+## 🔔 LEDGER_SCROLLS — Release 000: The Library Opens
+
+The project's release announcement, first issue of the **LEDGER_SCROLLS**
+publisher channel (`8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80`,
+asset `LEDGER_SCROLLS_0000`). Pointer
+`d8875be1a21dffca56252ddd22e701ae088645518e48c49f873449b87802e96d#0` ·
+`text/html` · gzip · sha256
+`19ba8fccd3bd7e5ac997c3a4a0ff768a2699959bfd3bcf9db2ae073c09fe5013` · 🟢 LIVE.
+Receipts: [`examples/ledger-scrolls-000/`](../examples/ledger-scrolls-000/).
+
+---
+
 ## 0000) 📐 The Spec — the protocol, stored in its own format
 
 The `manifest-chain-v2` wire spec minted as a Chain Scroll. Pointer

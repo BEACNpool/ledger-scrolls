@@ -13,6 +13,16 @@ preserve?).
 
 ---
 
+## 🔔 LEDGER_SCROLLS — Release 000
+
+*The project announces itself as a scroll.*
+
+The release feed nobody can fake: every LEDGER_SCROLLS announcement is
+minted under one policy ID, forever. Release 000 declares the self-hosting
+milestone — reader, spec, and witness all on-chain.
+
+→ [`examples/ledger-scrolls-000/`](../examples/ledger-scrolls-000/)
+
 ## 🗄️ BEACN Leaks — Issue 002: The Year the Archives Blinked
 
 *The witness scroll.*
