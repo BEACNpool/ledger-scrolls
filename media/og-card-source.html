@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html,body { width: 1200px; height: 630px; overflow: hidden; }
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #14161b;
+  background:
+    radial-gradient(900px 520px at 82% -10%, rgba(47,83,255,.12), transparent 60%),
+    radial-gradient(700px 480px at 2% 8%, rgba(178,122,30,.10), transparent 60%),
+    linear-gradient(to right, rgba(20,22,27,.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(20,22,27,.04) 1px, transparent 1px),
+    #f6f5f1;
+  background-size: 100% 100%, 100% 100%, 46px 46px, 46px 46px;
+  position: relative;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 84px;
+}
+.mark {
+  position: absolute; right: 64px; top: 50%; transform: translateY(-50%);
+  width: 340px; height: 340px; border-radius: 64px;
+  background: linear-gradient(150deg, #ffffff, #f6eedd);
+  border: 2px solid #dbd6ca;
+  box-shadow: 0 30px 70px -30px rgba(13,34,143,.28), 0 10px 28px -12px rgba(20,22,27,.15);
+  display: grid; place-items: center;
+  font-size: 170px;
+}
+.mark::after {
+  content: "";
+  position: absolute; inset: 22px; border-radius: 46px;
+  border: 2px dashed rgba(47,83,255,.32);
+}
+.chain {
+  position: absolute; right: 34px; top: 90px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.chain span {
+  width: 17px; height: 17px; border-radius: 50%;
+  background: #2f53ff; opacity: .85;
+  box-shadow: 0 0 0 6px rgba(47,83,255,.14);
+}
+.chain span:nth-child(2n) { background: #b27a1e; box-shadow: 0 0 0 6px rgba(178,122,30,.14); }
+.eyebrow {
+  display: inline-flex; width: fit-content; align-items: center; gap: 12px;
+  font-weight: 700; font-size: 21px; letter-spacing: .18em; text-transform: uppercase;
+  color: #0d228f; background: #ebefff;
+  border: 2px solid rgba(47,83,255,.25);
+  padding: 12px 26px; border-radius: 999px;
+  margin-bottom: 34px;
+}
+h1 {
+  font-size: 108px; line-height: .98; letter-spacing: -0.025em; font-weight: 800;
+  max-width: 720px;
+}
+h1 .b {
+  background: linear-gradient(90deg, #2f53ff, #b27a1e);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.tagline {
+  margin-top: 30px;
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  font-style: italic; font-size: 46px; color: #3a4049;
+}
+.footrow {
+  position: absolute; left: 84px; bottom: 52px;
+  display: flex; gap: 14px; align-items: center;
+  font-size: 22.5px; font-weight: 600; color: #6b7280;
+}
+.footrow .pill {
+  background: #ffffff; border: 2px solid #e6e3da; border-radius: 999px;
+  padding: 10px 22px; box-shadow: 0 2px 6px rgba(20,22,27,.06);
+}
+.footrow .pill b { color: #0a8f5b; }
+.footrow .pill.u { }
+.footrow .pill.f b { color: #0d228f; }
+</style>
+</head>
+<body>
+  <div class="chain" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="mark">&#128220;</div>
+  <span class="eyebrow">Immutable media on Cardano</span>
+  <h1>Ledger<br><span class="b">Scrolls</span></h1>
+  <div class="tagline">A library that cannot burn.</div>
+  <div class="footrow">
+    <span class="pill"><b>&#10003;</b> verified on every read</span>
+    <span class="pill u">uncensorable &middot; timestamped</span>
+    <span class="pill f"><b>one fee</b> &middot; zero subscriptions</span>
+  </div>
+</body>
+</html>
