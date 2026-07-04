@@ -1,6 +1,7 @@
 # Ledger Scrolls 📜
 
 **"A library that cannot burn."**
+*Unfindable by bots. Verifiable by anyone. Deletable by no one.*
 
 Ledger Scrolls is the free, open-source **reader and writer for immutable,
 forever media**. That is the whole job — one job. It puts files **inside the
@@ -16,6 +17,12 @@ Once a scroll is written:
 - **Anyone can read it.** No account, no permission, no fee to read.
 - **Everyone can verify it.** The bytes are checked against a SHA-256
   fingerprint on every read. Readers don't trust — they check.
+- **No crawler can find it.** A scroll has no URL — it exists as fragments
+  spread across transactions, and only becomes a file again when someone
+  holding the pointer reassembles it. Search engines, scrapers, and
+  content-ID systems see nothing; anyone you hand the pointer sees
+  everything. Hidden from the web's machinery, not from people — the
+  chain itself is radically public.
 
 That combination has never existed before. Books burn. Servers go dark.
 Links rot. Platforms moderate, archives get edited, companies fold. A
