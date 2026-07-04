@@ -7,6 +7,18 @@ also has a folder in [`examples/`](../examples/) with its exact source and
 
 ---
 
+## 🎧 Ledger Scrolls — The Theme · the first music on the shelf
+
+The project's own theme — a 1:47 electronic piece by the librarian, mastered
+for the chain from the lossless mix. Minted 2026-07-03. Pointer
+`b6d9e70a751398fae0dc86580ce256802e6aea9ae0978b8c92b88b50a536962b#0` ·
+`audio/ogg` (Opus 32k stereo) · codec none · sha256
+`8bd5c906744197d94a7252f2607f671037b426eea18a05fa39330a85145b06e7` ·
+473,561 bytes · 39 pages · 🟢 LIVE.
+Receipts: [`examples/ledger-scrolls-theme/`](../examples/ledger-scrolls-theme/).
+
+---
+
 ## 📕 The Protocol on One Page — the first PDF scroll
 
 The whole protocol on a single printed page, minted as a Chain Scroll on

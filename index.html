@@ -160,6 +160,12 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
 .resolver-hint{font-size:13px;color:var(--muted);margin-top:12px;padding-left:6px}
 
 /* ── trust strip ── */
+.viewtabs{display:flex;gap:10px;margin-top:30px}
+.viewtab{display:inline-flex;align-items:center;gap:9px;padding:12px 22px;border-radius:var(--pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);font:600 15px/1 var(--sans);cursor:pointer;box-shadow:var(--sh-sm);transition:.15s var(--ease)}
+.viewtab:hover{transform:translateY(-1px);border-color:var(--accent)}
+.viewtab[aria-selected="true"]{background:var(--ink);color:#f6f5f1;border-color:var(--ink)}
+.viewtab .n{font:600 11px var(--mono);background:rgba(255,255,255,.16);border-radius:var(--pill);padding:3px 8px}
+.viewtab[aria-selected="false"] .n{background:var(--accent-soft);color:var(--accent-ink)}
 .trust-strip{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:34px}
 .trust-strip li{display:flex;gap:12px;align-items:flex-start;padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sh-sm)}
 .trust-strip .ti{font-size:18px;line-height:1;flex:none;margin-top:1px}
@@ -354,10 +360,15 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
     <li><code>56-hex policy id</code><span>a publisher channel or NFT-page set &mdash; opens the feed</span></li>
     <li><code>registry head txin</code><span>someone else&rsquo;s catalog &mdash; swaps this whole library</span></li>
    </ul>
-   <p class="resolver-hint">Not a walled garden &mdash; anyone&rsquo;s scrolls, channels, and registries resolve here. Or browse the BEACN public library below.</p>
+   <p class="resolver-hint">Not a walled garden &mdash; anyone&rsquo;s scrolls, channels, and registries resolve here.</p>
   </div>
 
-  <ul class="trust-strip">
+  <nav class="viewtabs" role="tablist" aria-label="Site views">
+   <button class="viewtab" id="tab-home" role="tab" aria-selected="true">&#128269; Viewer</button>
+   <button class="viewtab" id="tab-library" role="tab" aria-selected="false">&#127963;&#65039; BEACN Public Library <span class="n" id="shelfcount"></span></button>
+  </nav>
+
+  <ul class="trust-strip" id="truststrip">
    <li><span class="ti">&#128269;</span><div><b>Verify, don&rsquo;t trust</b><span>SHA-256 recomputed locally against an on-chain commitment.</span></div></li>
    <li><span class="ti">&#127760;</span><div><b>Hosts nothing</b><span>The page is a lens. Your browser does the querying.</span></div></li>
    <li><span class="ti">&#9889;</span><div><b>Zero dependencies</b><span>One self-contained file. No build, no CDN, no servers of record.</span></div></li>
@@ -371,8 +382,9 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
  <div class="shelftools">
   <div class="head">
    <h2 class="section-title">The BEACN Public Library</h2>
-   <p class="section-sub">Every scroll below lives on Cardano mainnet &mdash; shelved by media type,
-   with its vital facts on the spine. Click one to rebuild and verify it from the chain.</p>
+   <p class="section-sub">Every scroll on this shelf lives on Cardano mainnet &mdash; organized by media
+   type, vital facts on the spine. Click one to rebuild and verify it from the chain, or paste any
+   pointer in the viewer above.</p>
   </div>
   <div class="shelftools-controls">
    <input id="search" placeholder="search the stacks&hellip;" autocomplete="off">
@@ -390,7 +402,7 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
 <!-- READER -->
 <section class="reader container section" id="reader">
  <div class="docbar">
-  <button class="ghost" id="backbtn">&#8592; The Stacks</button>
+  <button class="ghost" id="backbtn">&#8592; Back</button>
   <h2 id="doctitle"></h2>
   <button class="ghost" id="dlbtn" style="display:none">&#11015; Original bytes</button>
  </div>
@@ -410,7 +422,7 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
 <!-- CHANNEL -->
 <section class="channel container section" id="channel">
  <div class="docbar">
-  <button class="ghost" id="backbtn2">&#8592; The Stacks</button>
+  <button class="ghost" id="backbtn2">&#8592; Back</button>
   <h2 id="chantitle">Publisher channel</h2>
  </div>
  <p class="chansub" id="chansub"></p>
@@ -684,6 +696,9 @@ const BOOTSTRAP = [
  {name:'the-spec',icon:'📐',title:'The Spec (manifest-chain-v2)',form:'chain',
   desc:'The Chain Scroll wire specification, stored in its own format. The chain carries its own law next to its own reader.',
   txin:'e4845deed98471b29b35689cfdb76f18add189c8d8f5c61b2ef32ea7ce6d5cf9#0',contentType:'text/markdown; charset=utf-8',sha256:'4793c38349cca60d552c52d68dfd950f3dd945db55c8a6a87f05ca6d98e3b242'},
+ {name:'ledger-scrolls-theme',icon:'🎧',title:'Ledger Scrolls — The Theme',form:'chain',
+  desc:'The project\'s own theme: a two-drop electronic piece by the librarian himself — the first music on the shelf, mastered for the chain from the original lossless mix.',
+  txin:'b6d9e70a751398fae0dc86580ce256802e6aea9ae0978b8c92b88b50a536962b#0',contentType:'audio/ogg',sha256:'8bd5c906744197d94a7252f2607f671037b426eea18a05fa39330a85145b06e7'},
  {name:'protocol-one-pager',icon:'📕',title:'The Protocol on One Page (PDF)',form:'chain',
   desc:'The whole idea on a single printed page — the first PDF on the shelf, stored in the system it describes. Print it, hand it out; the original can never be lost.',
   txin:'5fdadf5158f78afb70a74693b595889406652f3eeddb9a76f44e6f0d481a797e#0',contentType:'application/pdf',sha256:'89de5c64b0d2a05b0199875399a47506a75554d0d8613b0d88889667d2122adb'},
@@ -743,6 +758,7 @@ const FACTS={
  'the-reader':{size:16634,pages:1,minted:'2026-07'},
  'beacn-leaks-002':{size:7500,pages:1,minted:'2026-07'},
  'the-spec':{size:5518,pages:1,minted:'2026-07'},
+ 'ledger-scrolls-theme':{size:473561,pages:39,minted:'2026-07'},
  'protocol-one-pager':{size:58946,pages:5,minted:'2026-07'},
  'card-catalog':{size:5272,pages:1,minted:'2026-07'},
  'legal-0001':{size:11192,pages:1,minted:'2026-06'},
@@ -793,6 +809,7 @@ function cardFor(e){
   return c;
 }
 function drawShelf(){
+  $('shelfcount').textContent = SHELF.length;
   const q = ($('search').value||'').toLowerCase();
   const grid=$('shelf'); grid.innerHTML='';
   const groups=new Map();
@@ -846,7 +863,16 @@ async function loadRegistry(){
 let currentBytes=null,currentName='scroll',currentType='',currentUrl=null;
 function step(n,st){ const el=$('st'+n); el.classList.remove('on','done','fail'); if(st)el.classList.add(st); }
 function resetReader(){ [1,2,3,4,5].forEach(n=>step(n,null)); clearLog(); $('verdict').className='verdict'; $('stage').style.display='none'; $('stage').innerHTML=''; $('receipt').style.display='none'; $('dlbtn').style.display='none'; }
-function show(view){ for(const v of ['library','reader','channel']) $(v).style.display = v===view?'block':'none'; $('about').style.display = view==='library'?'block':'none'; if(view!=='library')window.scrollTo({top:0}); }
+let lastTab='home';
+function show(view){
+  if(view==='home'||view==='library') lastTab=view;
+  for(const v of ['library','reader','channel']) $(v).style.display = v===view?'block':'none';
+  $('about').style.display = view==='home'?'block':'none';
+  $('truststrip').style.display = view==='home'?'grid':'none';
+  $('tab-home').setAttribute('aria-selected', String(view==='home'));
+  $('tab-library').setAttribute('aria-selected', String(view==='library'));
+  if(view==='reader'||view==='channel')window.scrollTo({top:0});
+}
 
 async function openScroll(e){
   show('reader'); resetReader();
@@ -959,13 +985,16 @@ async function openPointer(raw){
 function route(){
   const h=location.hash.replace(/^#/,'');
   const s=h.match(/^s=([a-z0-9-]+)/), pp=h.match(/^p=([0-9a-f]{56})$/);
-  if(s){ const e=SHELF.find(x=>x.name===s[1]); if(e){ openScroll(e); return; } }
+  if(s && s[1]!=='library'){ const e=SHELF.find(x=>x.name===s[1]); if(e){ openScroll(e); return; } }
   if(pp){ openChannel(pp[1]); return; }
-  show('library');
+  show((h==='stacks'||h==='library')?'library':'home');
 }
 window.addEventListener('hashchange',route);
-$('backbtn').onclick=()=>{ location.hash=''; };
-$('backbtn2').onclick=()=>{ location.hash=''; };
+$('tab-home').onclick=()=>{ if(location.hash&&location.hash!=='#'){location.hash='';}else{show('home');} };
+$('tab-library').onclick=()=>{ location.hash='stacks'; };
+const goBack=()=>{ location.hash = lastTab==='library' ? 'stacks' : ''; };
+$('backbtn').onclick=goBack;
+$('backbtn2').onclick=goBack;
 $('openbtn').onclick=()=>openPointer($('point').value);
 $('point').addEventListener('keydown',e=>{ if(e.key==='Enter')openPointer($('point').value); });
 $('dlbtn').onclick=()=>{ if(!currentBytes)return; const base=(currentType||'').split(';')[0].trim();

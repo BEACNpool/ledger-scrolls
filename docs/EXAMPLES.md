@@ -45,6 +45,16 @@ glasses, and check one against the other.
 
 → [`examples/the-spec/`](../examples/the-spec/)
 
+## 🎧 Ledger Scrolls — The Theme
+
+*The first music on the shelf.*
+
+The project's own theme, encoded once from the lossless master and split
+across 39 transactions. Click it and the chain plays you a song — every
+byte hash-verified before the first beat.
+
+→ [`examples/ledger-scrolls-theme/`](../examples/ledger-scrolls-theme/)
+
 ## 📕 The Protocol on One Page
 
 *The first PDF on the shelf.*
