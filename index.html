@@ -143,8 +143,19 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
 .hero-lede{font-size:clamp(16px,2.1vw,19px);color:var(--ink-2);max-width:62ch;margin-top:22px;line-height:1.7}
 .hero-lede b{color:var(--ink);font-weight:600}
 
-/* ── resolver bar ── */
-.resolver{margin-top:30px;max-width:720px}
+/* ── resolver bar (the portal) ── */
+.hero .container{text-align:center}
+.hero-lede{margin-left:auto;margin-right:auto}
+.resolver{margin:34px auto 0;max-width:780px;text-align:left}
+.viewtabs{justify-content:center}
+@keyframes portalpulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}70%{box-shadow:0 0 0 16px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.resolver-field.pulse{animation:portalpulse 1.1s ease-out 2;border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(8px);background:var(--ink);color:#f6f5f1;border:1px solid #3a4049;border-radius:14px;padding:13px 18px;font:500 14px/1.5 var(--sans);box-shadow:0 18px 50px rgba(0,0,0,.35);z-index:99;display:flex;gap:14px;align-items:center;max-width:92vw;opacity:0;pointer-events:none;transition:.25s var(--ease)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast code{font:600 12px var(--mono);color:#e8d9ae;word-break:break-all}
+.toast a{color:#9ab2ff;font-weight:600;white-space:nowrap;cursor:pointer}
+.card{cursor:copy}
+.facts .copyhint{color:var(--accent-ink);font-weight:600}
 .resolver-field{
   display:flex;align-items:center;gap:8px;padding:8px;
   background:var(--surface);border:1px solid var(--line-2);border-radius:var(--pill);
@@ -345,14 +356,15 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
  <div class="container">
   <span class="eyebrow">Immutable media on Cardano</span>
   <h1 class="hero-title">A library that <em>cannot burn</em></h1>
-  <p class="hero-lede"><b>This site hosts nothing.</b> Every document below lives inside the Cardano blockchain &mdash; written once, for one fee, with no subscription and no pinning service to keep it alive, timestamped by the block that sealed it. Your browser queries the public ledger, rebuilds the bytes, and <b>verifies every hash</b> before showing you a single word &mdash; and shows you each request it makes while doing it.</p>
+  <p class="hero-lede"><b>This site hosts nothing.</b> Paste a pointer &mdash; your browser raises the
+  bytes from the Cardano ledger, rebuilds them, and <b>verifies every hash</b> before a single word renders.</p>
 
   <div class="resolver">
    <div class="resolver-field">
     <span class="resolver-ic" aria-hidden="true">
      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
     </span>
-    <input id="point" placeholder="read anything on the chain — paste a pointer&hellip;" spellcheck="false" autocomplete="off" autocapitalize="off">
+    <input id="point" placeholder="paste a pointer — raise it from the ledger&hellip;" spellcheck="false" autocomplete="off" autocapitalize="off">
     <button id="openbtn">Read</button>
    </div>
    <ul class="reads-legend" aria-label="What the reader accepts">
@@ -383,8 +395,8 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
   <div class="head">
    <h2 class="section-title">The BEACN Public Library</h2>
    <p class="section-sub">Every scroll on this shelf lives on Cardano mainnet &mdash; organized by media
-   type, vital facts on the spine. Click one to rebuild and verify it from the chain, or paste any
-   pointer in the viewer above.</p>
+   type, vital facts on the spine. <b>Click a spine to copy its pointer</b>, then paste it into the
+   portal above and watch it rebuild from the ledger.</p>
   </div>
   <div class="shelftools-controls">
    <input id="search" placeholder="search the stacks&hellip;" autocomplete="off">
@@ -796,6 +808,7 @@ function cardFor(e){
   if(f.pages!==undefined)facts.push(`<span><b>${f.pages===0?'single coin':f.pages+' page'+(f.pages>1?'s':'')}</b></span>`);
   if(f.minted)facts.push(`<span>minted <b>${f.minted}</b></span>`);
   if(e.sha256)facts.push(`<span>sha <b>${e.sha256.slice(0,8)}…</b></span>`);
+  facts.push(`<span class="copyhint">&#10697; click&nbsp;=&nbsp;copy pointer</span>`);
   const c=document.createElement('div'); c.className='card';
   c.innerHTML=`<div class="ic">${e.icon||'📄'}</div><h3></h3><p></p><div class="tags">
     <span class="tag form">${e.form}</span>
@@ -805,8 +818,36 @@ function cardFor(e){
     ${facts.length?`<div class="facts">${facts.join('')}</div>`:''}`;
   c.querySelector('h3').textContent=e.title;
   c.querySelector('p').textContent=e.desc||'';
-  c.onclick=()=>{ location.hash='s='+e.name; };
+  c.onclick=()=>{ copyPointer(e); };
   return c;
+}
+const pointerOf = e => e.txin || e.policy || '';
+async function copyPointer(e){
+  const ptr = pointerOf(e);
+  if(!ptr){ location.hash='s='+e.name; return; }
+  let copied = true;
+  try{ await navigator.clipboard.writeText(ptr); }
+  catch(_){ copied = false; }
+  toast(e, ptr, copied);
+  const f=document.querySelector('.resolver-field');
+  window.scrollTo({top:0,behavior:'smooth'});
+  f.classList.remove('pulse'); void f.offsetWidth; f.classList.add('pulse');
+  setTimeout(()=>$('point').focus({preventScroll:true}), 450);
+}
+let toastTimer=null;
+function toast(e, ptr, copied){
+  let el=$('toast');
+  if(!el){ el=document.createElement('div'); el.id='toast'; el.className='toast'; document.body.appendChild(el); }
+  el.innerHTML='';
+  const msg=document.createElement('span');
+  if(copied){ msg.innerHTML=`&#10697; Pointer copied &mdash; paste it into the portal above.`; }
+  else{ const c=document.createElement('code'); c.textContent=ptr; msg.append('Copy this pointer: ', c); }
+  const open=document.createElement('a');
+  open.textContent='or open now →';
+  open.onclick=()=>{ el.classList.remove('on'); location.hash = e.form==='pages'&&!e.txin ? 'p='+e.policy : 's='+e.name; };
+  el.append(msg, open);
+  el.classList.add('on');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('on'), 7000);
 }
 function drawShelf(){
   $('shelfcount').textContent = SHELF.length;
