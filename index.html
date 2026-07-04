@@ -352,7 +352,7 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
 <main>
 
 <!-- HERO -->
-<section class="hero">
+<section class="hero" id="hero">
  <div class="container">
   <span class="eyebrow">Immutable media on Cardano</span>
   <h1 class="hero-title">A library that <em>cannot burn</em></h1>
@@ -907,12 +907,14 @@ function resetReader(){ [1,2,3,4,5].forEach(n=>step(n,null)); clearLog(); $('ver
 let lastTab='home';
 function show(view){
   if(view==='home'||view==='library') lastTab=view;
+  const viewing = view==='reader'||view==='channel';
+  $('hero').style.display = viewing?'none':'block';
   for(const v of ['library','reader','channel']) $(v).style.display = v===view?'block':'none';
   $('about').style.display = view==='home'?'block':'none';
   $('truststrip').style.display = view==='home'?'grid':'none';
   $('tab-home').setAttribute('aria-selected', String(view==='home'));
   $('tab-library').setAttribute('aria-selected', String(view==='library'));
-  if(view==='reader'||view==='channel')window.scrollTo({top:0});
+  if(viewing)window.scrollTo({top:0});
 }
 
 async function openScroll(e){
