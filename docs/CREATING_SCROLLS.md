@@ -20,7 +20,7 @@ today — the worked examples are real, with receipts.
    takedown. Never include secrets, private keys, personal data, or anything
    you may regret. Assume every future human and bot can read it.
 2. **Rehearse on testnet first.** Run the full pipeline on the Preview
-   testnet (see [PREVIEW_TESTNET_POC.md](PREVIEW_TESTNET_POC.md)) before
+   the Preview testnet before
    spending mainnet ADA. The bytes are the same; the mistakes are free.
 3. **Hash before, verify after.** Record the SHA-256 of your original file
    *before* minting. After minting, reconstruct the scroll from chain with a

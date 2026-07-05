@@ -130,7 +130,7 @@ current text — stored on the chain they govern. Governance history that
 cannot be quietly revised.
 
 → [SCROLL_INVENTORY.md](SCROLL_INVENTORY.md) ·
-[Constitution viewer](https://beacnpool.github.io/ledger-scrolls/constitution.html)
+[open in The Library](https://beacnpool.github.io/ledger-scrolls/#s=constitution-e608)
 
 ## 📖 The Bible — 237 pages
 
@@ -139,7 +139,7 @@ cannot be quietly revised.
 4.68 MB of HTML, gzipped and split across 237 page NFTs. If a book this
 size fits, your manifesto fits.
 
-→ [Bible viewer](https://beacnpool.github.io/ledger-scrolls/bible.html)
+→ [open in The Library](https://beacnpool.github.io/ledger-scrolls/#s=bible)
 
 ## 🪙 The Bitcoin Whitepaper
 

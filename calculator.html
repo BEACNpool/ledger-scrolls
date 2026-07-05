@@ -626,7 +626,7 @@ function buildOutputs(){
 
   const fn = S.name || "yourfile";
   $("o_cmd").textContent = isStd
-? `# 1. Rehearse on Preview testnet first (docs/PREVIEW_TESTNET_POC.md)
+? `# 1. Rehearse on the Preview testnet first (same pipeline, free mistakes)
 # 2. Record your commitment hash
 sha256sum "${fn}"
 
@@ -637,7 +637,7 @@ sha256sum "${fn}"
 cd koios-viewer
 python3 -m lsview reconstruct-utxo --txin ${stdTxh}#0 --out check.bin
 sha256sum check.bin   # must equal step 2`
-: `# 1. Rehearse on Preview testnet first (docs/PREVIEW_TESTNET_POC.md)
+: `# 1. Rehearse on the Preview testnet first (same pipeline, free mistakes)
 # 2. Prepare: deterministic gzip, hashes, page split, honest cost quote
 python3 tools/lschain/prepare.py "${fn}" --content-type "${ct}" --out build/
 

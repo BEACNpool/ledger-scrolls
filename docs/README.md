@@ -21,7 +21,6 @@ each guide is backed by scrolls live on mainnet today.
 |---|---|
 | [CREATING_SCROLLS.md](CREATING_SCROLLS.md) | Best practices for every media type: text, images, HTML, PDF, audio, video, data |
 | [GETTING_STARTED.md](GETTING_STARTED.md) | Environment setup: cardano-cli, node access, wallet |
-| [PREVIEW_TESTNET_POC.md](PREVIEW_TESTNET_POC.md) | Rehearse the whole pipeline on testnet — the mistakes are free |
 | [CREATING_LEGAL_RECORDS.md](CREATING_LEGAL_RECORDS.md) | Signature-controlled legal dockets with numbered document tokens |
 
 ## 📖 Reading & verifying

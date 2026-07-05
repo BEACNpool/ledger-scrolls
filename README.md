@@ -56,8 +56,6 @@ technology it teaches. Full list with hashes and receipts:
 | [Media Types](https://beacnpool.github.io/ledger-scrolls/media.html) | What can live forever — every media type that works, prep tips, live proof scrolls, prices |
 | [BEACN Leaks player](https://beacnpool.github.io/ledger-scrolls/leaks.html) | Publisher-channel player — point at a policy ID; this site hosts nothing |
 | [Ledger Docket](https://beacnpool.github.io/ledger-scrolls/legal.html) | Legal-records terminal — pull a recorded instrument by document number |
-| [Constitution](https://beacnpool.github.io/ledger-scrolls/constitution.html) · [Bible](https://beacnpool.github.io/ledger-scrolls/bible.html) · [First Video](https://beacnpool.github.io/ledger-scrolls/first-video.html) · [Latest](https://beacnpool.github.io/ledger-scrolls/latest.html) | Permanent links — each opens its scroll in The Library |
-| [Testnet PoC](https://beacnpool.github.io/ledger-scrolls/preview.html) | Preview-testnet rehearsal viewer (bring a Blockfrost preview key) |
 
 ---
 
@@ -173,8 +171,8 @@ tools/lschain/mint.sh build/ payment.skey payment.addr   # mints pages + manifes
 
 1. **Permanent means permanent.** No edit, no delete. Never inscribe
    secrets, private data, or words you may regret.
-2. **Rehearse on testnet.** Same bytes, free mistakes —
-   [docs/PREVIEW_TESTNET_POC.md](docs/PREVIEW_TESTNET_POC.md).
+2. **Rehearse on testnet.** Same bytes, free mistakes — run the full
+   pipeline on the Preview testnet before spending mainnet ADA.
 3. **Hash before, verify after.** Record your file's SHA-256 before minting;
    reconstruct from chain and compare before telling the world.
 4. **Keep receipts.** Transaction hashes are how civilization finds your

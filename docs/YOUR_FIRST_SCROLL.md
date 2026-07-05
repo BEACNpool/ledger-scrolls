@@ -70,7 +70,7 @@ and sound from one `<video>` element. There is nothing extra to do.
 ## Step 3 — Rehearse on testnet (free)
 
 The bytes are identical on testnet; the mistakes are free. Run the full pipeline
-on the Preview testnet first — see [PREVIEW_TESTNET_POC.md](PREVIEW_TESTNET_POC.md).
+on the Preview testnet first (same pipeline, free mistakes).
 
 ## Step 4 — Mint it
 

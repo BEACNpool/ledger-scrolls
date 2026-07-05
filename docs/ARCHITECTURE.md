@@ -8,7 +8,7 @@ survive the death of the layers above it.
 ┌────────────────────────────────────────────────────────────────────┐
 │ 4. THE SITE (GitHub Pages serves this repo's root — a convenience) │
 │    index.html (The Library) · leaks.html · legal.html              │
-│    create.html · calculator.html · preview.html                    │
+│    create.html · calculator.html · media.html                     │
 ├────────────────────────────────────────────────────────────────────┤
 │ 3. READERS (each one stands alone)                                 │
 │    reader.html — one file, zero deps, MINTED ON-CHAIN              │
@@ -59,11 +59,11 @@ BEACN endpoint at all.
 `index.html` (The Library) is the single browser engine: all three scroll
 forms, channels, registries, deep links (`#s=<name>`, `#p=<policy>`),
 user-set data source and registry head persisted locally. The old
-standalone viewers (`bible.html`, `constitution.html`, `first-video.html`,
-`latest.html`) are now permanent alias URLs that redirect into the Library —
-their bespoke fetch stacks (~187 KB of drift, each with its own bugs) are
-deleted. `leaks.html` and `legal.html` remain separate products (channel
-player, docket terminal) on the same source discipline.
+per-scroll standalone viewers (bible, constitution, first-video, latest) and
+the testnet rehearsal viewer have been **removed** — the Library reads every
+scroll via `#s=<name>` deep links, so they were redundant. `leaks.html` and
+`legal.html` remain separate products (channel player, docket terminal) on
+the same source discipline.
 
 ## Invariants (change these and it stops being Ledger Scrolls)
 
