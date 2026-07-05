@@ -110,13 +110,13 @@ as the first Chain Scroll. The document teaching you how scrolls work
 
 → [`examples/eternal-scroll-tutorial/`](../examples/eternal-scroll-tutorial/)
 
-## ⚖️ Ledger Docket — Document No. 1
+## ⚖️ LEGAL-0001 — a recorded legal instrument
 
 *A legal record with no courthouse.*
 
 The first instrument in a signature-controlled legal docket: a numbered
 document token whose record can be pulled by anyone, forever, from the
-[Ledger Docket terminal](https://beacnpool.github.io/ledger-scrolls/legal.html).
+[Main Viewer](https://beacnpool.github.io/ledger-scrolls/#s=legal-0001).
 
 → [`examples/legal-0001/`](../examples/legal-0001/) ·
 [how to create one](CREATING_LEGAL_RECORDS.md)

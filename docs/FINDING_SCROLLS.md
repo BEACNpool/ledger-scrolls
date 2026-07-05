@@ -38,8 +38,8 @@ A **minting policy**. In Ledger Scrolls a policy ID means one of two things:
    byline. Only the key holder can ever publish under it. Point the reader at
    the policy and it opens the channel's **feed** — every issue published to
    that byline, in order. Examples: BEACN Leaks
-   (`5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415`), LEDGER_SCROLLS,
-   the Ledger Docket.
+   (`5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415`) and
+   LEDGER_SCROLLS.
 2. **A legacy CIP-25 page-set** — the original scrolls (the Bible, both
    Constitutions, First Video, FIRST WORDS) are stored as **NFT pages**, all
    minted under one policy. The policy groups every page of that one file.
@@ -48,7 +48,7 @@ A **minting policy**. In Ledger Scrolls a policy ID means one of two things:
 - **Use it to:** open a channel feed, or reconstruct a legacy page-set.
 - **Paste it into:** the reader bar (auto-detected), the
   [BEACN Leaks player](https://beacnpool.github.io/ledger-scrolls/leaks.html)
-  (`leaks.html#policy=<id>`), or the [Ledger Docket](https://beacnpool.github.io/ledger-scrolls/legal.html).
+  (`leaks.html#policy=<id>`), or the [Main Viewer](https://beacnpool.github.io/ledger-scrolls/).
 
 ## TX hash — 64 hex, no `#ix`  ·  finds a transaction
 
@@ -100,7 +100,7 @@ Use the **pointer** to open a specific one.
 | Key | Length / shape | Finds | Where you use it |
 |---|---|---|---|
 | **Pointer** | `64hex#ix` | one file | reader bar → rebuild + verify |
-| **Policy ID** | 56 hex | a channel feed, or a legacy page-set | reader bar / leaks / docket |
+| **Policy ID** | 56 hex | a channel feed, or a legacy page-set | Main Viewer / leaks player |
 | **TX hash** | 64 hex | one transaction | block explorer |
 | **Registry head** | `64hex#ix` | a whole catalog | reader trust-anchor |
 | **SHA-256** | 64 hex | *nothing — it verifies* | local hash check |

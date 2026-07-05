@@ -7,8 +7,8 @@ survive the death of the layers above it.
 ```
 ┌────────────────────────────────────────────────────────────────────┐
 │ 4. THE SITE (GitHub Pages serves this repo's root — a convenience) │
-│    index.html (The Library) · leaks.html · legal.html              │
-│    create.html · calculator.html · media.html                     │
+│    index.html (The Library) · leaks.html · the Main Viewer              │
+│    calculator.html · calculator.html · media.html                     │
 ├────────────────────────────────────────────────────────────────────┤
 │ 3. READERS (each one stands alone)                                 │
 │    reader.html — one file, zero deps, MINTED ON-CHAIN              │
@@ -62,7 +62,7 @@ user-set data source and registry head persisted locally. The old
 per-scroll standalone viewers (bible, constitution, first-video, latest) and
 the testnet rehearsal viewer have been **removed** — the Library reads every
 scroll via `#s=<name>` deep links, so they were redundant. `leaks.html` and
-`legal.html` remain separate products (channel player, docket terminal) on
+`the Main Viewer` remain separate products (channel player, docket terminal) on
 the same source discipline.
 
 ## Invariants (change these and it stops being Ledger Scrolls)

@@ -34,6 +34,11 @@ must outlive the platforms — this is for you.
 
 ---
 
+## 📚 The full catalog
+
+Every scroll BEACNpool has written, with all its keys (pointer, policy,
+asset, hashes) in one browsable list: **[BEACNpool's Library →](BEACNpool's%20Library/README.md)**
+
 ## Read a scroll right now (30 seconds, nothing to install)
 
 Open **[The Library](https://beacnpool.github.io/ledger-scrolls/)** — a
@@ -49,13 +54,11 @@ technology it teaches. Full list with hashes and receipts:
 
 | Site | What it is |
 |---|---|
-| [The Library](https://beacnpool.github.io/ledger-scrolls/) | Main viewer — browse and verify any scroll, channel, or registry |
+| [Main Viewer](https://beacnpool.github.io/ledger-scrolls/) | Read & verify any scroll — browse and verify any scroll, channel, or registry |
 | [Build a Reader](https://beacnpool.github.io/ledger-scrolls/build-a-reader/) | Everything to build your own reader in an afternoon — the minimal reference reader itself is minted on-chain |
-| [Create a Scroll](https://beacnpool.github.io/ledger-scrolls/create.html) | The friendly how-to: costs, estimator, full workflow |
 | [Mint a Scroll](https://beacnpool.github.io/ledger-scrolls/calculator.html) | The one-stop shop: drop any file → what forever costs — and small files mint right there from your browser wallet, no node, no CLI |
 | [Media Types](https://beacnpool.github.io/ledger-scrolls/media.html) | What can live forever — every media type that works, prep tips, live proof scrolls, prices |
 | [BEACN Leaks player](https://beacnpool.github.io/ledger-scrolls/leaks.html) | Publisher-channel player — point at a policy ID; this site hosts nothing |
-| [Ledger Docket](https://beacnpool.github.io/ledger-scrolls/legal.html) | Legal-records terminal — pull a recorded instrument by document number |
 
 ---
 
@@ -223,7 +226,7 @@ ledger-scrolls/
 ├── index.html              # THE LIBRARY — the app, one dependency-free file (source = deployment)
 ├── reader.html             # retired stub → build-a-reader/ (the minted reader lives in examples/the-reader/)
 ├── build-a-reader/         # BUILD YOUR OWN READER — the one-stop guide page
-├── create.html / leaks.html / legal.html / calculator.html   # site pages (Pages serves repo root)
+├── calculator.html / leaks.html / media.html   # site pages (Pages serves repo root)
 ├── docs/                   # All guides — start at docs/README.md
 │   └── history/            # Past audits & design reviews
 ├── registry/               # Registry + protocol specs, JSON schemas, examples, tooling

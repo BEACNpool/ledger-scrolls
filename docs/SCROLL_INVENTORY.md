@@ -318,11 +318,11 @@ Seven meditations on existence.
 
 ---
 
-## 10) ⚖️ LEGAL-0001 — Declaration of Record (Ledger Docket, Chain Scroll)
+## 10) ⚖️ LEGAL-0001 — Declaration of Record (Chain Scroll)
 
 A recorded legal instrument: executed by the signature on its minting tx,
-dated by block time, sealed by hash. Pull it by number in the Ledger Docket
-terminal (`legal.html#doc=1`).
+dated by block time, sealed by hash. Pull it by number in the Main Viewer
+Main Viewer (`#s=legal-0001`).
 
 | Field | Value |
 |-------|-------|
