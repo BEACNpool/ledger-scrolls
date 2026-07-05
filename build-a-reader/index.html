@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Build Your Own Reader — Ledger Scrolls</title>
+<meta name="description" content="The whole Ledger Scrolls protocol is two chain queries and a hash. Everything you need to build a conforming reader in an afternoon — reference code, test vectors, live scrolls to read.">
+<meta name="theme-color" content="#f6f5f1">
+<meta property="og:title" content="Build Your Own Reader — Ledger Scrolls">
+<meta property="og:description" content="Two queries and a hash. Build a reader in an afternoon; prove it with the conformance suite.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="canonical" href="https://beacnpool.github.io/ledger-scrolls/build-a-reader/">
+<meta property="og:url" content="https://beacnpool.github.io/ledger-scrolls/build-a-reader/">
+<meta property="og:image" content="https://beacnpool.github.io/ledger-scrolls/media/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{
+  --bg:#f6f5f1; --bg-2:#efece4; --surface:#ffffff; --surface-2:#fbfaf6;
+  --ink:#14161b; --ink-2:#3a4049; --muted:#6b7280; --faint:#9aa1ab;
+  --line:#e6e3da; --line-2:#dbd6ca;
+  --accent:#2f53ff; --accent-ink:#0d228f; --accent-soft:#ebefff;
+  --amber:#b27a1e; --amber-soft:#f6eedd; --ok:#0a8f5b; --ok-soft:#e7f6ef;
+  --radius:16px; --radius-sm:10px; --pill:999px;
+  --sh-sm:0 1px 2px rgba(20,22,27,.05),0 1px 3px rgba(20,22,27,.04);
+  --sh:0 6px 20px -6px rgba(20,22,27,.12),0 2px 6px rgba(20,22,27,.05);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.bg-grid{position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 78% -8%,rgba(47,83,255,.10),transparent 60%),
+    radial-gradient(760px 460px at 6% 4%,rgba(178,122,30,.08),transparent 60%),
+    linear-gradient(to right,rgba(20,22,27,.035) 1px,transparent 1px),
+    linear-gradient(to bottom,rgba(20,22,27,.035) 1px,transparent 1px),
+    var(--bg);
+  background-size:100% 100%,100% 100%,46px 46px,46px 46px;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 70%,transparent 100%);
+          mask-image:linear-gradient(to bottom,#000 0%,#000 70%,transparent 100%);}
+.container{max-width:900px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+a{color:var(--accent-ink);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+a:hover{color:var(--accent);border-color:var(--accent)}
+code{font-family:var(--mono);font-size:.92em;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+pre{background:#181b22;color:#e6e3da;border-radius:var(--radius-sm);padding:14px 16px;overflow-x:auto;font:12.5px/1.55 var(--mono);border:1px solid #2a2f3a}
+pre code{background:none;border:0;padding:0;color:inherit}
+h1{font:700 clamp(26px,4.4vw,38px)/1.15 var(--sans);letter-spacing:-.02em}
+h2{font:700 clamp(20px,3vw,26px)/1.25 var(--sans);letter-spacing:-.015em;margin:0 0 6px}
+p{color:var(--ink-2)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font:600 12px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);padding:7px 14px;border-radius:var(--pill)}
+.site-header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-row{display:flex;align-items:center;gap:12px;min-height:60px;flex-wrap:wrap;max-width:900px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+.brand{display:inline-flex;align-items:center;gap:10px;border:0;margin-right:auto;color:var(--ink)}
+.brand-mark{font-size:18px;width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:linear-gradient(145deg,var(--surface),var(--amber-soft));border:1px solid var(--line-2);box-shadow:var(--sh-sm)}
+.brand-name{font:700 19px/1 var(--sans);letter-spacing:-.01em}
+.brand-name .b{background:linear-gradient(90deg,var(--accent),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ghost{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 14px;background:var(--surface);color:var(--ink-2);border:1px solid var(--line-2);border-radius:var(--pill);font:500 14px/1 var(--sans);box-shadow:var(--sh-sm);transition:.15s var(--ease)}
+.ghost:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.section{padding:clamp(22px,4vw,36px) 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sh-sm);padding:clamp(16px,3vw,24px)}
+.hero{padding:clamp(30px,6vw,54px) 0 clamp(10px,2vw,18px)}
+.hero p.lead{font-size:18px;max-width:64ch;margin-top:10px}
+.algo{font:13.5px/1.7 var(--mono);color:var(--ink-2);background:var(--surface-2);border:1px dashed var(--line-2);border-radius:var(--radius-sm);padding:14px 18px;overflow-x:auto;white-space:pre}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
+td,th{border-top:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+th{color:var(--muted);font:600 12.5px/1.4 var(--sans);text-transform:uppercase;letter-spacing:.06em}
+.note{margin-top:14px;padding:12px 16px;border-radius:var(--radius-sm);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);font-size:14.5px;color:var(--accent-ink)}
+.note.amber{background:var(--amber-soft);border-color:color-mix(in srgb,var(--amber) 30%,transparent);color:#6d4d0a}
+.note.ok{background:var(--ok-soft);border-color:color-mix(in srgb,var(--ok) 30%,transparent);color:#0a6b46}
+.mono{font-family:var(--mono);word-break:break-all}
+.footer{border-top:1px solid var(--line);margin-top:28px;padding:26px 0 44px;font-size:14px;color:var(--muted)}
+.golden{margin:18px 0;padding:16px 20px;border-left:4px solid var(--amber);background:var(--amber-soft);border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:16px;color:#6d4d0a}
+</style>
+</head>
+<body>
+<div class="bg-grid" aria-hidden="true"></div>
+
+<header class="site-header">
+  <div class="header-row">
+    <a class="brand" href="../index.html"><span class="brand-mark">📜</span><span class="brand-name">Ledger <span class="b">Scrolls</span></span></a>
+    <a class="ghost" href="../calculator.html">Mint a scroll</a>
+    <a class="ghost" href="../create.html">How it works</a>
+    <a class="ghost" href="../index.html">The Library</a>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="hero">
+  <span class="eyebrow">Build Your Own Reader</span>
+  <h1>The most important reader is the one <em>you</em> write.</h1>
+  <p class="lead">A format only deserves the word <strong>immutable</strong> if anyone can rebuild
+  the media without asking permission — without this website, without BEACN, without anyone.
+  The whole protocol is <strong>two chain queries and a hash</strong>. This page is everything
+  you need to build a conforming reader in an afternoon, and to prove it's correct.</p>
+</section>
+
+<section class="section">
+  <div class="card">
+    <h2>The algorithm (all of it)</h2>
+    <div class="algo">pointer (txHash#ix)
+  → fetch that output's inline datum            [1 query]
+  → decode 8 CBOR fields: contentType, codec,
+    sizes, two SHA-256s, the ordered page-tx list
+  → fetch metadata label 22025 for those txs    [1 query]
+  → concatenate the byte segments, in order
+  → gunzip if codec says gzip
+  → sha256(result) == the manifest's fingerprint, or you show NOTHING</div>
+    <p style="margin-top:12px;font-size:15px">Tiny files skip the pages: if the datum's top-level
+    CBOR value is a byte string (or a constructor holding one) rather than a manifest, those
+    bytes <em>are</em> the media — a <strong>Standard Scroll</strong>.</p>
+    <div class="golden"><strong>The golden rule of every conforming reader:</strong> never render
+    bytes you could not verify.</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <h2>The two queries, concretely</h2>
+    <p style="font-size:15px">Free, keyless, any language. This is the entire chain interface:</p>
+<pre><code># 1. the manifest (or Standard Scroll) datum
+curl -X POST https://api.koios.rest/api/v1/utxo_info \
+  -H 'Content-Type: application/json' \
+  -d '{"_utxo_refs":["&lt;txHash&gt;#0"], "_extended":true}'
+# → .inline_datum.bytes is CBOR: [2, contentType, codec, sizeDecoded,
+#    sha256Decoded, sha256Encoded, [pageTxHashes…], next]
+
+# 2. the pages it names (chain scrolls only)
+curl -X POST https://api.koios.rest/api/v1/tx_metadata \
+  -H 'Content-Type: application/json' \
+  -d '{"_tx_hashes":["&lt;page-tx-1&gt;","&lt;page-tx-2&gt;"]}'
+# → label "22025" of each: { v, i, n, sha, p: ["0x&lt;64-byte segment&gt;", …] }
+
+# concatenate → gunzip → sha256sum — done.</code></pre>
+    <p style="font-size:14px;color:var(--muted);margin-top:10px">Segment encodings vary by indexer —
+    accept <code>0x</code>-prefixed hex, bare hex, and <code>{"bytes":"…"}</code> objects. Byte
+    strings over 64 bytes arrive as CBOR indefinite-length chunks; join them. Full normative rules:
+    <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/PROTOCOL_V1_PROPOSAL.md">Protocol v1</a> ·
+    <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/manifest-chain-v2.md">chain-format spec</a>.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <h2>Reference readers to copy from</h2>
+    <table>
+      <tr><th>Reader</th><th>Language</th><th>Best starting point for</th></tr>
+      <tr><td><a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/examples/the-reader/reader.html">the-reader (frozen)</a></td>
+          <td>Browser JS, one file, zero deps</td><td>Web readers — this exact file is minted on-chain (below)</td></tr>
+      <tr><td><a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/viewers/koios-cli/read_scroll.py">read_scroll.py</a></td>
+          <td>Python, stdlib only, ~150 lines</td><td>Scripts, air-gapped verification</td></tr>
+      <tr><td><a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/koios-viewer">koios-viewer (lsview)</a></td>
+          <td>Python package</td><td>Full tooling: every format, registry, catalogs</td></tr>
+      <tr><td><a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/index.html">The Library</a></td>
+          <td>Browser JS, one file</td><td>The full experience: shelves, channels, trust log</td></tr>
+    </table>
+    <p style="margin-top:12px;font-size:15px">The complete written guide — CBOR decoding, datum shapes,
+    failure semantics, endpoint independence:
+    <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/BUILD_A_READER.md">docs/BUILD_A_READER.md</a>.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <h2>Prove it — the conformance suite</h2>
+    <p style="font-size:15px">The <a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/conformance">conformance
+    suite</a> is the contract: test vectors for hashing, deterministic gzip, both CBOR byte-string
+    forms, segment variants, and pointer validity. Your thirty lines and ours can prove they agree:</p>
+<pre><code>git clone https://github.com/BEACNpool/ledger-scrolls
+python3 ledger-scrolls/conformance/run_conformance.py   # or run_conformance.mjs</code></pre>
+    <p style="font-size:15px;margin-top:10px">Then read something real — every
+    <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/SCROLL_INVENTORY.md">live scroll</a>
+    carries its expected hash. If your reader reconstructs the Eternal Scroll to
+    <span class="mono">65824f62…47dd2</span>, it works.</p>
+    <div class="note"><b>Stay independent:</b> a reader is only as free as its data source. Best:
+    your own node + your own Koios instance. Good: any Koios-compatible provider, or a
+    <a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/tools/cors-mirror">CORS mirror you
+    deploy yourself in two minutes</a>. Let the user pick the endpoint — an endpoint you don't
+    control is a landlord.</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <h2>The reader that reads itself</h2>
+    <p style="font-size:15px">A complete, working reader is <strong>minted on Cardano as a scroll</strong>.
+    Hand any conforming reader this pointer and you get back <code>reader.html</code>, byte for byte —
+    a reader you can extract from the chain using nothing but the spec, which then reads every other
+    scroll, <em>including itself</em>:</p>
+    <p class="mono" style="margin:12px 0;font-size:13px">9a564165ebdc4e0c4a2e1163b5cf9355604ecb8e163b425d834570e5b9007de2#0</p>
+    <p style="font-size:15px">That loop is the whole point. If this repository, this website, and
+    everyone who ever worked on this protocol disappear, the spec is two queries and a hash — and a
+    working implementation is carved into the ledger it reads. The library holds its own pair of
+    glasses. Receipts and the frozen source:
+    <a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/examples/the-reader">examples/the-reader/</a>.</p>
+    <div class="note ok"><b>Why we retired the hosted reader page:</b> hosting a second viewer taught
+    people to depend on our URL. The Library remains for browsing — but the reader's real home is the
+    chain, and the real mission is a thousand independent readers. Build yours, and
+    <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/CONTRIBUTING.md">tell us about it</a>.</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card" style="text-align:center">
+    <h2>Got a reader? Write something worth reading.</h2>
+    <p style="font-size:15px;max-width:56ch;margin:6px auto 14px">Price any file and mint small ones
+    straight from your browser wallet — no node, no command line.</p>
+    <a class="ghost" style="border-color:var(--accent);color:var(--accent-ink);font-weight:700" href="../calculator.html">📜 Mint a scroll →</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <p><strong>Ledger Scrolls</strong> — the free, open-source reader &amp; writer for immutable,
+  forever media. <a href="https://github.com/BEACNpool/ledger-scrolls">Source &amp; specs on GitHub</a> ·
+  <a href="../index.html">The Library</a> · <a href="../calculator.html">Mint a scroll</a></p>
+  <p style="margin-top:6px"><em>"A library that cannot burn."</em></p>
+</footer>
+</main>
+</body>
+</html>
