@@ -265,6 +265,77 @@ record.
 
 ---
 
+## 7) 🎬 First Video on Cardano — video proof (legacy pages)
+
+A 175-page MP4 — proof that even video survives in stone.
+
+| Field | Value |
+|-------|-------|
+| **ID** | `first-video` |
+| **Type** | `cip25_pages_v1` (original NFT pages) |
+| **Policy ID** | `38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2` |
+| **Pages** | 175 |
+| **Content-Type** | `video/mp4` |
+| **Codec** | `none` |
+| **SHA-256** | `aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814` |
+| **Status** | 🟢 LIVE — DO NOT MOVE NFTs |
+
+---
+
+## 8) ✨ FIRST WORDS — an AI's first permanent words (legacy pages)
+
+Seven meditations on existence.
+
+| Field | Value |
+|-------|-------|
+| **ID** | `first-words` |
+| **Type** | `cip25_pages_v1` (original NFT pages) |
+| **Policy ID** | `beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba` |
+| **Pages** | 4 |
+| **Content-Type** | `text/plain; charset=utf-8` |
+| **Codec** | `none` |
+| **Status** | 🟢 LIVE — DO NOT MOVE NFTs |
+| **Receipts** | [`examples/first-words/`](../examples/first-words/) |
+
+---
+
+## 9) 🌱 The Genesis Scroll — the founding manifesto (Standard Scroll)
+
+*"In the digital age, true knowledge must be unstoppable."*
+
+| Field | Value |
+|-------|-------|
+| **ID** | `genesis-scroll` |
+| **Type** | `utxo-inline-datum-bytes-v1` (Standard Scroll, locked UTxO) |
+| **Pointer** | `a19f64fba94abdc37b50012d5d602c75a1ca73c82520ae030fc6b4e82274ceb2#0` |
+| **Content-Type** | `text/plain; charset=utf-8` |
+| **Status** | 🟢 LIVE — immutable UTxO |
+| **Receipts** | [`examples/genesis-scroll/`](../examples/genesis-scroll/) |
+
+---
+
+## 10) ⚖️ LEGAL-0001 — Declaration of Record (Ledger Docket, Chain Scroll)
+
+A recorded legal instrument: executed by the signature on its minting tx,
+dated by block time, sealed by hash. Pull it by number in the Ledger Docket
+terminal (`legal.html#doc=1`).
+
+| Field | Value |
+|-------|-------|
+| **ID** | `legal-0001` |
+| **Type** | `manifest-chain-v2` (Chain Scroll) |
+| **Pointer** | `ceced54b2bd462b1ed41864f2583309666010ce1fb96b9f3dc9968174d958bc9#0` |
+| **Page TX** | `ee22d43f77bbf374f87a81569f5770b559eb2d5a454e5e18e7ea8422706eabef` |
+| **Docket Policy** | `97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4` (asset `LEGAL_0001`) |
+| **Lock Address** | `addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn` |
+| **Content-Type** | `text/html` |
+| **SHA-256** | `8c95db4bb4248d82d3d5c4bb49dfe0200d779f4b6905cd3b5649fcb847378bc1` |
+| **Size** | 11,192 bytes · 1 page · minted 2026-06-12 |
+| **Status** | 🟢 LIVE |
+| **Receipts** | [`examples/legal-0001/`](../examples/legal-0001/) |
+
+---
+
 ## Quick Reference Tables
 
 ### Policy IDs
@@ -272,7 +343,11 @@ record.
 | Scroll | Policy ID | Purpose | Minting Status |
 |--------|-----------|---------|----------------|
 | BEACN Leaks (channel) | `5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415` | Publisher channel — unforgeable byline | Open (sig-only; key holder publishes) |
+| LEDGER_SCROLLS (channel) | `8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80` | Publisher channel — project releases | Open (sig-only; key holder publishes) |
+| Ledger Docket (LEGAL) | `97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4` | Legal-record docket — numbered instruments | Active (sig-only) |
 | LS_REGISTRY | `895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062` | Registry NFT (DNS for scrolls) | Active (spend-and-recreate) |
+| First Video | `38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2` | 175-page MP4 video (Legacy) | Policy likely locked |
+| FIRST WORDS | `beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba` | 4-page text meditations (Legacy) | Policy likely locked |
 | Bible | `2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0` | 237-page HTML Bible (Legacy) | Policy likely locked |
 | Bitcoin Whitepaper | `8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1` | 3-page BTC whitepaper (Legacy) | Policy likely locked |
 | Constitution E608 | `ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750` | Current Constitution (11 pages) | Time-locked policy |
