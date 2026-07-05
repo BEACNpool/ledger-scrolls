@@ -162,6 +162,19 @@ details.assump td,details.assump th{border-top:1px solid var(--line);padding:6px
 .consent input{width:18px;height:18px;margin-top:3px;accent-color:var(--accent)}
 .mintquote{margin-top:6px}
 .cmp{margin-top:12px;padding:11px 14px;border-radius:var(--radius-sm);background:var(--surface-2);border:1px dashed var(--line-2);font-size:13.5px;color:var(--muted)}
+/* chain-scroll copy-paste assistant */
+details.pg{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-2);margin-top:10px}
+details.pg summary{cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 14px;font:600 14px/1.3 var(--sans);color:var(--ink)}
+details.pg .pgbody{padding:0 14px 14px}
+details.pg pre{max-height:180px;overflow:auto}
+.pgchip{margin-left:auto;font:700 11px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;border-radius:var(--pill);padding:5px 10px}
+.pgchip.wait{color:var(--warn);background:var(--warn-soft)}
+.pgchip.ok{color:var(--ok);background:var(--ok-soft)}
+.pgchip.bad{color:var(--bad);background:var(--bad-soft)}
+.txin{width:100%;font:12.5px/1.4 var(--mono)!important;margin-top:8px}
+.steps{counter-reset:st;margin:12px 0 0;padding:0;list-style:none;font-size:14.5px;color:var(--ink-2)}
+.steps li{position:relative;padding:4px 0 4px 34px}
+.steps li::before{counter-increment:st;content:counter(st);position:absolute;left:0;top:5px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:700 12px/1 var(--sans);color:#fff;background:var(--accent)}
 .footer{border-top:1px solid var(--line);margin-top:28px;padding:26px 0 44px;font-size:14px;color:var(--muted)}
 .warnbox{margin-top:14px;padding:12px 16px;border-radius:var(--radius-sm);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);color:#6d4d0a;font-size:14px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
@@ -463,7 +476,8 @@ async function analyzeFile(file){
   const ext = (file.name.split(".").pop()||"").toLowerCase();
   const media = mediaByExt(ext);
   const buf = await file.arrayBuffer();
-  M.state = "idle"; M.txid = "";        // new file → fresh mint flow
+  M.state = "idle"; M.txid = ""; M.mode = "std";        // new file → fresh mint flow
+  CP.active = false; CP.pages = []; CP.txids = []; CP.checked = false;
   S.raw = buf.byteLength; S.name = file.name; S.media = media;
   S.ct = file.type && !media.exts.length===false ? (media.ct || file.type) : (media.ct || file.type || "application/octet-stream");
   S.sha = await sha256hex(buf);
@@ -499,7 +513,8 @@ function analyzeManual(){
   const media = MEDIA[+$("mtype").value];
   S.raw = bytes; S.name = ""; S.media = media; S.ct = media.ct;
   S.sha = ""; S.shaEnc = ""; S.rawBytes = null; S.encBytes = null;
-  M.state = "idle"; M.txid = "";
+  M.state = "idle"; M.txid = ""; M.mode = "std";
+  CP.active = false; CP.pages = []; CP.txids = []; CP.checked = false;
   if(media.gz){ S.codec = "gzip"; S.enc = Math.round(bytes * 0.33); }  // typical 3:1 for text
   else { S.codec = "none"; S.enc = bytes; }
   $("kv").innerHTML = `
@@ -588,11 +603,12 @@ function buildOutputs(){
   const ct = $("b_ct").value.trim() || S.ct || "application/octet-stream";
   const chan = $("b_channel").value.trim();
   const issue = $("b_issue").value;
-  const isStd = S.method === "std" || !!M.txid;
-  const stdTxh = M.txid || "<LOCK_TX_HASH>";
+  const isStd = M.txid ? M.mode!=="chain" : S.method === "std";
+  const stdTxh = (M.txid && M.mode!=="chain") ? M.txid : "<LOCK_TX_HASH>";
+  const chainTxh = (M.txid && M.mode==="chain") ? M.txid : "<MANIFEST_TX_HASH>";
   const pointer = isStd
     ? { kind:"utxo-inline-datum-bytes-v1", txHash:stdTxh, txIx:0 }
-    : { kind:"manifest-chain-v2", txHash:"<MANIFEST_TX_HASH>", txIx:0 };
+    : { kind:"manifest-chain-v2", txHash:chainTxh, txIx:0 };
 
   const entry = { name, pointer, contentType: ct, codec: S.codec,
     sha256: S.sha || "<sha256 of your original file — sha256sum yourfile>" };
@@ -625,7 +641,7 @@ tools/lschain/mint.sh build/ payment.skey payment.addr
 
 # 4. Verify from chain BEFORE announcing
 cd koios-viewer
-python3 -m lsview reconstruct-chain --txin <MANIFEST_TX_HASH>#0 --out check.bin
+python3 -m lsview reconstruct-chain --txin ${chainTxh}#0 --out check.bin
 sha256sum check.bin   # must equal ${S.sha ? S.sha.slice(0,16)+"…" : "your recorded hash"}`;
 
   if(chan){
@@ -879,7 +895,7 @@ function planTx(net,utxos,datum,changeB,params){
 }
 
 /* ── mint flow ── */
-const M = { wapi:null, wname:"", net:null, params:null, plan:null, datum:null, txid:"", state:"idle" };
+const M = { wapi:null, wname:"", net:null, params:null, plan:null, datum:null, txid:"", state:"idle", mode:"std" };
 const mlog = (cls,msg)=>{ const el=$("mlog"); if(!el) return; const d=document.createElement("div");
   d.className=cls; d.textContent=msg; el.appendChild(d); el.scrollTop=el.scrollHeight; };
 
@@ -892,19 +908,23 @@ function renderMint(){
     body.innerHTML=`<div class="cmp">Drop a <b>real file</b> above (not a size estimate) and it can be minted from here.</div>`;
     return;
   }
+  if(CP.active){ renderChainAssistant(); return; }
   if(S.enc > P.stdMax){
+    const pgs=Math.ceil(S.enc/CP_PAGE);
     body.innerHTML=`<div class="cmp">This file is <b>${fmtB(S.enc)}</b> on-chain — bigger than the ~14 KB that fits a
-      one-transaction Standard Scroll. It mints as a <b>Chain Scroll</b> (~${fmtA(calcChain(S.enc).total)} ADA) with the
-      free CLI toolkit — the metadata builder below prints your exact commands. One-click browser minting for big
-      scrolls is on the roadmap.</div>`;
+      one-transaction Standard Scroll, so it mints as a <b>Chain Scroll</b>: ${pgs} page transaction${pgs>1?"s":""} plus
+      one locked manifest.</div>
+      <p style="margin-top:12px"><button class="btn" id="cpstart">🧾 Build my page transactions (wallet copy-paste)</button>
+      <span style="font-size:13px;color:var(--muted)">&nbsp;or use the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI toolkit</a> — cheaper per byte, better for big files</span></p>`;
+    $("cpstart").addEventListener("click",renderChainAssistant);
     return;
   }
   const st=calcStandard(S.enc), ch=calcChain(S.enc);
   const wallets=listWallets();
   const cmpNote = st.total > ch.total*1.5
     ? `<div class="cmp">Honest note: one-click minting locks the whole file in a single coin —
-       ≈ <b>${fmtA(st.total)} ADA</b>. The CLI Chain-Scroll path costs ≈ <b>${fmtA(ch.total)} ADA</b> for the same
-       file (commands in the builder below). You're paying the difference for one signature and zero setup.</div>` : "";
+       ≈ <b>${fmtA(st.total)} ADA</b>. The Chain-Scroll path costs ≈ <b>${fmtA(ch.total)} ADA</b> for the same file —
+       <a href="#" id="cplink">build it page-by-page with wallet copy-paste instead →</a></div>` : "";
   body.innerHTML = `
     ${cmpNote}
     ${wallets.length ? `
@@ -919,18 +939,166 @@ function renderMint(){
        dApp browser (Eternl / Vespr). Then drop your file in again.</div>`}
     <div id="mintstage"></div>`;
   body.querySelectorAll(".wbtn").forEach(b=>b.addEventListener("click",()=>connectAndQuote(b.dataset.w)));
+  $("cplink")?.addEventListener("click",e=>{ e.preventDefault(); renderChainAssistant(); });
 }
 
-async function connectAndQuote(key){
+/* ══════════ chain-scroll assistant: copy-paste page txs into any wallet ══════════
+   Pages are plain self-sends carrying label-22025 metadata. Segments are
+   "0x"+62-hex strings (31 bytes) — exactly 64 characters, so they are valid
+   whether the wallet writes them as byte strings (cardano-cli convention) or
+   as text; conforming readers accept both. Per-page sha is omitted (optional
+   per spec) to stay under the 64-char text limit; the manifest's stream hash
+   still guards every byte. */
+const CP = { active:false, pages:[], txids:[], hashB:null, net:1, checked:false };
+const CP_SEG=31, CP_SEGSPP=200, CP_PAGE=CP_SEG*CP_SEGSPP;
+
+function buildChainPages(bytes){
+  const n=Math.max(1,Math.ceil(bytes.length/CP_PAGE)), pages=[];
+  for(let i=0;i<n;i++){
+    const payload=bytes.subarray(i*CP_PAGE,Math.min((i+1)*CP_PAGE,bytes.length));
+    const segs=[];
+    for(let o=0;o<payload.length;o+=CP_SEG) segs.push("0x"+bHex(payload.subarray(o,Math.min(o+CP_SEG,payload.length))));
+    pages.push({ i:i+1, n, payload, meta:{ "22025":{ v:2, i:i+1, n, p:segs } } });
+  }
+  return pages;
+}
+function segBytes(s){
+  if(s && typeof s==="object" && !Array.isArray(s)) s = "bytes" in s ? "0x"+s.bytes : s.string;
+  if(typeof s!=="string") throw new Error("segment shape");
+  if(s.startsWith("0x")||s.startsWith("0X")) s=s.slice(2);
+  if(!/^[0-9a-fA-F]*$/.test(s)||s.length%2) throw new Error("segment not hex");
+  return hexB(s);
+}
+function buildManifestDatum(){
+  /* byte-identical to tools/lschain/make_manifest.py: definite lists throughout */
+  const te=new TextEncoder();
+  const list=catB([cH(CP.hashB.length,4),...CP.hashB.map(h=>cBy(h))]);
+  const fields=[cU(2),cBy(te.encode(S.ct)),cBy(te.encode(S.codec)),cU(S.raw),
+                cBy(hexB(S.sha)),cBy(hexB(S.shaEnc)),list,catB([cTg(121),cH(0,4)])];
+  return catB([cTg(121),cH(fields.length,4),...fields]);
+}
+const setChip=(i,cls,txt)=>{ const c=$("pgchip-"+i); if(c){ c.className="pgchip "+cls; c.textContent=txt; } };
+
+function renderChainAssistant(){
+  CP.active=true;
+  if(!CP.pages.length) CP.pages=buildChainPages(S.encBytes);
+  const n=CP.pages.length;
+  const feePage=fee(CP_SEGSPP*66+1200), feeTot=feePage*n;
+  const body=$("mintbody");
+  body.innerHTML=`
+    <div class="cmp"><b>Chain Scroll, assisted:</b> this page has cut your file into
+    <b>${n} page transaction${n>1?"s":""}</b> (${fmtB(S.enc)} on-chain). You paste each one into your
+    wallet's metadata box, paste back the transaction ids, and this page <b>verifies every byte from
+    the chain</b> before helping you lock the manifest. Budget ≈ <b>${fmtA(feeTot)} ADA</b> in page fees
+    (≈ ${fmtA(feePage)} each — your wallet shows the real number) plus the manifest lock.
+    ${n>12?`<br>⚠️ <b>${n} rounds of copy-paste is a workout</b> — the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI toolkit</a> does this in one command and costs less per byte.`:""}</div>
+    <ol class="steps">
+      <li>Copy a page's metadata JSON below.</li>
+      <li>In your wallet (Eternl: <b>Send</b> → recipient = <b>your own address</b>, amount ≈ 1.5 ADA →
+          <b>Metadata / JSON</b> → paste → send). You only pay the fee — the ADA comes back to you.
+          Don't edit the JSON.</li>
+      <li>Paste the transaction id into that page's box. Repeat for every page — <b>in any order, but
+          fill the boxes in order</b>.</li>
+      <li>Hit <b>Check pages on-chain</b>. Green across the board → lock the manifest.</li>
+    </ol>
+    ${CP.pages.map(p=>`
+      <details class="pg" ${p.n===1?"open":""}>
+        <summary>Page ${p.i} of ${p.n} <span class="pgchip wait" id="pgchip-${p.i}">waiting</span></summary>
+        <div class="pgbody">
+          <div class="out"><h4>Metadata JSON <button class="copy" data-cp="${p.i}">copy</button></h4>
+          <pre>${JSON.stringify(p.meta,null,1)}</pre></div>
+          <input class="txin" id="pgtx-${p.i}" placeholder="transaction id of the send that carried page ${p.i} (64 hex chars)"
+                 value="${CP.txids[p.i-1]||""}">
+        </div>
+      </details>`).join("")}
+    <p style="margin-top:14px">
+      <label style="font-size:14px;color:var(--ink-2)">Network:
+        <select id="cpnet"><option value="1" ${CP.net===1?"selected":""}>Mainnet</option>
+        <option value="0" ${CP.net===0?"selected":""}>Preview (rehearsal)</option></select></label>
+      <button class="btn" id="cpcheck" style="margin-left:10px">🔎 Check pages on-chain</button>
+      <button class="copy" id="cpback" style="margin-left:10px">← back</button>
+    </p>
+    <div id="cpmanifest" hidden></div>
+    <div id="mintstage"></div>`;
+  body.querySelectorAll(".copy[data-cp]").forEach(b=>
+    b.addEventListener("click",()=>copyText(b, JSON.stringify(CP.pages[b.dataset.cp-1].meta))));
+  $("cpcheck").addEventListener("click",checkPages);
+  $("cpback").addEventListener("click",()=>{ CP.active=false; renderMint(); });
+}
+
+async function checkPages(){
+  CP.net=+$("cpnet").value; CP.checked=false; $("cpmanifest").hidden=true;
+  const n=CP.pages.length, txids=[];
+  let formOk=true;
+  for(let i=1;i<=n;i++){
+    const v=$("pgtx-"+i).value.trim().toLowerCase().replace(/#\d+$/,"");
+    if(!/^[0-9a-f]{64}$/.test(v)){ setChip(i,"bad","need a 64-hex tx id"); formOk=false; txids.push(null); }
+    else txids.push(v);
+  }
+  if(new Set(txids.filter(Boolean)).size !== txids.filter(Boolean).length){
+    alert("Two pages have the same transaction id — each page rides its own transaction."); return;
+  }
+  if(!formOk) return;
+  $("cpcheck").disabled=true; $("cpcheck").textContent="checking…";
+  try{
+    const map={};
+    for(let o=0;o<txids.length;o+=25){
+      const rows=await kapi(CP.net,"/tx_metadata",{_tx_hashes:txids.slice(o,o+25)});
+      for(const r of rows||[]) map[r.tx_hash]=r.metadata||{};
+    }
+    let all=true;
+    for(let i=1;i<=n;i++){
+      const md=map[txids[i-1]]?.["22025"];
+      if(!md){ setChip(i,"bad","no label-22025 metadata found (not confirmed yet?)"); all=false; continue; }
+      let bytes=null;
+      try{ bytes=catB((Array.isArray(md.p)?md.p:[]).map(segBytes)); }catch(e){ void e; }
+      if(!bytes || bHex(bytes)!==bHex(CP.pages[i-1].payload)){ setChip(i,"bad","payload doesn't match this page"); all=false; continue; }
+      if(+md.i!==i || +md.n!==n){ setChip(i,"bad",`says page ${md.i}/${md.n}, expected ${i}/${n}`); all=false; continue; }
+      setChip(i,"ok","verified ✓");
+    }
+    if(all){
+      CP.txids=txids; CP.hashB=txids.map(hexB); CP.checked=true;
+      const wallets=listWallets();
+      const datum=buildManifestDatum();
+      $("cpmanifest").hidden=false;
+      $("cpmanifest").innerHTML=`
+        <div class="okbox"><b>All ${n} page${n>1?"s":""} verified from the chain, byte for byte.</b>
+        One step left: lock the manifest — a small coin at the always-fail address that lists your pages
+        and seals the file's fingerprint. That's what makes it a scroll.</div>
+        ${wallets.length?`<div class="wbtns">${wallets.map(w=>`
+          <button class="wbtn" data-w="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} Lock the manifest with ${esc(w.name)}</button>`).join("")}</div>`
+        :`<div class="warnbox">No CIP-30 wallet in this browser for the manifest step — use the CLI below.</div>`}
+        <details class="assump" style="margin-top:12px"><summary>CLI instead (cardano-cli)</summary>
+        <pre>echo "${bHex(datum)}" | xxd -r -p &gt; manifest.cbor
+cardano-cli conway transaction build ${CP.net===1?"--mainnet":"--testnet-magic 2"} \\
+  --tx-in &lt;A_PURE_ADA_UTXO&gt; \\
+  --tx-out "${NETS[CP.net].lockBech}+${minLockCoin(CP.net,datum,{a:44,b:155381,cpb:4310})}" \\
+  --tx-out-inline-datum-cbor-file manifest.cbor \\
+  --change-address &lt;YOUR_ADDR&gt; --out-file tx.raw
+# then sign + submit as usual</pre></details>`;
+      $("cpmanifest").querySelectorAll(".wbtn").forEach(b=>
+        b.addEventListener("click",()=>connectAndQuote(b.dataset.w,"chain")));
+    }
+  }catch(e){
+    alert("Chain lookup failed: "+String(e.message||e));
+  }finally{
+    $("cpcheck").disabled=false; $("cpcheck").textContent="🔎 Check pages on-chain";
+  }
+}
+
+async function connectAndQuote(key, mode="std"){
   const stage=$("mintstage");
   stage.innerHTML=`<div class="cmp">Connecting to ${esc(key)}…</div>`;
   try{
+    M.mode = mode;
     M.wapi = await window.cardano[key].enable();
     M.wname = window.cardano[key].name||key;
     M.net = await M.wapi.getNetworkId();
     if(!(M.net in NETS)) throw new Error("Unknown network id "+M.net);
+    if(mode==="chain" && M.net!==CP.net)
+      throw new Error(`Your wallet is on ${NETS[M.net].name} but the pages were verified on ${NETS[CP.net].name} — switch the wallet network (or re-check the pages) so the manifest lands next to its pages.`);
     M.params = await fetchNetParams(M.net);
-    M.datum = buildDatum(S.encBytes);
+    M.datum = mode==="chain" ? buildManifestDatum() : buildDatum(S.encBytes);
     const utxos = parseWalletUtxos(await M.wapi.getUtxos());
     const changeB = hexB(await M.wapi.getChangeAddress());
     M.plan = planTx(M.net, utxos, M.datum, changeB, M.params);
@@ -942,7 +1110,7 @@ async function connectAndQuote(key){
         <p style="margin-top:14px"><span class="netbadge ${n.cls}">${n.name}</span>
           <span style="font-size:13px;color:var(--muted)">&nbsp;${esc(n.note)} · connected: ${esc(M.wname)}${M.params.live?"":" · using fallback fee params"}</span></p>
         <div class="rows">
-          <div><span>Locked forever with your file (min-UTxO, exact)</span><span class="mono">${A(pl.lockCoin)} ADA</span></div>
+          <div><span>Locked forever with your ${mode==="chain"?"manifest":"file"} (min-UTxO, exact)</span><span class="mono">${A(pl.lockCoin)} ADA</span></div>
           <div><span>Network fee (exact, ${pl.ins.length} input${pl.ins.length>1?"s":""})</span><span class="mono">${A(pl.fee)} ADA</span></div>
           <div><span>Change returned to your wallet</span><span class="mono">${A(pl.change)} ADA</span></div>
           <div class="tot"><span>Total leaving your wallet</span><span class="mono">${A(pl.lockCoin+pl.fee)} ADA ${S.price&&M.net===1?`<span class="usd">≈ $${((pl.lockCoin+pl.fee)/1e6*S.price).toFixed(2)}</span>`:""}</span></div>
@@ -953,7 +1121,7 @@ async function connectAndQuote(key){
         <div class="consent"><input type="checkbox" id="consent">
           <label for="consent"><b>I understand this is permanent and public.</b> No edit, no delete, no takedown —
           not by me, not by anyone, for as long as Cardano exists. No secrets, no private data, nothing I may regret.</label></div>
-        <p style="margin-top:14px"><button class="btn" id="mintgo" disabled>📜 Mint it — forever</button></p>
+        <p style="margin-top:14px"><button class="btn" id="mintgo" disabled>📜 ${mode==="chain"?"Lock the manifest — forever":"Mint it — forever"}</button></p>
       </div>`;
     M.state="quoted";
     $("consent").addEventListener("change",e=>{ $("mintgo").disabled=!e.target.checked; });
@@ -970,8 +1138,10 @@ async function doMint(){
   stage.insertAdjacentHTML("beforeend",`<div class="mlog" id="mlog"></div>`);
   const pl=M.plan, n=NETS[M.net];
   try{
-    mlog("h",`── minting “${S.name}” as a Standard Scroll on ${n.name}`);
-    mlog("",`datum: ${M.datum.length} bytes (${S.codec==="gzip"?"gzip-encoded":"raw"} content, Constr 0)`);
+    mlog("h", M.mode==="chain"
+      ? `── locking the manifest for “${S.name}” (${CP.pages.length} pages) on ${n.name}`
+      : `── minting “${S.name}” as a Standard Scroll on ${n.name}`);
+    mlog("",`datum: ${M.datum.length} bytes (${M.mode==="chain"?"manifest, Constr 0, "+CP.pages.length+" page hashes":(S.codec==="gzip"?"gzip-encoded":"raw")+" content, Constr 0"})`);
     mlog("",`tx: ${pl.ins.length} input(s) → lock ${(pl.lockCoin/1e6).toFixed(2)} ADA + change, fee ${(pl.fee/1e6).toFixed(3)} ADA`);
     const unsigned = catB([u8([0x84]), pl.body, u8([0xa0]), u8([0xf5,0xf6])]);
     mlog("",`asking ${M.wname} to sign — check the amounts in the wallet window…`);
@@ -1001,44 +1171,76 @@ async function doMint(){
 }
 
 async function verifyBack(){
-  const n=NETS[M.net];
   for(let tries=1; tries<=25; tries++){
     await new Promise(r=>setTimeout(r,12000));
     try{
       const rows = await kapi(M.net,"/utxo_info",{_utxo_refs:[M.txid+"#0"],_extended:true});
       const hexd = rows?.[0]?.inline_datum?.bytes;
       if(!hexd){ mlog("",`waiting for a block… (${tries*12}s)`); continue; }
-      const [v] = cborD(hexB(hexd));
-      let bytes = (v instanceof Uint8Array) ? v
-        : (v && v.tag===121 && v.value?.[0] instanceof Uint8Array) ? v.value[0] : null;
-      if(!bytes) throw new Error("datum came back in an unexpected shape");
-      const encHash = await sha256hex(bytes.slice().buffer);
-      if(encHash!==S.shaEnc) throw new Error("on-chain bytes hash mismatch (encoded)");
-      mlog("ok",`on-chain bytes ✓ sha256 ${encHash.slice(0,16)}… matches`);
-      if(S.codec==="gzip"){
-        const ds=new DecompressionStream("gzip");
-        bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(ds)).arrayBuffer());
-      }
-      const decHash = await sha256hex(bytes.slice().buffer);
-      if(decHash!==S.sha) throw new Error("decoded hash mismatch");
-      mlog("ok",`decoded file ✓ sha256 ${decHash.slice(0,16)}… matches your original`);
-      mintSuccess();
+      if(M.mode==="chain"){ await verifyManifest(hexB(hexd)); } else { await verifyStandard(hexB(hexd)); }
       return;
     }catch(e){
-      if(/mismatch|shape/.test(String(e.message))){ mlog("err","✗ "+e.message); return; }
+      if(/mismatch|shape|expected/.test(String(e.message))){ mlog("err","✗ "+e.message); return; }
       mlog("",`indexer not ready yet… (${tries*12}s)`);
     }
   }
   mlog("",`The indexer hasn't caught up after 5 minutes — that happens. Your transaction is real:`);
   mintSuccess(true);
 }
+async function gunzipB(b){
+  const ds=new DecompressionStream("gzip");
+  return new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(ds)).arrayBuffer());
+}
+async function verifyStandard(raw){
+  const [v]=cborD(raw);
+  let bytes = (v instanceof Uint8Array) ? v
+    : (v && v.tag===121 && v.value?.[0] instanceof Uint8Array) ? v.value[0] : null;
+  if(!bytes) throw new Error("datum came back in an unexpected shape");
+  const encHash = await sha256hex(bytes.slice().buffer);
+  if(encHash!==S.shaEnc) throw new Error("on-chain bytes hash mismatch (encoded)");
+  mlog("ok",`on-chain bytes ✓ sha256 ${encHash.slice(0,16)}… matches`);
+  if(S.codec==="gzip") bytes=await gunzipB(bytes);
+  const decHash = await sha256hex(bytes.slice().buffer);
+  if(decHash!==S.sha) throw new Error("decoded hash mismatch");
+  mlog("ok",`decoded file ✓ sha256 ${decHash.slice(0,16)}… matches your original`);
+  mintSuccess();
+}
+async function verifyManifest(raw){
+  const [v]=cborD(raw);
+  if(!v || v.tag!==121 || !Array.isArray(v.value) || v.value.length<8 || v.value[0]!==2)
+    throw new Error("manifest datum came back in an unexpected shape");
+  const hashes=v.value[6];
+  if(!Array.isArray(hashes) || hashes.length!==CP.txids.length
+     || hashes.some((h,i)=>bHex(h)!==CP.txids[i]))
+    throw new Error("manifest page list mismatch — expected your verified pages");
+  mlog("ok",`manifest ✓ lists all ${hashes.length} page transaction${hashes.length>1?"s":""} in order`);
+  mlog("h",`── full reconstruction, like any reader would do it`);
+  const map={};
+  for(let o=0;o<CP.txids.length;o+=25){
+    const rows=await kapi(M.net,"/tx_metadata",{_tx_hashes:CP.txids.slice(o,o+25)});
+    for(const r of rows||[]) map[r.tx_hash]=r.metadata||{};
+  }
+  let stream=catB(CP.txids.map(t=>{
+    const md=map[t]?.["22025"]; if(!md) throw new Error("page metadata vanished?! "+t.slice(0,12));
+    return catB((md.p||[]).map(segBytes));
+  }));
+  const encHash=await sha256hex(stream.slice().buffer);
+  if(encHash!==S.shaEnc) throw new Error("reconstructed stream hash mismatch");
+  mlog("ok",`stream ✓ sha256 ${encHash.slice(0,16)}… matches`);
+  if(S.codec==="gzip") stream=await gunzipB(stream);
+  const decHash=await sha256hex(stream.slice().buffer);
+  if(decHash!==S.sha) throw new Error("decoded file hash mismatch");
+  mlog("ok",`decoded file ✓ sha256 ${decHash.slice(0,16)}… matches your original — a stranger's reader will agree`);
+  mintSuccess();
+}
 
 function mintSuccess(unverified){
   M.state="done";
-  const n=NETS[M.net], ptr=M.txid+"#0";
+  const n=NETS[M.net], ptr=M.txid+"#0", chain=M.mode==="chain";
   const receipts={ scroll:$("b_name").value.trim()||S.name, file:S.name, network:n.name,
-    format:"standard-scroll (utxo-inline-datum-bytes-v1)",
-    pointer:{ kind:"utxo-inline-datum-bytes-v1", txHash:M.txid, txIx:0 },
+    format: chain ? "chain-scroll (manifest-chain-v2)" : "standard-scroll (utxo-inline-datum-bytes-v1)",
+    pointer:{ kind: chain?"manifest-chain-v2":"utxo-inline-datum-bytes-v1", txHash:M.txid, txIx:0 },
+    ...(chain?{ pageTxHashes:CP.txids.slice(), pages:CP.txids.length }:{}),
     lockAddress:n.lockBech, lockTxIn:ptr, contentType:S.ct, codec:S.codec,
     sizeDecoded:S.raw, sizeEncoded:S.enc, sha256Decoded:S.sha, sha256Encoded:S.shaEnc,
     lockedLovelace:M.plan.lockCoin, feeLovelace:M.plan.fee,
