@@ -7,6 +7,9 @@
  * worst a malicious mirror can do is fail to serve you, not fool you.
  */
 const UPSTREAM = "https://api.koios.rest";
+// Requests under /preview/… go to the Preview-testnet Koios instead —
+// one mirror serves both mainnet reads and testnet rehearsals.
+const UPSTREAM_PREVIEW = "https://preview.koios.rest";
 
 const cors = (req) => ({
   "Access-Control-Allow-Origin": req.headers.get("Origin") || "*",
@@ -24,7 +27,9 @@ export default {
       return new Response("method not allowed", { status: 405, headers: cors(req) });
 
     const url = new URL(req.url);
-    const upstream = await fetch(UPSTREAM + url.pathname + url.search, {
+    let base = UPSTREAM, path = url.pathname;
+    if (path.startsWith("/preview/")) { base = UPSTREAM_PREVIEW; path = path.slice("/preview".length); }
+    const upstream = await fetch(base + path + url.search, {
       method: req.method,
       headers: { "Content-Type": req.headers.get("Content-Type") || "application/json" },
       body: req.method === "POST" ? await req.arrayBuffer() : undefined,
