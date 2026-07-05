@@ -28,6 +28,7 @@ each guide is backed by scrolls live on mainnet today.
 
 | Read this | To learn |
 |---|---|
+| [FINDING_SCROLLS.md](FINDING_SCROLLS.md) | The lookup keys explained — pointer vs policy ID vs tx hash vs registry head vs SHA-256 |
 | [KOIOS_CLI.md](KOIOS_CLI.md) | Zero-dependency verification with plain Python |
 | [EXAMPLES.md](EXAMPLES.md) | The gallery — every live scroll's story, with links to source + receipts |
 | [SCROLL_INVENTORY.md](SCROLL_INVENTORY.md) | Every live scroll: pointers, hashes, policy IDs, proof walkthrough |

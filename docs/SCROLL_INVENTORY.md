@@ -5,6 +5,9 @@ This is the canonical record of pointers, hashes, and receipts. Each scroll
 also has a folder in [`examples/`](../examples/) with its exact source and
 `receipts.json`.
 
+> **New to the keys?** Pointer vs policy ID vs tx hash vs SHA-256 — what each
+> one finds and where you paste it: **[FINDING_SCROLLS.md](FINDING_SCROLLS.md)**.
+
 ---
 
 ## 🎧 Ledger Scrolls — The Theme · the first music on the shelf
