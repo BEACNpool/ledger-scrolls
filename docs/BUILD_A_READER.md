@@ -32,7 +32,7 @@ not verify.**
 
 | Reader | Language | Lines that matter | Best starting point for |
 |---|---|---|---|
-| [`reader.html`](../reader.html) | Browser JS, one file, zero deps | ~200 | Web readers. This exact file is minted on-chain — see below. |
+| [`reader.html`](../examples/the-reader/reader.html) | Browser JS, one file, zero deps | ~200 | Web readers. This exact file is minted on-chain — see below. |
 | [`viewers/koios-cli/read_scroll.py`](../viewers/koios-cli/read_scroll.py) | Python, stdlib only | ~150 | Scripts, air-gapped verification |
 | [`koios-viewer/`](../koios-viewer/) (`lsview`) | Python package | — | Full tooling: every format, registry, catalogs |
 

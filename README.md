@@ -50,9 +50,9 @@ technology it teaches. Full list with hashes and receipts:
 | Site | What it is |
 |---|---|
 | [The Library](https://beacnpool.github.io/ledger-scrolls/) | Main viewer — browse and verify any scroll, channel, or registry |
-| [The Reader](https://beacnpool.github.io/ledger-scrolls/reader.html) | The minimal reader — one file, zero dependencies, itself minted on-chain |
+| [Build a Reader](https://beacnpool.github.io/ledger-scrolls/build-a-reader/) | Everything to build your own reader in an afternoon — the minimal reference reader itself is minted on-chain |
 | [Create a Scroll](https://beacnpool.github.io/ledger-scrolls/create.html) | The friendly how-to: costs, estimator, full workflow |
-| [Cost Calculator](https://beacnpool.github.io/ledger-scrolls/calculator.html) | Drop any file → what forever costs: one number, ADA + live USD, with a metadata builder |
+| [Mint a Scroll](https://beacnpool.github.io/ledger-scrolls/calculator.html) | The one-stop shop: drop any file → what forever costs — and small files mint right there from your browser wallet, no node, no CLI |
 | [Media Types](https://beacnpool.github.io/ledger-scrolls/media.html) | What can live forever — every media type that works, prep tips, live proof scrolls, prices |
 | [BEACN Leaks player](https://beacnpool.github.io/ledger-scrolls/leaks.html) | Publisher-channel player — point at a policy ID; this site hosts nothing |
 | [Ledger Docket](https://beacnpool.github.io/ledger-scrolls/legal.html) | Legal-records terminal — pull a recorded instrument by document number |
@@ -135,7 +135,7 @@ is the complete guide to writing your own reader; the [conformance suite](confor
 ships test vectors so your thirty lines and ours can prove they agree:
 `python3 conformance/run_conformance.py` or `node conformance/run_conformance.mjs`.
 
-And the minimal reader — **[reader.html](reader.html)**, one dependency-free
+And the minimal reader — **[examples/the-reader/reader.html](examples/the-reader/reader.html)**, one dependency-free
 file that speaks the open Koios API (any endpoint you choose) or Blockfrost
 with your own key — **is itself minted on Cardano as a scroll**
 (`9a564165ebdc4e0c4a2e1163b5cf9355604ecb8e163b425d834570e5b9007de2#0`,
@@ -148,6 +148,15 @@ scroll, including itself.
 
 ## Write your own scroll
 
+**No node? No command line?** Small files (≤ ~14 KB encoded) mint **in one
+click from a browser wallet** — Eternl, Lace, Typhon, Vespr — on the
+**[Mint a Scroll](https://beacnpool.github.io/ledger-scrolls/calculator.html)**
+page. The transaction is built locally in auditable page JS, your wallet signs
+and submits it, and the page reconstructs the scroll from the chain and checks
+both SHA-256s before declaring success. Nothing to install, no API key, no
+custody — if you can send ADA, you can write forever.
+
+For bigger files (Chain Scrolls) use the CLI toolkit —
 **[docs/YOUR_FIRST_SCROLL.md](docs/YOUR_FIRST_SCROLL.md)** is the 10-minute
 quickstart. The short version:
 
@@ -205,7 +214,8 @@ BEACN's public one. Spec and schemas: [registry/](registry/).
 ```
 ledger-scrolls/
 ├── index.html              # THE LIBRARY — the app, one dependency-free file (source = deployment)
-├── reader.html             # THE READER — minimal reader, minted on-chain (frozen copy in examples/)
+├── reader.html             # retired stub → build-a-reader/ (the minted reader lives in examples/the-reader/)
+├── build-a-reader/         # BUILD YOUR OWN READER — the one-stop guide page
 ├── create.html / leaks.html / legal.html / calculator.html   # site pages (Pages serves repo root)
 ├── docs/                   # All guides — start at docs/README.md
 │   └── history/            # Past audits & design reviews

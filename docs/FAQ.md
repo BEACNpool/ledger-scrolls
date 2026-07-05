@@ -94,7 +94,7 @@ testnet; the mistakes are free there.
 
 **How do I read a scroll right now?**
 [The Library](https://beacnpool.github.io/ledger-scrolls/) in any browser —
-or [reader.html](../reader.html) from a USB stick — or two `curl` commands
+or [reader.html](../examples/the-reader/reader.html) from a USB stick — or two `curl` commands
 ([BUILD_A_READER.md](BUILD_A_READER.md)).
 
 **How do I write one?**
