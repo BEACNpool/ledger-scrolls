@@ -207,6 +207,15 @@ Discovery is handled by the **registry** — an on-chain directory (a "DNS
 for scrolls") that is forkable by design: run your own, or PR an entry into
 BEACN's public one. Spec and schemas: [registry/](registry/).
 
+## Agree on it, on-chain (countersigned scrolls)
+
+Two parties, one document: mint the terms as a scroll, then each party
+**countersigns** with a small transaction naming the scroll and its hash —
+a signing platform's audit trail with no platform. Exact bytes, signer
+keys, block timestamps, ordering: reconstructible forever from any Cardano
+node. The mint page emits the acceptance JSON pre-filled. Spec:
+[registry/spec/countersigned-scroll-v1.md](registry/spec/countersigned-scroll-v1.md).
+
 ---
 
 ## Repository map

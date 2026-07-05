@@ -323,6 +323,11 @@ details.pg pre{max-height:180px;overflow:auto}
     <div class="out"><h4>Registry entry <button class="copy" data-for="o_reg">copy</button></h4><pre id="o_reg"></pre></div>
     <div class="out"><h4>Mint &amp; verify commands <button class="copy" data-for="o_cmd">copy</button></h4><pre id="o_cmd"></pre></div>
     <div class="out" id="chanout" hidden><h4>Channel issue metadata <button class="copy" data-for="o_chan">copy</button></h4><pre id="o_chan"></pre></div>
+    <div class="out"><h4>Countersign — acceptance metadata (agreements) <button class="copy" data-for="o_cs">copy</button></h4><pre id="o_cs"></pre>
+    <p style="font-size:13.5px;color:var(--muted);margin-top:6px">For two-party agreements: mint the terms as the scroll, then <b>each party</b>
+    sends any small self-send from their own wallet with this JSON in the metadata box (change <code>r</code> per party) —
+    an on-chain countersignature of the exact bytes, timestamped forever. Keep the tx hash; that <i>is</i> your receipt.
+    Spec: <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/countersigned-scroll-v1.md">countersigned-scroll-v1</a>.</p></div>
 
     <div class="warnbox">⚠️ <strong>Before you mint:</strong> permanent means permanent — no
     edit, no delete, no takedown. Strip EXIF/document metadata, keep the file self-contained,
@@ -656,6 +661,11 @@ sha256sum check.bin   # must equal ${S.sha ? S.sha.slice(0,16)+"…" : "your rec
       description: splitLines(desc || title || name) } } } };
     $("o_chan").textContent = JSON.stringify(chanMeta, null, 2);
   } else $("chanout").hidden = true;
+
+  $("o_cs").textContent = JSON.stringify({ "22026": { v:1,
+    t: isStd ? stdTxh : chainTxh, i: 0,
+    h: S.sha || "<sha256 of the original document>",
+    r: "partyA" } }, null, 1);
 }
 
 /* ══════════════════════════════════════════════════════════════════
