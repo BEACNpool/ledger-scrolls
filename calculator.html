@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Scroll Cost Calculator — Ledger Scrolls</title>
-<meta name="description" content="Drop any file and see exactly what it costs to store it on Cardano forever — one number, one time, no subscriptions. Computed locally; nothing is uploaded.">
+<title>Mint a Scroll — Ledger Scrolls</title>
+<meta name="description" content="Drop any file, see exactly what forever costs, and mint it on Cardano right from your browser wallet — no node, no CLI, no API key. Computed locally; nothing is uploaded.">
 <meta name="theme-color" content="#f6f5f1">
-<meta property="og:title" content="Scroll Cost Calculator — Ledger Scrolls">
-<meta property="og:description" content="What does forever cost? Drop a file in and find out — live ADA/USD pricing and a metadata builder included.">
+<meta property="og:title" content="Mint a Scroll — Ledger Scrolls">
+<meta property="og:description" content="What does forever cost? Drop a file in, see one number, and mint it with the wallet you already have — no node needed.">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="canonical" href="https://beacnpool.github.io/ledger-scrolls/calculator.html">
@@ -146,6 +146,22 @@ details.assump summary{cursor:pointer;font-weight:600;color:var(--ink)}
 details.assump table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
 details.assump td,details.assump th{border-top:1px solid var(--line);padding:6px 8px;text-align:left}
 .share{margin-top:14px;padding:12px 16px;border:1px dashed var(--line-2);border-radius:var(--radius-sm);background:var(--surface-2);font-size:14.5px;color:var(--ink-2);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+/* mint */
+.wbtns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.wbtn{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 16px;border-radius:var(--radius-sm);border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font:600 14.5px/1 var(--sans);cursor:pointer;box-shadow:var(--sh-sm);transition:.15s var(--ease)}
+.wbtn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.wbtn img{width:22px;height:22px;border-radius:5px}
+.netbadge{display:inline-flex;align-items:center;gap:6px;font:700 11.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;border-radius:var(--pill);padding:5px 11px}
+.netbadge.main{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent)}
+.netbadge.test{color:var(--violet-ink);background:var(--violet-soft);border:1px solid color-mix(in srgb,var(--violet) 30%,transparent)}
+.mlog{background:#0e1118;border:1px solid #1d2433;border-radius:var(--radius-sm);padding:12px 14px;margin-top:14px;font:12.5px/1.7 var(--mono);color:#c8ceda;max-height:260px;overflow-y:auto}
+.mlog .ok{color:#5ad196}.mlog .err{color:#ff8f93}.mlog .h{color:#8ea2ff}
+.okbox{margin-top:14px;padding:14px 16px;border-radius:var(--radius-sm);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent);color:#0a6b46;font-size:14.5px}
+.okbox .mono{word-break:break-all;font-size:12.5px}
+.consent{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:14.5px;color:var(--ink-2)}
+.consent input{width:18px;height:18px;margin-top:3px;accent-color:var(--accent)}
+.mintquote{margin-top:6px}
+.cmp{margin-top:12px;padding:11px 14px;border-radius:var(--radius-sm);background:var(--surface-2);border:1px dashed var(--line-2);font-size:13.5px;color:var(--muted)}
 .footer{border-top:1px solid var(--line);margin-top:28px;padding:26px 0 44px;font-size:14px;color:var(--muted)}
 .warnbox{margin-top:14px;padding:12px 16px;border-radius:var(--radius-sm);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);color:#6d4d0a;font-size:14px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
@@ -159,6 +175,7 @@ details.assump td,details.assump th{border-top:1px solid var(--line);padding:6px
     <a class="brand" href="./index.html"><span class="brand-mark">📜</span><span class="brand-name">Ledger <span class="b">Scrolls</span></span></a>
     <a class="ghost" href="./media.html">Media types</a>
     <a class="ghost" href="./create.html">How it works</a>
+    <a class="ghost" href="./build-a-reader/">Build a reader</a>
     <a class="ghost" href="./index.html">The Library</a>
   </div>
 </header>
@@ -166,11 +183,12 @@ details.assump td,details.assump th{border-top:1px solid var(--line);padding:6px
 <main class="container">
 
 <section class="hero">
-  <span class="eyebrow">Cost Calculator</span>
-  <h1>What will your scroll cost?</h1>
-  <p class="lead">Drop in any file — a photo, a PDF, a song, a video, a manifesto — and see
-  what it costs to make it permanent on Cardano: one number, paid once. No subscriptions,
-  no renewals, no NFTs to babysit.</p>
+  <span class="eyebrow">Mint a Scroll</span>
+  <h1>Price it. Mint it. Forever.</h1>
+  <p class="lead">Drop in any file — a photo, a PDF, a song, a manifesto — and see
+  what it costs to make it permanent on Cardano: one number, paid once. Small files
+  mint <strong>right here, from the wallet you already have</strong> — no node, no
+  command line, no account, no API key.</p>
   <p class="privacy">🔒 Everything runs in your browser. Your file is never uploaded anywhere.</p>
 </section>
 
@@ -254,6 +272,17 @@ details.assump td,details.assump th{border-top:1px solid var(--line);padding:6px
 </section>
 
 
+<section class="section" id="mintsec" hidden>
+  <div class="card">
+    <h2>⚡ Mint it right now — no node, no command line</h2>
+    <p style="font-size:15px">This page can write your file to Cardano <strong>directly from
+    your browser wallet</strong> (Eternl, Lace, Typhon, Vespr…). The transaction is built
+    locally, your wallet shows you exactly what it spends before you approve, and nothing —
+    not the file, not a key — ever leaves your machine except the signed transaction itself.</p>
+    <div id="mintbody"></div>
+  </div>
+</section>
+
 <section class="section" id="buildersec" hidden>
   <div class="card">
     <h2>Metadata builder</h2>
@@ -292,7 +321,8 @@ details.assump td,details.assump th{border-top:1px solid var(--line);padding:6px
 <footer class="footer container">
   <p><strong>Ledger Scrolls</strong> — the free, open-source reader &amp; writer for immutable,
   forever media. <a href="https://github.com/BEACNpool/ledger-scrolls">Source &amp; specs on GitHub</a> ·
-  <a href="./index.html">The Library</a> · <a href="./create.html">How it works</a></p>
+  <a href="./index.html">The Library</a> · <a href="./create.html">How it works</a> ·
+  <a href="./build-a-reader/">Build your own reader</a></p>
   <p style="margin-top:6px"><em>"A library that cannot burn."</em></p>
 </footer>
 </main>
@@ -433,15 +463,18 @@ async function analyzeFile(file){
   const ext = (file.name.split(".").pop()||"").toLowerCase();
   const media = mediaByExt(ext);
   const buf = await file.arrayBuffer();
+  M.state = "idle"; M.txid = "";        // new file → fresh mint flow
   S.raw = buf.byteLength; S.name = file.name; S.media = media;
   S.ct = file.type && !media.exts.length===false ? (media.ct || file.type) : (media.ct || file.type || "application/octet-stream");
   S.sha = await sha256hex(buf);
   S.codec = "none"; S.enc = S.raw; S.shaEnc = S.sha;
+  S.rawBytes = new Uint8Array(buf); S.encBytes = S.rawBytes;
   let gzNote = "not attempted (already-compressed format)";
   if(media.gz){
     const gz = await gzipBytes(buf);
     if(gz && gz.byteLength < S.raw){
       S.codec = "gzip"; S.enc = gz.byteLength;
+      S.encBytes = gz;
       S.shaEnc = await sha256hex(gz.buffer);
       gzNote = `${fmtB(gz.byteLength)} (${Math.round(100-100*gz.byteLength/S.raw)}% smaller) — codec: gzip`;
     } else gzNote = gz ? "gzip didn't help — codec: none" : "browser can't gzip — sizes shown uncompressed";
@@ -465,7 +498,8 @@ function analyzeManual(){
   const bytes = Math.round(v * ($("munit").value === "MB" ? 1048576 : 1024));
   const media = MEDIA[+$("mtype").value];
   S.raw = bytes; S.name = ""; S.media = media; S.ct = media.ct;
-  S.sha = ""; S.shaEnc = "";
+  S.sha = ""; S.shaEnc = ""; S.rawBytes = null; S.encBytes = null;
+  M.state = "idle"; M.txid = "";
   if(media.gz){ S.codec = "gzip"; S.enc = Math.round(bytes * 0.33); }  // typical 3:1 for text
   else { S.codec = "none"; S.enc = bytes; }
   $("kv").innerHTML = `
@@ -518,6 +552,8 @@ function render(){
       ? "Written as a <b>single locked coin</b> — your whole file fits inside the manifest itself, readable from any Cardano node with one query, forever."
       : `Written as <b>${fmtN(ch.pages)} page transaction${ch.pages > 1 ? "s" : ""}</b> plus ${ch.links > 1 ? fmtN(ch.links) + " locked manifests" : "one locked manifest"} that lists every page and seals the file's SHA-256 fingerprint.`}</div>`;
 
+  renderMint();
+
   const what = S.name ? `“${esc(S.name)}” (${fmtB(S.raw)})` : `${fmtB(S.raw)} of ${esc(S.media.label)}`;
   $("share").innerHTML = `<span>&#128226; ${what} &rarr; &approx; <b>${fmtA(best.total)} ADA</b>
     ${S.price ? `(~$${(best.total * S.price).toFixed(2)})` : ""}, once, to live on Cardano
@@ -552,9 +588,10 @@ function buildOutputs(){
   const ct = $("b_ct").value.trim() || S.ct || "application/octet-stream";
   const chan = $("b_channel").value.trim();
   const issue = $("b_issue").value;
-  const isStd = S.method === "std";
+  const isStd = S.method === "std" || !!M.txid;
+  const stdTxh = M.txid || "<LOCK_TX_HASH>";
   const pointer = isStd
-    ? { kind:"utxo-inline-datum-bytes-v1", txHash:"<LOCK_TX_HASH>", txIx:0 }
+    ? { kind:"utxo-inline-datum-bytes-v1", txHash:stdTxh, txIx:0 }
     : { kind:"manifest-chain-v2", txHash:"<MANIFEST_TX_HASH>", txIx:0 };
 
   const entry = { name, pointer, contentType: ct, codec: S.codec,
@@ -572,12 +609,12 @@ function buildOutputs(){
 # 2. Record your commitment hash
 sha256sum "${fn}"
 
-# 3. Mint the Standard Scroll (locks the datum at the always-fail address)
+# 3. Mint the Standard Scroll (or use the one-click minter on this page)
 ./scripts/mint-standard-scroll.sh "${fn}" payment.skey payment.addr
 
 # 4. Verify from chain BEFORE announcing
 cd koios-viewer
-python3 -m lsview reconstruct-utxo --txin <LOCK_TX_HASH>#0 --out check.bin
+python3 -m lsview reconstruct-utxo --txin ${stdTxh}#0 --out check.bin
 sha256sum check.bin   # must equal step 2`
 : `# 1. Rehearse on Preview testnet first (docs/PREVIEW_TESTNET_POC.md)
 # 2. Prepare: deterministic gzip, hashes, page split, honest cost quote
@@ -603,6 +640,425 @@ sha256sum check.bin   # must equal ${S.sha ? S.sha.slice(0,16)+"…" : "your rec
       description: splitLines(desc || title || name) } } } };
     $("o_chan").textContent = JSON.stringify(chanMeta, null, 2);
   } else $("chanout").hidden = true;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   IN-BROWSER MINTER — Standard Scrolls via any CIP-30 wallet.
+   The tx is built here, byte by byte, in plain JS you can read:
+   inputs from your wallet, one output locked forever at the always-fail
+   address with your file as its inline datum, change back to you.
+   No node, no API key, no server. Your wallet signs and submits.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── bytes & hex ── */
+const u8 = a => Uint8Array.from(a);
+const hexB = h => { const o=new Uint8Array(h.length/2); for(let i=0;i<o.length;i++)o[i]=parseInt(h.substr(i*2,2),16); return o; };
+const bHex = b => [...b].map(x=>x.toString(16).padStart(2,"0")).join("");
+const catB = parts => { let n=0; for(const p of parts)n+=p.length; const o=new Uint8Array(n); let i=0; for(const p of parts){o.set(p,i);i+=p.length;} return o; };
+
+/* ── bech32 (BIP-173, Cardano ignores the 90-char cap) ── */
+const B32C = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+function b32polymod(vals){ const G=[0x3b6a57b2,0x26508e6d,0x1ea119fa,0x3d4233dd,0x2a1462b3]; let chk=1;
+  for(const v of vals){ const b=chk>>>25; chk=((chk&0x1ffffff)<<5)^v; for(let i=0;i<5;i++) if((b>>>i)&1) chk^=G[i]; } return chk; }
+function b32hrpx(hrp){ const r=[]; for(const c of hrp)r.push(c.charCodeAt(0)>>>5); r.push(0); for(const c of hrp)r.push(c.charCodeAt(0)&31); return r; }
+function b32decode(s){ s=s.toLowerCase(); const pos=s.lastIndexOf("1"); const hrp=s.slice(0,pos);
+  const data=[...s.slice(pos+1)].map(c=>B32C.indexOf(c));
+  if(data.includes(-1) || b32polymod(b32hrpx(hrp).concat(data))!==1) throw new Error("bad bech32");
+  const d5=data.slice(0,-6); let acc=0,bits=0; const out=[];
+  for(const v of d5){ acc=(acc<<5)|v; bits+=5; while(bits>=8){ bits-=8; out.push((acc>>>bits)&255); } }
+  return { hrp, bytes:new Uint8Array(out) }; }
+function b32encode(hrp,bytes){ let acc=0,bits=0; const d5=[];
+  for(const b of bytes){ acc=(acc<<8)|b; bits+=8; while(bits>=5){ bits-=5; d5.push((acc>>>bits)&31); } }
+  if(bits>0) d5.push((acc<<(5-bits))&31);
+  const chkv=b32hrpx(hrp).concat(d5).concat([0,0,0,0,0,0]); const mod=b32polymod(chkv)^1; const chk=[];
+  for(let p=0;p<6;p++) chk.push((mod>>>(5*(5-p)))&31);
+  return hrp+"1"+d5.concat(chk).map(i=>B32C[i]).join(""); }
+
+/* ── blake2b-256 (public-domain blakejs construction) ── */
+const B2IV = new Uint32Array([0xf3bcc908,0x6a09e667,0x84caa73b,0xbb67ae85,0xfe94f82b,0x3c6ef372,0x5f1d36f1,0xa54ff53a,0xade682d1,0x510e527f,0x2b3e6c1f,0x9b05688c,0xfb41bd6b,0x1f83d9ab,0x137e2179,0x5be0cd19]);
+const B2S = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,10,4,8,9,15,13,6,1,12,0,2,11,7,5,3,11,8,12,0,5,2,15,13,10,14,3,6,7,1,9,4,7,9,3,1,13,12,11,14,2,6,5,10,4,0,15,8,9,0,5,7,2,4,10,15,14,1,11,12,6,8,3,13,2,12,6,10,0,11,8,3,4,13,7,5,15,14,1,9,12,5,1,15,14,13,4,10,0,7,6,3,9,2,8,11,13,11,7,14,12,1,3,9,5,0,15,4,8,6,2,10,6,15,14,9,11,3,0,8,12,2,13,7,1,4,10,5,10,2,8,4,7,6,1,5,15,11,9,14,3,12,13,0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,10,4,8,9,15,13,6,1,12,0,2,11,7,5,3].map(x=>x*2);
+function blake2b256(input){
+  const v=new Uint32Array(32), m=new Uint32Array(32);
+  const A=(a,b)=>{ let o0=v[a]+v[b], o1=v[a+1]+v[b+1]; if(o0>=0x100000000)o1++; v[a]=o0>>>0; v[a+1]=o1>>>0; };
+  const AC=(a,b0,b1)=>{ let o0=v[a]+b0; if(b0<0)o0+=0x100000000; let o1=v[a+1]+b1; if(o0>=0x100000000)o1++; v[a]=o0>>>0; v[a+1]=o1>>>0; };
+  const G=(a,b,c,d,ix,iy)=>{
+    const x0=m[ix],x1=m[ix+1],y0=m[iy],y1=m[iy+1]; let x;
+    A(a,b); AC(a,x0,x1); x=v[d]^v[a]; const x2=v[d+1]^v[a+1]; v[d]=x2; v[d+1]=x;
+    A(c,d); x=v[b]^v[c]; const x3=v[b+1]^v[c+1]; v[b]=((x>>>24)^(x3<<8))>>>0; v[b+1]=((x3>>>24)^(x<<8))>>>0;
+    A(a,b); AC(a,y0,y1); x=v[d]^v[a]; const x4=v[d+1]^v[a+1]; v[d]=((x>>>16)^(x4<<16))>>>0; v[d+1]=((x4>>>16)^(x<<16))>>>0;
+    A(c,d); x=v[b]^v[c]; const x5=v[b+1]^v[c+1]; v[b]=((x5>>>31)^(x<<1))>>>0; v[b+1]=((x>>>31)^(x5<<1))>>>0; };
+  const h=new Uint32Array(16); for(let i=0;i<16;i++)h[i]=B2IV[i]; h[0]^=0x01010000^32;
+  const blk=new Uint8Array(128); let t=0,c=0;
+  const compress=last=>{
+    for(let i=0;i<16;i++){ v[i]=h[i]; v[i+16]=B2IV[i]; }
+    v[24]=(v[24]^t)>>>0; v[25]=(v[25]^(t/0x100000000))>>>0;
+    if(last){ v[28]=~v[28]>>>0; v[29]=~v[29]>>>0; }
+    for(let i=0;i<32;i++) m[i]=(blk[4*i]^(blk[4*i+1]<<8)^(blk[4*i+2]<<16)^(blk[4*i+3]<<24))>>>0;
+    for(let i=0;i<12;i++){
+      G(0,8,16,24,B2S[i*16+0],B2S[i*16+1]);   G(2,10,18,26,B2S[i*16+2],B2S[i*16+3]);
+      G(4,12,20,28,B2S[i*16+4],B2S[i*16+5]);  G(6,14,22,30,B2S[i*16+6],B2S[i*16+7]);
+      G(0,10,20,30,B2S[i*16+8],B2S[i*16+9]);  G(2,12,22,24,B2S[i*16+10],B2S[i*16+11]);
+      G(4,14,16,26,B2S[i*16+12],B2S[i*16+13]);G(6,8,18,28,B2S[i*16+14],B2S[i*16+15]); }
+    for(let i=0;i<16;i++) h[i]=(h[i]^v[i]^v[i+16])>>>0; };
+  for(let i=0;i<input.length;i++){ if(c===128){ t+=c; compress(false); c=0; } blk[c++]=input[i]; }
+  t+=c; while(c<128)blk[c++]=0; compress(true);
+  const out=new Uint8Array(32); for(let i=0;i<32;i++)out[i]=(h[i>>2]>>>(8*(i&3)))&255;
+  return out;
+}
+
+/* ── CBOR ── */
+function cH(n,mt){ const t=mt<<5;
+  if(n<24) return u8([t|n]);
+  if(n<256) return u8([t|24,n]);
+  if(n<65536) return u8([t|25,n>>>8,n&255]);
+  if(n<4294967296) return u8([t|26,(n/16777216)&255,(n>>>16)&255,(n>>>8)&255,n&255]);
+  const hi=Math.floor(n/4294967296), lo=n%4294967296;
+  return u8([t|27,(hi/16777216)&255,(hi>>>16)&255,(hi>>>8)&255,hi&255,(lo/16777216)&255,(lo>>>16)&255,(lo>>>8)&255,lo&255]); }
+const cU  = n => cH(n,0);
+const cBy = b => catB([cH(b.length,2), b]);
+const cAr = n => cH(n,4);
+const cMp = n => cH(n,5);
+const cTg = n => cH(n,6);
+function cborD(raw,pos=0){
+  const len=(ai,p)=>{ if(ai<24)return[ai,p]; const w={24:1,25:2,26:4,27:8}[ai]; if(!w)throw new Error("cbor len");
+    let n=0; for(let i=0;i<w;i++)n=n*256+raw[p+i]; return[n,p+w]; };
+  const mt=raw[pos]>>>5, ai=raw[pos]&31;
+  if(mt===0) return len(ai,pos+1);
+  if(mt===1){ const[n,p]=len(ai,pos+1); return[-1-n,p]; }
+  if(mt===2||mt===3){
+    if(ai===31){ let p=pos+1; const parts=[];
+      while(raw[p]!==0xff){ const cai=raw[p]&31; const[n,q]=len(cai,p+1); parts.push(raw.subarray(q,q+n)); p=q+n; }
+      const v=catB(parts); return[mt===2?v:new TextDecoder().decode(v),p+1]; }
+    const[n,p]=len(ai,pos+1); const v=raw.subarray(p,p+n); return[mt===2?v:new TextDecoder().decode(v),p+n]; }
+  if(mt===4){
+    if(ai===31){ let p=pos+1; const o=[]; while(raw[p]!==0xff){ const[v,q]=cborD(raw,p); o.push(v); p=q; } return[o,p+1]; }
+    let[n,p]=len(ai,pos+1); const o=[]; for(let i=0;i<n;i++){ const[v,q]=cborD(raw,p); o.push(v); p=q; } return[o,p]; }
+  if(mt===5){
+    const m=new Map(); let n,p;
+    if(ai===31){ p=pos+1; while(raw[p]!==0xff){ const[k,q]=cborD(raw,p); const[v,r]=cborD(raw,q); m.set(k,v); p=r; } return[m,p+1]; }
+    [n,p]=len(ai,pos+1); for(let i=0;i<n;i++){ const[k,q]=cborD(raw,p); const[v,r]=cborD(raw,q); m.set(k,v); p=r; } return[m,p]; }
+  if(mt===6){ const[n,p]=len(ai,pos+1); const[v,q]=cborD(raw,p); return[{tag:n,value:v},q]; }
+  if(mt===7){ if(ai===20)return[false,pos+1]; if(ai===21)return[true,pos+1]; if(ai===22)return[null,pos+1];
+    const[n,p]=len(ai,pos+1); return[n,p]; }
+  throw new Error("cbor major "+mt);
+}
+
+/* ── the datum: Constr 0 [ your bytes ] — chunks >64 B per Plutus rules ── */
+function chunkedBytes(b){
+  if(b.length<=64) return cBy(b);
+  const parts=[u8([0x5f])];
+  for(let i=0;i<b.length;i+=64) parts.push(cBy(b.subarray(i,Math.min(i+64,b.length))));
+  parts.push(u8([0xff]));
+  return catB(parts);
+}
+/* canonical Plutus Data: non-empty constructor field lists are indefinite (9f…ff) */
+const buildDatum = content => catB([u8([0xd8,0x79,0x9f]), chunkedBytes(content), u8([0xff])]);
+
+/* ── networks ── */
+const LOCK_MAINNET = "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn";
+const SCRIPT_HASH  = b32decode(LOCK_MAINNET).bytes.subarray(1);
+const NETS = {
+  /* browser CORS: api.koios.rest only answers its own site — the mirror
+     (tools/cors-mirror/, deploy your own!) goes first for web use */
+  1:{ name:"MAINNET", cls:"main", note:"real ADA — this is forever",
+      lockBech:LOCK_MAINNET, lockBytes:b32decode(LOCK_MAINNET).bytes,
+      koios:["https://koios.beacn.workers.dev/api/v1","https://api.koios.rest/api/v1"],
+      scan:"https://cardanoscan.io/transaction/" },
+  0:{ name:"PREVIEW — rehearsal", cls:"test", note:"test ADA — free mistakes (get tADA from the faucet)",
+      lockBech:b32encode("addr_test", catB([u8([0x70]),SCRIPT_HASH])),
+      lockBytes:catB([u8([0x70]),SCRIPT_HASH]),
+      koios:["https://koios.beacn.workers.dev/preview/api/v1","https://preview.koios.rest/api/v1"],
+      scan:"https://preview.cardanoscan.io/transaction/" },
+};
+
+async function kapi(net,path,body,method){
+  let lastErr;
+  for(const base of NETS[net].koios){
+    try{
+      const r = await fetch(base+path, { method: method||(body?"POST":"GET"),
+        headers: body?{"Content-Type":"application/json"}:{},
+        body: body?JSON.stringify(body):undefined, signal:AbortSignal.timeout(15000) });
+      if(r.ok) return await r.json();
+      lastErr = new Error("HTTP "+r.status+" from "+base);
+    }catch(e){ lastErr=e; }
+  }
+  throw lastErr || new Error("chain API unreachable");
+}
+async function fetchNetParams(net){
+  try{
+    const rows = await kapi(net,"/epoch_params?order=epoch_no.desc&limit=1");
+    const p = rows?.[0]||{};
+    return { a:+p.min_fee_a||44, b:+p.min_fee_b||155381, cpb:+p.coins_per_utxo_size||4310, live:!!rows?.[0] };
+  }catch(e){ return { a:44, b:155381, cpb:4310, live:false }; }
+}
+
+/* ── CIP-30 ── */
+function listWallets(){
+  const out=[];
+  for(const k of Object.keys(window.cardano||{})){
+    const w=window.cardano[k];
+    if(w && typeof w.enable==="function" && w.apiVersion) out.push({key:k,name:w.name||k,icon:w.icon});
+  }
+  const seen=new Set();
+  return out.filter(w=>{ const n=w.name.toLowerCase(); if(seen.has(n))return false; seen.add(n); return true; });
+}
+function parseWalletUtxos(hexList){
+  const out=[];
+  for(const h of hexList||[]){
+    try{
+      const [pair]=cborD(hexB(h));
+      const inp=pair[0], o=pair[1];
+      let addr,val,extra=false;
+      if(o instanceof Map){ addr=o.get(0); val=o.get(1); if(o.has(2)||o.has(3))extra=true; }
+      else { addr=o[0]; val=o[1]; if(o.length>2 && o[2]!=null)extra=true; }
+      let coin=null;
+      if(typeof val==="number") coin=val;
+      else if(Array.isArray(val)&&typeof val[0]==="number"){
+        const ma=val[1];
+        const hasTokens = ma instanceof Map ? ma.size>0 : ma && Object.keys(ma).length>0;
+        if(hasTokens) continue;                    // never touch token-bearing UTxOs
+        coin=val[0];
+      }
+      if(extra || coin==null || !(coin>0) || coin>2**52) continue;
+      if(!(inp[0] instanceof Uint8Array) || inp[0].length!==32) continue;
+      out.push({ txh:inp[0], ix:inp[1], coin, addrHex:bHex(addr) });
+    }catch(e){ void e; }
+  }
+  return out;
+}
+
+/* ── tx assembly (Conway; one locked output + change; no scripts run) ── */
+function encInput(i){ return catB([u8([0x82]), cBy(i.txh), cU(i.ix)]); }
+function encLockOut(net,coin,datum){
+  return catB([u8([0xa3]), cU(0), cBy(NETS[net].lockBytes), cU(1), cU(coin),
+               cU(2), u8([0x82]), cU(1), cTg(24), cBy(datum)]); }
+function encChangeOut(addrB,coin){ return catB([u8([0xa2]), cU(0), cBy(addrB), cU(1), cU(coin)]); }
+function encBody(net,ins,datum,lockCoin,changeB,changeCoin,fee){
+  return catB([u8([0xa3]),
+    cU(0), cAr(ins.length), ...ins.map(encInput),
+    cU(1), u8([0x82]), encLockOut(net,lockCoin,datum), encChangeOut(changeB,changeCoin),
+    cU(2), cU(fee)]); }
+function dummyWitLen(n){
+  return catB([u8([0xa1]), cU(0), cAr(n),
+    ...Array.from({length:n},()=>catB([u8([0x82]), cBy(new Uint8Array(32)), cBy(new Uint8Array(64))]))]).length; }
+function minLockCoin(net,datum,params){
+  let coin=2000000;
+  for(let i=0;i<4;i++) coin=(160+encLockOut(net,coin,datum).length)*params.cpb;
+  return coin;
+}
+function minChangeCoin(changeB,params){
+  let coin=1000000;
+  for(let i=0;i<4;i++) coin=(160+encChangeOut(changeB,coin).length)*params.cpb;
+  return coin;
+}
+function planTx(net,utxos,datum,changeB,params){
+  const lockCoin=minLockCoin(net,datum,params);
+  const minChange=minChangeCoin(changeB,params);
+  const pool=[...utxos].sort((a,b)=>b.coin-a.coin);
+  const ins=[]; let sum=0, fee=300000;
+  const totalAvail = pool.reduce((s,x)=>s+x.coin,0);
+  for(let round=0; round<40; round++){
+    while(sum < lockCoin+fee+minChange && pool.length){ const x=pool.shift(); ins.push(x); sum+=x.coin; }
+    if(sum < lockCoin+fee+minChange)
+      throw new Error(`Not enough spendable ADA: this mint needs ≈ ${((lockCoin+fee+minChange)/1e6).toFixed(2)} ADA `+
+        `(including ≈ ${(minChange/1e6).toFixed(2)} ADA that comes right back as change) but the wallet has `+
+        `${(totalAvail/1e6).toFixed(2)} ADA in plain-ADA UTxOs. Token-holding UTxOs are never touched.`);
+    const nWit = new Set(ins.map(i=>i.addrHex)).size + 1;   // +1 witness of margin
+    const change = sum-lockCoin-fee;
+    const body = encBody(net,ins,datum,lockCoin,changeB,change,fee);
+    const size = 3 + body.length + dummyWitLen(nWit);
+    const newFee = Math.ceil(params.a*size + params.b) + 220;  // tiny pad for width jitter
+    if(newFee<=fee && change>=minChange){ fee=newFee; break; }
+    fee=Math.max(fee,newFee);
+  }
+  const change=sum-lockCoin-fee;
+  const body=encBody(net,ins,datum,lockCoin,changeB,change,fee);
+  if(3+body.length+dummyWitLen(ins.length+1) > 16200)
+    throw new Error("Transaction would exceed Cardano's 16 KB limit — this file needs the Chain Scroll CLI path.");
+  return { ins, lockCoin, fee, change, body };
+}
+
+/* ── mint flow ── */
+const M = { wapi:null, wname:"", net:null, params:null, plan:null, datum:null, txid:"", state:"idle" };
+const mlog = (cls,msg)=>{ const el=$("mlog"); if(!el) return; const d=document.createElement("div");
+  d.className=cls; d.textContent=msg; el.appendChild(d); el.scrollTop=el.scrollHeight; };
+
+function renderMint(){
+  const sec=$("mintsec"); if(!S.enc){ sec.hidden=true; return; }
+  sec.hidden=false;
+  const body=$("mintbody");
+  if(M.state==="quoted"||M.state==="minting"||M.state==="done") return;   // don't clobber an active flow
+  if(!S.encBytes){
+    body.innerHTML=`<div class="cmp">Drop a <b>real file</b> above (not a size estimate) and it can be minted from here.</div>`;
+    return;
+  }
+  if(S.enc > P.stdMax){
+    body.innerHTML=`<div class="cmp">This file is <b>${fmtB(S.enc)}</b> on-chain — bigger than the ~14 KB that fits a
+      one-transaction Standard Scroll. It mints as a <b>Chain Scroll</b> (~${fmtA(calcChain(S.enc).total)} ADA) with the
+      free CLI toolkit — the metadata builder below prints your exact commands. One-click browser minting for big
+      scrolls is on the roadmap.</div>`;
+    return;
+  }
+  const st=calcStandard(S.enc), ch=calcChain(S.enc);
+  const wallets=listWallets();
+  const cmpNote = st.total > ch.total*1.5
+    ? `<div class="cmp">Honest note: one-click minting locks the whole file in a single coin —
+       ≈ <b>${fmtA(st.total)} ADA</b>. The CLI Chain-Scroll path costs ≈ <b>${fmtA(ch.total)} ADA</b> for the same
+       file (commands in the builder below). You're paying the difference for one signature and zero setup.</div>` : "";
+  body.innerHTML = `
+    ${cmpNote}
+    ${wallets.length ? `
+      <p style="margin-top:12px;font-size:15px"><b>Connect a wallet to begin.</b> To rehearse first (rule&nbsp;2),
+      switch the wallet to the <b>Preview</b> network and this page follows it — test ADA, free mistakes.</p>
+      <div class="wbtns">${wallets.map(w=>`
+        <button class="wbtn" data-w="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} ${esc(w.name)}</button>`).join("")}
+      </div>`
+    : `<div class="warnbox" style="margin-top:12px">No Cardano wallet found in this browser. Install
+       <a href="https://eternl.io">Eternl</a>, <a href="https://www.lace.io">Lace</a>, or
+       <a href="https://typhonwallet.io">Typhon</a> (desktop), or open this page inside your mobile wallet's
+       dApp browser (Eternl / Vespr). Then drop your file in again.</div>`}
+    <div id="mintstage"></div>`;
+  body.querySelectorAll(".wbtn").forEach(b=>b.addEventListener("click",()=>connectAndQuote(b.dataset.w)));
+}
+
+async function connectAndQuote(key){
+  const stage=$("mintstage");
+  stage.innerHTML=`<div class="cmp">Connecting to ${esc(key)}…</div>`;
+  try{
+    M.wapi = await window.cardano[key].enable();
+    M.wname = window.cardano[key].name||key;
+    M.net = await M.wapi.getNetworkId();
+    if(!(M.net in NETS)) throw new Error("Unknown network id "+M.net);
+    M.params = await fetchNetParams(M.net);
+    M.datum = buildDatum(S.encBytes);
+    const utxos = parseWalletUtxos(await M.wapi.getUtxos());
+    const changeB = hexB(await M.wapi.getChangeAddress());
+    M.plan = planTx(M.net, utxos, M.datum, changeB, M.params);
+    M.changeB = changeB;
+    const n=NETS[M.net], pl=M.plan;
+    const A=x=>(x/1e6).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+    stage.innerHTML=`
+      <div class="mintquote">
+        <p style="margin-top:14px"><span class="netbadge ${n.cls}">${n.name}</span>
+          <span style="font-size:13px;color:var(--muted)">&nbsp;${esc(n.note)} · connected: ${esc(M.wname)}${M.params.live?"":" · using fallback fee params"}</span></p>
+        <div class="rows">
+          <div><span>Locked forever with your file (min-UTxO, exact)</span><span class="mono">${A(pl.lockCoin)} ADA</span></div>
+          <div><span>Network fee (exact, ${pl.ins.length} input${pl.ins.length>1?"s":""})</span><span class="mono">${A(pl.fee)} ADA</span></div>
+          <div><span>Change returned to your wallet</span><span class="mono">${A(pl.change)} ADA</span></div>
+          <div class="tot"><span>Total leaving your wallet</span><span class="mono">${A(pl.lockCoin+pl.fee)} ADA ${S.price&&M.net===1?`<span class="usd">≈ $${((pl.lockCoin+pl.fee)/1e6*S.price).toFixed(2)}</span>`:""}</span></div>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin-top:8px">Destination: the always-fail vault
+          <span class="mono">${n.lockBech.slice(0,24)}…${n.lockBech.slice(-8)}</span> — an address with no spending key.
+          Your wallet will show this exact output before you approve.</p>
+        <div class="consent"><input type="checkbox" id="consent">
+          <label for="consent"><b>I understand this is permanent and public.</b> No edit, no delete, no takedown —
+          not by me, not by anyone, for as long as Cardano exists. No secrets, no private data, nothing I may regret.</label></div>
+        <p style="margin-top:14px"><button class="btn" id="mintgo" disabled>📜 Mint it — forever</button></p>
+      </div>`;
+    M.state="quoted";
+    $("consent").addEventListener("change",e=>{ $("mintgo").disabled=!e.target.checked; });
+    $("mintgo").addEventListener("click",doMint);
+  }catch(e){
+    stage.innerHTML=`<div class="warnbox">✋ ${esc(String(e.message||e))}</div>`;
+  }
+}
+
+async function doMint(){
+  M.state="minting";
+  const stage=$("mintstage");
+  stage.querySelector("#mintgo").disabled=true;
+  stage.insertAdjacentHTML("beforeend",`<div class="mlog" id="mlog"></div>`);
+  const pl=M.plan, n=NETS[M.net];
+  try{
+    mlog("h",`── minting “${S.name}” as a Standard Scroll on ${n.name}`);
+    mlog("",`datum: ${M.datum.length} bytes (${S.codec==="gzip"?"gzip-encoded":"raw"} content, Constr 0)`);
+    mlog("",`tx: ${pl.ins.length} input(s) → lock ${(pl.lockCoin/1e6).toFixed(2)} ADA + change, fee ${(pl.fee/1e6).toFixed(3)} ADA`);
+    const unsigned = catB([u8([0x84]), pl.body, u8([0xa0]), u8([0xf5,0xf6])]);
+    mlog("",`asking ${M.wname} to sign — check the amounts in the wallet window…`);
+    const witHex = await M.wapi.signTx(bHex(unsigned), false);
+    const wit = hexB(witHex);
+    const signed = wit[0]===0x84 ? wit : catB([u8([0x84]), pl.body, wit, u8([0xf5,0xf6])]);
+    const txid = bHex(blake2b256(pl.body));
+    mlog("ok",`signed ✓ tx ${txid.slice(0,16)}…`);
+    mlog("",`submitting through ${M.wname}…`);
+    const wid = await M.wapi.submitTx(bHex(signed));
+    M.txid = (typeof wid==="string" && /^[0-9a-f]{64}$/i.test(wid)) ? wid.toLowerCase() : txid;
+    if(M.txid!==txid) mlog("",`note: wallet reports txid ${M.txid.slice(0,16)}… (using it)`);
+    mlog("ok",`submitted ✓ ${M.txid}`);
+    buildOutputs();
+    mlog("h",`── verifying from the chain (never announce before this passes)`);
+    await verifyBack();
+  }catch(e){
+    M.state="idle";
+    const msg=String(e?.info||e?.message||e);
+    mlog("err",`✗ ${msg}`);
+    mlog("", /decline|refus|cancel|denied/i.test(msg)
+      ? "You declined in the wallet — nothing was sent, nothing was spent."
+      : "Nothing is lost: if the transaction wasn't submitted, no ADA moved. Fix the issue and try again.");
+    stage.insertAdjacentHTML("beforeend",`<p style="margin-top:10px"><button class="btn sub" id="retry">Try again</button></p>`);
+    $("retry").addEventListener("click",()=>{ M.state="idle"; renderMint(); });
+  }
+}
+
+async function verifyBack(){
+  const n=NETS[M.net];
+  for(let tries=1; tries<=25; tries++){
+    await new Promise(r=>setTimeout(r,12000));
+    try{
+      const rows = await kapi(M.net,"/utxo_info",{_utxo_refs:[M.txid+"#0"],_extended:true});
+      const hexd = rows?.[0]?.inline_datum?.bytes;
+      if(!hexd){ mlog("",`waiting for a block… (${tries*12}s)`); continue; }
+      const [v] = cborD(hexB(hexd));
+      let bytes = (v instanceof Uint8Array) ? v
+        : (v && v.tag===121 && v.value?.[0] instanceof Uint8Array) ? v.value[0] : null;
+      if(!bytes) throw new Error("datum came back in an unexpected shape");
+      const encHash = await sha256hex(bytes.slice().buffer);
+      if(encHash!==S.shaEnc) throw new Error("on-chain bytes hash mismatch (encoded)");
+      mlog("ok",`on-chain bytes ✓ sha256 ${encHash.slice(0,16)}… matches`);
+      if(S.codec==="gzip"){
+        const ds=new DecompressionStream("gzip");
+        bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(ds)).arrayBuffer());
+      }
+      const decHash = await sha256hex(bytes.slice().buffer);
+      if(decHash!==S.sha) throw new Error("decoded hash mismatch");
+      mlog("ok",`decoded file ✓ sha256 ${decHash.slice(0,16)}… matches your original`);
+      mintSuccess();
+      return;
+    }catch(e){
+      if(/mismatch|shape/.test(String(e.message))){ mlog("err","✗ "+e.message); return; }
+      mlog("",`indexer not ready yet… (${tries*12}s)`);
+    }
+  }
+  mlog("",`The indexer hasn't caught up after 5 minutes — that happens. Your transaction is real:`);
+  mintSuccess(true);
+}
+
+function mintSuccess(unverified){
+  M.state="done";
+  const n=NETS[M.net], ptr=M.txid+"#0";
+  const receipts={ scroll:$("b_name").value.trim()||S.name, file:S.name, network:n.name,
+    format:"standard-scroll (utxo-inline-datum-bytes-v1)",
+    pointer:{ kind:"utxo-inline-datum-bytes-v1", txHash:M.txid, txIx:0 },
+    lockAddress:n.lockBech, lockTxIn:ptr, contentType:S.ct, codec:S.codec,
+    sizeDecoded:S.raw, sizeEncoded:S.enc, sha256Decoded:S.sha, sha256Encoded:S.shaEnc,
+    lockedLovelace:M.plan.lockCoin, feeLovelace:M.plan.fee,
+    mintedAt:new Date().toISOString(), verifiedFromChain:!unverified, wallet:M.wname };
+  const blob=new Blob([JSON.stringify(receipts,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  $("mintstage").insertAdjacentHTML("beforeend",`
+    <div class="okbox">
+      <b>📜 ${unverified?"Minted (verify from chain before announcing!)":"Your scroll is eternal — verified from the chain."}</b><br>
+      Pointer (this is how civilization finds it — keep it):<br>
+      <span class="mono">${ptr}</span> <button class="copy" id="ptrcopy">copy</button><br>
+      <span style="font-size:13.5px">
+      <a href="${n.scan}${M.txid}" target="_blank" rel="noopener">View on Cardanoscan</a> ·
+      ${M.net===1?`<a href="./index.html" target="_blank" rel="noopener">Open the Library</a> and paste the pointer in the search bar ·`:""}
+      <a href="${url}" download="receipts-${(S.name||"scroll").replace(/[^a-zA-Z0-9._-]+/g,"_")}.json">Download receipts.json</a></span><br>
+      <span style="font-size:13px;color:#0a6b46">The registry entry below now carries your real transaction hash —
+      PR it into <a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/registry">the registry</a> to put it on the public shelf.</span>
+    </div>`);
+  $("ptrcopy").addEventListener("click",e=>copyText(e.target,ptr));
+  buildOutputs();
 }
 
 function copyText(btn, text){
