@@ -10,7 +10,7 @@ where none of it can happen to the document itself.
 | Scroll pointer | `manifest-chain-v2` · `1b465d3f9368cf6e1a36ae536631ffed9ca12b35c3bd2843bc423398140174fc#0` |
 | Content | `text/html`, gzip, 7,500 → 3,524 bytes, 1 page |
 | SHA-256 (decoded) | `16612dfb6cef652e23014fecba3108996edb76c1d62d37562a2d799cb7165a55` |
-| Channel NFT | **pending** — `BEACN_LEAKS_0002` (see below) |
+| Channel NFT | 🟢 **MINTED** — `BEACN_LEAKS_0002` · tx `278046dc1f31a4dcccbdcfe91e03b3ae7154b33a2d5cd5cb9d7207cc45eeb768` (block 13,639,610, 2026-07-05) |
 
 ```bash
 cd koios-viewer

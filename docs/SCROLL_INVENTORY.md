@@ -74,8 +74,9 @@ Sourced chronicle of 2025–26 public-record erasure. Pointer
 `1b465d3f9368cf6e1a36ae536631ffed9ca12b35c3bd2843bc423398140174fc#0` ·
 `text/html` · gzip · sha256
 `16612dfb6cef652e23014fecba3108996edb76c1d62d37562a2d799cb7165a55` ·
-🟢 LIVE (channel NFT `BEACN_LEAKS_0002` pending — see
-[`examples/beacn-leaks-002/`](../examples/beacn-leaks-002/)).
+🟢 LIVE · channel NFT `BEACN_LEAKS_0002` minted 2026-07-05 (tx
+`278046dc1f31a4dcccbdcfe91e03b3ae7154b33a2d5cd5cb9d7207cc45eeb768`). See
+[`examples/beacn-leaks-002/`](../examples/beacn-leaks-002/).
 
 ---
 
