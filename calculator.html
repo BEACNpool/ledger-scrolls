@@ -303,6 +303,15 @@ details.pg pre{max-height:180px;overflow:auto}
     (with the file's real SHA-256 already computed), the <strong>mint commands</strong>, and —
     if you're publishing under a channel — the <strong>channel issue metadata</strong>.</p>
 
+    <div class="out" id="bundlebox" style="border:1.5px solid var(--accent);background:var(--accent-soft)">
+      <h4 style="font-size:16px">&#128230; Build the whole scroll — one download</h4>
+      <p style="font-size:14px;margin:2px 0 10px">Your file is cut into page transactions, hashed, and packaged exactly the way
+      the minter expects — the same artifacts as the command-line <code>prepare.py</code>, produced right here in your browser.
+      Download the <code>.zip</code>, then mint every page with a single command. Nothing is uploaded.</p>
+      <button class="btn" id="dlbundle" disabled>&#11015; Build scroll bundle (.zip)</button>
+      <span id="bundlestat" style="margin-left:10px;font-size:13.5px;color:var(--muted)">drop a file above to enable</span>
+    </div>
+
     <div class="builder-grid">
       <div class="field"><label for="b_name">Scroll id (kebab-case)</label>
         <input type="text" id="b_name" placeholder="my-first-scroll"></div>
@@ -545,6 +554,9 @@ function render(){
   if(!S.enc){ return; }
   $("results").hidden = false;
   $("buildersec").hidden = false;
+  { const bb=$("dlbundle"), bs=$("bundlestat");
+    if(bb){ bb.disabled=!S.encBytes;
+      if(bs) bs.textContent = S.encBytes ? "ready — packages your file's exact bytes" : "manual size only — drop a real file to build the bundle"; } }
 
   const ch = calcChain(S.enc);
   const st = calcStandard(S.enc);
@@ -961,6 +973,80 @@ function renderMint(){
    still guards every byte. */
 const CP = { active:false, pages:[], txids:[], hashB:null, net:1, checked:false };
 const CP_SEG=31, CP_SEGSPP=200, CP_PAGE=CP_SEG*CP_SEGSPP;
+
+/* ═══════ build bundle: prepare.py-equivalent .zip (page-NNNN.json + plan.json), consumed as-is by tools/lschain/mint.sh ═══════ */
+const BND_SEG=64, BND_SPP=190, BND_PAGE=BND_SEG*BND_SPP;   // 12,160-byte pages — matches prepare.py + the cost estimate
+function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++){ c^=u8[i]; for(let k=0;k<8;k++) c=(c>>>1)^(0xEDB88320 & -(c&1)); } return (c^0xFFFFFFFF)>>>0; }
+function zipStore(files){   // files:[{name,data:Uint8Array}] → Uint8Array (ZIP, store/no-compress)
+  const enc=new TextEncoder(), locals=[], central=[]; let off=0;
+  const u16=v=>[v&255,(v>>8)&255], u32=v=>[v&255,(v>>8)&255,(v>>16)&255,(v>>24)&255];
+  for(const f of files){
+    const nm=enc.encode(f.name), crc=crc32(f.data), sz=f.data.length;
+    const lh=[0x50,0x4b,3,4, ...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(sz),...u32(sz),...u16(nm.length),...u16(0)];
+    const local=new Uint8Array(lh.length+nm.length+sz); local.set(lh,0); local.set(nm,lh.length); local.set(f.data,lh.length+nm.length);
+    locals.push(local);
+    const ch=[0x50,0x4b,1,2, ...u16(20),...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(sz),...u32(sz),...u16(nm.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)];
+    const cd=new Uint8Array(ch.length+nm.length); cd.set(ch,0); cd.set(nm,ch.length); central.push(cd); off+=local.length;
+  }
+  let cds=0; for(const c of central) cds+=c.length;
+  const eocd=new Uint8Array([0x50,0x4b,5,6, ...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cds),...u32(off),...u16(0)]);
+  const out=new Uint8Array(off+cds+eocd.length); let p=0;
+  for(const c of locals){ out.set(c,p); p+=c.length; } for(const c of central){ out.set(c,p); p+=c.length; } out.set(eocd,p);
+  return out;
+}
+function dlBlob(data,fname){
+  const url=URL.createObjectURL(new Blob([data],{type:"application/zip"}));
+  const a=document.createElement("a"); a.href=url; a.download=fname; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ a.remove(); URL.revokeObjectURL(url); },2000);
+}
+function bundleReadme(plan){
+  const nn=String(plan.pages).padStart(4,"0");
+  return "Ledger Scrolls — build bundle for \""+plan.sourceFile+"\"\n"
+   +"Generated in your browser by the Mint a Scroll page. Nothing was uploaded.\n\n"
+   +"WHAT'S INSIDE (identical to the command-line tools/lschain/prepare.py output):\n"
+   +"  page-0001.json … page-"+nn+".json   the "+plan.pages+" page transaction(s), metadata label 22025\n"
+   +"  plan.json                       hashes, sizes, page list — the minter reads this\n"
+   +"  registry-entry.json             your catalog entry (if you filled the builder)\n\n"
+   +"CONTENT: "+plan.contentType+", codec "+plan.codec+", "+plan.sizeDecoded+" bytes -> "+plan.sizeEncoded+" on-chain, "+plan.pages+" page(s)\n"
+   +"SHA-256 (decoded — what a reader verifies): "+plan.sha256Decoded+"\n\n"
+   +"MINT IT (needs the repo tooling, a funded payment key, and a synced node socket):\n"
+   +"  git clone https://github.com/BEACNpool/ledger-scrolls && cd ledger-scrolls\n"
+   +"  # put this bundle's files in a folder, e.g. build/\n"
+   +"  tools/lschain/mint.sh build/ payment.skey payment.addr\n"
+   +"  # -> mints every page, builds + locks the manifest, writes receipts.json with your pointer\n\n"
+   +"VERIFY BEFORE ANNOUNCING (rebuild from chain, compare the hash):\n"
+   +"  cd koios-viewer\n"
+   +"  python3 -m lsview reconstruct-chain --txin <MANIFEST_TX>#0 --out check.out\n"
+   +"  sha256sum check.out   # must equal "+plan.sha256Decoded+"\n\n"
+   +"Guide: https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md\n"
+   +"A library that cannot burn.\n";
+}
+async function buildBundle(){
+  if(!S.encBytes){ alert("Drop a real file in first — the bundle is built from your file's exact bytes."); return; }
+  const bs=$("bundlestat"), btn=$("dlbundle"); if(btn) btn.disabled=true; if(bs) bs.textContent="building…";
+  try{
+    const bytes=S.encBytes, te=new TextEncoder();
+    const n=Math.max(1,Math.ceil(bytes.length/BND_PAGE)), files=[], pageShas=[];
+    for(let i=0;i<n;i++){
+      const payload=bytes.subarray(i*BND_PAGE, Math.min((i+1)*BND_PAGE, bytes.length));
+      const sh=await sha256hex(payload); pageShas.push(sh);
+      const segs=[]; for(let o=0;o<payload.length;o+=BND_SEG) segs.push("0x"+bHex(payload.subarray(o,Math.min(o+BND_SEG,payload.length))));
+      const meta={"22025":{v:2,i:i+1,n,sha:"0x"+sh,p:segs}};
+      files.push({name:"page-"+String(i+1).padStart(4,"0")+".json", data:te.encode(JSON.stringify(meta))});
+    }
+    const plan={format:"ls-chain-v2-plan", sourceFile:(S.name||"scroll"), contentType:S.ct, codec:S.codec,
+      sizeDecoded:S.raw, sizeEncoded:S.enc, sha256Decoded:S.sha, sha256Encoded:S.shaEnc,
+      pages:n, segmentBytes:BND_SEG, segmentsPerPage:BND_SPP, pageSha256:pageShas, metadataLabel:22025};
+    files.push({name:"plan.json", data:te.encode(JSON.stringify(plan,null,2)+"\n")});
+    const reg=($("o_reg")?.textContent||"").trim(); if(reg) files.push({name:"registry-entry.json", data:te.encode(reg+"\n")});
+    files.push({name:"README.txt", data:te.encode(bundleReadme(plan))});
+    const base=((S.name||"scroll").replace(/\.[^.]+$/,"").replace(/[^A-Za-z0-9._-]/g,"-"))||"scroll";
+    dlBlob(zipStore(files), base+"-scroll-bundle.zip");
+    if(bs) bs.textContent="✓ "+n+" page"+(n>1?"s":"")+" + plan.json → downloaded";
+  }catch(e){ if(bs) bs.textContent="build failed: "+e.message; }
+  finally{ if(btn) btn.disabled=false; }
+}
+$("dlbundle")?.addEventListener("click", buildBundle);
 
 function buildChainPages(bytes){
   const n=Math.max(1,Math.ceil(bytes.length/CP_PAGE)), pages=[];
