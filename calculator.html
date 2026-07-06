@@ -292,6 +292,25 @@ details.pg pre{max-height:180px;overflow:auto}
     your browser wallet</strong> (Eternl, Lace, Typhon, Vespr…). The transaction is built
     locally, your wallet shows you exactly what it spends before you approve, and nothing —
     not the file, not a key — ever leaves your machine except the signed transaction itself.</p>
+    <details class="assump" style="margin-top:12px">
+      <summary>Never used Cardano? Start here (10 minutes, three steps)</summary>
+      <ol class="steps" style="margin-top:10px">
+        <li><b>Get a wallet.</b> Install <a href="https://eternl.io">Eternl</a> (desktop browser
+          extension or mobile app). Write the seed phrase on paper — it <i>is</i> the wallet.</li>
+        <li><b>Fund it.</b> Buy ADA on any exchange and withdraw to your wallet's
+          <i>receive address</i>. Drop your file above first — the price it shows plus a couple
+          of ADA for fees is your funding target.</li>
+        <li><b>Come back here in the wallet's browser.</b> Desktop: the same browser as the
+          extension. Mobile: open this page inside the wallet app's built-in dApp browser.
+          Then drop your file and follow the buttons — the page does the rest and proves the
+          result back to you from the chain.</li>
+      </ol>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:8px">Plain truth about privacy:
+      a scroll is forever and unsigned by default, but the transaction that minted it traces to
+      the wallet that paid — and exchange accounts are identity-verified. If <i>who minted it</i>
+      must stay secret, have someone you trust mint it for you: the SHA-256 proves your bytes
+      arrived untouched no matter whose wallet paid the fee.</p>
+    </details>
     <div id="mintbody"></div>
   </div>
 </section>
