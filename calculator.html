@@ -518,6 +518,7 @@ async function analyzeFile(file){
   const buf = await file.arrayBuffer();
   M.state = "idle"; M.txid = ""; M.mode = "std";        // new file → fresh mint flow
   CP.active = false; CP.pages = []; CP.txids = []; CP.checked = false;
+  SGN.pages = []; SGN.done = 0; SGN.spent = new Set(); SGN.running = false;
   S.raw = buf.byteLength; S.name = file.name; S.media = media;
   S.ct = file.type && !media.exts.length===false ? (media.ct || file.type) : (media.ct || file.type || "application/octet-stream");
   S.sha = await sha256hex(buf);
@@ -555,6 +556,7 @@ function analyzeManual(){
   S.sha = ""; S.shaEnc = ""; S.rawBytes = null; S.encBytes = null;
   M.state = "idle"; M.txid = ""; M.mode = "std";
   CP.active = false; CP.pages = []; CP.txids = []; CP.checked = false;
+  SGN.pages = []; SGN.done = 0; SGN.spent = new Set(); SGN.running = false;
   if(media.gz){ S.codec = "gzip"; S.enc = Math.round(bytes * 0.33); }  // typical 3:1 for text
   else { S.codec = "none"; S.enc = bytes; }
   $("kv").innerHTML = `
@@ -780,6 +782,7 @@ function cH(n,mt){ const t=mt<<5;
   return u8([t|27,(hi/16777216)&255,(hi>>>16)&255,(hi>>>8)&255,hi&255,(lo/16777216)&255,(lo>>>16)&255,(lo>>>8)&255,lo&255]); }
 const cU  = n => cH(n,0);
 const cBy = b => catB([cH(b.length,2), b]);
+const cS  = s => { const b=new TextEncoder().encode(s); return catB([cH(b.length,3), b]); };
 const cAr = n => cH(n,4);
 const cMp = n => cH(n,5);
 const cTg = n => cH(n,6);
@@ -943,7 +946,7 @@ function planTx(net,utxos,datum,changeB,params){
 }
 
 /* ── mint flow ── */
-const M = { wapi:null, wname:"", net:null, params:null, plan:null, datum:null, txid:"", state:"idle", mode:"std" };
+const M = { wapi:null, wname:"", net:null, params:null, plan:null, datum:null, txid:"", state:"idle", mode:"std", walletKey:"", changeB:null };
 const mlog = (cls,msg)=>{ const el=$("mlog"); if(!el) return; const d=document.createElement("div");
   d.className=cls; d.textContent=msg; el.appendChild(d); el.scrollTop=el.scrollHeight; };
 
@@ -952,19 +955,32 @@ function renderMint(){
   sec.hidden=false;
   const body=$("mintbody");
   if(M.state==="quoted"||M.state==="minting"||M.state==="done") return;   // don't clobber an active flow
+  if(SGN.running || (SGN.pages.length && SGN.done>0 && SGN.done<SGN.pages.length)) return;   // don't clobber page-signing
   if(!S.encBytes){
     body.innerHTML=`<div class="cmp">Drop a <b>real file</b> above (not a size estimate) and it can be minted from here.</div>`;
     return;
   }
   if(CP.active){ renderChainAssistant(); return; }
   if(S.enc > P.stdMax){
-    const pgs=Math.ceil(S.enc/CP_PAGE);
+    const wl=listWallets();
+    const sgnPages=Math.max(1,Math.ceil(S.enc/(SGN.SEG*SGN.SPP)));
     body.innerHTML=`<div class="cmp">This file is <b>${fmtB(S.enc)}</b> on-chain — bigger than the ~14 KB that fits a
-      one-transaction Standard Scroll, so it mints as a <b>Chain Scroll</b>: ${pgs} page transaction${pgs>1?"s":""} plus
-      one locked manifest.</div>
-      <p style="margin-top:12px"><button class="btn" id="cpstart">🧾 Build my page transactions (wallet copy-paste)</button>
-      <span style="font-size:13px;color:var(--muted)">&nbsp;or use the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI toolkit</a> — cheaper per byte, better for big files</span></p>`;
-    $("cpstart").addEventListener("click",renderChainAssistant);
+      one-transaction Standard Scroll, so it mints as a <b>Chain Scroll</b>: ${sgnPages} page${sgnPages>1?"s":""} plus one seal.</div>
+      ${wl.length ? `
+        <p style="margin:12px 0 4px;font-weight:600">Best on a laptop with a browser wallet — just click to sign each page:</p>
+        <div class="wbtns">${wl.map(w=>`<button class="wbtn" data-sgn="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} Sign ${sgnPages+1} transactions with ${esc(w.name)}</button>`).join("")}</div>
+        <p style="font-size:12.5px;color:var(--muted);margin:6px 0 0">The page builds each transaction; your wallet only signs — no metadata to paste, nothing to download.</p>
+        <details class="assump" style="margin-top:12px"><summary>Other ways (manual paste · CLI)</summary>
+          <p style="margin-top:8px"><button class="btn sub" id="cpstart">Send pages manually (copy-paste metadata)</button>
+          <span style="font-size:12.5px;color:var(--muted)">&nbsp;— only if your wallet's Send screen supports custom metadata (many don't; Eternl's does not for this).</span></p>
+          <p style="font-size:12.5px;color:var(--muted);margin-top:8px">Comfortable at a terminal? The <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI toolkit</a> mints in one command.</p>
+        </details>`
+      : `<div class="warnbox" style="margin-top:12px">No browser wallet found. On a <b>laptop</b>, install the
+        <a href="https://eternl.io">Eternl</a> extension, refresh, and drop your file again — then you just click to sign each page.</div>
+        <p style="margin-top:10px"><button class="btn sub" id="cpstart">Or send pages manually (advanced)</button></p>`}
+      <div id="cpstage" style="margin-top:14px"></div>`;
+    body.querySelectorAll("[data-sgn]").forEach(b=>b.addEventListener("click",()=>startWalletSign(b.dataset.sgn)));
+    $("cpstart")?.addEventListener("click",renderChainAssistant);
     return;
   }
   const st=calcStandard(S.enc), ch=calcChain(S.enc);
@@ -1208,6 +1224,162 @@ function downloadPacket(){
   a.href=url; a.download=`ledger-scroll-${(S.name||"packet").replace(/[^a-zA-Z0-9._-]+/g,"_")}.zip`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   WALLET-SIGNED PAGES — the laptop path (Eternl extension & any CIP-30).
+   The page builds each page transaction in full (a self-send carrying the
+   label-22025 metadata) and the wallet only SIGNS it. No manual metadata
+   box needed — which matters because most wallets' Send screens can't
+   attach arbitrary metadata. Because we build the CBOR ourselves, segments
+   are efficient 64-byte byte strings (matches the headline estimate).
+   ══════════════════════════════════════════════════════════════════════ */
+const SGN = { SEG:64, SPP:190, pages:[], done:0, spent:new Set(), running:false };
+function buildSignPages(bytes){
+  const PG=SGN.SEG*SGN.SPP, n=Math.max(1,Math.ceil(bytes.length/PG)), pages=[];
+  for(let i=0;i<n;i++){
+    const payload=bytes.subarray(i*PG,Math.min((i+1)*PG,bytes.length));
+    const segs=[];
+    for(let o=0;o<payload.length;o+=SGN.SEG) segs.push(payload.subarray(o,Math.min(o+SGN.SEG,payload.length)));
+    pages.push({ i:i+1, n, segs });
+  }
+  return pages;
+}
+/* auxiliary data (Alonzo tag-259): { 0: { 22025: {"v":2,"i":i,"n":n,"p":[bytes]} } } */
+function pageAux(p){
+  // canonical CBOR map key order (same as cardano-cli): i, n, p, v
+  const md = catB([cMp(4), cS("i"),cU(p.i), cS("n"),cU(p.n),
+                   cS("p"), catB([cAr(p.segs.length), ...p.segs.map(cBy)]), cS("v"),cU(2)]);
+  const meta = catB([cMp(1), cU(22025), md]);
+  return catB([cTg(259), cMp(1), cU(0), meta]);
+}
+function encPageBody(ins, selfB, out, fee, auxHash){
+  return catB([u8([0xa4]),
+    cU(0), cAr(ins.length), ...ins.map(encInput),
+    cU(1), cAr(1), encChangeOut(selfB, out),
+    cU(2), cU(fee),
+    cU(7), cBy(auxHash)]);
+}
+function planPage(ins0, auxBytes, auxHash, selfB, params){
+  const pool=[...ins0].sort((a,b)=>b.coin-a.coin);
+  const ins=[]; let sum=0, fee=300000;
+  const MINOUT=1000000;
+  for(let r=0;r<30;r++){
+    while(sum < MINOUT+fee && pool.length){ const x=pool.shift(); ins.push(x); sum+=x.coin; }
+    if(sum < MINOUT+fee) throw new Error(`Not enough spendable ADA for page — need ≈ ${((MINOUT+fee)/1e6).toFixed(2)} ADA in one or more plain-ADA UTxOs.`);
+    const out=sum-fee;
+    const body=encPageBody(ins,selfB,out,fee,auxHash);
+    const nWit=new Set(ins.map(i=>i.addrHex)).size+1;
+    const size=3+body.length+dummyWitLen(nWit)+auxBytes.length;
+    const nf=Math.ceil(params.a*size+params.b)+220;
+    if(nf<=fee){ fee=nf; break; } fee=Math.max(fee,nf);
+  }
+  const out=sum-fee;
+  return { ins, out, fee, body:encPageBody(ins,selfB,out,fee,auxHash) };
+}
+const utxoKey=u=>bHex(u.txh)+"#"+u.ix;
+async function freshSpendable(){
+  const raw=parseWalletUtxos(await M.wapi.getUtxos());
+  return raw.filter(u=>!SGN.spent.has(utxoKey(u)));
+}
+async function signAllPages(){
+  if(SGN.running) return; SGN.running=true;
+  const n=SGN.pages.length;
+  const changeB = M.changeB || (M.changeB=hexB(await M.wapi.getChangeAddress()));
+  const selfB = changeB;
+  try{
+    for(let k=SGN.done; k<n; k++){
+      const p=SGN.pages[k];
+      sgnStatus(k+1,"sign","building page "+(k+1)+"…");
+      const aux=pageAux(p), auxHash=blake2b256(aux);
+      // wait (briefly) for a spendable UTxO — the previous page's change may be settling
+      let utxos=await freshSpendable(), waited=0;
+      while(!utxos.length && waited<120){ sgnStatus(k+1,"sign",`waiting for your wallet to see the previous transaction… (${waited}s)`); await new Promise(r=>setTimeout(r,6000)); waited+=6; utxos=await freshSpendable(); }
+      if(!utxos.length) throw new Error("wallet shows no spendable ADA yet — give Eternl a few seconds after the last transaction, then Resume.");
+      const plan=planPage(utxos, aux, auxHash, selfB, M.params);
+      const unsigned=catB([u8([0x84]), plan.body, u8([0xa0]), u8([0xf5]), aux]);
+      sgnStatus(k+1,"sign","approve page "+(k+1)+" in your wallet…");
+      const witHex=await M.wapi.signTx(bHex(unsigned), false);
+      const wit=hexB(witHex);
+      const signed = wit[0]===0x84 ? wit : catB([u8([0x84]), plan.body, wit, u8([0xf5]), aux]);
+      const localTxid=bHex(blake2b256(plan.body));
+      const wid=await M.wapi.submitTx(bHex(signed));
+      const txid=(typeof wid==="string" && /^[0-9a-f]{64}$/i.test(wid)) ? wid.toLowerCase() : localTxid;
+      CP.txids[k]=txid;
+      plan.ins.forEach(i=>SGN.spent.add(utxoKey(i)));
+      SGN.done=k+1;
+      sgnStatus(k+1,"ok","page "+(k+1)+" on chain ✓ "+txid.slice(0,12)+"…");
+      sgnProgress();
+    }
+    // all pages signed → set up manifest state and hand off to the manifest signer
+    CP.net = M.net; CP.checked=true;
+    CP.hashB = CP.txids.map(hexB);
+    sgnDoneUI();
+  }catch(e){
+    SGN.running=false;
+    const msg=String(e?.info||e?.message||e);
+    sgnStatus(SGN.done+1,"bad", /decline|refus|cancel|denied/i.test(msg) ? "you declined — nothing sent for this page; tap Resume when ready" : msg);
+    $("sgnresume") && ($("sgnresume").hidden=false);
+    return;
+  }
+  SGN.running=false;
+}
+function sgnStatus(page1,cls,txt){
+  const el=$("sgnrow-"+page1); if(el){ const c=el.querySelector(".pgchip");
+    c.className="pgchip "+(cls==="ok"?"ok":cls==="bad"?"bad":"wait"); c.textContent=txt; }
+  const line=$("sgnline"); if(line && cls!=="ok") line.textContent=txt;
+}
+function sgnProgress(){
+  const n=SGN.pages.length, bar=$("sgnbar"), cnt=$("sgncount");
+  if(bar) bar.style.width=(100*SGN.done/n)+"%";
+  if(cnt) cnt.textContent=`${SGN.done} of ${n} pages on chain`;
+}
+function sgnDoneUI(){
+  const line=$("sgnline"); if(line) line.textContent="";
+  const box=$("sgnmanifest"); if(!box) return;
+  box.hidden=false;
+  box.innerHTML=`<div class="okbox"><b>All ${SGN.pages.length} pages are on the chain.</b> One last signature
+    seals them into a scroll — a tiny locked coin that lists your pages and your file's fingerprint.</div>
+    <p style="margin-top:10px"><button class="btn" id="sgnlock">📜 Sign the seal — finish the scroll</button></p>
+    <div id="mintstage"></div>`;
+  $("sgnlock").addEventListener("click",()=>connectAndQuote(M.walletKey,"chain"));
+}
+
+async function startWalletSign(key){
+  const stage=$("cpstage"); stage.innerHTML=`<div class="cmp">Connecting to ${esc(key)}…</div>`;
+  try{
+    M.wapi=await window.cardano[key].enable(); M.wname=window.cardano[key].name||key; M.walletKey=key;
+    M.net=await M.wapi.getNetworkId();
+    if(!(M.net in NETS)) throw new Error("Unknown network id "+M.net);
+    M.params=await fetchNetParams(M.net);
+    M.changeB=hexB(await M.wapi.getChangeAddress());
+    SGN.pages=buildSignPages(S.encBytes); SGN.done=0; SGN.spent=new Set(); CP.txids=[];
+    const n=SGN.pages.length, nnet=NETS[M.net];
+    const feeGuess=fee(SGN.SPP*66+1200)*n;
+    stage.innerHTML=`
+      <p style="margin:6px 0"><span class="netbadge ${nnet.cls}">${nnet.name}</span>
+        <span style="font-size:13px;color:var(--muted)">&nbsp;connected: ${esc(M.wname)}${M.params.live?"":" · fallback fee params"}</span></p>
+      <div class="cmp">Your file is <b>${n} page${n>1?"s":""}</b> + 1 seal. You'll approve each in ${esc(M.wname)} —
+        just tap sign; the page builds every transaction for you. Keep this tab open until it finishes.
+        Budget ≈ <b>${fmtA(feeGuess)} ADA</b> in fees plus the seal.</div>
+      <div class="prog"><span id="sgncount">0 of ${n} pages on chain</span>
+        <span class="bar"><span id="sgnbar" style="width:0%"></span></span></div>
+      ${SGN.pages.map(p=>`<div class="pg" id="sgnrow-${p.i}" style="padding:10px 14px;display:flex;align-items:center;gap:10px">
+        <b style="font:600 14px/1 var(--sans)">Page ${p.i} of ${p.n}</b>
+        <span class="pgchip wait" style="margin-left:auto">queued</span></div>`).join("")}
+      <p id="sgnline" style="font-size:13px;color:var(--muted);margin:8px 0 0"></p>
+      <p style="margin-top:12px"><button class="btn" id="sgngo">✍️ Start signing — ${n} page${n>1?"s":""}</button>
+        <button class="btn sub" id="sgnresume" hidden style="margin-left:8px">Resume</button>
+        <button class="copy" id="sgnmanual" style="margin-left:8px">send pages manually instead</button></p>
+      <div id="sgnmanifest" hidden></div>`;
+    $("sgngo").addEventListener("click",()=>{ $("sgngo").disabled=true; $("sgnresume").hidden=true; signAllPages(); });
+    $("sgnresume").addEventListener("click",()=>{ $("sgnresume").hidden=true; signAllPages(); });
+    $("sgnmanual").addEventListener("click",()=>{ CP.active=true; renderChainAssistant(); });
+  }catch(e){
+    stage.innerHTML=`<div class="warnbox">✋ ${esc(String(e.message||e))}</div>
+      <p style="margin-top:8px"><button class="copy" id="sgnmanual2">send pages manually instead</button></p>`;
+    $("sgnmanual2")?.addEventListener("click",()=>{ CP.active=true; renderChainAssistant(); });
+  }
 }
 
 function renderChainAssistant(){
