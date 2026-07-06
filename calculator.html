@@ -296,7 +296,7 @@ details.pg pre{max-height:180px;overflow:auto}
   <div class="card">
     <h2>⚡ Mint it right now — no node, no command line</h2>
     <p style="font-size:15px">This page can write your file to Cardano <strong>directly from
-    your browser wallet</strong> (Eternl, Lace, Typhon, Vespr…). The transaction is built
+    your browser wallet</strong> — <b>Eternl</b>, on a laptop. The transaction is built
     locally, your wallet shows you exactly what it spends before you approve, and nothing —
     not the file, not a key — ever leaves your machine except the signed transaction itself.</p>
     <details class="assump" style="margin-top:12px">
@@ -322,7 +322,7 @@ details.pg pre{max-height:180px;overflow:auto}
       Mint from a <strong>software wallet instead.</strong> A scroll transaction carries far more data than
       an everyday payment, and hardware wallets can freeze or <em>reboot</em> mid-signing when they try to
       process it — your funds are safe, but the mint won't complete. Fund a fresh hot wallet (a software
-      Eternl/Lace/Nami account) with a few ADA and use that: you're only spending fees, not guarding
+      software Eternl account) with a few ADA and use that: you're only spending fees, not guarding
       savings. Comfortable at a terminal? The <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI</a> works with any key too.</div>
     <div id="mintbody"></div>
   </div>
@@ -866,11 +866,16 @@ async function fetchNetParams(net){
 }
 
 /* ── CIP-30 ── */
+/* We officially support Eternl for now (the wallet the mint flow is tested
+   and proven against). `ccvault` is Eternl's legacy injection key. */
 function listWallets(){
   const out=[];
   for(const k of Object.keys(window.cardano||{})){
     const w=window.cardano[k];
-    if(w && typeof w.enable==="function" && w.apiVersion) out.push({key:k,name:w.name||k,icon:w.icon});
+    if(!(w && typeof w.enable==="function" && w.apiVersion)) continue;
+    const id=(k+" "+(w.name||"")).toLowerCase();
+    if(!/eternl|ccvault/.test(id)) continue;         // Eternl only
+    out.push({key:k,name:w.name||"Eternl",icon:w.icon});
   }
   const seen=new Set();
   return out.filter(w=>{ const n=w.name.toLowerCase(); if(seen.has(n))return false; seen.add(n); return true; });
@@ -992,8 +997,8 @@ function renderMint(){
           <span style="font-size:12.5px;color:var(--muted)">&nbsp;— only if your wallet's Send screen supports custom metadata (many don't; Eternl's does not for this).</span></p>
           <p style="font-size:12.5px;color:var(--muted);margin-top:8px">Comfortable at a terminal? The <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI toolkit</a> mints in one command.</p>
         </details>`
-      : `<div class="warnbox" style="margin-top:12px">No browser wallet found. On a <b>laptop</b>, install the
-        <a href="https://eternl.io">Eternl</a> extension, refresh, and drop your file again — then you just click to sign each page.</div>
+      : `<div class="warnbox" style="margin-top:12px">No <b>Eternl</b> wallet found. On a <b>laptop</b>, install the
+        <a href="https://eternl.io">Eternl</a> extension, fund it with a few ADA, refresh, and drop your file again — then you just click to sign each page.</div>
         <p style="margin-top:10px"><button class="btn sub" id="cpstart">Or send pages manually (advanced)</button></p>`}
       <div id="cpstage" style="margin-top:14px"></div>`;
     body.querySelectorAll("[data-sgn]").forEach(b=>b.addEventListener("click",()=>startWalletSign(b.dataset.sgn)));
@@ -1015,10 +1020,10 @@ function renderMint(){
         <button class="wbtn" data-w="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} ${esc(w.name)}</button>`).join("")}
       </div>
       ${hwNote()}`
-    : `<div class="warnbox" style="margin-top:12px">No Cardano wallet found in this browser. Install
-       <a href="https://eternl.io">Eternl</a>, <a href="https://www.lace.io">Lace</a>, or
-       <a href="https://typhonwallet.io">Typhon</a> (desktop), or open this page inside your mobile wallet's
-       dApp browser (Eternl / Vespr). Then drop your file in again.</div>`}
+    : `<div class="warnbox" style="margin-top:12px">No <a href="https://eternl.io">Eternl</a> wallet found in
+       this browser. Install the <b>Eternl</b> browser extension on a laptop, fund it with a few ADA, refresh,
+       and drop your file in again. <span style="color:var(--muted)">(Eternl is the wallet this mint flow is
+       tested and proven against — more wallets coming.)</span></div>`}
     <div id="mintstage"></div>`;
   body.querySelectorAll(".wbtn").forEach(b=>b.addEventListener("click",()=>connectAndQuote(b.dataset.w)));
   $("cplink")?.addEventListener("click",e=>{ e.preventDefault(); renderChainAssistant(); });
