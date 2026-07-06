@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vault Tool — seal & unseal a Ledger Scrolls treasure</title>
+<meta name="description" content="Encrypt a seed phrase behind a puzzle answer and generate a self-contained Vault Scroll — or, as a winner, decrypt one. Everything runs locally; nothing is uploaded.">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<style>
+:root{
+  --bg:#0c0e13;--panel:#161a23;--panel2:#1b202b;--ink:#ece7db;--ink2:#b7b2a4;--faint:#7d818c;
+  --gold:#d9a441;--gold2:#f2c96b;--blue:#6f8bff;--ok:#3fd08b;--bad:#ff7d82;--warn:#e0b155;--line:#2a2f3a;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(1100px 700px at 75% -10%,rgba(111,139,255,.12),transparent 60%),
+  radial-gradient(900px 600px at 5% 5%,rgba(217,164,65,.10),transparent 60%),var(--bg);
+  color:var(--ink);font:400 16px/1.6 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:5vw 20px 12vw}
+h1{font:800 clamp(26px,5vw,38px)/1.1 var(--sans);letter-spacing:-.02em;
+  background:linear-gradient(92deg,var(--gold2),var(--gold) 60%,#c98b2c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--ink2);margin:8px 0 22px;font-size:15.5px}
+.tabs{display:flex;gap:8px;margin-bottom:18px}
+.tab{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink2);
+  font:700 15px/1 var(--sans);cursor:pointer;transition:.15s}
+.tab.on{background:linear-gradient(145deg,var(--panel2),var(--panel));color:var(--gold2);border-color:color-mix(in srgb,var(--gold) 40%,transparent)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px}
+label{display:block;font:600 13px/1.4 var(--sans);color:var(--ink2);margin:14px 0 5px}
+textarea,input{width:100%;background:#0e1118;color:var(--ink);border:1px solid var(--line);border-radius:10px;
+  padding:11px 13px;font:14px/1.5 var(--mono);resize:vertical}
+input[type=text]{font-family:var(--mono)}
+textarea{min-height:90px}
+.btn{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:13px 20px;border-radius:12px;border:0;cursor:pointer;
+  font:700 15px/1 var(--sans);color:#0c0e13;background:linear-gradient(96deg,var(--gold2),var(--gold))}
+.btn.sub{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+.out{margin-top:16px;background:#0e1118;border:1px solid var(--line);border-radius:10px;padding:13px;
+  font:12.5px/1.5 var(--mono);color:var(--ink2);word-break:break-all;white-space:pre-wrap;display:none}
+.out.show{display:block}
+.words{color:var(--gold2);font-size:15px;line-height:1.9}
+.note{margin:14px 0;padding:12px 15px;border-radius:10px;font-size:13.5px}
+.note.warn{background:rgba(224,177,85,.12);border:1px solid rgba(224,177,85,.4);color:#e6c477}
+.note.bad{background:rgba(255,125,130,.12);border:1px solid rgba(255,125,130,.4);color:#ff9ea2}
+.note.ok{background:rgba(63,208,139,.1);border:1px solid rgba(63,208,139,.35);color:#6fe0ac}
+.strength{font-size:12.5px;margin-top:5px}
+.hide{display:none}
+code{font-family:var(--mono);background:#0e1118;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:.9em}
+a{color:var(--blue)}
+.copy{margin-left:10px;font:600 12px/1 var(--sans);border:1px solid var(--line);background:var(--panel2);color:var(--ink2);border-radius:999px;padding:6px 12px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🗝️ Vault Tool</h1>
+  <p class="sub">Lock a prize behind a puzzle answer, or unlock one you've solved. <b>Everything runs in your browser</b> using the Web Crypto API — nothing is uploaded, nothing is stored. For maximum safety when sealing a real seed phrase, <b>turn off Wi-Fi first</b> — this page needs no network.</p>
+
+  <div class="note bad">⚠ Never seal a wallet you use for anything else. Create a <b>fresh throwaway wallet</b> just for the prize, fund it, seal it, and delete every plaintext copy of the seed afterward. Once minted, a scroll is permanent and public — only the encryption stands between the world and the words.</div>
+
+  <div class="tabs">
+    <button class="tab on" id="tabSeal">🔒 Seal (create a prize)</button>
+    <button class="tab" id="tabUnseal">🔓 Unseal (claim a prize)</button>
+  </div>
+
+  <!-- ══ SEAL ══ -->
+  <div class="card" id="sealCard">
+    <label for="s_seed">The 24-word recovery phrase (or whatever secret unlocks the prize)</label>
+    <textarea id="s_seed" placeholder="word1 word2 word3 …  — pasted only on THIS device, never transmitted"></textarea>
+    <label for="s_answer">The secret answer / passphrase that will decrypt it (this is your puzzle's solution)</label>
+    <input type="text" id="s_answer" placeholder="a long, non-dictionary phrase — case & spaces matter">
+    <div class="strength" id="s_strength"></div>
+    <label for="s_clue">Clue text to show on the scroll — how a solver earns the answer (optional)</label>
+    <textarea id="s_clue" placeholder="e.g. The answer is the 3rd line of the BEACN Leaks 000 manifesto, lowercased. Or: it's in the 3D NFT's on-chain metadata."></textarea>
+    <label for="s_prize">Prize description shown on the scroll (optional)</label>
+    <input type="text" id="s_prize" placeholder="20 ADA + the 1/1 3D BEACN NFT" style="font-family:var(--sans)">
+    <button class="btn" id="doSeal">🔒 Seal it &amp; build the Vault Scroll</button>
+    <div class="out" id="sealOut"></div>
+  </div>
+
+  <!-- ══ UNSEAL ══ -->
+  <div class="card hide" id="unsealCard">
+    <div class="note warn">Solved the puzzle? Paste the sealed block from the scroll and your answer. Decrypt on a <b>device you trust</b>, then move the funds to your own wallet <b>fast</b> — you're racing anyone else who also solved it.</div>
+    <label for="u_ct">The sealed block (from the Vault Scroll)</label>
+    <textarea id="u_ct" placeholder="paste the long base64 block here"></textarea>
+    <label for="u_answer">Your answer</label>
+    <input type="text" id="u_answer" placeholder="the exact answer you solved for">
+    <button class="btn" id="doUnseal">🔓 Unseal</button>
+    <div class="out" id="unsealOut"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const te=new TextEncoder(), td=new TextDecoder();
+const b64e=b=>btoa(String.fromCharCode(...b));
+const b64d=s=>Uint8Array.from(atob(s.replace(/\s+/g,"")),c=>c.charCodeAt(0));
+const ITER=300000;
+
+async function deriveKey(answer, salt){
+  const km=await crypto.subtle.importKey("raw", te.encode(answer), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:ITER, hash:"SHA-256"},
+    km, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
+}
+async function seal(plaintext, answer){
+  const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(answer, salt);
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, te.encode(plaintext)));
+  const blob=new Uint8Array(28+ct.length); blob.set(salt,0); blob.set(iv,16); blob.set(ct,28);
+  return b64e(blob);
+}
+async function unseal(b64, answer){
+  const blob=b64d(b64);
+  const key=await deriveKey(answer, blob.slice(0,16));
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM", iv:blob.slice(16,28)}, key, blob.slice(28));
+  return td.decode(pt);
+}
+
+/* answer strength meter */
+function rateAnswer(a){
+  const bits = a.length*Math.log2(1 + (/[a-z]/.test(a)?26:0)+(/[A-Z]/.test(a)?26:0)+(/[0-9]/.test(a)?10:0)+(/[^a-zA-Z0-9]/.test(a)?20:0));
+  if(!a) return ["","var(--faint)"];
+  if(a.length<10 || bits<45) return ["⚠ too weak — a bot will brute-force this. Use a longer, non-dictionary phrase.","var(--bad)"];
+  if(bits<70) return ["ok, but longer is safer for a real prize.","var(--warn)"];
+  return ["strong ✓","var(--ok)"];
+}
+$("s_answer").addEventListener("input",e=>{ const [t,c]=rateAnswer(e.target.value); const el=$("s_strength"); el.textContent=t; el.style.color=c; });
+
+/* build the self-contained Vault Scroll (no JS — safe to mint) */
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function vaultScrollHTML(cipher, clue, prize){
+  const tool="https://beacnpool.github.io/ledger-scrolls/vault-tool.html";
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Vault Scroll — you found it</title>
+<style>
+:root{--bg:#0c0e13;--ink:#ece7db;--ink2:#b7b2a4;--gold:#f2c96b;--blue:#9db0ff;--line:#2a2f3a;--mono:ui-monospace,Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(1000px 640px at 72% -10%,rgba(111,139,255,.13),transparent 60%),radial-gradient(800px 520px at 6% 4%,rgba(217,164,65,.11),transparent 60%),var(--bg);color:var(--ink);font:400 17px/1.7 Georgia,serif;padding:7vw 6vw 12vw}
+main{max-width:680px;margin:0 auto}
+.eyebrow{font:700 12px/1 var(--sans);letter-spacing:.3em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:16px}
+h1{font:800 clamp(30px,7vw,52px)/1.05 var(--sans);letter-spacing:-.02em;background:linear-gradient(92deg,var(--gold),#c98b2c);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:14px}
+p{color:var(--ink2);margin:0 0 16px}
+.prize{font:700 20px/1.4 var(--sans);color:var(--ink);margin:6px 0 22px}
+.sealed{background:#0e1118;border:1px solid var(--line);border-radius:12px;padding:16px;font:12.5px/1.55 var(--mono);color:var(--gold);word-break:break-all;margin:8px 0 20px}
+.step{border-left:3px solid var(--gold);padding:4px 0 4px 18px;margin:18px 0;color:var(--ink)}
+.rule{height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);margin:28px 0}
+a{color:var(--blue)}
+.foot{color:#7d818c;font:400 14px/1.7 var(--sans);text-align:center;border-top:1px solid var(--line);padding-top:22px;margin-top:36px}
+</style></head><body><main>
+  <span class="eyebrow">You cracked the first seal</span>
+  <h1>You found the Vault Scroll.</h1>
+  <p>Almost nobody gets here. You recognized a pointer that looked like noise and rebuilt this page
+  straight from the Cardano blockchain — which means you understand exactly what Ledger Scrolls is.</p>
+  ${prize?`<p class="prize">🏆 Inside the vault: ${esc(prize)}</p>`:""}
+  <div class="rule"></div>
+  <p><b>The keys are right here — sealed.</b> This block is the wallet's recovery phrase, encrypted.
+  It's useless to any bot or scraper: without the answer, it's just noise, forever.</p>
+  <div class="sealed">${esc(cipher)}</div>
+  ${clue?`<p><b>The answer that opens it:</b></p><p class="step">${esc(clue)}</p>`:""}
+  <div class="rule"></div>
+  <p><b>How to claim:</b></p>
+  <p class="step">1. Go to <a href="${tool}">${tool}</a> → the <b>Unseal</b> tab.</p>
+  <p class="step">2. Paste the sealed block above and your answer. It decrypts <b>in your browser</b> and reveals the 24 words.</p>
+  <p class="step">3. Import those 24 words into any Cardano wallet (Eternl, Lace, …) and <b>send everything to your own wallet immediately</b> — you're racing anyone else who solves it.</p>
+  <div class="foot">📜 A Ledger Scroll — permanent, verifiable, deletable by no one.<br>beacnpool.github.io/ledger-scrolls</div>
+</main></body></html>`;
+}
+
+$("tabSeal").onclick=()=>{ $("tabSeal").classList.add("on"); $("tabUnseal").classList.remove("on"); $("sealCard").classList.remove("hide"); $("unsealCard").classList.add("hide"); };
+$("tabUnseal").onclick=()=>{ $("tabUnseal").classList.add("on"); $("tabSeal").classList.remove("on"); $("unsealCard").classList.remove("hide"); $("sealCard").classList.add("hide"); };
+
+$("doSeal").onclick=async()=>{
+  const seed=$("s_seed").value.trim(), answer=$("s_answer").value;
+  const out=$("sealOut"); out.className="out show";
+  if(!seed || !answer){ out.innerHTML=`<span style="color:var(--bad)">Enter both the phrase and the answer.</span>`; return; }
+  const [txt,col]=rateAnswer(answer);
+  if(col==="var(--bad)"){ out.innerHTML=`<span style="color:var(--bad)">Answer too weak — ${txt} Fix it before sealing a real prize.</span>`; return; }
+  try{
+    const cipher=await seal(seed, answer);
+    // sanity: verify it round-trips before you trust it
+    const check=await unseal(cipher, answer);
+    if(check!==seed) throw new Error("round-trip check failed");
+    const scroll=vaultScrollHTML(cipher, $("s_clue").value.trim(), $("s_prize").value.trim());
+    const url=URL.createObjectURL(new Blob([scroll],{type:"text/html"}));
+    out.innerHTML=`<b style="color:var(--ok)">✓ Sealed &amp; verified (decrypts back to your exact phrase).</b>
+
+<b>The sealed block</b> (this is what's in the scroll — safe to be public): <button class="copy" id="cpc">copy</button>
+${esc(cipher)}
+
+<b>Your ready-to-mint Vault Scroll:</b>
+<a class="copy" href="${url}" download="vault-scroll.html">⬇ download vault-scroll.html</a>  — then mint it on the calculator page and put its pointer in plain sight.
+
+<span style="color:var(--warn)">Now: delete every plaintext copy of the seed, and keep the <b>answer</b> written down somewhere only you can reach — if you lose it, the prize is locked forever.</span>`;
+    $("cpc").onclick=()=>{ navigator.clipboard?.writeText(cipher); $("cpc").textContent="copied ✓"; };
+  }catch(e){ out.innerHTML=`<span style="color:var(--bad)">Failed: ${esc(String(e.message||e))}</span>`; }
+};
+
+$("doUnseal").onclick=async()=>{
+  const out=$("unsealOut"); out.className="out show";
+  try{
+    const words=await unseal($("u_ct").value.trim(), $("u_answer").value);
+    out.innerHTML=`<b style="color:var(--ok)">🔓 Unsealed! Import these into a Cardano wallet and sweep it NOW:</b>
+<div class="words">${esc(words)}</div>`;
+  }catch(e){ out.innerHTML=`<span style="color:var(--bad)">Wrong answer, or the block is corrupted. (Decryption failed.)</span>`; }
+};
+</script>
+</body></html>
