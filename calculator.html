@@ -1425,11 +1425,13 @@ async function signAllBulk(bulk){
   catch(e){ if(/not a function|unsupported|invalid|schema|type/i.test(String(e?.message||e))) wits=await bulk.sign(reqs.map(r=>r.cbor)); else throw e; }
   if(!Array.isArray(wits)||wits.length!==txs.length) throw new Error("wallet returned an unexpected number of signatures");
   sgnBulkLine("signed ✓ submitting "+txs.length+" transactions…");
+  const np=SGN.pages.length;
   for(let i=0;i<txs.length;i++){
     const t=txs[i], w=hexB(wits[i]);
     const signed=catB([u8([0x84]), t.body, w, u8([0xf5]), t.aux||u8([0xf6])]);
     await M.wapi.submitTx(bHex(signed));
-    SGN.done=i+1; sgnProgress(); sgnBulkLine(`submitted ${i+1} of ${txs.length}…`);
+    if(i<np){ SGN.done=i+1; sgnProgress(); sgnStatus(i+1,"ok","on chain ✓"); sgnBulkLine(`page ${i+1} of ${np} on chain…`); }
+    else sgnBulkLine("sealing the scroll…");
   }
   const man=txs[txs.length-1];
   M.mode="chain"; M.txid=man.txid; M.plan={lockCoin:man.lockCoin,fee:man.fee}; M.datum=buildManifestDatum();
