@@ -1094,6 +1094,115 @@ function buildManifestDatum(){
 }
 const setChip=(i,cls,txt)=>{ const c=$("pgchip-"+i); if(c){ c.className="pgchip "+cls; c.textContent=txt; } };
 
+/* ── zero-dependency ZIP (store method) so the whole job downloads as one
+      folder of files — one transaction per file, do them one at a time ── */
+const CRC_T=(()=>{ const t=new Uint32Array(256);
+  for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } return t; })();
+function crc32(b){ let c=0xFFFFFFFF; for(let i=0;i<b.length;i++) c=CRC_T[(c^b[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+const dosNow=()=>{ const d=new Date();
+  return { t:((d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1))&0xFFFF,
+           d:(((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate())&0xFFFF }; }
+function makeZip(files){
+  const enc=new TextEncoder(), parts=[], central=[]; let off=0; const {t,d}=dosNow();
+  const u16=n=>u8([n&255,(n>>8)&255]); const u32=n=>u8([n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255]);
+  for(const f of files){
+    const name=enc.encode(f.name), data=(f.data instanceof Uint8Array)?f.data:enc.encode(f.text);
+    const crc=crc32(data);
+    const lh=catB([u32(0x04034b50),u16(20),u16(0),u16(0),u16(t),u16(d),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),name,data]);
+    parts.push(lh);
+    central.push(catB([u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(t),u16(d),u32(crc),u32(data.length),u32(data.length),
+      u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off),name]));
+    off+=lh.length;
+  }
+  const cd=catB(central); const cdOff=off;
+  const end=catB([u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cd.length),u32(cdOff),u16(0)]);
+  return new Blob([catB([...parts,cd,end])],{type:"application/zip"});
+}
+
+function packetFiles(){
+  const n=CP.pages.length, pad=String(n).length;
+  const nn=i=>String(i).padStart(Math.max(2,pad),"0");
+  const feePage=fee(CP_SEGSPP*66+1200);
+  const files=[];
+  const start=
+`LEDGER SCROLLS — YOUR MINTING PACKET
+=====================================================
+File:      ${S.name||"(your file)"}
+On chain:  ${fmtB(S.enc)} in ${n} page transaction${n>1?"s":""}
+SHA-256:   ${S.sha}
+
+WHAT THIS FOLDER IS
+Everything needed to write your file permanently onto the Cardano
+blockchain, ONE TRANSACTION AT A TIME, using only your own wallet.
+You never connect your wallet to any website. You paste each page
+yourself. Nobody can see your file until YOU hand someone the pointer.
+
+WHAT YOU NEED
+  - A Cardano wallet with at least ${fmtA(feePage*n+10)} ADA in it (covers every page
+    fee, the final manifest lock, and working room so you never run dry).
+    (Eternl is the easiest: eternl.io — write your seed phrase on paper.)
+  - The files in this folder. That is all.
+
+DO THIS, IN ORDER  (repeat for every page-XX file)
+  1. Open your wallet. Tap SEND.
+  2. Recipient = YOUR OWN receive address. You are sending to yourself.
+     Amount = 1.5 ADA. It comes back to you minus a small fee (~${fmtA(feePage)} ADA).
+  3. Find the metadata / JSON field.
+     In Eternl: on the Send screen, turn on "Add metadata".
+  4. Open  page-${nn(1)}-of-${nn(n)}.json  in any text editor. Select ALL, copy.
+     Paste it into the metadata field. DO NOT CHANGE ONE CHARACTER.
+  5. Send. When it confirms, copy the TRANSACTION ID (long letters+numbers).
+     Write it in  transaction-ids.txt  next to Page 1.
+  6. Do the next page. Then the next. Until all ${n} are done.
+
+FINISH IT — turn the pages into a real scroll
+  7. Go to:  https://beacnpool.github.io/ledger-scrolls/calculator.html
+     Drop in the SAME file. Choose "Build my page transactions".
+     Paste each transaction id into its box. Press "Check pages on-chain".
+     When every page is GREEN, press "Lock the manifest" and approve the
+     ONE transaction in your wallet. The page then rebuilds your file from
+     the chain and proves it matches — before it ever says done.
+  8. Save the pointer it gives you (a txid ending in #0). That pointer is
+     how anyone reads your scroll, forever. Guard it; share it when ready.
+
+  Site gone, or you don't trust the website? plan.json + the cardano-cli
+  command shown in that page's manifest step rebuild it from scratch. The
+  protocol is two queries and a hash — it outlives us.
+
+PRIVACY — READ THIS TWICE
+  The wallet that pays these fees can be traced. ADA bought from an
+  exchange with your ID is linked to you. If WHO published this must stay
+  unknown, do NOT use a wallet funded from your identity — use ADA that
+  is not tied to you, or have someone you trust send these transactions.
+  The SHA-256 above proves the file is yours and untampered no matter who
+  paid. This tool makes your file undeletable; it does not make you
+  anonymous. That part is on you.
+
+  Permanent means permanent. No edit, no delete, ever. Never include
+  anything you could regret — names, faces, metadata — that you did not
+  mean to publish for all time.
+`;
+  files.push({name:"START-HERE.txt",text:start});
+  for(const p of CP.pages)
+    files.push({name:`page-${nn(p.i)}-of-${nn(n)}.json`, text:JSON.stringify(p.meta,null,1)});
+  files.push({name:"transaction-ids.txt",
+    text:`Write each transaction id here as you send each page. Keep this file —\nthese ids are how your scroll is finished and found.\n\n`+
+      CP.pages.map(p=>`Page ${p.i}  (page-${nn(p.i)}-of-${nn(n)}.json):  ________________________________________________________________`).join("\n\n")+"\n"});
+  files.push({name:"plan.json",
+    text:JSON.stringify({ format:"manifest-chain-v2", contentType:S.ct, codec:S.codec,
+      sizeDecoded:S.raw, sizeEncoded:S.enc, sha256Decoded:S.sha, sha256Encoded:S.shaEnc,
+      pages:n, segmentsPerPage:CP_SEGSPP, segmentBytes:CP_SEG,
+      lockAddressMainnet:NETS[1].lockBech, note:"pageTxHashes are the ids you collect in transaction-ids.txt" }, null, 2)});
+  return files;
+}
+function downloadPacket(){
+  const url=URL.createObjectURL(makeZip(packetFiles()));
+  const a=document.createElement("a");
+  a.href=url; a.download=`ledger-scroll-${(S.name||"packet").replace(/[^a-zA-Z0-9._-]+/g,"_")}.zip`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+
 function renderChainAssistant(){
   CP.active=true;
   if(!CP.pages.length) CP.pages=buildChainPages(S.encBytes);
@@ -1101,21 +1210,30 @@ function renderChainAssistant(){
   const feePage=fee(CP_SEGSPP*66+1200), feeTot=feePage*n;
   const body=$("mintbody");
   body.innerHTML=`
-    <div class="cmp"><b>Chain Scroll, assisted:</b> this page has cut your file into
-    <b>${n} page transaction${n>1?"s":""}</b> (${fmtB(S.enc)} on-chain). You paste each one into your
-    wallet's metadata box, paste back the transaction ids, and this page <b>verifies every byte from
-    the chain</b> before helping you lock the manifest. Budget ≈ <b>${fmtA(feeTot)} ADA</b> in page fees
-    (≈ ${fmtA(feePage)} each — your wallet shows the real number) plus the manifest lock.
-    ${n>12?`<br>⚠️ <b>${n} rounds of copy-paste is a workout</b> — the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI toolkit</a> does this in one command and costs less per byte.`:""}</div>
+    <div class="cmp"><b>Chain Scroll, assisted:</b> your file is bigger than one transaction, so this
+    page cut it into <b>${n} page transaction${n>1?"s":""}</b> (${fmtB(S.enc)} on-chain). Download them
+    all as one folder, send them one at a time from your own wallet, then come back to finish. You
+    <b>never connect your wallet to this site</b> for the pages — you paste each yourself.
+    <br><span style="font-size:12.5px">These use small, <b>wallet-safe chunks</b> that every wallet
+    encodes correctly, so it's a few more transactions than the headline estimate — the tradeoff for
+    "works in any wallet, no surprises." The CLI bundle further down packs bigger chunks for fewer,
+    cheaper transactions if you're comfortable at a command line.</span></div>
+    <p style="margin:12px 0"><button class="btn" id="cpzip">⬇ Download all ${n} transaction${n>1?"s":""} (.zip)</button>
+      <span style="font-size:13px;color:var(--muted)">&nbsp;a folder with a plain <b>START-HERE.txt</b>, one file per transaction, and a place to write your ids</span></p>
     <ol class="steps">
-      <li>Copy a page's metadata JSON below.</li>
-      <li>In your wallet (Eternl: <b>Send</b> → recipient = <b>your own address</b>, amount ≈ 1.5 ADA →
-          <b>Metadata / JSON</b> → paste → send). You only pay the fee — the ADA comes back to you.
-          Don't edit the JSON.</li>
-      <li>Paste the transaction id into that page's box. Repeat for every page — <b>in any order, but
-          fill the boxes in order</b>.</li>
-      <li>Hit <b>Check pages on-chain</b>. Green across the board → lock the manifest.</li>
+      <li><b>Download the folder above</b> and open <b>START-HERE.txt</b> — it walks you through
+          everything, assuming you've never used Cardano.</li>
+      <li>For each <b>page-XX</b> file: in your wallet tap <b>Send</b> → recipient = <b>your own
+          address</b>, amount ≈ 1.5 ADA → turn on <b>metadata / JSON</b> → paste the file's contents →
+          send. You only pay the fee (≈ ${fmtA(feePage)} ADA); the rest comes back. Don't edit the JSON.</li>
+      <li>Copy each transaction id into <b>transaction-ids.txt</b>, then into the matching box below.</li>
+      <li>Hit <b>Check pages on-chain</b>. All green → lock the manifest (one wallet click) and this
+          page proves your whole file back from the chain.</li>
     </ol>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 4px">Budget ≈ <b>${fmtA(feeTot)} ADA</b> in page fees plus the manifest lock.
+    ${n>12?`⚠️ ${n} sends is a lot of copy-paste — the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI toolkit</a> does it in one command.`:""}
+    Prefer buttons over pasting? Connect a wallet and it can sign the pages for you (roadmap).</p>
+    <p style="font-size:13.5px;font-weight:600;margin:8px 0">Or copy each page by hand:</p>
     ${CP.pages.map(p=>`
       <details class="pg" ${p.n===1?"open":""}>
         <summary>Page ${p.i} of ${p.n} <span class="pgchip wait" id="pgchip-${p.i}">waiting</span></summary>
@@ -1137,6 +1255,7 @@ function renderChainAssistant(){
     <div id="mintstage"></div>`;
   body.querySelectorAll(".copy[data-cp]").forEach(b=>
     b.addEventListener("click",()=>copyText(b, JSON.stringify(CP.pages[b.dataset.cp-1].meta))));
+  $("cpzip").addEventListener("click",downloadPacket);
   $("cpcheck").addEventListener("click",checkPages);
   $("cpback").addEventListener("click",()=>{ CP.active=false; renderMint(); });
 }
