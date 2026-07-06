@@ -1030,7 +1030,8 @@ async function openPointer(raw){
 /* ════════════════════════ router & wiring ════════════════════════ */
 function route(){
   const h=location.hash.replace(/^#/,'');
-  const s=h.match(/^s=([a-z0-9-]+)/), pp=h.match(/^p=([0-9a-f]{56})$/);
+  const s=h.match(/^s=([a-z0-9-]+)/), pp=h.match(/^p=([0-9a-f]{56})$/), op=h.match(/^open=([0-9a-f]{64})$/);
+  if(op){ openPointer(op[1]+'#0'); return; }          // deep-link any scroll by pointer, even off the shelf
   if(s && s[1]!=='library'){ const e=SHELF.find(x=>x.name===s[1]); if(e){ openScroll(e); return; } }
   if(pp){ openChannel(pp[1]); return; }
   show((h==='stacks'||h==='library')?'library':'home');

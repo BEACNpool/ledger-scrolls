@@ -294,7 +294,8 @@ details.pg pre{max-height:180px;overflow:auto}
 
 <section class="section" id="mintsec" hidden>
   <div class="card">
-    <h2>⚡ Mint it right now — no node, no command line</h2>
+    <h2>⚡ Mint it right now — no node, no command line
+      <span id="walletbadge" hidden style="float:right;font:600 13px/1.9 var(--sans);color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent);border-radius:var(--pill);padding:3px 12px"></span></h2>
     <p style="font-size:15px">This page can write your file to Cardano <strong>directly from
     your browser wallet</strong> — <b>Eternl</b>, on a laptop. The transaction is built
     locally, your wallet shows you exactly what it spends before you approve, and nothing —
@@ -517,16 +518,38 @@ async function gzipBytes(buf){
   const stream = new Blob([buf]).stream().pipeThrough(cs);
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
+/* Re-encode an image through a canvas — this drops ALL embedded metadata
+   (EXIF, GPS coordinates, camera serials, thumbnails). Permanent means public:
+   you do not want a photo's GPS on-chain forever. Default ON for images. */
+async function stripImageMeta(buf, type){
+  try{
+    if(typeof createImageBitmap === "undefined") return null;
+    const bmp = await createImageBitmap(new Blob([buf],{type}));
+    const cv = document.createElement("canvas"); cv.width=bmp.width; cv.height=bmp.height;
+    cv.getContext("2d").drawImage(bmp,0,0); bmp.close?.();
+    const png = /png/i.test(type);
+    const blob = await new Promise(r=>cv.toBlob(r, png?"image/png":"image/jpeg", png?undefined:0.95));
+    if(!blob) return null;
+    return { buf: await blob.arrayBuffer(), ct: png?"image/png":"image/jpeg" };
+  }catch(e){ return null; }
+}
 
 async function analyzeFile(file){
+  S.file = file;
   const ext = (file.name.split(".").pop()||"").toLowerCase();
   const media = mediaByExt(ext);
-  const buf = await file.arrayBuffer();
+  let buf = await file.arrayBuffer();
   M.state = "idle"; M.txid = ""; M.mode = "std";        // new file → fresh mint flow
   CP.active = false; CP.pages = []; CP.txids = []; CP.checked = false;
   SGN.pages = []; SGN.done = 0; SGN.spent = new Set(); SGN.running = false;
+  const isImg = /^image\/(jpe?g|png|webp)$/i.test(file.type||"");
+  let metaStripped=false, ctOverride=null;
+  if(isImg && S.stripMeta!==false){
+    const s = await stripImageMeta(buf, file.type);
+    if(s){ buf=s.buf; metaStripped=true; ctOverride=s.ct; }
+  }
   S.raw = buf.byteLength; S.name = file.name; S.media = media;
-  S.ct = file.type && !media.exts.length===false ? (media.ct || file.type) : (media.ct || file.type || "application/octet-stream");
+  S.ct = ctOverride || (file.type && !media.exts.length===false ? (media.ct || file.type) : (media.ct || file.type || "application/octet-stream"));
   S.sha = await sha256hex(buf);
   S.codec = "none"; S.enc = S.raw; S.shaEnc = S.sha;
   S.rawBytes = new Uint8Array(buf); S.encBytes = S.rawBytes;
@@ -544,9 +567,14 @@ async function analyzeFile(file){
     <dt>File</dt><dd>${esc(file.name)}</dd>
     <dt>Detected type</dt><dd>${esc(S.ct)} <span style="color:var(--faint)">· ${esc(media.tip)}</span></dd>
     <dt>Original size</dt><dd>${fmtB(S.raw)} (${fmtN(S.raw)} bytes)</dd>
+    ${isImg ? `<dt>Privacy</dt><dd>${metaStripped
+        ? `<span style="color:var(--ok);font-weight:600">✓ camera / GPS metadata removed</span>`
+        : `<span style="color:var(--warn)">⚠ metadata kept — GPS/camera data will be public forever</span>`}
+        &nbsp;<label style="cursor:pointer;font-family:var(--sans);color:var(--ink-2)"><input type="checkbox" id="stripmeta" ${S.stripMeta!==false?"checked":""} style="vertical-align:-2px"> strip metadata (recommended)</label></dd>` : ""}
     <dt>Gzip trial</dt><dd>${gzNote}</dd>
     <dt>SHA-256 (original)</dt><dd>${S.sha}</dd>
     ${S.codec==="gzip" ? `<dt>SHA-256 (gzip)</dt><dd>${S.shaEnc}</dd>` : ""}`;
+  $("stripmeta")?.addEventListener("change",e=>{ S.stripMeta=e.target.checked; if(S.file) analyzeFile(S.file); });
   $("analysis").classList.add("show");
   $("b_ct").value = S.ct;
   if(!$("b_name").value) $("b_name").value = file.name.replace(/\.[^.]+$/,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40) || "my-scroll";
@@ -968,6 +996,33 @@ function planTx(net,utxos,datum,changeB,params){
 
 /* ── mint flow ── */
 const M = { wapi:null, wname:"", net:null, params:null, plan:null, datum:null, txid:"", state:"idle", mode:"std", walletKey:"", changeB:null };
+
+/* ── mint progress persistence — an interrupted chain mint (reload/crash) keeps
+   the page transactions it already paid for; re-drop the same file to resume ── */
+const RESUME_KEY="ls.mint.v1";
+function saveResume(){ try{ localStorage.setItem(RESUME_KEY, JSON.stringify({
+  sha:S.sha, net:M.net, txids:CP.txids.slice(), done:SGN.done, pages:SGN.pages.length,
+  name:S.name, enc:S.enc, ts:Date.now() })); }catch(e){ void e; } }
+function clearResume(){ try{ localStorage.removeItem(RESUME_KEY); }catch(e){ void e; } }
+function loadResume(){ try{ const r=JSON.parse(localStorage.getItem(RESUME_KEY)||"null");
+  return (r && Date.now()-r.ts < 7*864e5) ? r : null; }catch(e){ return null; } }
+
+/* ── dapp-feel: a persistent connected-wallet badge + silent re-connect ── */
+function setWalletBadge(name, net){
+  const el=$("walletbadge"); if(!el) return;
+  el.hidden=false; el.textContent=`🟢 ${name} · ${(NETS[net]?.name||"?").split(" ")[0]}`;
+  try{ localStorage.setItem("ls.wallet", M.walletKey||""); }catch(e){ void e; }
+}
+async function autoReconnect(){
+  try{
+    const key=localStorage.getItem("ls.wallet");
+    const w=key && window.cardano && window.cardano[key];
+    if(w && typeof w.isEnabled==="function" && await w.isEnabled() && /eternl|ccvault/i.test(key+(w.name||""))){
+      M.wapi=await w.enable(); M.walletKey=key; M.wname=w.name||key; M.net=await M.wapi.getNetworkId();
+      if(M.net in NETS) setWalletBadge(M.wname, M.net);
+    }
+  }catch(e){ void e; }
+}
 const mlog = (cls,msg)=>{ const el=$("mlog"); if(!el) return; const d=document.createElement("div");
   d.className=cls; d.textContent=msg; el.appendChild(d); el.scrollTop=el.scrollHeight; };
 
@@ -982,13 +1037,24 @@ function renderMint(){
     return;
   }
   if(CP.active){ renderChainAssistant(); return; }
-  if(S.enc > P.stdMax){
+  /* route by the CHEAPER method, so the quote and the mint always agree.
+     Standard scroll (single locked datum) wins only for very small files;
+     above that, Chain Scroll is far cheaper than locking ~4.4 ADA/KB. */
+  const st0=calcStandard(S.enc), ch0=calcChain(S.enc);
+  const useStd = !!(st0 && st0.total <= ch0.total);
+  if(!useStd){
     const wl=listWallets();
     const sgnPages=Math.max(1,Math.ceil(S.enc/(SGN.SEG*SGN.SPP)));
-    body.innerHTML=`<div class="cmp">This file is <b>${fmtB(S.enc)}</b> on-chain — bigger than the ~14 KB that fits a
-      one-transaction Standard Scroll, so it mints as a <b>Chain Scroll</b>: ${sgnPages} page${sgnPages>1?"s":""} plus one seal.</div>
+    const reason = S.enc > P.stdMax
+      ? `bigger than the ~14 KB that fits a one-transaction Standard Scroll`
+      : `cheaper this way than locking it all in a single coin`;
+    const rz=loadResume(); const canResume = !!(rz && rz.sha===S.sha && rz.done>0 && rz.done<rz.pages);
+    body.innerHTML=`<div class="cmp">This file is <b>${fmtB(S.enc)}</b> on-chain — ${reason}, so it mints as a <b>Chain Scroll</b>: ${sgnPages} page${sgnPages>1?"s":""} plus one seal.</div>
+      ${canResume && wl.length ? `<div class="okbox" style="margin:12px 0">↩ <b>Resume an interrupted mint.</b>
+        ${rz.done} of ${rz.pages} pages for this file are already on-chain — pick up where you left off (no double-spending):
+        <div class="wbtns" style="margin-top:8px">${wl.map(w=>`<button class="wbtn" data-resume="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} Resume with ${esc(w.name)}</button>`).join("")}</div></div>` : ""}
       ${wl.length ? `
-        <p style="margin:12px 0 4px;font-weight:600">Best on a laptop with a browser wallet — just click to sign each page:</p>
+        <p style="margin:12px 0 4px;font-weight:600">${canResume?"Or start over — ":""}Best on a laptop with a browser wallet — just click to sign each page:</p>
         <div class="wbtns">${wl.map(w=>`<button class="wbtn" data-sgn="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} Sign ${sgnPages+1} transactions with ${esc(w.name)}</button>`).join("")}</div>
         <p style="font-size:12.5px;color:var(--muted);margin:6px 0 0">The page builds each transaction; your wallet only signs — no metadata to paste, nothing to download.</p>
         ${hwNote()}
@@ -1002,6 +1068,7 @@ function renderMint(){
         <p style="margin-top:10px"><button class="btn sub" id="cpstart">Or send pages manually (advanced)</button></p>`}
       <div id="cpstage" style="margin-top:14px"></div>`;
     body.querySelectorAll("[data-sgn]").forEach(b=>b.addEventListener("click",()=>startWalletSign(b.dataset.sgn)));
+    body.querySelectorAll("[data-resume]").forEach(b=>b.addEventListener("click",()=>startWalletSign(b.dataset.resume, loadResume())));
     $("cpstart")?.addEventListener("click",renderChainAssistant);
     return;
   }
@@ -1331,6 +1398,7 @@ async function signAllPages(){
       CP.txids[k]=txid;
       plan.ins.forEach(i=>SGN.spent.add(utxoKey(i)));
       SGN.done=k+1;
+      saveResume();      // persist each landed page so a reload can resume
       sgnStatus(k+1,"ok","page "+(k+1)+" on chain ✓ "+txid.slice(0,12)+"…");
       sgnProgress();
     }
@@ -1443,15 +1511,19 @@ async function signAllBulk(bulk){
 }
 function sgnBulkLine(t){ const l=$("sgnline"); if(l) l.textContent=t; }
 
-async function startWalletSign(key){
+async function startWalletSign(key, resume){
   const stage=$("cpstage"); stage.innerHTML=`<div class="cmp">Connecting to ${esc(key)}…</div>`;
   try{
     M.wapi=await window.cardano[key].enable(); M.wname=window.cardano[key].name||key; M.walletKey=key;
     M.net=await M.wapi.getNetworkId();
     if(!(M.net in NETS)) throw new Error("Unknown network id "+M.net);
+    setWalletBadge(M.wname, M.net);
     M.params=await fetchNetParams(M.net);
     M.changeB=hexB(await M.wapi.getChangeAddress());
-    SGN.pages=buildSignPages(S.encBytes); SGN.done=0; SGN.spent=new Set(); CP.txids=[];
+    SGN.pages=buildSignPages(S.encBytes); SGN.spent=new Set();
+    if(resume && resume.done>0 && resume.done<SGN.pages.length && resume.net===M.net){
+      SGN.done=resume.done; CP.txids=resume.txids.slice();
+    } else { SGN.done=0; CP.txids=[]; }
     const n=SGN.pages.length, nnet=NETS[M.net], total=n+1;
     const feeGuess=fee(SGN.SPP*66+1200)*n;
     const bulk=bulkSignApi(M.wapi);
@@ -1486,6 +1558,11 @@ async function startWalletSign(key){
     $("sgngo").addEventListener("click",()=>{ $("sgngo").disabled=true; if($("sgnbulk"))$("sgnbulk").disabled=true; $("sgnresume").hidden=true; signAllPages(); });
     $("sgnresume").addEventListener("click",()=>{ $("sgnresume").hidden=true; signAllPages(); });
     $("sgnmanual").addEventListener("click",()=>{ CP.active=true; renderChainAssistant(); });
+    if(resume && SGN.done>0){                       // resuming: skip bulk, continue signing the rest
+      $("sgngo").disabled=true; if($("sgnbulk"))$("sgnbulk").disabled=true;
+      for(let i=1;i<=SGN.done;i++) sgnStatus(i,"ok","on chain ✓"); sgnProgress();
+      signAllPages();
+    }
   }catch(e){
     stage.innerHTML=`<div class="warnbox">✋ ${esc(String(e.message||e))}</div>
       <p style="margin-top:8px"><button class="copy" id="sgnmanual2">send pages manually instead</button></p>`;
@@ -1665,6 +1742,7 @@ async function connectAndQuote(key, mode="std"){
     M.wname = window.cardano[key].name||key;
     M.net = await M.wapi.getNetworkId();
     if(!(M.net in NETS)) throw new Error("Unknown network id "+M.net);
+    setWalletBadge(M.wname, M.net);
     if(mode==="chain" && M.net!==CP.net)
       throw new Error(`Your wallet is on ${NETS[M.net].name} but the pages were verified on ${NETS[CP.net].name} — switch the wallet network (or re-check the pages) so the manifest lands next to its pages.`);
     M.params = await fetchNetParams(M.net);
@@ -1806,6 +1884,7 @@ async function verifyManifest(raw){
 
 function mintSuccess(unverified){
   M.state="done";
+  clearResume();
   const n=NETS[M.net], ptr=M.txid+"#0", chain=M.mode==="chain";
   const receipts={ scroll:$("b_name").value.trim()||S.name, file:S.name, network:n.name,
     format: chain ? "chain-scroll (manifest-chain-v2)" : "standard-scroll (utxo-inline-datum-bytes-v1)",
@@ -1817,17 +1896,23 @@ function mintSuccess(unverified){
     mintedAt:new Date().toISOString(), verifiedFromChain:!unverified, wallet:M.wname };
   const blob=new Blob([JSON.stringify(receipts,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
+  const readerUrl = M.net===1 ? `./index.html#open=${M.txid}` : "";
+  const tweet = "https://twitter.com/intent/tweet?text="+encodeURIComponent(
+    `I just wrote this to Cardano forever — no server, no node, minted from my laptop with @eternlwallet.\n\nRead it straight from the chain, verify every byte:`)
+    + (readerUrl?"&url="+encodeURIComponent("https://beacnpool.github.io/ledger-scrolls/index.html#open="+M.txid):"");
   $("mintstage").insertAdjacentHTML("beforeend",`
     <div class="okbox">
       <b>📜 ${unverified?"Minted (verify from chain before announcing!)":"Your scroll is eternal — verified from the chain."}</b><br>
       Pointer (this is how civilization finds it — keep it):<br>
       <span class="mono">${ptr}</span> <button class="copy" id="ptrcopy">copy</button><br>
-      <span style="font-size:13.5px">
-      <a href="${n.scan}${M.txid}" target="_blank" rel="noopener">View on Cardanoscan</a> ·
-      ${M.net===1?`<a href="./index.html" target="_blank" rel="noopener">Open the Library</a> and paste the pointer in the search bar ·`:""}
-      <a href="${url}" download="receipts-${(S.name||"scroll").replace(/[^a-zA-Z0-9._-]+/g,"_")}.json">Download receipts.json</a></span><br>
-      <span style="font-size:13px;color:#0a6b46">The registry entry below now carries your real transaction hash —
-      PR it into <a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/registry">the registry</a> to put it on the public shelf.</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
+        ${readerUrl?`<a class="btn sub" href="${readerUrl}" target="_blank" rel="noopener">📖 Read it in the viewer</a>`:""}
+        <a class="btn sub" href="${n.scan}${M.txid}" target="_blank" rel="noopener">🔎 Cardanoscan</a>
+        ${readerUrl?`<a class="btn sub" href="${tweet}" target="_blank" rel="noopener">𝕏 Share</a>`:""}
+        <a class="btn sub" href="${url}" download="receipts-${(S.name||"scroll").replace(/[^a-zA-Z0-9._-]+/g,"_")}.json">⬇ receipts.json</a>
+      </div>
+      <span style="font-size:13px;color:#0a6b46;display:block;margin-top:10px">Want it on the public Library shelf? The registry entry below carries your real transaction hash —
+      PR it into <a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/registry">the registry</a>.</span>
     </div>`);
   $("ptrcopy").addEventListener("click",e=>copyText(e.target,ptr));
   buildOutputs();
@@ -1843,6 +1928,7 @@ document.querySelectorAll(".copy[data-for]").forEach(b =>
   b.addEventListener("click", () => copyText(b, $(b.dataset.for).textContent)));
 
 fetchPrice();
+autoReconnect();
 </script>
 </body>
 </html>
