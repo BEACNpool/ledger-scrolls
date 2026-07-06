@@ -1702,9 +1702,9 @@ async function doMint(){
   const pl=M.plan, n=NETS[M.net];
   try{
     mlog("h", M.mode==="chain"
-      ? `── locking the manifest for “${S.name}” (${CP.pages.length} pages) on ${n.name}`
+      ? `── locking the manifest for “${S.name}” (${CP.txids.length} pages) on ${n.name}`
       : `── minting “${S.name}” as a Standard Scroll on ${n.name}`);
-    mlog("",`datum: ${M.datum.length} bytes (${M.mode==="chain"?"manifest, Constr 0, "+CP.pages.length+" page hashes":(S.codec==="gzip"?"gzip-encoded":"raw")+" content, Constr 0"})`);
+    mlog("",`datum: ${M.datum.length} bytes (${M.mode==="chain"?"manifest, Constr 0, "+CP.txids.length+" page hashes":(S.codec==="gzip"?"gzip-encoded":"raw")+" content, Constr 0"})`);
     mlog("",`tx: ${pl.ins.length} input(s) → lock ${(pl.lockCoin/1e6).toFixed(2)} ADA + change, fee ${(pl.fee/1e6).toFixed(3)} ADA`);
     const unsigned = catB([u8([0x84]), pl.body, u8([0xa0]), u8([0xf5,0xf6])]);
     mlog("",`asking ${M.wname} to sign — check the amounts in the wallet window…`);
