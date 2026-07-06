@@ -875,6 +875,16 @@ function listWallets(){
   const seen=new Set();
   return out.filter(w=>{ const n=w.name.toLowerCase(); if(seen.has(n))return false; seen.add(n); return true; });
 }
+function hwNote(){
+  return `<details class="assump" style="margin-top:10px"><summary>⚠️ Using a Ledger or Trezor hardware wallet? Read this first</summary>
+    <p style="margin-top:8px;font-size:13.5px">Scroll transactions carry metadata, and some hardware-wallet + app + wallet-version
+    combinations mishandle that — users have reported a <b>Ledger device rebooting</b> at the final approve step (the transaction
+    itself is fine: hardware wallets only ever receive the metadata <i>hash</i>, and nothing is sent unless the device signs).</p>
+    <p style="font-size:13.5px">If that happens: <b>1)</b> update the Cardano app on the device via Ledger Live and retry;
+    <b>2)</b> if it still crashes, mint from a <b>software-wallet account</b> instead — create one in your wallet, send it a few ADA
+    to cover this page's estimate, and sign from there. Scroll mints are self-sends: your hardware-wallet funds are never needed,
+    and the scroll's permanence doesn't depend on which key signed it.</p></details>`;
+}
 function parseWalletUtxos(hexList){
   const out=[];
   for(const h of hexList||[]){
@@ -976,6 +986,7 @@ function renderMint(){
         <p style="margin:12px 0 4px;font-weight:600">Best on a laptop with a browser wallet — just click to sign each page:</p>
         <div class="wbtns">${wl.map(w=>`<button class="wbtn" data-sgn="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} Sign ${sgnPages+1} transactions with ${esc(w.name)}</button>`).join("")}</div>
         <p style="font-size:12.5px;color:var(--muted);margin:6px 0 0">The page builds each transaction; your wallet only signs — no metadata to paste, nothing to download.</p>
+        ${hwNote()}
         <details class="assump" style="margin-top:12px"><summary>Other ways (manual paste · CLI)</summary>
           <p style="margin-top:8px"><button class="btn sub" id="cpstart">Send pages manually (copy-paste metadata)</button>
           <span style="font-size:12.5px;color:var(--muted)">&nbsp;— only if your wallet's Send screen supports custom metadata (many don't; Eternl's does not for this).</span></p>
@@ -1002,7 +1013,8 @@ function renderMint(){
       switch the wallet to the <b>Preview</b> network and this page follows it — test ADA, free mistakes.</p>
       <div class="wbtns">${wallets.map(w=>`
         <button class="wbtn" data-w="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} ${esc(w.name)}</button>`).join("")}
-      </div>`
+      </div>
+      ${hwNote()}`
     : `<div class="warnbox" style="margin-top:12px">No Cardano wallet found in this browser. Install
        <a href="https://eternl.io">Eternl</a>, <a href="https://www.lace.io">Lace</a>, or
        <a href="https://typhonwallet.io">Typhon</a> (desktop), or open this page inside your mobile wallet's
