@@ -175,6 +175,13 @@ details.pg pre{max-height:180px;overflow:auto}
 .steps{counter-reset:st;margin:12px 0 0;padding:0;list-style:none;font-size:14.5px;color:var(--ink-2)}
 .steps li{position:relative;padding:4px 0 4px 34px}
 .steps li::before{counter-increment:st;content:counter(st);position:absolute;left:0;top:5px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:700 12px/1 var(--sans);color:#fff;background:var(--accent)}
+.phase{display:flex;align-items:center;gap:10px;margin:22px 0 6px;font:700 16px/1.3 var(--sans);color:var(--ink)}
+.phase .pn{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:800 13px/1 var(--sans);color:#fff;background:linear-gradient(145deg,var(--accent),#1f44ff)}
+.prog{display:flex;align-items:center;gap:10px;margin:10px 0;font:600 14px/1 var(--sans);color:var(--ink-2)}
+.prog .bar{flex:1;height:8px;border-radius:var(--pill);background:var(--line);overflow:hidden;max-width:280px}
+.prog .bar span{display:block;height:100%;background:var(--ok);transition:width .3s var(--ease)}
+.wsub{margin:8px 0 0;padding:0 0 0 34px;font-size:14px;color:var(--ink-2);list-style:disc}
+.wsub li{margin:3px 0}
 .footer{border-top:1px solid var(--line);margin-top:28px;padding:26px 0 44px;font-size:14px;color:var(--muted)}
 .warnbox{margin-top:14px;padding:12px 16px;border-radius:var(--radius-sm);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);color:#6d4d0a;font-size:14px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
@@ -1092,7 +1099,7 @@ function buildManifestDatum(){
                 cBy(hexB(S.sha)),cBy(hexB(S.shaEnc)),list,catB([cTg(121),cH(0,4)])];
   return catB([cTg(121),cH(fields.length,4),...fields]);
 }
-const setChip=(i,cls,txt)=>{ const c=$("pgchip-"+i); if(c){ c.className="pgchip "+cls; c.textContent=txt; } };
+const setChip=(i,cls,txt)=>{ const c=$("pgchip-"+i); if(c){ c.className="pgchip "+cls; c.style.cssText=""; c.textContent=txt; } };
 
 /* ── zero-dependency ZIP (store method) so the whole job downloads as one
       folder of files — one transaction per file, do them one at a time ── */
@@ -1209,48 +1216,70 @@ function renderChainAssistant(){
   const n=CP.pages.length;
   const feePage=fee(CP_SEGSPP*66+1200), feeTot=feePage*n;
   const body=$("mintbody");
+  const nn=i=>String(i).padStart(Math.max(2,String(n).length),"0");
   body.innerHTML=`
-    <div class="cmp"><b>Chain Scroll, assisted:</b> your file is bigger than one transaction, so this
-    page cut it into <b>${n} page transaction${n>1?"s":""}</b> (${fmtB(S.enc)} on-chain). Download them
-    all as one folder, send them one at a time from your own wallet, then come back to finish. You
-    <b>never connect your wallet to this site</b> for the pages — you paste each yourself.
-    <br><span style="font-size:12.5px">These use small, <b>wallet-safe chunks</b> that every wallet
-    encodes correctly, so it's a few more transactions than the headline estimate — the tradeoff for
-    "works in any wallet, no surprises." The CLI bundle further down packs bigger chunks for fewer,
-    cheaper transactions if you're comfortable at a command line.</span></div>
-    <p style="margin:12px 0"><button class="btn" id="cpzip">⬇ Download all ${n} transaction${n>1?"s":""} (.zip)</button>
-      <span style="font-size:13px;color:var(--muted)">&nbsp;a folder with a plain <b>START-HERE.txt</b>, one file per transaction, and a place to write your ids</span></p>
+    <div class="cmp"><b>Chain Scroll, assisted:</b> your file is bigger than one transaction, so it's
+    written as <b>${n} small "page" transaction${n>1?"s":""}</b> (${fmtB(S.enc)} on-chain) plus one to
+    seal it. You'll send each page to <b>yourself</b> from your own wallet — nothing to connect, no one
+    else involved. Follow the three steps below in order; the page keeps your place.</div>
+
+    <div class="phase"><span class="pn">1</span> Get your ${n} page${n>1?"s":""} — as a folder or copy each one</div>
+    <p style="margin:2px 0 0"><button class="btn" id="cpzip">⬇ Download all ${n} page${n>1?"s":""} (.zip)</button>
+      <span style="font-size:13px;color:var(--muted)">&nbsp;— a folder with START-HERE.txt and one file per page (<b>page-${nn(1)}-of-${nn(n)}.json</b> …). You can also just copy each page straight from the cards in step&nbsp;3.</span></p>
+
+    <div class="phase"><span class="pn">2</span> Send each page to yourself from your wallet</div>
+    <p style="margin:0 0 2px;font-size:14.5px;color:var(--ink-2)">Do this once per page. Each send costs
+      only the network fee (≈ ${fmtA(feePage)} ADA) — the 1.5 ADA returns to you. Budget ≈ <b>${fmtA(feeTot)} ADA</b> for all pages plus the seal at the end.</p>
     <ol class="steps">
-      <li><b>Download the folder above</b> and open <b>START-HERE.txt</b> — it walks you through
-          everything, assuming you've never used Cardano.</li>
-      <li>For each <b>page-XX</b> file: in your wallet tap <b>Send</b> → recipient = <b>your own
-          address</b>, amount ≈ 1.5 ADA → turn on <b>metadata / JSON</b> → paste the file's contents →
-          send. You only pay the fee (≈ ${fmtA(feePage)} ADA); the rest comes back. Don't edit the JSON.</li>
-      <li>Copy each transaction id into <b>transaction-ids.txt</b>, then into the matching box below.</li>
-      <li>Hit <b>Check pages on-chain</b>. All green → lock the manifest (one wallet click) and this
-          page proves your whole file back from the chain.</li>
+      <li><b>Copy one page.</b> Open <b>page-${nn(1)}-of-${nn(n)}.json</b> from the folder (any text app), select all, copy — or use the <b>copy</b> button on Page&nbsp;1 in step&nbsp;3 below.</li>
+      <li><b>In your wallet, start a Send to your own address.</b> Tap <b>Receive</b> first to copy your address, then <b>Send</b> and paste it as the recipient. Amount: <b>1.5 ADA</b>. You're paying yourself; only the fee is spent.</li>
+      <li><b>Turn on metadata and paste the page.</b> Find the <b>metadata / JSON</b> option on the send screen, paste the page's contents, and <b>don't change a character</b>.</li>
+      <li><b>Send &amp; sign</b>, then copy the <b>transaction id</b> it gives you. Paste it into that page's box in step&nbsp;3.</li>
     </ol>
-    <p style="font-size:13px;color:var(--muted);margin:0 0 4px">Budget ≈ <b>${fmtA(feeTot)} ADA</b> in page fees plus the manifest lock.
-    ${n>12?`⚠️ ${n} sends is a lot of copy-paste — the <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI toolkit</a> does it in one command.`:""}
-    Prefer buttons over pasting? Connect a wallet and it can sign the pages for you (roadmap).</p>
-    <p style="font-size:13.5px;font-weight:600;margin:8px 0">Or copy each page by hand:</p>
+    <details class="assump" style="margin-top:10px">
+      <summary>⚠️ Can't find a "metadata" field in your wallet? Read this</summary>
+      <p style="margin-top:8px">The sending wallet <b>must let you attach metadata to a transaction.</b>
+      Not every wallet does — this is the most common place people get stuck.</p>
+      <ul class="wsub">
+        <li><b>Eternl</b> (recommended for this): on the Send screen tick <b>Add metadata</b> (desktop) or
+          open the <b>⋮ / advanced</b> options and choose <b>Add metadata / JSON</b> (mobile). Paste there.</li>
+        <li><b>Simpler mobile wallets (including some that only do basic sends) may not expose a metadata
+          field at all.</b> If yours doesn't, you can't send the pages from it — use <b>Eternl</b> for the
+          page sends (desktop or mobile), then come back here. The final seal in step 4 can use any wallet.</li>
+      </ul>
+      <p style="margin-top:6px;font-size:13px;color:var(--muted)">Rehearse for free first: get test ADA from
+      the Cardano <b>Preview faucet</b>, set your wallet + the Network selector below to <b>Preview</b>, and
+      run the whole thing with play money before spending real ADA.</p>
+    </details>
+
+    <div class="phase"><span class="pn">3</span> Paste each transaction id back here</div>
+    <p style="margin:0 0 2px;font-size:14.5px;color:var(--ink-2)">As each send confirms, paste its id into the
+      matching page. Order doesn't matter — fill them all in.</p>
+    <div class="prog"><span id="cpcount">0 of ${n} ids entered</span>
+      <span class="bar"><span id="cpbar" style="width:0%"></span></span></div>
     ${CP.pages.map(p=>`
       <details class="pg" ${p.n===1?"open":""}>
-        <summary>Page ${p.i} of ${p.n} <span class="pgchip wait" id="pgchip-${p.i}">waiting</span></summary>
+        <summary>Page ${p.i} of ${p.n} · <span style="font-family:var(--mono);font-size:12px;color:var(--muted)">page-${nn(p.i)}-of-${nn(n)}.json</span> <span class="pgchip wait" id="pgchip-${p.i}">no id yet</span></summary>
         <div class="pgbody">
-          <div class="out"><h4>Metadata JSON <button class="copy" data-cp="${p.i}">copy</button></h4>
+          <div class="out"><h4>This page's metadata JSON <button class="copy" data-cp="${p.i}">copy</button></h4>
           <pre>${JSON.stringify(p.meta,null,1)}</pre></div>
-          <input class="txin" id="pgtx-${p.i}" placeholder="transaction id of the send that carried page ${p.i} (64 hex chars)"
+          <label style="font-size:13px;font-weight:600;color:var(--ink-2);display:block;margin-top:6px">Transaction id from sending this page:</label>
+          <input class="txin" id="pgtx-${p.i}" placeholder="paste the 64-character transaction id here"
                  value="${CP.txids[p.i-1]||""}">
         </div>
       </details>`).join("")}
-    <p style="margin-top:14px">
+
+    <div class="phase"><span class="pn">4</span> Verify on-chain, then seal it</div>
+    <p style="margin:0 0 6px;font-size:14.5px;color:var(--ink-2)">This checks every page is really on the chain
+      and matches your file — <b>before</b> you spend anything on the seal.</p>
+    <p style="margin-top:4px">
       <label style="font-size:14px;color:var(--ink-2)">Network:
-        <select id="cpnet"><option value="1" ${CP.net===1?"selected":""}>Mainnet</option>
-        <option value="0" ${CP.net===0?"selected":""}>Preview (rehearsal)</option></select></label>
-      <button class="btn" id="cpcheck" style="margin-left:10px">🔎 Check pages on-chain</button>
-      <button class="copy" id="cpback" style="margin-left:10px">← back</button>
+        <select id="cpnet"><option value="1" ${CP.net===1?"selected":""}>Mainnet (real ADA)</option>
+        <option value="0" ${CP.net===0?"selected":""}>Preview (free rehearsal)</option></select></label>
+      <button class="btn" id="cpcheck" style="margin-left:10px" disabled>🔎 Check my pages on-chain</button>
+      <button class="copy" id="cpback" style="margin-left:10px">← start over</button>
     </p>
+    <p id="cphint" style="font-size:13px;color:var(--muted);margin:6px 0 0">Enter all ${n} transaction ids above to enable the check.</p>
     <div id="cpmanifest" hidden></div>
     <div id="mintstage"></div>`;
   body.querySelectorAll(".copy[data-cp]").forEach(b=>
@@ -1258,6 +1287,30 @@ function renderChainAssistant(){
   $("cpzip").addEventListener("click",downloadPacket);
   $("cpcheck").addEventListener("click",checkPages);
   $("cpback").addEventListener("click",()=>{ CP.active=false; renderMint(); });
+  for(let i=1;i<=n;i++) $("pgtx-"+i).addEventListener("input",cpProgress);
+  cpProgress();
+}
+
+/* live progress: count valid tx ids, drive the bar, gate the Check button */
+function cpProgress(){
+  const n=CP.pages.length; let ok=0;
+  for(let i=1;i<=n;i++){
+    const raw=($("pgtx-"+i)?.value||"").trim().toLowerCase().replace(/#\d+$/,"");
+    const good=/^[0-9a-f]{64}$/.test(raw);
+    if(good) ok++;
+    const chip=$("pgchip-"+i);
+    if(chip && !chip.classList.contains("ok")){       // keep verified ✓ chips; re-evaluate everything else
+      if(good){ chip.className="pgchip"; chip.style.cssText="background:var(--accent-soft);color:var(--accent-ink)"; chip.textContent="id ready"; }
+      else { chip.className="pgchip wait"; chip.style.cssText=""; chip.textContent="no id yet"; }
+    }
+  }
+  const cnt=$("cpcount"), bar=$("cpbar"), btn=$("cpcheck"), hint=$("cphint");
+  if(cnt) cnt.textContent=`${ok} of ${n} ids entered`;
+  if(bar) bar.style.width=(100*ok/n)+"%";
+  if(btn) btn.disabled = ok<n;
+  if(hint) hint.textContent = ok<n
+    ? `Enter all ${n} transaction ids above to enable the check (${n-ok} to go).`
+    : `All ${n} ids in — tap “Check my pages on-chain”.`;
 }
 
 async function checkPages(){
