@@ -318,6 +318,12 @@ details.pg pre{max-height:180px;overflow:auto}
       must stay secret, have someone you trust mint it for you: the SHA-256 proves your bytes
       arrived untouched no matter whose wallet paid the fee.</p>
     </details>
+    <div class="warnbox" style="margin-top:12px">🔑 <strong>Using a hardware wallet (Ledger / Trezor)?</strong>
+      Mint from a <strong>software wallet instead.</strong> A scroll transaction carries far more data than
+      an everyday payment, and hardware wallets can freeze or <em>reboot</em> mid-signing when they try to
+      process it — your funds are safe, but the mint won't complete. Fund a fresh hot wallet (a software
+      Eternl/Lace/Nami account) with a few ADA and use that: you're only spending fees, not guarding
+      savings. Comfortable at a terminal? The <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI</a> works with any key too.</div>
     <div id="mintbody"></div>
   </div>
 </section>
