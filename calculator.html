@@ -1363,6 +1363,79 @@ function sgnDoneUI(){
   $("sgnlock").addEventListener("click",()=>connectAndQuote(M.walletKey,"chain"));
 }
 
+/* ── CIP-103 bulk signing: build the whole chain up front, sign it all in
+      ONE wallet approval (Eternl api.experimental.signTxs / Typhon signTxs). ── */
+function encManifestBody(net, input, datum, lockCoin, selfB, changeCoin, fee){
+  return catB([u8([0xa3]),
+    cU(0), cAr(1), encInput(input),
+    cU(1), cAr(2), encLockOut(net,lockCoin,datum), encChangeOut(selfB,changeCoin),
+    cU(2), cU(fee)]);
+}
+function bulkSignApi(api){
+  const c=api.cip103, x=api.experimental;
+  if(c && typeof c.signTxs==="function") return { sign:t=>c.signTxs(t), submit:c.submitTxs?.bind(c) };
+  if(x && typeof x.signTxs==="function") return { sign:t=>x.signTxs(t), submit:x.submitTxs?.bind(x) };
+  if(typeof api.signTxs==="function")    return { sign:t=>api.signTxs(t), submit:api.submitTxs?.bind(api) };
+  return null;
+}
+/* returns the full ordered chain: N page txs (self-send + metadata) then the manifest
+   (lock output + change), each spending the previous change output. Deterministic. */
+function buildChainedTxs(net, funding, selfB, params){
+  const pages=buildSignPages(S.encBytes), txs=[], pageTxids=[];
+  let cur={...funding};
+  const feeFor=(bodyLen,auxLen)=>Math.ceil(params.a*(3+bodyLen+dummyWitLen(2)+auxLen)+params.b)+220;
+  for(const p of pages){
+    const aux=pageAux(p), auxHash=blake2b256(aux);
+    let fee=300000;
+    for(let r=0;r<8;r++){ const out=cur.coin-fee;
+      const nf=feeFor(encPageBody([cur],selfB,out,fee,auxHash).length, aux.length);
+      if(nf<=fee) break; fee=nf; }
+    const out=cur.coin-fee;
+    if(out<1000000) throw new Error("The wallet's UTxO isn't big enough to chain every page — send a bit more ADA (one combined UTxO works best).");
+    const body=encPageBody([cur],selfB,out,fee,auxHash), txid=bHex(blake2b256(body));
+    txs.push({body,aux,txid}); pageTxids.push(txid);
+    cur={txh:hexB(txid),ix:0,coin:out,addrHex:cur.addrHex};
+  }
+  CP.txids=pageTxids.slice(); CP.hashB=pageTxids.map(hexB);
+  const datum=buildManifestDatum(), lockCoin=minLockCoin(net,datum,params);
+  let mfee=300000;
+  for(let r=0;r<8;r++){ const ch=cur.coin-lockCoin-mfee;
+    const nf=feeFor(encManifestBody(net,cur,datum,lockCoin,selfB,ch,mfee).length,0);
+    if(nf<=mfee) break; mfee=nf; }
+  const change=cur.coin-lockCoin-mfee;
+  if(change<1000000) throw new Error("The wallet's UTxO isn't big enough for the seal — send a bit more ADA.");
+  const body=encManifestBody(net,cur,datum,lockCoin,selfB,change,mfee);
+  txs.push({body,manifest:true,txid:bHex(blake2b256(body)),lockCoin,fee:mfee});
+  return txs;
+}
+async function signAllBulk(bulk){
+  const utxos=parseWalletUtxos(await M.wapi.getUtxos());
+  const funding=[...utxos].sort((a,b)=>b.coin-a.coin)[0];
+  if(!funding) throw new Error("No plain-ADA UTxO in the wallet to fund the mint.");
+  const txs=buildChainedTxs(M.net, funding, M.changeB, M.params);
+  const reqs=txs.map(t=>({ cbor: bHex(catB([u8([0x84]), t.body, u8([0xa0]), u8([0xf5]), t.aux||u8([0xf6])])), partialSign:false }));
+  sgnBulkLine("approve all "+txs.length+" transactions in "+esc(M.wname)+" — one prompt…");
+  let wits;
+  try{ wits=await bulk.sign(reqs); }
+  catch(e){ if(/not a function|unsupported|invalid|schema|type/i.test(String(e?.message||e))) wits=await bulk.sign(reqs.map(r=>r.cbor)); else throw e; }
+  if(!Array.isArray(wits)||wits.length!==txs.length) throw new Error("wallet returned an unexpected number of signatures");
+  sgnBulkLine("signed ✓ submitting "+txs.length+" transactions…");
+  for(let i=0;i<txs.length;i++){
+    const t=txs[i], w=hexB(wits[i]);
+    const signed=catB([u8([0x84]), t.body, w, u8([0xf5]), t.aux||u8([0xf6])]);
+    await M.wapi.submitTx(bHex(signed));
+    SGN.done=i+1; sgnProgress(); sgnBulkLine(`submitted ${i+1} of ${txs.length}…`);
+  }
+  const man=txs[txs.length-1];
+  M.mode="chain"; M.txid=man.txid; M.plan={lockCoin:man.lockCoin,fee:man.fee}; M.datum=buildManifestDatum();
+  CP.net=M.net; CP.checked=true;
+  sgnBulkLine(""); const box=$("sgnmanifest"); if(box){ box.hidden=false; box.innerHTML=`<div id="mlog" class="mlog"></div><div id="mintstage"></div>`; }
+  mlog("h","── all transactions submitted in one approval; verifying from the chain");
+  M.state="minting";
+  await verifyBack();
+}
+function sgnBulkLine(t){ const l=$("sgnline"); if(l) l.textContent=t; }
+
 async function startWalletSign(key){
   const stage=$("cpstage"); stage.innerHTML=`<div class="cmp">Connecting to ${esc(key)}…</div>`;
   try{
@@ -1372,25 +1445,38 @@ async function startWalletSign(key){
     M.params=await fetchNetParams(M.net);
     M.changeB=hexB(await M.wapi.getChangeAddress());
     SGN.pages=buildSignPages(S.encBytes); SGN.done=0; SGN.spent=new Set(); CP.txids=[];
-    const n=SGN.pages.length, nnet=NETS[M.net];
+    const n=SGN.pages.length, nnet=NETS[M.net], total=n+1;
     const feeGuess=fee(SGN.SPP*66+1200)*n;
+    const bulk=bulkSignApi(M.wapi);
     stage.innerHTML=`
       <p style="margin:6px 0"><span class="netbadge ${nnet.cls}">${nnet.name}</span>
         <span style="font-size:13px;color:var(--muted)">&nbsp;connected: ${esc(M.wname)}${M.params.live?"":" · fallback fee params"}</span></p>
-      <div class="cmp">Your file is <b>${n} page${n>1?"s":""}</b> + 1 seal. You'll approve each in ${esc(M.wname)} —
-        just tap sign; the page builds every transaction for you. Keep this tab open until it finishes.
-        Budget ≈ <b>${fmtA(feeGuess)} ADA</b> in fees plus the seal.</div>
+      <div class="cmp">Your file is <b>${n} page${n>1?"s":""}</b> + 1 seal = <b>${total} transactions</b>. The page
+        builds every one; your wallet just signs. Budget ≈ <b>${fmtA(feeGuess)} ADA</b> in fees plus the seal.</div>
+      ${bulk?`<p style="margin:6px 0 2px;font-weight:600">${esc(M.wname)} supports bulk signing — do all ${total} in one approval:</p>
+        <p><button class="btn" id="sgnbulk">⚡ Sign all ${total} transactions — one approval</button></p>
+        <p style="font-size:12.5px;color:var(--muted);margin:4px 0 10px">Uses CIP-103. If your wallet balks, use the one-at-a-time button below.</p>`:""}
       <div class="prog"><span id="sgncount">0 of ${n} pages on chain</span>
         <span class="bar"><span id="sgnbar" style="width:0%"></span></span></div>
       ${SGN.pages.map(p=>`<div class="pg" id="sgnrow-${p.i}" style="padding:10px 14px;display:flex;align-items:center;gap:10px">
         <b style="font:600 14px/1 var(--sans)">Page ${p.i} of ${p.n}</b>
         <span class="pgchip wait" style="margin-left:auto">queued</span></div>`).join("")}
       <p id="sgnline" style="font-size:13px;color:var(--muted);margin:8px 0 0"></p>
-      <p style="margin-top:12px"><button class="btn" id="sgngo">✍️ Start signing — ${n} page${n>1?"s":""}</button>
+      <p style="margin-top:12px"><button class="btn ${bulk?'sub':''}" id="sgngo">✍️ ${bulk?'Or sign one at a time':'Start signing — '+n+' page'+(n>1?'s':'')}</button>
         <button class="btn sub" id="sgnresume" hidden style="margin-left:8px">Resume</button>
         <button class="copy" id="sgnmanual" style="margin-left:8px">send pages manually instead</button></p>
       <div id="sgnmanifest" hidden></div>`;
-    $("sgngo").addEventListener("click",()=>{ $("sgngo").disabled=true; $("sgnresume").hidden=true; signAllPages(); });
+    if(bulk) $("sgnbulk").addEventListener("click",async()=>{
+      $("sgnbulk").disabled=true; $("sgngo").disabled=true; SGN.done=0;
+      try{ await signAllBulk(bulk); }
+      catch(e){ const msg=String(e?.info||e?.message||e);
+        sgnBulkLine("");
+        const box=$("sgnmanifest"); if(box){ box.hidden=false;
+          box.innerHTML=`<div class="warnbox">Bulk signing didn't go through (${esc(msg)}). Nothing is lost — use
+            <b>“Or sign one at a time”</b> below to finish page by page.</div>`; }
+        $("sgngo").disabled=false; $("sgnbulk").disabled=false; }
+    });
+    $("sgngo").addEventListener("click",()=>{ $("sgngo").disabled=true; if($("sgnbulk"))$("sgnbulk").disabled=true; $("sgnresume").hidden=true; signAllPages(); });
     $("sgnresume").addEventListener("click",()=>{ $("sgnresume").hidden=true; signAllPages(); });
     $("sgnmanual").addEventListener("click",()=>{ CP.active=true; renderChainAssistant(); });
   }catch(e){
