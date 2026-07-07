@@ -806,7 +806,7 @@ function drawShelf(){
 }
 
 /* V2 registry: resolve an NFT (policy.ASSET) or tx-hash -> label 22027 list */
-const REGISTRY_PTR = '8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80.LS_REGISTRY_V3';
+const REGISTRY_PTR = '8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80.LS_REGISTRY_V4';
 const prettify = n => (n||'').replace(/[-_]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
 const hexEnc = s => [...s].map(c=>c.charCodeAt(0).toString(16).padStart(2,'0')).join('');
 const formOf = k => k==='cip25-pages-v1'?'pages':k==='utxo-inline-datum-bytes-v1'?'lock':'chain';
