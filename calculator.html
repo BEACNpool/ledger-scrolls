@@ -289,44 +289,6 @@ body{padding-bottom:96px}
   </div>
 
   <div class="share" id="share"></div>
-
-  <div class="card" style="margin-top:18px">
-    <h2 style="font-size:19px">How a Ledger Scroll works</h2>
-    <p style="font-size:15px">Your file is written <strong>byte-for-byte into Cardano
-    transactions</strong> and sealed by a manifest that no one — including you — can ever
-    spend, edit, or delete. Readers rebuild the file from the chain and verify its SHA-256
-    fingerprint before a single byte is shown.</p>
-    <div class="pack">
-      <div class="packcard"><b>Pages</b>
-        <span class="m">12,160 bytes per transaction</span><br>
-        The file is split into pages riding in ordinary transactions. No tokens, nothing
-        locked per page — just bytes in the ledger's permanent history.</div>
-      <div class="packcard"><b>The manifest</b>
-        <span class="m">one small locked coin, forever</span><br>
-        Lists every page and seals the file's fingerprint. It sits at an address that can
-        never be spent, so every Cardano node carries it, always. Tiny files skip the pages
-        entirely — the whole file fits inside this one locked coin.</div>
-      <div class="packcard"><b>Zero tokens</b>
-        <span class="m">nothing to custody, move, or lose</span><br>
-        The very first scrolls (2026) carried pages in NFTs — still perfectly readable,
-        but ~6× the cost. Today's format needs no tokens at all.</div>
-    </div>
-  </div>
-
-  <details class="assump">
-    <summary>Assumptions &amp; formulas (tap to open)</summary>
-    <p style="margin-top:10px">Estimates use Cardano mainnet parameters (2026):
-    fee = 0.155381 ADA + 0.000044 ADA per byte of transaction; a locked coin carries
-    ≈ 0.00431 ADA per byte of datum. Pages hold 12,160 bytes each
-    (<code>ceil(encoded ÷ 12,160)</code> transactions, plus one manifest per 400 pages).
-    Files that fit in a single datum (≤ ~14 KB) are priced as one locked coin when that's
-    cheaper. Real costs vary a few percent with wallet layout — the mint tools print the
-    exact price before you sign. Gzip here is your browser's; the mint pipeline uses
-    deterministic gzip (<code>gzip -n -9</code>), which may differ by a few bytes.</p>
-    <p>Reference points from live scrolls: the on-chain tutorial (18 KB HTML → 7.4 KB gzip)
-    cost ~0.9 ADA in fees + ~1.6 ADA locked. Full protocol details:
-    <a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/registry/spec">the specs</a>.</p>
-  </details>
 </section>
 
 
@@ -418,6 +380,46 @@ body{padding-bottom:96px}
     </div>
   </div>
 </div>
+
+<section class="section" id="learnsec" hidden>
+  <div class="card">
+    <h2 style="font-size:19px">How a Ledger Scroll works</h2>
+    <p style="font-size:15px">Your file is written <strong>byte-for-byte into Cardano
+    transactions</strong> and sealed by a manifest that no one — including you — can ever
+    spend, edit, or delete. Readers rebuild the file from the chain and verify its SHA-256
+    fingerprint before a single byte is shown.</p>
+    <div class="pack">
+      <div class="packcard"><b>Pages</b>
+        <span class="m">12,160 bytes per transaction</span><br>
+        The file is split into pages riding in ordinary transactions. No tokens, nothing
+        locked per page — just bytes in the ledger's permanent history.</div>
+      <div class="packcard"><b>The manifest</b>
+        <span class="m">one small locked coin, forever</span><br>
+        Lists every page and seals the file's fingerprint. It sits at an address that can
+        never be spent, so every Cardano node carries it, always. Tiny files skip the pages
+        entirely — the whole file fits inside this one locked coin.</div>
+      <div class="packcard"><b>Zero tokens</b>
+        <span class="m">nothing to custody, move, or lose</span><br>
+        The very first scrolls (2026) carried pages in NFTs — still perfectly readable,
+        but ~6× the cost. Today's format needs no tokens at all.</div>
+    </div>
+  </div>
+
+  <details class="assump">
+    <summary>Assumptions &amp; formulas (tap to open)</summary>
+    <p style="margin-top:10px">Estimates use Cardano mainnet parameters (2026):
+    fee = 0.155381 ADA + 0.000044 ADA per byte of transaction; a locked coin carries
+    ≈ 0.00431 ADA per byte of datum. Pages hold 12,160 bytes each
+    (<code>ceil(encoded ÷ 12,160)</code> transactions, plus one manifest per 400 pages).
+    Files that fit in a single datum (≤ ~14 KB) are priced as one locked coin when that's
+    cheaper. Real costs vary a few percent with wallet layout — the mint tools print the
+    exact price before you sign. Gzip here is your browser's; the mint pipeline uses
+    deterministic gzip (<code>gzip -n -9</code>), which may differ by a few bytes.</p>
+    <p>Reference points from live scrolls: the on-chain tutorial (18 KB HTML → 7.4 KB gzip)
+    cost ~0.9 ADA in fees + ~1.6 ADA locked. Full protocol details:
+    <a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/registry/spec">the specs</a>.</p>
+  </details>
+</section>
 
 <section class="section" id="buildersec" hidden>
   <div class="card">
@@ -700,6 +702,7 @@ function statHTML(big, label){ return `<div class="stat"><div class="n">${big}</
 function render(){
   if(!S.enc){ return; }
   $("results").hidden = false;
+  $("learnsec").hidden = false;
   $("buildersec").hidden = false;
   { const bb=$("dlbundle"), bs=$("bundlestat");
     if(bb){ bb.disabled=!S.encBytes;
