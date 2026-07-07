@@ -734,7 +734,7 @@ function mediaGroup(ct){
   if(c.startsWith('audio/'))return '🎧 Audio';
   return '🗃️ Other';
 }
-const GROUP_ORDER=['📜 Chain Scrolls','🔒 Locked Scrolls','🧩 Page-NFT Scrolls','📄 Documents','✍️ Plain Text & Markdown','🖼️ Images','🎬 Video','🎧 Audio','🗂️ Data & Datasets','🗃️ Other'];
+const GROUP_ORDER=['📄 Web Page (HTML)','📝 Markdown','✍️ Plain Text','✍️ Text','📕 PDF','🖼️ PNG Image','🖼️ JPEG Image','🖼️ GIF','🖼️ SVG','🖼️ WebP Image','🖼️ Image','🎬 MP4 Video','🎬 Video','🎧 MP3 Audio','🎧 OGG Audio','🎧 Audio','🗂️ CSV Data','🗂️ JSON','🗃️ Other'];
 let filter='all';
 
 function cardFor(e){
@@ -793,7 +793,7 @@ function drawShelf(){
   for(const e of SHELF){
     if(filter!=='all'&&e.form!==filter)continue;
     if(q && !(e.title+e.desc+e.name).toLowerCase().includes(q))continue;
-    const g = e.contentType ? mediaGroup(e.contentType) : ({chain:'📜 Chain Scrolls',lock:'🔒 Locked Scrolls',pages:'🧩 Page-NFT Scrolls'}[e.form]||'🗃️ Other');
+    const g = typeLabel(e.contentType) || '🗃️ Other';
     if(!groups.has(g))groups.set(g,[]);
     groups.get(g).push(e);
   }
@@ -814,6 +814,36 @@ const prettify = n => (n||'').replace(/[-_]+/g,' ').replace(/\b\w/g,c=>c.toUpper
 const hexEnc = s => [...s].map(c=>c.charCodeAt(0).toString(16).padStart(2,'0')).join('');
 const formOf = k => k==='cip25-pages-v1'?'pages':k==='utxo-inline-datum-bytes-v1'?'lock':'chain';
 const iconOf = f => f==='pages'?'\u{1F9E9}':f==='lock'?'\u{1F512}':'\u{1F4DC}';
+
+function hexName(s){ return [...(s||'')].map(c=>c.charCodeAt(0).toString(16).padStart(2,'0')).join(''); }
+function typeLabel(ct){
+  if(!ct) return null;
+  const c=ct.split(';')[0].trim().toLowerCase();
+  const M={'application/pdf':'📕 PDF','video/mp4':'🎬 MP4 Video','audio/mpeg':'🎧 MP3 Audio','audio/mp3':'🎧 MP3 Audio','audio/ogg':'🎧 OGG Audio','audio/wav':'🎧 WAV Audio','image/png':'🖼️ PNG Image','image/jpeg':'🖼️ JPEG Image','image/gif':'🖼️ GIF','image/webp':'🖼️ WebP Image','image/svg+xml':'🖼️ SVG','text/html':'📄 Web Page (HTML)','text/markdown':'📝 Markdown','text/csv':'🗂️ CSV Data','text/plain':'✍️ Plain Text','application/json':'🗂️ JSON'};
+  if(M[c]) return M[c];
+  if(c.startsWith('video/')) return '🎬 Video';
+  if(c.startsWith('audio/')) return '🎧 Audio';
+  if(c.startsWith('image/')) return '🖼️ Image';
+  if(c.startsWith('text/')) return '✍️ Text';
+  return '🗃️ '+((c.split('/')[1]||c).toUpperCase());
+}
+async function fetchCT(e){
+  try{
+    if(e.form==='pages'){
+      const metaCt = meta => meta&&(meta.mediaType||meta.contentType||meta.mimeType||meta.ct||meta.content_type);
+      const tryAsset = async nameHex => { const inf=await api('/asset_info',{_asset_list:[[e.policy,nameHex]]},true); const a=inf&&inf[0]; if(!a) return null; const g=a.minting_tx_metadata&&a.minting_tx_metadata['721']&&a.minting_tx_metadata['721'][e.policy]; return metaCt(g&&(g[a.asset_name_ascii]||Object.values(g)[0])); };
+      if(e.manifestAsset){ const ct=await tryAsset(hexName(e.manifestAsset)); if(ct) return ct; }
+      const list=await api('/policy_asset_list',{_asset_policy:e.policy},true);
+      const man=(list||[]).find(x=>{ try{ return td.decode(hex2b(x.asset_name||'')).toUpperCase().includes('MANIFEST'); }catch(_){ return false; } });
+      if(man){ const ct=await tryAsset(man.asset_name); if(ct) return ct; }
+      return null;
+    }
+    const dh=await utxoDatumHex(e.txin,true);
+    const man=parseManifest(dh); if(man&&man.contentType) return man.contentType;
+    let b=datumBytes(dh); if(b[0]===0x1f&&b[1]===0x8b){ try{ b=await gunzip(b); }catch(_){} }
+    return sniff(b);
+  }catch(_){ return null; }
+}
 function isRegistryPointer(raw){ const r=(raw||'').trim(); return (r.includes('.')&&/^[0-9a-f]{56}\./i.test(r)) || /^[0-9a-f]{64}$/i.test(r); }
 async function resolveRegistry(input){
   const raw=(input||REGISTRY_PTR).trim();
@@ -841,7 +871,11 @@ async function resolveRegistry(input){
   if($('regtitle')) $('regtitle').textContent=regName;
   if($('reginfo')) $('reginfo').textContent=SHELF.length+' scrolls, pulled live from '+raw.slice(0,20)+'…';
   if($('anchorinfo')) $('anchorinfo').textContent='loaded '+SHELF.length+' scrolls from '+raw.slice(0,16)+'…';
-  filter='all'; drawShelf(); show('library');
+  filter='all'; show('library');
+  const _sh=$('shelf'); if(_sh) _sh.innerHTML='<p style="text-align:center;color:#7f8ba3;padding:34px 0">Reading media types from the chain…</p>';
+  for(let pass=0;pass<2;pass++){ const todo=SHELF.filter(x=>!x.contentType); if(!todo.length) break; for(let i=0;i<todo.length;i+=5){ await Promise.all(todo.slice(i,i+5).map(async en=>{ try{ const ct=await fetchCT(en); if(ct) en.contentType=ct; }catch(_){} })); } }
+  drawShelf();
+  if($('reginfo')) $('reginfo').textContent=SHELF.length+' scrolls · organized by media type · pulled live from chain';
 }
 
 /* ════════════════════════ reader flow ════════════════════════ */
