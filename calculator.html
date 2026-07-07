@@ -152,6 +152,19 @@ details.assump td,details.assump th{border-top:1px solid var(--line);padding:6px
 .wbtn:hover{border-color:var(--accent);transform:translateY(-1px)}
 .wbtn img{width:22px;height:22px;border-radius:5px}
 .netbadge{display:inline-flex;align-items:center;gap:6px;font:700 11.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;border-radius:var(--pill);padding:5px 11px}
+/* connected-wallet control panel (dapp header) */
+#walletctl{margin:14px 0 4px}
+.wconnect{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.wpanel{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:10px 14px;font:600 13.5px/1.4 var(--sans)}
+.wpanel .wname{color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.wpanel .wbal{color:var(--ok);font-weight:700}
+.wpanel .waddr{font-family:var(--mono);font-size:12px;color:var(--muted);word-break:break-all}
+.wpanel .wsp{margin-left:auto}
+.wpanel .wchip{font:600 12px/1 var(--sans);border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:var(--pill);padding:6px 12px;cursor:pointer}
+.wpanel .wchip:hover{border-color:var(--accent);color:var(--accent)}
+.namewrap{margin:12px 0}
+.namewrap label{font:600 13px/1 var(--sans);color:var(--ink-2)}
+.namewrap input{margin-top:5px;width:100%;max-width:420px;font:500 14.5px/1.4 var(--sans);color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:9px 12px}
 .netbadge.main{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent)}
 .netbadge.test{color:var(--violet-ink);background:var(--violet-soft);border:1px solid color-mix(in srgb,var(--violet) 30%,transparent)}
 .mlog{background:#0e1118;border:1px solid #1d2433;border-radius:var(--radius-sm);padding:12px 14px;margin-top:14px;font:12.5px/1.7 var(--mono);color:#c8ceda;max-height:260px;overflow-y:auto}
@@ -294,8 +307,7 @@ details.pg pre{max-height:180px;overflow:auto}
 
 <section class="section" id="mintsec" hidden>
   <div class="card">
-    <h2>⚡ Mint it right now — no node, no command line
-      <span id="walletbadge" hidden style="float:right;font:600 13px/1.9 var(--sans);color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent);border-radius:var(--pill);padding:3px 12px"></span></h2>
+    <h2>⚡ Mint it right now — no node, no command line</h2>
     <p style="font-size:15px">This page can write your file to Cardano <strong>directly from
     your browser wallet</strong> — <b>Eternl</b>, on a laptop. The transaction is built
     locally, your wallet shows you exactly what it spends before you approve, and nothing —
@@ -325,6 +337,7 @@ details.pg pre{max-height:180px;overflow:auto}
       process it — your funds are safe, but the mint won't complete. Fund a fresh hot wallet (a software
       Eternl account) with a few ADA and use that: you're only spending fees, not guarding
       savings. Comfortable at a terminal? The <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI</a> works with any key too.</div>
+    <div id="walletctl"></div>
     <div id="mintbody"></div>
   </div>
 </section>
@@ -995,7 +1008,7 @@ function planTx(net,utxos,datum,changeB,params){
 }
 
 /* ── mint flow ── */
-const M = { wapi:null, wname:"", net:null, params:null, plan:null, datum:null, txid:"", state:"idle", mode:"std", walletKey:"", changeB:null };
+const M = { wapi:null, wname:"", net:null, params:null, plan:null, datum:null, txid:"", state:"idle", mode:"std", walletKey:"", changeB:null, balance:null, addrBech:null };
 
 /* ── mint progress persistence — an interrupted chain mint (reload/crash) keeps
    the page transactions it already paid for; re-drop the same file to resume ── */
@@ -1007,20 +1020,53 @@ function clearResume(){ try{ localStorage.removeItem(RESUME_KEY); }catch(e){ voi
 function loadResume(){ try{ const r=JSON.parse(localStorage.getItem(RESUME_KEY)||"null");
   return (r && Date.now()-r.ts < 7*864e5) ? r : null; }catch(e){ return null; } }
 
-/* ── dapp-feel: a persistent connected-wallet badge + silent re-connect ── */
-function setWalletBadge(name, net){
-  const el=$("walletbadge"); if(!el) return;
-  el.hidden=false; el.textContent=`🟢 ${name} · ${(NETS[net]?.name||"?").split(" ")[0]}`;
-  try{ localStorage.setItem("ls.wallet", M.walletKey||""); }catch(e){ void e; }
+/* ── dapp-feel: a connected-wallet control panel (balance · address · disconnect) ── */
+function decodeBalance(hex){ try{ const [v]=cborD(hexB(hex));
+  return typeof v==="number" ? v : (Array.isArray(v)?v[0]:0); }catch(e){ return null; } }
+async function refreshBalance(){ try{ M.balance=decodeBalance(await M.wapi.getBalance()); }catch(e){ M.balance=null; } renderWalletCtl(); }
+async function connectWallet(key){
+  const w=window.cardano&&window.cardano[key]; if(!w) return;
+  try{
+    M.wapi=await w.enable(); M.walletKey=key; M.wname=w.name||"Eternl";
+    M.net=await M.wapi.getNetworkId(); if(!(M.net in NETS)) throw new Error("Unknown network id "+M.net);
+    try{ localStorage.setItem("ls.wallet",key); }catch(e){ void e; }
+    try{ M.changeB=hexB(await M.wapi.getChangeAddress()); M.addrBech=b32encode(M.net===1?"addr":"addr_test", M.changeB); }catch(e){ void e; }
+    renderWalletCtl(); refreshBalance(); renderMint();
+  }catch(e){ const el=$("walletctl"); if(el) el.innerHTML=`<div class="warnbox">✋ ${esc(String(e.message||e))}</div>`; }
+}
+function disconnectWallet(){
+  M.wapi=null; M.walletKey=""; M.wname=""; M.balance=null; M.addrBech=null; M.state="idle";
+  try{ localStorage.removeItem("ls.wallet"); }catch(e){ void e; }
+  renderWalletCtl(); renderMint();
+}
+function setWalletBadge(){ renderWalletCtl(); }     // legacy calls (from connect flows) now refresh the panel
+function renderWalletCtl(){
+  const el=$("walletctl"); if(!el) return;
+  if(!M.wapi){
+    const wl=listWallets();
+    el.innerHTML = wl.length
+      ? `<div class="wconnect"><button class="btn" id="wc-connect">🔌 Connect ${esc(wl[0].name)}</button>
+         <span style="font-size:13px;color:var(--muted)">Connect once — then it's all buttons from here.</span></div>` : ``;
+    $("wc-connect")?.addEventListener("click",()=>connectWallet(listWallets()[0].key));
+    return;
+  }
+  const net=NETS[M.net];
+  el.innerHTML = `<div class="wpanel">
+    <span class="wname">🟢 ${esc(M.wname)}</span>
+    <span class="netbadge ${net.cls}">${net.name.split(" ")[0]}</span>
+    <span class="wbal">${M.balance!=null?fmtA(M.balance/1e6)+" ADA":"…"}</span>
+    ${M.addrBech?`<span class="waddr">${M.addrBech.slice(0,11)}…${M.addrBech.slice(-6)} <button class="wchip" id="wc-copy" style="padding:3px 9px">copy</button></span>`:""}
+    <span class="wsp"><button class="wchip" id="wc-refresh" title="refresh balance">↻</button> <button class="wchip" id="wc-disc">Disconnect</button></span>
+  </div>`;
+  $("wc-copy")?.addEventListener("click",e=>copyText(e.target,M.addrBech));
+  $("wc-refresh")?.addEventListener("click",refreshBalance);
+  $("wc-disc")?.addEventListener("click",disconnectWallet);
 }
 async function autoReconnect(){
   try{
     const key=localStorage.getItem("ls.wallet");
     const w=key && window.cardano && window.cardano[key];
-    if(w && typeof w.isEnabled==="function" && await w.isEnabled() && /eternl|ccvault/i.test(key+(w.name||""))){
-      M.wapi=await w.enable(); M.walletKey=key; M.wname=w.name||key; M.net=await M.wapi.getNetworkId();
-      if(M.net in NETS) setWalletBadge(M.wname, M.net);
-    }
+    if(w && typeof w.isEnabled==="function" && await w.isEnabled() && /eternl|ccvault/i.test(key+(w.name||""))) await connectWallet(key);
   }catch(e){ void e; }
 }
 const mlog = (cls,msg)=>{ const el=$("mlog"); if(!el) return; const d=document.createElement("div");
@@ -1029,6 +1075,7 @@ const mlog = (cls,msg)=>{ const el=$("mlog"); if(!el) return; const d=document.c
 function renderMint(){
   const sec=$("mintsec"); if(!S.enc){ sec.hidden=true; return; }
   sec.hidden=false;
+  renderWalletCtl();
   const body=$("mintbody");
   if(M.state==="quoted"||M.state==="minting"||M.state==="done") return;   // don't clobber an active flow
   if(SGN.running || (SGN.pages.length && SGN.done>0 && SGN.done<SGN.pages.length)) return;   // don't clobber page-signing
@@ -1042,6 +1089,13 @@ function renderMint(){
      above that, Chain Scroll is far cheaper than locking ~4.4 ADA/KB. */
   const st0=calcStandard(S.enc), ch0=calcChain(S.enc);
   const useStd = !!(st0 && st0.total <= ch0.total);
+  const curName = ($("b_name")?.value)||"";
+  const nameField = `<div class="namewrap"><label for="mint-name">Name your scroll <span style="color:var(--muted);font-weight:400">(optional — shows on your receipt and the Library entry)</span></label>
+    <input id="mint-name" placeholder="my-first-scroll" value="${esc(curName)}" autocomplete="off"></div>`;
+  const wireName = ()=>$("mint-name")?.addEventListener("input",e=>{
+    const v=e.target.value.replace(/[^a-z0-9-]+/gi,"-").replace(/^-+|-+$/g,"").toLowerCase().slice(0,40);
+    if($("b_name")){ $("b_name").value=v; try{ buildOutputs(); }catch(_){ void _; } }
+  });
   if(!useStd){
     const wl=listWallets();
     const sgnPages=Math.max(1,Math.ceil(S.enc/(SGN.SEG*SGN.SPP)));
@@ -1050,6 +1104,7 @@ function renderMint(){
       : `cheaper this way than locking it all in a single coin`;
     const rz=loadResume(); const canResume = !!(rz && rz.sha===S.sha && rz.done>0 && rz.done<rz.pages);
     body.innerHTML=`<div class="cmp">This file is <b>${fmtB(S.enc)}</b> on-chain — ${reason}, so it mints as a <b>Chain Scroll</b>: ${sgnPages} page${sgnPages>1?"s":""} plus one seal.</div>
+      ${nameField}
       ${canResume && wl.length ? `<div class="okbox" style="margin:12px 0">↩ <b>Resume an interrupted mint.</b>
         ${rz.done} of ${rz.pages} pages for this file are already on-chain — pick up where you left off (no double-spending):
         <div class="wbtns" style="margin-top:8px">${wl.map(w=>`<button class="wbtn" data-resume="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} Resume with ${esc(w.name)}</button>`).join("")}</div></div>` : ""}
@@ -1070,6 +1125,7 @@ function renderMint(){
     body.querySelectorAll("[data-sgn]").forEach(b=>b.addEventListener("click",()=>startWalletSign(b.dataset.sgn)));
     body.querySelectorAll("[data-resume]").forEach(b=>b.addEventListener("click",()=>startWalletSign(b.dataset.resume, loadResume())));
     $("cpstart")?.addEventListener("click",renderChainAssistant);
+    wireName();
     return;
   }
   const st=calcStandard(S.enc), ch=calcChain(S.enc);
@@ -1080,6 +1136,7 @@ function renderMint(){
        <a href="#" id="cplink">build it page-by-page with wallet copy-paste instead →</a></div>` : "";
   body.innerHTML = `
     ${cmpNote}
+    ${nameField}
     ${wallets.length ? `
       <p style="margin-top:12px;font-size:15px"><b>Connect a wallet to begin.</b> To rehearse first (rule&nbsp;2),
       switch the wallet to the <b>Preview</b> network and this page follows it — test ADA, free mistakes.</p>
@@ -1094,6 +1151,7 @@ function renderMint(){
     <div id="mintstage"></div>`;
   body.querySelectorAll(".wbtn").forEach(b=>b.addEventListener("click",()=>connectAndQuote(b.dataset.w)));
   $("cplink")?.addEventListener("click",e=>{ e.preventDefault(); renderChainAssistant(); });
+  wireName();
 }
 
 /* ══════════ chain-scroll assistant: copy-paste page txs into any wallet ══════════
@@ -1514,12 +1572,13 @@ function sgnBulkLine(t){ const l=$("sgnline"); if(l) l.textContent=t; }
 async function startWalletSign(key, resume){
   const stage=$("cpstage"); stage.innerHTML=`<div class="cmp">Connecting to ${esc(key)}…</div>`;
   try{
-    M.wapi=await window.cardano[key].enable(); M.wname=window.cardano[key].name||key; M.walletKey=key;
+    M.wapi=(M.wapi && M.walletKey===key)?M.wapi:await window.cardano[key].enable(); M.wname=window.cardano[key].name||key; M.walletKey=key;
     M.net=await M.wapi.getNetworkId();
     if(!(M.net in NETS)) throw new Error("Unknown network id "+M.net);
-    setWalletBadge(M.wname, M.net);
+    setWalletBadge();
     M.params=await fetchNetParams(M.net);
     M.changeB=hexB(await M.wapi.getChangeAddress());
+    try{ M.addrBech=b32encode(M.net===1?"addr":"addr_test", M.changeB); }catch(e){ void e; }
     SGN.pages=buildSignPages(S.encBytes); SGN.spent=new Set();
     if(resume && resume.done>0 && resume.done<SGN.pages.length && resume.net===M.net){
       SGN.done=resume.done; CP.txids=resume.txids.slice();
@@ -1738,11 +1797,11 @@ async function connectAndQuote(key, mode="std"){
   stage.innerHTML=`<div class="cmp">Connecting to ${esc(key)}…</div>`;
   try{
     M.mode = mode;
-    M.wapi = await window.cardano[key].enable();
-    M.wname = window.cardano[key].name||key;
+    M.wapi = (M.wapi && M.walletKey===key) ? M.wapi : await window.cardano[key].enable();
+    M.walletKey = key; M.wname = window.cardano[key].name||key;
     M.net = await M.wapi.getNetworkId();
     if(!(M.net in NETS)) throw new Error("Unknown network id "+M.net);
-    setWalletBadge(M.wname, M.net);
+    setWalletBadge();
     if(mode==="chain" && M.net!==CP.net)
       throw new Error(`Your wallet is on ${NETS[M.net].name} but the pages were verified on ${NETS[CP.net].name} — switch the wallet network (or re-check the pages) so the manifest lands next to its pages.`);
     M.params = await fetchNetParams(M.net);
