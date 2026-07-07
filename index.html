@@ -738,19 +738,16 @@ const GROUP_ORDER=['📄 Web Page (HTML)','📝 Markdown','✍️ Plain Text','�
 let filter='all';
 
 function cardFor(e){
-  const f=FACTS[e.name]||{};
   const facts=[];
-  if(f.size)facts.push(`<span><b>${fmtSize(f.size)}</b></span>`);
-  if(f.pages!==undefined)facts.push(`<span><b>${f.pages===0?'single coin':f.pages+' page'+(f.pages>1?'s':'')}</b></span>`);
-  if(f.minted)facts.push(`<span>minted <b>${f.minted}</b></span>`);
-  if(e.sha256)facts.push(`<span>sha <b>${e.sha256.slice(0,8)}…</b></span>`);
-  facts.push(`<span class="copyhint">&#10697; click&nbsp;=&nbsp;copy pointer</span>`);
+  if(e.sizeBytes)facts.push(`<span><b>${fmtSize(e.sizeBytes)}</b></span>`);
+  if(e.pages!==undefined&&e.pages!==null)facts.push(`<span><b>${e.pages===0?'single coin':e.pages===1?'1 transaction':e.pages+' pages'}</b></span>`);
+  if(e.codec&&e.codec!=='none')facts.push(`<span>${e.codec}</span>`);
+  facts.push(`<span class="copyhint">&#9654; click to read &amp; verify</span>`);
+  const ctShort=(e.contentType||'').split(';')[0];
   const c=document.createElement('div'); c.className='card';
   c.innerHTML=`<div class="ic">${e.icon||'📄'}</div><h3></h3><p></p><div class="tags">
-    <span class="tag form">${e.form}</span>
-    <span class="tag">${(e.contentType||'?').split(';')[0]}</span>
-    ${e.sha256?'<span class="tag">sha ✓ on record</span>':'<span class="tag unv">no hash on record</span>'}
-    ${e._reg?'<span class="tag reg">on-chain registry</span>':''}</div>
+    <span class="tag">${typeLabel(e.contentType)||(ctShort||'reading type…')}</span>
+    ${e.sha256?`<span class="tag ok" title="on-chain SHA-256 — recomputed and checked when you open it">&#128274; ${e.sha256.slice(0,10)}…</span>`:''}</div>
     ${facts.length?`<div class="facts">${facts.join('')}</div>`:''}`;
   c.querySelector('h3').textContent=e.title;
   c.querySelector('p').textContent=e.desc||'';
@@ -827,22 +824,22 @@ function typeLabel(ct){
   if(c.startsWith('text/')) return '✍️ Text';
   return '🗃️ '+((c.split('/')[1]||c).toUpperCase());
 }
-async function fetchCT(e){
+function normSha(x){ let s=String(x||'').replace(/^0x/i,'').toLowerCase(); return /^[0-9a-f]{64}$/.test(s)?s:undefined; }
+async function fetchMeta(e){
   try{
     if(e.form==='pages'){
-      const metaCt = meta => meta&&(meta.mediaType||meta.contentType||meta.mimeType||meta.ct||meta.content_type);
-      const tryAsset = async nameHex => { const inf=await api('/asset_info',{_asset_list:[[e.policy,nameHex]]},true); const a=inf&&inf[0]; if(!a) return null; const g=a.minting_tx_metadata&&a.minting_tx_metadata['721']&&a.minting_tx_metadata['721'][e.policy]; return metaCt(g&&(g[a.asset_name_ascii]||Object.values(g)[0])); };
-      if(e.manifestAsset){ const ct=await tryAsset(hexName(e.manifestAsset)); if(ct) return ct; }
-      const list=await api('/policy_asset_list',{_asset_policy:e.policy},true);
-      const man=(list||[]).find(x=>{ try{ return td.decode(hex2b(x.asset_name||'')).toUpperCase().includes('MANIFEST'); }catch(_){ return false; } });
-      if(man){ const ct=await tryAsset(man.asset_name); if(ct) return ct; }
-      return null;
+      const grab=async nh=>{ const inf=await api('/asset_info',{_asset_list:[[e.policy,nh]]},true); const a=inf&&inf[0]; if(!a) return null; const g=a.minting_tx_metadata&&a.minting_tx_metadata['721']&&a.minting_tx_metadata['721'][e.policy]; return g&&(g[a.asset_name_ascii]||Object.values(g)[0]); };
+      let m=e.manifestAsset?await grab(hexName(e.manifestAsset)):null;
+      if(!m){ const list=await api('/policy_asset_list',{_asset_policy:e.policy},true); const man=(list||[]).find(x=>{ try{ return td.decode(hex2b(x.asset_name||'')).toUpperCase().includes('MANIFEST'); }catch(_){ return false; } }); if(man) m=await grab(man.asset_name); }
+      if(!m) return {};
+      return { ct:m.mediaType||m.contentType||m.mimeType||m.ct||m.content_type, pages:m.pages||m.total_pages, sha256:normSha(m.sha_html||m.sha256||m.sha), sizeBytes:Number(m.source_bytes||m.size)||undefined };
     }
     const dh=await utxoDatumHex(e.txin,true);
-    const man=parseManifest(dh); if(man&&man.contentType) return man.contentType;
+    const man=parseManifest(dh);
+    if(man) return { ct:man.contentType, sizeBytes:Number(man.size)||undefined, sha256:normSha(man.shaDec), pages:(man.pages&&man.pages.length)||1, codec:man.codec };
     let b=datumBytes(dh); if(b[0]===0x1f&&b[1]===0x8b){ try{ b=await gunzip(b); }catch(_){} }
-    return sniff(b);
-  }catch(_){ return null; }
+    return { ct:sniff(b), sizeBytes:b.length, sha256:normSha(await sha256(b)), pages:0 };
+  }catch(_){ return {}; }
 }
 function isRegistryPointer(raw){ const r=(raw||'').trim(); return (r.includes('.')&&/^[0-9a-f]{56}\./i.test(r)) || /^[0-9a-f]{64}$/i.test(r); }
 async function resolveRegistry(input){
@@ -873,7 +870,7 @@ async function resolveRegistry(input){
   if($('anchorinfo')) $('anchorinfo').textContent='loaded '+SHELF.length+' scrolls from '+raw.slice(0,16)+'…';
   filter='all'; show('library');
   const _sh=$('shelf'); if(_sh) _sh.innerHTML='<p style="text-align:center;color:#7f8ba3;padding:34px 0">Reading media types from the chain…</p>';
-  for(let pass=0;pass<2;pass++){ const todo=SHELF.filter(x=>!x.contentType); if(!todo.length) break; for(let i=0;i<todo.length;i+=5){ await Promise.all(todo.slice(i,i+5).map(async en=>{ try{ const ct=await fetchCT(en); if(ct) en.contentType=ct; }catch(_){} })); } }
+  for(let pass=0;pass<2;pass++){ const todo=SHELF.filter(x=>!x.contentType); if(!todo.length) break; for(let i=0;i<todo.length;i+=5){ await Promise.all(todo.slice(i,i+5).map(async en=>{ try{ const md=await fetchMeta(en); if(md.ct)en.contentType=md.ct; if(md.sizeBytes)en.sizeBytes=md.sizeBytes; if(md.sha256)en.sha256=md.sha256; if(md.pages!==undefined&&md.pages!==null)en.pages=md.pages; if(md.codec)en.codec=md.codec; }catch(_){} })); } }
   drawShelf();
   if($('reginfo')) $('reginfo').textContent=SHELF.length+' scrolls · organized by media type · pulled live from chain';
 }
