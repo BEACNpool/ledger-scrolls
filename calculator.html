@@ -1631,7 +1631,9 @@ async function signAllBulk(bulk){
   const funding=[...utxos].sort((a,b)=>b.coin-a.coin)[0];
   if(!funding) throw new Error("No plain-ADA UTxO in the wallet to fund the mint.");
   const txs=buildChainedTxs(M.net, funding, M.changeB, M.params);
-  const reqs=txs.map(t=>({ cbor: bHex(catB([u8([0x84]), t.body, u8([0xa0]), u8([0xf5]), t.aux||u8([0xf6])])), partialSign:false }));
+  /* partialSign MUST be true: pages 2..N spend the previous page's not-yet-on-chain output,
+     so the wallet can't resolve those inputs to fully witness — it just adds our key. */
+  const reqs=txs.map(t=>({ cbor: bHex(catB([u8([0x84]), t.body, u8([0xa0]), u8([0xf5]), t.aux||u8([0xf6])])), partialSign:true }));
   sgnBulkLine("approve all "+txs.length+" transactions in "+esc(M.wname)+" — one prompt…");
   let wits;
   try{ wits=await bulk.sign(reqs); }
@@ -1678,18 +1680,19 @@ async function startWalletSign(key, resume){
         <span style="font-size:13px;color:var(--muted)">&nbsp;connected: ${esc(M.wname)}${M.params.live?"":" · fallback fee params"}</span></p>
       <div class="cmp">Your file is <b>${n} page${n>1?"s":""}</b> + 1 seal = <b>${total} transactions</b>. The page
         builds every one; your wallet just signs. Budget ≈ <b>${fmtA(feeGuess)} ADA</b> in fees plus the seal.</div>
-      ${bulk?`<p style="margin:6px 0 2px;font-weight:600">${esc(M.wname)} supports bulk signing — do all ${total} in one approval:</p>
-        <p><button class="btn" id="sgnbulk">⚡ Sign all ${total} transactions — one approval</button></p>
-        <p style="font-size:12.5px;color:var(--muted);margin:4px 0 10px">Uses CIP-103. If your wallet balks, use the one-at-a-time button below.</p>`:""}
       <div class="prog"><span id="sgncount">0 of ${n} pages on chain</span>
         <span class="bar"><span id="sgnbar" style="width:0%"></span></span></div>
       ${SGN.pages.map(p=>`<div class="pg" id="sgnrow-${p.i}" style="padding:10px 14px;display:flex;align-items:center;gap:10px">
         <b style="font:600 14px/1 var(--sans)">Page ${p.i} of ${p.n}</b>
         <span class="pgchip wait" style="margin-left:auto">queued</span></div>`).join("")}
       <p id="sgnline" style="font-size:13px;color:var(--muted);margin:8px 0 0"></p>
-      <p style="margin-top:12px"><button class="btn ${bulk?'sub':''}" id="sgngo">✍️ ${bulk?'Or sign one at a time':'Start signing — '+n+' page'+(n>1?'s':'')}</button>
-        <button class="btn sub" id="sgnresume" hidden style="margin-left:8px">Resume</button>
-        <button class="copy" id="sgnmanual" style="margin-left:8px">send pages manually instead</button></p>
+      <p style="margin-top:14px"><button class="btn" id="sgngo">✍️ Start minting — sign each transaction</button>
+        <button class="btn sub" id="sgnresume" hidden style="margin-left:8px">Resume</button></p>
+      <p style="font-size:12.5px;color:var(--muted);margin:6px 0 0">Your wallet asks for your spending password once per transaction — ${n} page${n>1?"s":""}, then the seal. This is the reliable path; each transaction confirms before the next.</p>
+      ${bulk?`<p style="margin-top:12px"><button class="btn sub" id="sgnbulk">⚡ Advanced: try one approval (CIP-103)</button>
+        <span style="font-size:12px;color:var(--muted)">&nbsp;experimental — signs all ${total} at once; if your wallet can't chain, it falls back to one-at-a-time.</span></p>`
+        :`<span id="sgnbulk" hidden></span>`}
+      <p style="margin-top:12px"><button class="copy" id="sgnmanual">send pages manually instead</button></p>
       <div id="sgnmanifest" hidden></div>`;
     if(bulk) $("sgnbulk").addEventListener("click",async()=>{
       $("sgnbulk").disabled=true; $("sgngo").disabled=true; SGN.done=0;
@@ -1697,8 +1700,9 @@ async function startWalletSign(key, resume){
       catch(e){ const msg=String(e?.info||e?.message||e);
         sgnBulkLine("");
         const box=$("sgnmanifest"); if(box){ box.hidden=false;
-          box.innerHTML=`<div class="warnbox">Bulk signing didn't go through (${esc(msg)}). Nothing is lost — use
-            <b>“Or sign one at a time”</b> below to finish page by page.</div>`; }
+          box.innerHTML=`<div class="warnbox">One-approval signing didn't go through (${esc(msg)}). Nothing was spent — click
+            <b>“✍️ Start minting — sign each transaction”</b> ${SGN.done>0?"or <b>Resume</b> ":""}above to finish page by page (this way always works).</div>`; }
+        if(SGN.done>0) $("sgnresume").hidden=false;
         $("sgngo").disabled=false; $("sgnbulk").disabled=false; }
     });
     $("sgngo").addEventListener("click",()=>{ $("sgngo").disabled=true; if($("sgnbulk"))$("sgnbulk").disabled=true; $("sgnresume").hidden=true; signAllPages(); });
