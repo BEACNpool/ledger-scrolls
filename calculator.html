@@ -197,6 +197,31 @@ details.pg pre{max-height:180px;overflow:auto}
 .wsub li{margin:3px 0}
 .footer{border-top:1px solid var(--line);margin-top:28px;padding:26px 0 44px;font-size:14px;color:var(--muted)}
 .warnbox{margin-top:14px;padding:12px 16px;border-radius:var(--radius-sm);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);color:#6d4d0a;font-size:14px}
+/* guided mint wizard */
+.wizstep{margin-top:16px}
+.wizhd{display:flex;align-items:center;gap:11px;font:800 19px/1.25 var(--sans);color:var(--ink)}
+.wizhd .wizn{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:800 15px/1 var(--sans);color:#fff;background:linear-gradient(145deg,var(--accent),#1f44ff)}
+.wizsub{margin:8px 0 4px;font-size:14.5px;color:var(--ink-2)}
+.wizbtns{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+.wizbtns .btn.ghost{background:var(--surface);color:var(--ink-2);border-color:var(--line-2)}
+.wizbtns .btn.ghost:hover{border-color:var(--accent);color:var(--accent)}
+.wizbtns .spacer{margin-left:auto}
+#detailform{margin-top:14px}
+#detailform .field label{font:600 13px/1.3 var(--sans);color:var(--ink-2);display:block;margin-bottom:5px}
+/* fixed bottom progress bar */
+#wizbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--line-2);box-shadow:0 -4px 20px rgba(20,22,30,.06)}
+.wizbar-inner{max-width:720px;margin:0 auto;padding:10px 18px 12px}
+.wizbar-track{height:6px;border-radius:var(--pill);background:var(--line);overflow:hidden}
+.wizbar-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--ok));transition:width .35s var(--ease)}
+.wizbar-steps{display:flex;gap:8px;margin-top:9px}
+.wizbar-step{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:none;border:0;cursor:pointer;font:600 13px/1 var(--sans);color:var(--muted);padding:2px}
+.wizbar-step b{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font:800 11px/1 var(--sans);color:var(--muted);background:var(--line)}
+.wizbar-step.cur{color:var(--accent-ink)}.wizbar-step.cur b{color:#fff;background:var(--accent)}
+.wizbar-step.done{color:var(--ok)}.wizbar-step.done b{color:#fff;background:var(--ok)}
+.wizbar-step.done b::after{content:"✓";font-size:11px}.wizbar-step.done b{font-size:0}
+.wizbar-step:disabled{cursor:default;opacity:.65}
+@media(max-width:560px){.wizbar-step span{display:none}}
+body{padding-bottom:96px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
@@ -312,42 +337,97 @@ details.pg pre{max-height:180px;overflow:auto}
     your browser wallet</strong> — <b>Eternl</b>, on a laptop. The transaction is built
     locally, your wallet shows you exactly what it spends before you approve, and nothing —
     not the file, not a key — ever leaves your machine except the signed transaction itself.</p>
-    <details class="assump" style="margin-top:12px">
-      <summary>Never used Cardano? Start here (10 minutes, three steps)</summary>
-      <ol class="steps" style="margin-top:10px">
-        <li><b>Get a wallet.</b> Install <a href="https://eternl.io">Eternl</a> (desktop browser
-          extension or mobile app). Write the seed phrase on paper — it <i>is</i> the wallet.</li>
-        <li><b>Fund it.</b> Buy ADA on any exchange and withdraw to your wallet's
-          <i>receive address</i>. Drop your file above first — the price it shows plus a couple
-          of ADA for fees is your funding target.</li>
-        <li><b>Come back here in the wallet's browser.</b> Desktop: the same browser as the
-          extension. Mobile: open this page inside the wallet app's built-in dApp browser.
-          Then drop your file and follow the buttons — the page does the rest and proves the
-          result back to you from the chain.</li>
-      </ol>
-      <p style="font-size:13.5px;color:var(--muted);margin-top:8px">Plain truth about privacy:
-      a scroll is forever and unsigned by default, but the transaction that minted it traces to
-      the wallet that paid — and exchange accounts are identity-verified. If <i>who minted it</i>
-      must stay secret, have someone you trust mint it for you: the SHA-256 proves your bytes
-      arrived untouched no matter whose wallet paid the fee.</p>
-    </details>
-    <div class="warnbox" style="margin-top:12px">🔑 <strong>Using a hardware wallet (Ledger / Trezor)?</strong>
-      Mint from a <strong>software wallet instead.</strong> A scroll transaction carries far more data than
-      an everyday payment, and hardware wallets can freeze or <em>reboot</em> mid-signing when they try to
-      process it — your funds are safe, but the mint won't complete. Fund a fresh hot wallet (a software
-      Eternl account) with a few ADA and use that: you're only spending fees, not guarding
-      savings. Comfortable at a terminal? The <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI</a> works with any key too.</div>
     <div id="walletctl"></div>
-    <div id="mintbody"></div>
+
+    <!-- STEP 1 · CONNECT -->
+    <div class="wizstep" id="wiz1">
+      <div class="wizhd"><span class="wizn">1</span> Connect your wallet</div>
+      <p class="wizsub">Click <b>Connect</b> above — your wallet just approves the link, <b>no funds move</b>. Once you're connected we'll walk you through naming and minting.</p>
+      <details class="assump" style="margin-top:12px">
+        <summary>Never used Cardano? Start here (10 minutes, three steps)</summary>
+        <ol class="steps" style="margin-top:10px">
+          <li><b>Get a wallet.</b> Install <a href="https://eternl.io">Eternl</a> (desktop browser
+            extension or mobile app). Write the seed phrase on paper — it <i>is</i> the wallet.</li>
+          <li><b>Fund it.</b> Buy ADA on any exchange and withdraw to your wallet's
+            <i>receive address</i>. Drop your file above first — the price it shows plus a couple
+            of ADA for fees is your funding target.</li>
+          <li><b>Come back here in the wallet's browser.</b> Desktop: the same browser as the
+            extension. Mobile: open this page inside the wallet app's built-in dApp browser.
+            Then drop your file and follow the buttons — the page does the rest and proves the
+            result back to you from the chain.</li>
+        </ol>
+        <p style="font-size:13.5px;color:var(--muted);margin-top:8px">Plain truth about privacy:
+        a scroll is forever and unsigned by default, but the transaction that minted it traces to
+        the wallet that paid — and exchange accounts are identity-verified. If <i>who minted it</i>
+        must stay secret, have someone you trust mint it for you: the SHA-256 proves your bytes
+        arrived untouched no matter whose wallet paid the fee.</p>
+      </details>
+      <div class="warnbox" style="margin-top:12px">🔑 <strong>Using a hardware wallet (Ledger / Trezor)?</strong>
+        Mint from a <strong>software wallet instead.</strong> A scroll transaction carries far more data than
+        an everyday payment, and hardware wallets can freeze or <em>reboot</em> mid-signing when they try to
+        process it — your funds are safe, but the mint won't complete. Fund a fresh hot wallet (a software
+        Eternl account) with a few ADA and use that: you're only spending fees, not guarding
+        savings. Comfortable at a terminal? The <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI</a> works with any key too.</div>
+      <p style="font-size:13px;color:var(--muted);margin-top:12px">On a wallet that can't connect here (some mobile or hardware setups)?
+        <a href="#" id="manualstart">Skip ahead and mint page-by-page manually →</a></p>
+    </div>
+
+    <!-- STEP 2 · DETAILS -->
+    <div class="wizstep" id="wiz2" hidden>
+      <div class="wizhd"><span class="wizn">2</span> Name your scroll</div>
+      <p class="wizsub">All optional — this becomes your scroll's public label, its receipt, and its
+      registry entry. Skip anything and sensible defaults fill in (the filename becomes the id).</p>
+      <div class="builder-grid" id="detailform">
+        <div class="field"><label for="b_name">Scroll id (kebab-case)</label>
+          <input type="text" id="b_name" placeholder="my-first-scroll"></div>
+        <div class="field"><label for="b_title">Title</label>
+          <input type="text" id="b_title" placeholder="My First Scroll"></div>
+        <div class="field wide"><label for="b_desc">Description</label>
+          <textarea id="b_desc" rows="2" placeholder="What is this, for a reader in 2050?"></textarea></div>
+        <div class="field"><label for="b_author">Author / publisher</label>
+          <input type="text" id="b_author" placeholder="anonymous"></div>
+        <div class="field"><label for="b_ct">Content type</label>
+          <input type="text" id="b_ct" placeholder="text/plain; charset=utf-8"></div>
+        <div class="field"><label for="b_channel">Publisher channel <span class="note">(optional — unforgeable byline)</span></label>
+          <input type="text" id="b_channel" placeholder="MY_CHANNEL"></div>
+        <div class="field"><label for="b_issue">Issue number <span class="note">(if channel)</span></label>
+          <input type="number" id="b_issue" min="0" placeholder="0"></div>
+      </div>
+      <div class="wizbtns">
+        <button class="btn ghost" type="button" data-wiz="1">← Back</button>
+        <button class="btn" type="button" id="wiz2next">Continue to mint →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 · MINT -->
+    <div class="wizstep" id="wiz3" hidden>
+      <div class="wizhd"><span class="wizn">3</span> Mint on Cardano — forever</div>
+      <div id="mintbody"></div>
+      <div class="wizbtns"><button class="btn ghost" type="button" data-wiz="2">← Back to details</button></div>
+    </div>
   </div>
 </section>
 
+<div id="wizbar" hidden aria-label="mint progress">
+  <div class="wizbar-inner">
+    <div class="wizbar-track"><div class="wizbar-fill" id="wizfill"></div></div>
+    <div class="wizbar-steps">
+      <button class="wizbar-step" type="button" data-goto="1"><b>1</b><span>Connect</span></button>
+      <button class="wizbar-step" type="button" data-goto="2"><b>2</b><span>Details</span></button>
+      <button class="wizbar-step" type="button" data-goto="3"><b>3</b><span>Mint</span></button>
+    </div>
+  </div>
+</div>
+
 <section class="section" id="buildersec" hidden>
   <div class="card">
-    <h2>Metadata builder</h2>
-    <p>Answer a few questions and get copy-paste artifacts: your <strong>registry entry</strong>
-    (with the file's real SHA-256 already computed), the <strong>mint commands</strong>, and —
-    if you're publishing under a channel — the <strong>channel issue metadata</strong>.</p>
+    <details class="assump" id="advbuild">
+      <summary>🛠️ Advanced — command-line export &amp; registry artifacts</summary>
+      <p style="margin-top:10px">Prefer to mint from a terminal, or want the copy-paste artifacts? Everything below is
+      generated from the details you entered above: your <strong>registry entry</strong> (with the file's real
+      SHA-256 already computed), the <strong>mint commands</strong>, the optional <strong>channel issue metadata</strong>,
+      and a downloadable <strong>build bundle</strong> — the same artifacts as the command-line <code>prepare.py</code>.
+      None of this is needed for the browser mint above.</p>
 
     <div class="out" id="bundlebox" style="border:1.5px solid var(--accent);background:var(--accent-soft)">
       <h4 style="font-size:16px">&#128230; Build the whole scroll — one download</h4>
@@ -356,23 +436,6 @@ details.pg pre{max-height:180px;overflow:auto}
       Download the <code>.zip</code>, then mint every page with a single command. Nothing is uploaded.</p>
       <button class="btn" id="dlbundle" disabled>&#11015; Build scroll bundle (.zip)</button>
       <span id="bundlestat" style="margin-left:10px;font-size:13.5px;color:var(--muted)">drop a file above to enable</span>
-    </div>
-
-    <div class="builder-grid">
-      <div class="field"><label for="b_name">Scroll id (kebab-case)</label>
-        <input type="text" id="b_name" placeholder="my-first-scroll"></div>
-      <div class="field"><label for="b_title">Title</label>
-        <input type="text" id="b_title" placeholder="My First Scroll"></div>
-      <div class="field wide"><label for="b_desc">Description</label>
-        <textarea id="b_desc" rows="2" placeholder="What is this, for a reader in 2050?"></textarea></div>
-      <div class="field"><label for="b_author">Author / publisher</label>
-        <input type="text" id="b_author" placeholder="anonymous"></div>
-      <div class="field"><label for="b_ct">Content type</label>
-        <input type="text" id="b_ct" placeholder="text/plain; charset=utf-8"></div>
-      <div class="field"><label for="b_channel">Publisher channel <span class="note">(optional — unforgeable byline)</span></label>
-        <input type="text" id="b_channel" placeholder="MY_CHANNEL"></div>
-      <div class="field"><label for="b_issue">Issue number <span class="note">(if channel)</span></label>
-        <input type="number" id="b_issue" min="0" placeholder="0"></div>
     </div>
 
     <div class="out"><h4>Registry entry <button class="copy" data-for="o_reg">copy</button></h4><pre id="o_reg"></pre></div>
@@ -388,6 +451,7 @@ details.pg pre{max-height:180px;overflow:auto}
     edit, no delete, no takedown. Strip EXIF/document metadata, keep the file self-contained,
     rehearse on testnet, and verify the reconstruction hash before announcing.
     Read <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">Your First Scroll</a>.</div>
+    </details>
   </div>
 </section>
 
@@ -478,7 +542,7 @@ const mediaByExt = ext => MEDIA.find(m => m.exts.includes(ext)) || MEDIA[MEDIA.l
 
 /* ══════════ state & helpers ══════════ */
 const $ = id => document.getElementById(id);
-const S = { raw:0, enc:0, codec:"none", ct:"", name:"", sha:"", shaEnc:"", price:null, priceSrc:"none", media:null };
+const S = { raw:0, enc:0, codec:"none", ct:"", name:"", sha:"", shaEnc:"", price:null, priceSrc:"none", media:null, wiz:1, manual:false };
 const fmtB = n => n >= 1048576 ? (n/1048576).toFixed(2)+" MB" : n >= 1024 ? (n/1024).toFixed(1)+" KB" : n+" B";
 const fmtA = n => n >= 1000 ? Math.round(n).toLocaleString("en-US") : n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2);
 const fmtN = n => n.toLocaleString("en-US");
@@ -622,6 +686,14 @@ $("file").addEventListener("change", e => e.target.files[0] && analyzeFile(e.tar
 ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("drag"); }));
 drop.addEventListener("drop", e => e.dataTransfer.files[0] && analyzeFile(e.dataTransfer.files[0]));
 
+/* wizard navigation: back buttons, "continue to mint", and the bottom progress bar */
+document.addEventListener("click", e=>{
+  const back=e.target.closest("[data-wiz]"); if(back){ setWiz(+back.dataset.wiz); return; }
+  const go=e.target.closest(".wizbar-step"); if(go && !go.disabled){ setWiz(+go.dataset.goto); return; }
+});
+$("wiz2next")?.addEventListener("click",()=>setWiz(3));
+$("manualstart")?.addEventListener("click",e=>{ e.preventDefault(); S.manual=true; setWiz(3); });
+
 /* ══════════ render results ══════════ */
 function statHTML(big, label){ return `<div class="stat"><div class="n">${big}</div><div class="l">${label}</div></div>`; }
 
@@ -659,7 +731,7 @@ function render(){
       ? "Written as a <b>single locked coin</b> — your whole file fits inside the manifest itself, readable from any Cardano node with one query, forever."
       : `Written as <b>${fmtN(ch.pages)} page transaction${ch.pages > 1 ? "s" : ""}</b> plus ${ch.links > 1 ? fmtN(ch.links) + " locked manifests" : "one locked manifest"} that lists every page and seals the file's SHA-256 fingerprint.`}</div>`;
 
-  renderMint();
+  renderWiz();
 
   const what = S.name ? `“${esc(S.name)}” (${fmtB(S.raw)})` : `${fmtB(S.raw)} of ${esc(S.media.label)}`;
   $("share").innerHTML = `<span>&#128226; ${what} &rarr; &approx; <b>${fmtA(best.total)} ADA</b>
@@ -1031,13 +1103,15 @@ async function connectWallet(key){
     M.net=await M.wapi.getNetworkId(); if(!(M.net in NETS)) throw new Error("Unknown network id "+M.net);
     try{ localStorage.setItem("ls.wallet",key); }catch(e){ void e; }
     try{ M.changeB=hexB(await M.wapi.getChangeAddress()); M.addrBech=b32encode(M.net===1?"addr":"addr_test", M.changeB); }catch(e){ void e; }
-    renderWalletCtl(); refreshBalance(); renderMint();
+    if((S.wiz||1)<2) S.wiz=2;                          // connecting advances the wizard to "details"
+    refreshBalance(); renderWiz();
   }catch(e){ const el=$("walletctl"); if(el) el.innerHTML=`<div class="warnbox">✋ ${esc(String(e.message||e))}</div>`; }
 }
 function disconnectWallet(){
   M.wapi=null; M.walletKey=""; M.wname=""; M.balance=null; M.addrBech=null; M.state="idle";
+  S.wiz=1;
   try{ localStorage.removeItem("ls.wallet"); }catch(e){ void e; }
-  renderWalletCtl(); renderMint();
+  renderWiz();
 }
 function setWalletBadge(){ renderWalletCtl(); }     // legacy calls (from connect flows) now refresh the panel
 function renderWalletCtl(){
@@ -1072,11 +1146,32 @@ async function autoReconnect(){
 const mlog = (cls,msg)=>{ const el=$("mlog"); if(!el) return; const d=document.createElement("div");
   d.className=cls; d.textContent=msg; el.appendChild(d); el.scrollTop=el.scrollHeight; };
 
-function renderMint(){
-  const sec=$("mintsec"); if(!S.enc){ sec.hidden=true; return; }
+/* ── guided 3-step wizard: 1 connect · 2 details · 3 mint ── */
+function setWiz(n){ S.wiz=n; renderWiz(); const sec=$("mintsec"); if(sec && !sec.hidden){ const t=$("wiz"+n); if(t) t.scrollIntoView({behavior:"smooth",block:"start"}); } }
+function renderWiz(){
+  const sec=$("mintsec"), bar=$("wizbar");
+  if(!S.enc){ if(sec) sec.hidden=true; if(bar) bar.hidden=true; return; }
   sec.hidden=false;
   renderWalletCtl();
-  const body=$("mintbody");
+  let n=S.wiz||1;
+  if(!M.wapi && !S.manual) n=1;                       // can't advance past connect without a wallet (or manual mode)
+  else if(M.wapi && n<2) n=2;                          // once connected, never sit on the connect step
+  S.wiz=n;
+  ["1","2","3"].forEach(k=>{ const el=$("wiz"+k); if(el) el.hidden = (k!==String(n)); });
+  if(n===3) renderMint();
+  bar.hidden=false;
+  const fill=$("wizfill"); if(fill) fill.style.width=((n-1)/2*100)+"%";
+  const unlocked = M.wapi || S.manual;
+  bar.querySelectorAll(".wizbar-step").forEach(b=>{
+    const s=+b.dataset.goto;
+    b.classList.toggle("done", s<n);
+    b.classList.toggle("cur", s===n);
+    b.disabled = (s>n) || (s>1 && !unlocked);          // can't jump ahead; nothing past connect until connected/manual
+  });
+}
+function renderMint(){
+  if(!S.enc) return;
+  const body=$("mintbody"); if(!body) return;
   if(M.state==="quoted"||M.state==="minting"||M.state==="done") return;   // don't clobber an active flow
   if(SGN.running || (SGN.pages.length && SGN.done>0 && SGN.done<SGN.pages.length)) return;   // don't clobber page-signing
   if(!S.encBytes){
@@ -1089,13 +1184,6 @@ function renderMint(){
      above that, Chain Scroll is far cheaper than locking ~4.4 ADA/KB. */
   const st0=calcStandard(S.enc), ch0=calcChain(S.enc);
   const useStd = !!(st0 && st0.total <= ch0.total);
-  const curName = ($("b_name")?.value)||"";
-  const nameField = `<div class="namewrap"><label for="mint-name">Name your scroll <span style="color:var(--muted);font-weight:400">(optional — shows on your receipt and the Library entry)</span></label>
-    <input id="mint-name" placeholder="my-first-scroll" value="${esc(curName)}" autocomplete="off"></div>`;
-  const wireName = ()=>$("mint-name")?.addEventListener("input",e=>{
-    const v=e.target.value.replace(/[^a-z0-9-]+/gi,"-").replace(/^-+|-+$/g,"").toLowerCase().slice(0,40);
-    if($("b_name")){ $("b_name").value=v; try{ buildOutputs(); }catch(_){ void _; } }
-  });
   if(!useStd){
     const wl=listWallets();
     const sgnPages=Math.max(1,Math.ceil(S.enc/(SGN.SEG*SGN.SPP)));
@@ -1104,7 +1192,6 @@ function renderMint(){
       : `cheaper this way than locking it all in a single coin`;
     const rz=loadResume(); const canResume = !!(rz && rz.sha===S.sha && rz.done>0 && rz.done<rz.pages);
     body.innerHTML=`<div class="cmp">This file is <b>${fmtB(S.enc)}</b> on-chain — ${reason}, so it mints as a <b>Chain Scroll</b>: ${sgnPages} page${sgnPages>1?"s":""} plus one seal.</div>
-      ${nameField}
       ${canResume && wl.length ? `<div class="okbox" style="margin:12px 0">↩ <b>Resume an interrupted mint.</b>
         ${rz.done} of ${rz.pages} pages for this file are already on-chain — pick up where you left off (no double-spending):
         <div class="wbtns" style="margin-top:8px">${wl.map(w=>`<button class="wbtn" data-resume="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} Resume with ${esc(w.name)}</button>`).join("")}</div></div>` : ""}
@@ -1125,7 +1212,6 @@ function renderMint(){
     body.querySelectorAll("[data-sgn]").forEach(b=>b.addEventListener("click",()=>startWalletSign(b.dataset.sgn)));
     body.querySelectorAll("[data-resume]").forEach(b=>b.addEventListener("click",()=>startWalletSign(b.dataset.resume, loadResume())));
     $("cpstart")?.addEventListener("click",renderChainAssistant);
-    wireName();
     return;
   }
   const st=calcStandard(S.enc), ch=calcChain(S.enc);
@@ -1136,12 +1222,11 @@ function renderMint(){
        <a href="#" id="cplink">build it page-by-page with wallet copy-paste instead →</a></div>` : "";
   body.innerHTML = `
     ${cmpNote}
-    ${nameField}
     ${wallets.length ? `
-      <p style="margin-top:12px;font-size:15px"><b>Connect a wallet to begin.</b> To rehearse first (rule&nbsp;2),
-      switch the wallet to the <b>Preview</b> network and this page follows it — test ADA, free mistakes.</p>
+      <p style="margin-top:4px;font-size:15px">Your file fits in a <b>single locked coin</b> — one transaction to sign.
+      To rehearse first (rule&nbsp;2), switch the wallet to the <b>Preview</b> network and this page follows it — test ADA, free mistakes.</p>
       <div class="wbtns">${wallets.map(w=>`
-        <button class="wbtn" data-w="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} ${esc(w.name)}</button>`).join("")}
+        <button class="wbtn" data-w="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} ${M.wapi?"Mint now with ":"Mint with "}${esc(w.name)}</button>`).join("")}
       </div>
       ${hwNote()}`
     : `<div class="warnbox" style="margin-top:12px">No <a href="https://eternl.io">Eternl</a> wallet found in
@@ -1151,7 +1236,6 @@ function renderMint(){
     <div id="mintstage"></div>`;
   body.querySelectorAll(".wbtn").forEach(b=>b.addEventListener("click",()=>connectAndQuote(b.dataset.w)));
   $("cplink")?.addEventListener("click",e=>{ e.preventDefault(); renderChainAssistant(); });
-  wireName();
 }
 
 /* ══════════ chain-scroll assistant: copy-paste page txs into any wallet ══════════
