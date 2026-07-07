@@ -856,8 +856,6 @@ function show(view){
   for(const v of ['library','reader','channel']) $(v).style.display = v===view?'block':'none';
   $('about').style.display = view==='home'?'block':'none';
   $('truststrip').style.display = view==='home'?'grid':'none';
-  $('tab-home').setAttribute('aria-selected', String(view==='home'));
-  $('tab-library').setAttribute('aria-selected', String(view==='library'));
   if(viewing)window.scrollTo({top:0});
 }
 
