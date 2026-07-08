@@ -585,8 +585,8 @@ function applyPacking(spp, meta){
   // keep fee model overhead consistent with denser pages
   P.chainTxOverhead = Math.max(200, estimatePageTxBytes(spp) - PACK.page);
   if(meta && meta.maxTx){ PACK.MAX_TX = meta.maxTx; PACK.maxTxLive = !!meta.live; }
-  if(typeof SGN !== "undefined" && SGN) SGN.SPP = spp;
-  if(typeof BND !== "undefined" && BND){ BND.SPP = spp; BND.PAGE = spp * BND.SEG; }
+  // NOTE: SGN/BND are consts declared later in this script (TDZ) — never touch them
+  // here. They re-sync from PACK at their use sites (buildSignPages, buildBundle).
 }
 const P = {
   feeB: 0.155381, feeA: 0.000044,          // ADA; fee = feeB + feeA*txBytes
@@ -1042,6 +1042,41 @@ function b32encode(hrp,bytes){ let acc=0,bits=0; const d5=[];
   for(let p=0;p<6;p++) chk.push((mod>>>(5*(5-p)))&31);
   return hrp+"1"+d5.concat(chk).map(i=>B32C[i]).join(""); }
 
+/* ── sha-256 (sync; FIPS 180-4) — page "sha" fields need a hash inside sync
+      tx-building code paths where crypto.subtle's promise can't reach ── */
+const SHA256K = new Uint32Array([0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]);
+function sha256Bytes(input){
+  const len=input.length, bitLenHi=Math.floor(len/0x20000000), bitLenLo=(len<<3)>>>0;
+  const padded=new Uint8Array((((len+8)>>6)+1)<<6);
+  padded.set(input); padded[len]=0x80;
+  const dv=new DataView(padded.buffer);
+  dv.setUint32(padded.length-8, bitLenHi); dv.setUint32(padded.length-4, bitLenLo);
+  const H=new Int32Array([0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]);
+  const w=new Int32Array(64);
+  const rr=(x,n)=>(x>>>n)|(x<<(32-n));
+  for(let off=0; off<padded.length; off+=64){
+    for(let t=0;t<16;t++) w[t]=dv.getInt32(off+t*4);
+    for(let t=16;t<64;t++){
+      const s0=rr(w[t-15],7)^rr(w[t-15],18)^(w[t-15]>>>3);
+      const s1=rr(w[t-2],17)^rr(w[t-2],19)^(w[t-2]>>>10);
+      w[t]=(w[t-16]+s0+w[t-7]+s1)|0;
+    }
+    let a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+    for(let t=0;t<64;t++){
+      const S1=rr(e,6)^rr(e,11)^rr(e,25), ch=(e&f)^(~e&g);
+      const t1=(h+S1+ch+SHA256K[t]+w[t])|0;
+      const S0=rr(a,2)^rr(a,13)^rr(a,22), maj=(a&b)^(a&c)^(b&c);
+      const t2=(S0+maj)|0;
+      h=g; g=f; f=e; e=(d+t1)|0; d=c; c=b; b=a; a=(t1+t2)|0;
+    }
+    H[0]=(H[0]+a)|0; H[1]=(H[1]+b)|0; H[2]=(H[2]+c)|0; H[3]=(H[3]+d)|0;
+    H[4]=(H[4]+e)|0; H[5]=(H[5]+f)|0; H[6]=(H[6]+g)|0; H[7]=(H[7]+h)|0;
+  }
+  const out=new Uint8Array(32), odv=new DataView(out.buffer);
+  for(let t=0;t<8;t++) odv.setInt32(t*4, H[t]);
+  return out;
+}
+
 /* ── blake2b-256 (public-domain blakejs construction) ── */
 const B2IV = new Uint32Array([0xf3bcc908,0x6a09e667,0x84caa73b,0xbb67ae85,0xfe94f82b,0x3c6ef372,0x5f1d36f1,0xa54ff53a,0xade682d1,0x510e527f,0x2b3e6c1f,0x9b05688c,0xfb41bd6b,0x1f83d9ab,0x137e2179,0x5be0cd19]);
 const B2S = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,10,4,8,9,15,13,6,1,12,0,2,11,7,5,3,11,8,12,0,5,2,15,13,10,14,3,6,7,1,9,4,7,9,3,1,13,12,11,14,2,6,5,10,4,0,15,8,9,0,5,7,2,4,10,15,14,1,11,12,6,8,3,13,2,12,6,10,0,11,8,3,4,13,7,5,15,14,1,9,12,5,1,15,14,13,4,10,0,7,6,3,9,2,8,11,13,11,7,14,12,1,3,9,5,0,15,4,8,6,2,10,6,15,14,9,11,3,0,8,12,2,13,7,1,4,10,5,10,2,8,4,7,6,1,5,15,11,9,14,3,12,13,0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,10,4,8,9,15,13,6,1,12,0,2,11,7,5,3].map(x=>x*2);
@@ -1159,7 +1194,10 @@ async function fetchNetParams(net){
     const p = rows?.[0]||{};
     const out = {
       a:+p.min_fee_a||44, b:+p.min_fee_b||155381, cpb:+p.coins_per_utxo_size||4310,
-      maxTx:+p.max_tx_size||PACK.MAX_TX, live:!!rows?.[0]
+      // clamp: a bogus/inflated value (proxy bug, field mix-up) must never
+      // shape real txs — accept a genuinely lower limit, never a higher one
+      maxTx:(+p.max_tx_size>=4096)?Math.min(+p.max_tx_size,16384):PACK.MAX_TX,
+      live:!!rows?.[0]
     };
     // densest safe packing for this network + live fee curve
     P.feeA = out.a / 1e6; P.feeB = out.b / 1e6; P.utxoPerByte = out.cpb / 1e6;
@@ -1677,7 +1715,7 @@ function renderMint(){
   const useStd = !!(st0 && st0.total <= ch0.total);
   if(!useStd){
     const wl=listWallets();
-    const sgnPages=Math.max(1,Math.ceil(S.enc/(SGN.SEG*SGN.SPP)));
+    const sgnPages=Math.max(1,Math.ceil(S.enc/(PACK.SEG*PACK.spp)));
     const seals=Math.max(1,Math.ceil(sgnPages/SGN.MAX_PER_MAN));
     const totalTx=sgnPages+seals;
     const feeGuess=fee(estimatePageTxBytes(PACK.spp, sgnPages))*sgnPages + 2.0*seals;
@@ -2024,16 +2062,21 @@ function buildSignPages(bytes){
     const payload=bytes.subarray(i*PG,Math.min((i+1)*PG,bytes.length));
     const segs=[];
     for(let o=0;o<payload.length;o+=SGN.SEG) segs.push(payload.subarray(o,Math.min(o+SGN.SEG,payload.length)));
-    pages.push({ i:i+1, n, segs });
+    pages.push({ i:i+1, n, segs, sha:sha256Bytes(payload) });
   }
   return pages;
 }
 /* auxiliary data (Alonzo tag-259): { 0: { 22025: {"v":2,"i":i,"n":n,"sha":bytes,"p":[bytes]} } } */
 function pageAux(p){
-  // canonical CBOR map key order (lexicographic keys as strings): i, n, p, sha, v — sha optional
-  // Match prepare.py field set when sha present; omit sha to keep aux smaller (still valid).
-  const md = catB([cMp(4), cS("i"),cU(p.i), cS("n"),cU(p.n),
-                   cS("p"), catB([cAr(p.segs.length), ...p.segs.map(cBy)]), cS("v"),cU(2)]);
+  // canonical CBOR map key order (lexicographic keys as strings): i, n, p, sha, v.
+  // sha (32-byte page-payload SHA-256) matches prepare.py and the conformance
+  // reconstructor, which requires it; the size estimator budgets for it.
+  const md = p.sha
+    ? catB([cMp(5), cS("i"),cU(p.i), cS("n"),cU(p.n),
+            cS("p"), catB([cAr(p.segs.length), ...p.segs.map(cBy)]),
+            cS("sha"), cBy(p.sha), cS("v"),cU(2)])
+    : catB([cMp(4), cS("i"),cU(p.i), cS("n"),cU(p.n),
+            cS("p"), catB([cAr(p.segs.length), ...p.segs.map(cBy)]), cS("v"),cU(2)]);
   const meta = catB([cMp(1), cU(22025), md]);
   return catB([cTg(259), cMp(1), cU(0), meta]);
 }
@@ -2059,7 +2102,15 @@ function planPage(ins0, auxBytes, auxHash, selfB, params){
     if(nf<=fee){ fee=nf; break; } fee=Math.max(fee,nf);
   }
   const out=sum-fee;
-  return { ins, out, fee, body:encPageBody(ins,selfB,out,fee,auxHash) };
+  const body=encPageBody(ins,selfB,out,fee,auxHash);
+  // Dense packing leaves only a few hundred bytes of slack: a fragmented
+  // wallet that needs several inputs/witnesses can push the tx over the
+  // network limit. Retrying cannot help (same UTxO set → same tx), so fail
+  // with the action that does.
+  const finalSize=3+body.length+dummyWitLen(new Set(ins.map(i=>i.addrHex)).size+1)+auxBytes.length;
+  if(finalSize>PACK.MAX_TX)
+    throw new Error(`This page transaction would be ${finalSize} bytes — over the network's ${PACK.MAX_TX}-byte limit, because your ADA is spread across ${ins.length} small UTxOs. Fix: send your full balance to yourself once in your wallet (consolidating it into one UTxO), wait for it to confirm, then press Resume — already-minted pages are safe and won't be re-paid.`);
+  return { ins, out, fee, body };
 }
 const utxoKey=u=>bHex(u.txh)+"#"+u.ix;
 async function freshSpendable(){

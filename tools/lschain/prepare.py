@@ -128,7 +128,11 @@ def fetch_max_tx_size(network: str = "mainnet") -> int:
             with urllib.request.urlopen(url, timeout=8) as r:
                 rows = json.loads(r.read().decode())
             if rows and rows[0].get("max_tx_size"):
-                return int(rows[0]["max_tx_size"])
+                live = int(rows[0]["max_tx_size"])
+                # Clamp: accept a genuinely lower limit, never an inflated one
+                # (a bogus large value would make every page tx oversized).
+                if live >= 4096:
+                    return min(live, DEFAULT_MAX_TX_SIZE)
         except (urllib.error.URLError, TimeoutError, ValueError, KeyError, IndexError, json.JSONDecodeError):
             continue
     return DEFAULT_MAX_TX_SIZE

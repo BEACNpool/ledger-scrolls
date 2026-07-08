@@ -1,6 +1,12 @@
 /* Ledger Scrolls PWA shell — caches UI assets only.
-   Never caches chain data or user files. Scroll bytes stay on Cardano. */
-const CACHE = "ls-shell-v1";
+   Never caches chain data or user files. Scroll bytes stay on Cardano.
+
+   HTML is NETWORK-FIRST: the mint page builds and signs real mainnet
+   transactions, so a deploy must reach users on their next load. The cache is
+   only an offline fallback. Static assets (svg/webmanifest/txt) are
+   cache-first with background revalidation. Bump CACHE on every deploy that
+   changes SHELL semantics. */
+const CACHE = "ls-shell-v2";
 const SHELL = [
   "./",
   "./index.html",
@@ -10,6 +16,11 @@ const SHELL = [
   "./media.html",
   "./robots.txt",
 ];
+
+const isHtml = (req, url) =>
+  req.mode === "navigate" ||
+  url.pathname.endsWith("/") ||
+  url.pathname.endsWith(".html");
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -33,11 +44,29 @@ self.addEventListener("fetch", (event) => {
   if (/koios|blockfrost|coingecko|cardanoscan/i.test(url.hostname)) return;
   // Same-origin shell only
   if (url.origin !== self.location.origin) return;
+
+  if (isHtml(req, url)) {
+    // Network-first: fresh mint logic whenever online; cache only as offline fallback.
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Static assets: cache-first with background revalidation.
   event.respondWith(
     caches.match(req).then((hit) => {
       const fetchPromise = fetch(req)
         .then((res) => {
-          if (res && res.ok && url.pathname.match(/\.(html|svg|webmanifest|js|css)$/)) {
+          if (res && res.ok) {
             const copy = res.clone();
             caches.open(CACHE).then((c) => c.put(req, copy));
           }
