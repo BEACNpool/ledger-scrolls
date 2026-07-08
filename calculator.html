@@ -681,6 +681,8 @@ function questionsDone(){
   if(!S.q.forever) return false;
   if(!S.q.net) return false;
   if((isFilmish() || isLargeFile()) && !S.q.sizeOk) return false;
+  // answered-but-blocking: "not ready" answers must not unlock the mint step
+  if(S.q.forever==="no" || S.q.sizeOk==="later") return false;
   return true;
 }
 const fmtB = n => n >= 1048576 ? (n/1048576).toFixed(2)+" MB" : n >= 1024 ? (n/1024).toFixed(1)+" KB" : n+" B";
@@ -759,6 +761,7 @@ async function analyzeFile(file){
   M.state = "idle"; M.txid = ""; M.mode = "std";        // new file → fresh mint flow
   CP.active = false; CP.pages = []; CP.txids = []; CP.checked = false;
   SGN.pages = []; SGN.done = 0; SGN.spent = new Set(); SGN.running = false;
+  SGN.sealTxids = []; SGN.feesSpent = 0; SGN.startedAt = 0;   // stale seals from a previous scroll must never be "skipped as landed"
   resetQuestions(); S.wiz = 1; S.manual = false;
   const isImg = /^image\/(jpe?g|png|webp)$/i.test(file.type||"");
   let metaStripped=false, ctOverride=null;
@@ -781,7 +784,7 @@ async function analyzeFile(file){
       gzNote = `${fmtB(gz.byteLength)} (${Math.round(100-100*gz.byteLength/S.raw)}% smaller) — codec: gzip`;
     } else gzNote = gz ? "gzip didn't help — codec: none" : "browser can't gzip — sizes shown uncompressed";
   }
-  $("kv").innerHTML = `
+  let kvHtml = `
     <dt>File</dt><dd>${esc(file.name)}</dd>
     <dt>Detected type</dt><dd>${esc(S.ct)} <span style="color:var(--faint)">· ${esc(media.tip)}</span></dd>
     <dt>Original size</dt><dd>${fmtB(S.raw)} (${fmtN(S.raw)} bytes)</dd>
@@ -792,23 +795,25 @@ async function analyzeFile(file){
     <dt>Gzip trial</dt><dd>${gzNote}</dd>
     <dt>SHA-256 (original)</dt><dd>${S.sha}</dd>
     ${S.codec==="gzip" ? `<dt>SHA-256 (gzip)</dt><dd>${S.shaEnc}</dd>` : ""}`;
-  $("stripmeta")?.addEventListener("change",e=>{ S.stripMeta=e.target.checked; if(S.file) analyzeFile(S.file); });
   // Dense packing + film preflight (encode smaller before mint to cut ADA & signatures)
   const ch0 = calcChain(S.enc);
   const pagesGuess = ch0.pages, sealsGuess = ch0.links, totalSig = pagesGuess + sealsGuess;
-  $("kv").innerHTML += `<dt>Dense packing</dt><dd>${P.chainSegs}×64 B = ${fmtB(P.chainPage)}/page ·
+  kvHtml += `<dt>Dense packing</dt><dd>${P.chainSegs}×64 B = ${fmtB(P.chainPage)}/page ·
     <b>${fmtN(pagesGuess)}</b> page${pagesGuess>1?"s":""}${sealsGuess>1?` + ${sealsGuess} seals`:""} ·
     est. <b>${fmtA(ch0.total)} ADA</b>${S.price?` (~$${(ch0.total*S.price).toFixed(2)})`:""}
     ${PACK.maxTxLive?"":" · live max_tx applied when wallet connects"}</dd>`;
   if(pagesGuess > 1 && /video\//i.test(S.ct||"")){
     const half = calcChain(Math.ceil(S.enc/2));
-    $("kv").innerHTML += `<dt>Film mint path</dt><dd><b>Chain Scroll</b> via Eternl — <b>${fmtN(totalSig)}</b> signature${totalSig>1?"s":""} (resume-safe).
+    kvHtml += `<dt>Film mint path</dt><dd><b>Chain Scroll</b> via Eternl — <b>${fmtN(totalSig)}</b> signature${totalSig>1?"s":""} (resume-safe).
       Encode smaller before mint (same forever guarantee): half the bytes ≈ <b>${fmtA(half.total)} ADA</b> / ${fmtN(half.pages+half.links)} sigs.
       Tips: ≤480p, CRF 28–32, <code>-movflags +faststart</code>, prefer WebM/AV1 when you can.
       ${pagesGuess>150?`<br><span style="color:var(--warn)">⚠ Long session — laptop + Eternl extension; leave this tab open.</span>`:""}</dd>`;
   } else if(pagesGuess > 20){
-    $("kv").innerHTML += `<dt>Browser mint</dt><dd>Chain Scroll · ${fmtN(totalSig)} Eternl signatures (pages + seal). Gzip applied when it shrinks the file.</dd>`;
+    kvHtml += `<dt>Browser mint</dt><dd>Chain Scroll · ${fmtN(totalSig)} Eternl signatures (pages + seal). Gzip applied when it shrinks the file.</dd>`;
   }
+  // one write, THEN bind — innerHTML += would destroy the listener's node
+  $("kv").innerHTML = kvHtml;
+  $("stripmeta")?.addEventListener("change",e=>{ S.stripMeta=e.target.checked; if(S.file) analyzeFile(S.file); });
   $("analysis").classList.add("show");
   if($("b_ct")) $("b_ct").value = S.ct;
   if($("b_name") && !$("b_name").value) $("b_name").value = file.name.replace(/\.[^.]+$/,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40) || "my-scroll";
@@ -831,6 +836,7 @@ function analyzeManual(){
   M.state = "idle"; M.txid = ""; M.mode = "std";
   CP.active = false; CP.pages = []; CP.txids = []; CP.checked = false;
   SGN.pages = []; SGN.done = 0; SGN.spent = new Set(); SGN.running = false;
+  SGN.sealTxids = []; SGN.feesSpent = 0; SGN.startedAt = 0;   // stale seals from a previous scroll must never be "skipped as landed"
   resetQuestions(); S.wiz = 1; S.manual = false;
   if(media.gz){ S.codec = "gzip"; S.enc = Math.round(bytes * 0.33); }  // typical 3:1 for text
   else { S.codec = "none"; S.enc = bytes; }
@@ -930,6 +936,16 @@ function render(){
 ["b_name","b_title","b_desc","b_author","b_ct","b_channel","b_issue"].forEach(id =>
   $(id)?.addEventListener("input", buildOutputs));
 
+/* Truncate to a UTF-8 BYTE budget (Cardano metadata strings are ≤64 bytes,
+   not 64 characters — String.slice would let CJK/emoji through oversized). */
+function truncUtf8(s, max=64){
+  s=String(s);
+  const enc=new TextEncoder();
+  while(s && enc.encode(s).length>max) s=s.slice(0,-1);
+  // never end on a lone high surrogate — it would encode as U+FFFD on-chain
+  if(s && /[\uD800-\uDBFF]$/.test(s)) s=s.slice(0,-1);
+  return s;
+}
 function splitLines(s, max=64){
   const out = []; let cur = "";
   for(const w of s.split(/\s+/)){
@@ -1188,7 +1204,15 @@ async function kapi(net,path,body,method){
   }
   throw lastErr || new Error("chain API unreachable");
 }
+const NETP_CACHE={};  // epoch_params change ~once per 5-day epoch; don't refetch per step
 async function fetchNetParams(net){
+  const hit=NETP_CACHE[net];
+  if(hit && Date.now()-hit.ts < 600e3){
+    const out=hit.out;
+    P.feeA = out.a / 1e6; P.feeB = out.b / 1e6; P.utxoPerByte = out.cpb / 1e6;
+    applyPacking(maxSegmentsPerPage(out.maxTx, PACK.SAFETY), { maxTx: out.maxTx, live: out.live });
+    return out;
+  }
   try{
     const rows = await kapi(net,"/epoch_params?order=epoch_no.desc&limit=1");
     const p = rows?.[0]||{};
@@ -1202,6 +1226,7 @@ async function fetchNetParams(net){
     // densest safe packing for this network + live fee curve
     P.feeA = out.a / 1e6; P.feeB = out.b / 1e6; P.utxoPerByte = out.cpb / 1e6;
     applyPacking(maxSegmentsPerPage(out.maxTx, PACK.SAFETY), { maxTx: out.maxTx, live: out.live });
+    if(out.live) NETP_CACHE[net]={ out, ts:Date.now() };
     return out;
   }catch(e){ return { a:44, b:155381, cpb:4310, maxTx:PACK.MAX_TX, live:false }; }
 }
@@ -1393,6 +1418,9 @@ const M = { wapi:null, wname:"", net:null, params:null, plan:null, datum:null, t
 const RESUME_KEY="ls.mint.v1";
 function saveResume(){ try{ localStorage.setItem(RESUME_KEY, JSON.stringify({
   sha:S.sha, net:M.net, txids:CP.txids.slice(), done:SGN.done, pages:SGN.pages.length,
+  // packing must be pinned: resuming with a different segments-per-page would
+  // re-chunk the file at new byte offsets and mint corrupt pages
+  spp:SGN.SPP, seg:SGN.SEG, maxTx:PACK.MAX_TX, sealTxids:(SGN.sealTxids||[]).slice(),
   name:S.name, enc:S.enc, ts:Date.now() })); }catch(e){ void e; } }
 function clearResume(){ try{ localStorage.removeItem(RESUME_KEY); }catch(e){ void e; } }
 function loadResume(){ try{ const r=JSON.parse(localStorage.getItem(RESUME_KEY)||"null");
@@ -1512,9 +1540,12 @@ function renderCoach(){
     if(!S.q.net) missing.push("network");
     if((isFilmish()||isLargeFile()) && !S.q.sizeOk) missing.push("file size");
     if(!S.q.forever) missing.push("permanence");
+    const blocked = S.q.forever==="no" || S.q.sizeOk==="later";
     coachSay("Step 2 of 3 — Questions",
       missing.length===3 ? "Answer a few quick questions so I route this correctly."
-        : `Still need: <b>${missing.join(", ")}</b>.`,
+        : missing.length ? `Still need: <b>${missing.join(", ")}</b>.`
+        : blocked ? "You answered “not ready” — change that answer above when you are; nothing mints until then."
+        : "Almost there — finish the questions above.",
       useStd
         ? `Your file is small enough for a single-transaction mint (~${fmtA(st.total)} ADA).`
         : `This will be a Chain Scroll: ~${fmtN(ch.pages)} page signatures + seal, about ${fmtA(ch.total)} ADA.`,
@@ -1652,8 +1683,10 @@ function renderWiz1Body(){
       <p style="font-size:13px;color:var(--muted);margin-top:8px">Tip: fund this wallet with a little more than the estimate above.</p>`;
     $("wiz1connect")?.addEventListener("click",()=>connectWallet(wl[0].key));
   } else {
-    el.innerHTML = noWalletHelpHTML();
-    bindNoWalletHelp();
+    // The connect help (and its #nowallet/#wc-* ids) is already rendered by
+    // renderWalletCtl() in the panel above — injecting a second copy here
+    // duplicated DOM ids and left this copy's buttons dead.
+    el.innerHTML = `<p style="font-size:13px;color:var(--muted)">No wallet detected — follow the connect steps in the wallet panel above. This updates automatically when a wallet appears.</p>`;
     startWalletPoll();
   }
 }
@@ -1723,7 +1756,9 @@ function renderMint(){
     const reason = S.enc > P.stdMax
       ? `bigger than the ~14 KB one-tx Standard Scroll`
       : `cheaper as pages than locking the whole file`;
-    const rz=loadResume(); const canResume = !!(rz && rz.sha===S.sha && rz.done>0 && rz.done<rz.pages);
+    // done===pages with a live record means pages finished but sealing didn't —
+    // that interruption must be resumable too (landed seals are skipped, not re-paid)
+    const rz=loadResume(); const canResume = !!(rz && rz.sha===S.sha && rz.done>0 && rz.done<=rz.pages);
     const isFilm=/video\//i.test(S.ct||"");
     const connected = !!(M.wapi && M.walletKey);
     const balNote = (M.balance!=null)
@@ -2054,7 +2089,7 @@ function downloadPacket(){
 /* MAX_PER_MAN: page hashes per locked manifest (~spec ~400; 350 leaves headroom under 16 KB).
    SPP tracks PACK.spp (dense auto-pack). */
 const SGN = { SEG:PACK.SEG, SPP:PACK.spp, MAX_PER_MAN:350, pages:[], done:0, spent:new Set(), running:false,
-  paused:false, feesSpent:0, startedAt:0, lastFee:0 };
+  paused:false, feesSpent:0, startedAt:0, lastFee:0, sealTxids:[] };
 function buildSignPages(bytes){
   SGN.SPP = PACK.spp; SGN.SEG = PACK.SEG;
   const PG=SGN.SEG*SGN.SPP, n=Math.max(1,Math.ceil(bytes.length/PG)), pages=[];
@@ -2118,18 +2153,50 @@ async function freshSpendable(){
   return raw.filter(u=>!SGN.spent.has(utxoKey(u)));
 }
 async function waitIfPaused(){
-  while(SGN.paused && SGN.running){
-    updateMintDash("paused");
-    await new Promise(r=>setTimeout(r,400));
-  }
+  if(SGN.paused && SGN.running) updateMintDash("paused");
+  // no re-render per tick: the dash nodes are stable, rebuilding them 2.5×/s
+  // would replace the Resume button under the user's cursor
+  while(SGN.paused && SGN.running){ await new Promise(r=>setTimeout(r,400)); }
 }
+/* Dashboard shell is built ONCE (stable nodes, listeners bound once);
+   updateMintDash only writes text/width into it. */
 function ensureMintDash(){
   let d=$("mintdash");
   if(d) return d;
   const host=$("cpstage")||$("mintbody");
   if(!host) return null;
   d=document.createElement("div"); d.id="mintdash"; d.className="dash";
+  d.innerHTML=`
+    <div style="font:700 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#8ea2ff">Live mint dashboard</div>
+    <div class="drow">
+      <div class="dstat">Pages<b id="dash-pages"></b></div>
+      <div class="dstat">Progress<b id="dash-pct"></b></div>
+      <div class="dstat">Fees so far<b id="dash-fees"></b></div>
+      <div class="dstat">ETA<b id="dash-eta"></b></div>
+      <div class="dstat">Est. remaining<b id="dash-est"></b></div>
+    </div>
+    <div class="dbar"><span id="dash-bar" style="width:0%"></span></div>
+    <p id="dash-msg" style="margin:10px 0 0;font:13px/1.4 var(--sans);color:#c8ceda"></p>
+    <p style="margin:10px 0 0;display:flex;flex-wrap:wrap;gap:8px">
+      <button type="button" class="btn sub" id="dash-pause"></button>
+      <button type="button" class="btn ghost" id="dash-export">⬇ Export progress JSON</button>
+    </p>`;
   host.insertBefore(d, host.firstChild);
+  d.querySelector("#dash-pause").addEventListener("click",()=>{
+    SGN.paused=!SGN.paused;
+    if(!SGN.paused && !SGN.running && SGN.done<SGN.pages.length) signAllPages();
+    updateMintDash(SGN.paused?"paused":"sign");
+  });
+  d.querySelector("#dash-export").addEventListener("click",()=>{
+    const blob=new Blob([JSON.stringify({
+      sha:S.sha, name:S.name, done:SGN.done, pages:SGN.pages.length, txids:CP.txids.slice(),
+      sealTxids:(SGN.sealTxids||[]).slice(), spp:SGN.SPP, maxTx:PACK.MAX_TX,
+      feesSpent:SGN.feesSpent, net:M.net, ts:Date.now()
+    },null,2)],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    a.download=`mint-progress-${(S.name||"scroll").replace(/[^a-zA-Z0-9._-]+/g,"_")}.json`;
+    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  });
   return d;
 }
 function updateMintDash(phase){
@@ -2142,41 +2209,20 @@ function updateMintDash(phase){
   const etaMin=Math.max(0, Math.ceil(left*rate/60));
   const feesAda=(SGN.feesSpent||0)/1e6;
   const estLeft=left * ((SGN.lastFee||estimatePageTxBytes(PACK.spp,n)*44+155381)/1e6);
-  d.innerHTML=`
-    <div style="font:700 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#8ea2ff">Live mint dashboard</div>
-    <div class="drow">
-      <div class="dstat">Pages<b>${done} / ${n}</b></div>
-      <div class="dstat">Progress<b>${pct}%</b></div>
-      <div class="dstat">Fees so far<b>${fmtA(feesAda)} ₳</b></div>
-      <div class="dstat">ETA<b>${SGN.paused?"paused":(left?("~"+etaMin+"m"):"seal next")}</b></div>
-      <div class="dstat">Est. remaining<b>~${fmtA(estLeft)} ₳</b></div>
-    </div>
-    <div class="dbar"><span style="width:${pct}%"></span></div>
-    <p style="margin:10px 0 0;font:13px/1.4 var(--sans);color:#c8ceda">${
-      phase==="paused" ? "⏸ Paused — no new signatures until you resume."
-      : phase==="waiting" ? "Waiting for Eternl to see the previous transaction…"
-      : phase==="sign" ? "→ Approve the open Eternl popup."
-      : phase==="done-pages" ? "All pages on chain — seal when ready."
-      : "Minting… leave this tab open."
-    }</p>
-    <p style="margin:10px 0 0;display:flex;flex-wrap:wrap;gap:8px">
-      <button type="button" class="btn sub" id="dash-pause">${SGN.paused?"▶ Resume signing":"⏸ Pause after this page"}</button>
-      <button type="button" class="btn ghost" id="dash-export">⬇ Export progress JSON</button>
-    </p>`;
-  $("dash-pause")?.addEventListener("click",()=>{
-    SGN.paused=!SGN.paused;
-    if(!SGN.paused && !SGN.running && SGN.done<SGN.pages.length) signAllPages();
-    updateMintDash(SGN.paused?"paused":"sign");
-  });
-  $("dash-export")?.addEventListener("click",()=>{
-    const blob=new Blob([JSON.stringify({
-      sha:S.sha, name:S.name, done:SGN.done, pages:SGN.pages.length, txids:CP.txids.slice(),
-      feesSpent:SGN.feesSpent, net:M.net, ts:Date.now()
-    },null,2)],{type:"application/json"});
-    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-    a.download=`mint-progress-${(S.name||"scroll").replace(/[^a-zA-Z0-9._-]+/g,"_")}.json`;
-    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
-  });
+  const put=(id,txt)=>{ const el=d.querySelector("#"+id); if(el) el.textContent=txt; };
+  put("dash-pages", `${done} / ${n}`);
+  put("dash-pct", pct+"%");
+  put("dash-fees", fmtA(feesAda)+" ₳");
+  put("dash-eta", SGN.paused?"paused":(left?("~"+etaMin+"m"):"seal next"));
+  put("dash-est", "~"+fmtA(estLeft)+" ₳");
+  const bar=d.querySelector("#dash-bar"); if(bar) bar.style.width=pct+"%";
+  put("dash-msg",
+    phase==="paused" ? "⏸ Paused — no new signatures until you resume."
+    : phase==="waiting" ? "Waiting for Eternl to see the previous transaction…"
+    : phase==="sign" ? "→ Approve the open Eternl popup."
+    : phase==="done-pages" ? "All pages on chain — seal when ready."
+    : "Minting… leave this tab open.");
+  put("dash-pause", SGN.paused?"▶ Resume signing":"⏸ Pause after this page");
 }
 async function signAllPages(){
   if(SGN.running) return; SGN.running=true; SGN.paused=false;
@@ -2281,13 +2327,31 @@ async function sealChainManifests(){
     const CHUNK=SGN.MAX_PER_MAN;
     const chunks=[];
     for(let i=0;i<allTxids.length;i+=CHUNK) chunks.push(allTxids.slice(i,i+CHUNK));
+    // Pages are verified from the chain BEFORE the first seal: once sealed, a
+    // corrupt or missing page is locked in forever. Read-only, waits out indexer lag.
+    mlog("h","── verifying every page from the chain before sealing");
+    await verifyPagesBack();
     mlog("h",`── sealing ${allTxids.length} pages in ${chunks.length} manifest${chunks.length>1?"s":""} on ${NETS[M.net].name}`);
+    SGN.sealTxids = SGN.sealTxids||[];
     let nextPtr=null, headTxid=null, lastPlan=null, lastDatum=null;
     // last chunk first so next pointers resolve
     for(let c=chunks.length-1; c>=0; c--){
+      if(SGN.sealTxids[c]){
+        // this seal already landed in an earlier attempt — never mint it twice
+        mlog("ok",`seal ${chunks.length-c}/${chunks.length} already on chain ✓ ${SGN.sealTxids[c].slice(0,16)}… (skipped)`);
+        nextPtr={ txHash:SGN.sealTxids[c], ix:0 };
+        if(c===0) headTxid=SGN.sealTxids[c];
+        continue;
+      }
       const hashes=chunks[c].map(hexB);
       const datum=buildManifestDatum(hashes, nextPtr);
-      const utxos=parseWalletUtxos(await M.wapi.getUtxos()).filter(u=>!SGN.spent.has(utxoKey(u)));
+      // wait for the wallet to index the previous seal's change (same discipline as pages)
+      let utxos=(await freshSpendable()), waited=0;
+      while(!utxos.length && waited<180){
+        mlog("",`waiting for ${M.wname} to see the previous transaction… (${waited}s)`);
+        await new Promise(r=>setTimeout(r,5000)); waited+=5; utxos=await freshSpendable();
+      }
+      if(!utxos.length) throw new Error("wallet shows no spendable ADA yet — give it ~30s, then click Retry seal (already-landed seals are skipped).");
       const plan=planTx(M.net, utxos, datum, M.changeB, M.params);
       mlog("",`manifest ${chunks.length-c}/${chunks.length}: ${chunks[c].length} pages · lock ${(plan.lockCoin/1e6).toFixed(2)} ADA · fee ${(plan.fee/1e6).toFixed(3)} ADA${nextPtr?" · next→"+nextPtr.txHash.slice(0,12)+"…":""}`);
       mlog("",`approve seal ${chunks.length-c} of ${chunks.length} in ${M.wname}…`);
@@ -2299,21 +2363,21 @@ async function sealChainManifests(){
       const wid=await M.wapi.submitTx(bHex(signed));
       const txid=(typeof wid==="string" && /^[0-9a-f]{64}$/i.test(wid)) ? wid.toLowerCase() : localTxid;
       plan.ins.forEach(i=>SGN.spent.add(utxoKey(i)));
+      SGN.sealTxids[c]=txid; saveResume();   // survives a mid-sequence failure/reload
       mlog("ok",`seal ${chunks.length-c}/${chunks.length} submitted ✓ ${txid.slice(0,16)}…`);
       nextPtr={ txHash:txid, ix:0 };
       if(c===0){ headTxid=txid; lastPlan=plan; lastDatum=datum; }
-      // brief settle so next seal sees change
-      if(c>0) await new Promise(r=>setTimeout(r,4000));
     }
     CP.hashB=allTxids.map(hexB);
     CP.txids=allTxids;
     M.txid=headTxid;
-    M.plan=lastPlan;
-    M.datum=lastDatum;
+    // all-seals-skipped retry: keep the previous plan/datum rather than nulling
+    // them (receipts would otherwise record 0 lock/fee and clobber the vault entry)
+    if(lastPlan) M.plan=lastPlan;
+    if(lastDatum) M.datum=lastDatum;
     M.state="minting";
     mlog("h","── verifying from the chain (never announce before this passes)");
-    clearResume();
-    await verifyBack();
+    await verifyBack();  // clearResume happens in mintSuccess, only after this passes
   }catch(e){
     const msg=String(e?.info||e?.message||e);
     mlog("err","✗ "+msg);
@@ -2413,15 +2477,31 @@ async function startWalletSign(key, resume){
     M.net=await M.wapi.getNetworkId();
     if(!(M.net in NETS)) throw new Error("Unknown network id "+M.net);
     setWalletBadge();
-    M.params=await fetchNetParams(M.net);
-    M.changeB=hexB(await M.wapi.getChangeAddress());
+    // independent round-trips (Koios + two wallet-bridge calls) — run together
+    const [params, chgHex, balHex] = await Promise.all([
+      fetchNetParams(M.net),
+      M.wapi.getChangeAddress(),
+      M.wapi.getBalance().catch(()=>null),
+    ]);
+    M.params=params; M.changeB=hexB(chgHex);
     try{ M.addrBech=b32encode(M.net===1?"addr":"addr_test", M.changeB); }catch(e){ void e; }
-    try{ M.balance=decodeBalance(await M.wapi.getBalance()); }catch(e){ M.balance=null; }
+    M.balance = balHex ? decodeBalance(balHex) : null;
+    if(resume && resume.done>0){
+      // Resume MUST re-create the exact page boundaries of the original mint.
+      if(!(resume.spp>=1 && resume.spp<=400))
+        throw new Error("This interrupted mint was saved by an older version that didn't record its page size — resuming could corrupt the scroll. Your minted pages are safe on-chain; contact support (or restart the mint with a fresh file) rather than resuming.");
+      if(resume.net!==M.net)
+        throw new Error(`This interrupted mint was on ${NETS[resume.net]?.name||("network "+resume.net)} — switch your wallet back to it to resume.`);
+      applyPacking(resume.spp, { maxTx: resume.maxTx||PACK.MAX_TX, live:false });  // pin
+    }
     SGN.pages=buildSignPages(S.encBytes); SGN.spent=new Set();
-    if(resume && resume.done>0 && resume.done<SGN.pages.length && resume.net===M.net){
+    if(resume && resume.done>0 && resume.done<=SGN.pages.length && resume.net===M.net){
+      if(resume.pages!==SGN.pages.length)
+        throw new Error(`Resume mismatch: the saved mint had ${resume.pages} pages but this file now splits into ${SGN.pages.length}. Refusing to resume — that would corrupt the scroll.`);
       SGN.done=resume.done; CP.txids=resume.txids.slice();
+      SGN.sealTxids=(resume.sealTxids||[]).slice();
       SGN.feesSpent=0; // unknown prior fees on resume
-    } else { SGN.done=0; CP.txids=[]; SGN.feesSpent=0; SGN.startedAt=0; }
+    } else { SGN.done=0; CP.txids=[]; SGN.sealTxids=[]; SGN.feesSpent=0; SGN.startedAt=0; }
     const n=SGN.pages.length, nnet=NETS[M.net];
     const seals=Math.max(1,Math.ceil(n/SGN.MAX_PER_MAN));
     const total=n+seals;
@@ -2680,6 +2760,7 @@ cardano-cli conway transaction build ${CP.net===1?"--mainnet":"--testnet-magic 2
             if(M.net!==CP.net) throw new Error("Wallet network must match the page network selector.");
             SGN.pages=SGN.pages.length?SGN.pages:buildSignPages(S.encBytes);
             SGN.done=SGN.pages.length; // pages already done via manual path
+            SGN.sealTxids=[];          // manual path seals THIS scroll — never skip on another mint's seals
             await sealChainManifests();
           }catch(e){ alert(String(e.message||e)); }
         }));
@@ -2776,6 +2857,37 @@ async function doMint(){
   }
 }
 
+/* Fetch every page tx's metadata from the chain, reconstruct the stream and
+   compare hashes against the local file. Runs BEFORE sealing (a corrupt or
+   missing page must be caught while the scroll is still unsealed) and again
+   as part of full post-seal verification. Waits out indexer lag. */
+async function verifyPagesBack(){
+  const map={};
+  let missing=CP.txids.slice();
+  for(let tries=1; tries<=25 && missing.length; tries++){
+    for(let o=0;o<missing.length;o+=25){
+      const rows=await kapi(M.net,"/tx_metadata",{_tx_hashes:missing.slice(o,o+25)});
+      for(const r of rows||[]) if(r.metadata) map[r.tx_hash]=r.metadata;
+    }
+    missing=CP.txids.filter(t=>!map[t]);
+    if(missing.length){
+      mlog("",`waiting for the indexer to see ${missing.length} page tx${missing.length>1?"s":""}… (${tries*12}s)`);
+      await new Promise(r=>setTimeout(r,12000));
+    }
+  }
+  if(missing.length) throw new Error("page transactions not indexed yet — wait a minute and try again: "+missing[0].slice(0,12)+"…");
+  let stream=catB(CP.txids.map(t=>{
+    const md=map[t]?.["22025"] ?? map[t]?.[22025]; if(!md) throw new Error("page metadata vanished?! "+t.slice(0,12));
+    return catB((md.p||[]).map(segBytes));
+  }));
+  const encHash=await sha256hex(stream.slice().buffer);
+  if(encHash!==S.shaEnc) throw new Error("reconstructed stream hash mismatch");
+  mlog("ok",`stream ✓ sha256 ${encHash.slice(0,16)}… matches`);
+  if(S.codec==="gzip") stream=await gunzipB(stream);
+  const decHash=await sha256hex(stream.slice().buffer);
+  if(decHash!==S.sha) throw new Error("decoded file hash mismatch");
+  mlog("ok",`decoded file ✓ sha256 ${decHash.slice(0,16)}… matches your original`);
+}
 async function verifyBack(){
   for(let tries=1; tries<=25; tries++){
     await new Promise(r=>setTimeout(r,12000));
@@ -2841,22 +2953,7 @@ async function verifyManifest(raw){
     throw new Error("manifest page list mismatch — expected your verified pages");
   mlog("ok",`manifest ✓ lists all ${hashes.length} page transaction${hashes.length>1?"s":""} in order${hops?` (${hops+1} seals)`:""}`);
   mlog("h",`── full reconstruction, like any reader would do it`);
-  const map={};
-  for(let o=0;o<CP.txids.length;o+=25){
-    const rows=await kapi(M.net,"/tx_metadata",{_tx_hashes:CP.txids.slice(o,o+25)});
-    for(const r of rows||[]) map[r.tx_hash]=r.metadata||{};
-  }
-  let stream=catB(CP.txids.map(t=>{
-    const md=map[t]?.["22025"] ?? map[t]?.[22025]; if(!md) throw new Error("page metadata vanished?! "+t.slice(0,12));
-    return catB((md.p||[]).map(segBytes));
-  }));
-  const encHash=await sha256hex(stream.slice().buffer);
-  if(encHash!==S.shaEnc) throw new Error("reconstructed stream hash mismatch");
-  mlog("ok",`stream ✓ sha256 ${encHash.slice(0,16)}… matches`);
-  if(S.codec==="gzip") stream=await gunzipB(stream);
-  const decHash=await sha256hex(stream.slice().buffer);
-  if(decHash!==S.sha) throw new Error("decoded file hash mismatch");
-  mlog("ok",`decoded file ✓ sha256 ${decHash.slice(0,16)}… matches your original — a stranger's reader will agree`);
+  await verifyPagesBack();
   mintSuccess();
 }
 
@@ -2873,7 +2970,7 @@ function mintSuccess(unverified){
     sizeDecoded:S.raw, sizeEncoded:S.enc, sha256Decoded:S.sha, sha256Encoded:S.shaEnc,
     lockedLovelace:M.plan?.lockCoin||0, feeLovelace:M.plan?.fee||0, pageFeesLovelace:SGN.feesSpent||0,
     mintedAt:new Date().toISOString(), verifiedFromChain:!unverified, wallet:M.wname };
-  vaultAdd(receipts);
+  const vaultOk=vaultAdd(receipts);
   const blob=new Blob([JSON.stringify(receipts,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
   const absReader = M.net===1
@@ -2926,7 +3023,9 @@ function mintSuccess(unverified){
     a.download=`scroll-card-${M.txid.slice(0,12)}.png`; a.click();
   });
   $("sharecopyurl")?.addEventListener("click",e=>copyText(e.target, absReader||ptr));
-  coachSay("Done 📜", "Saved to My Scrolls on this device.",
+  coachSay("Done 📜",
+    vaultOk ? "Saved to My Scrolls on this device."
+            : "⚠ Couldn't save to My Scrolls (browser storage is full) — DOWNLOAD THE RECEIPTS JSON NOW; it's your only local copy.",
     "Export the vault if you switch browsers. Verify in the Library before you announce.");
   renderVault();
   buildOutputs();
@@ -2935,11 +3034,17 @@ function mintSuccess(unverified){
 /* ══════════ My Scrolls vault (localStorage only) ══════════ */
 const VAULT_KEY="ls.vault.v1";
 function vaultLoad(){ try{ const a=JSON.parse(localStorage.getItem(VAULT_KEY)||"[]"); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
-function vaultSave(list){ try{ localStorage.setItem(VAULT_KEY, JSON.stringify(list.slice(0,200))); }catch(e){ void e; } }
+function vaultSave(list){
+  try{ localStorage.setItem(VAULT_KEY, JSON.stringify(list.slice(0,200))); return true; }
+  catch(e){ return false; }  // quota — caller must tell the user, not pretend it saved
+}
 function vaultAdd(receipt){
   const list=vaultLoad().filter(x=>x.lockTxIn!==receipt.lockTxIn && x.pointer?.txHash!==receipt.pointer?.txHash);
-  list.unshift(receipt);
-  vaultSave(list);
+  // Slim copy: pageTxHashes can be hundreds of hashes per film — they live in
+  // the downloadable receipts.json; storing them here exhausts localStorage.
+  const slim={...receipt}; delete slim.pageTxHashes;
+  list.unshift(slim);
+  return vaultSave(list);
 }
 function renderVault(){
   const el=$("vaultlist"); if(!el) return;
@@ -3044,24 +3149,15 @@ async function assessUtxoReadiness(){
 
 /* ══════════ Countersign wizard (label 22026) ══════════ */
 function csAux(rec){
-  // rec: {v,t,i,h,r?,n?}
-  const fields=[];
-  const put=(k,val)=>{ fields.push(cS(k), val); };
-  put("v", cU(rec.v));
-  put("t", cS(rec.t));
-  put("i", cU(rec.i));
-  put("h", cS(rec.h));
-  if(rec.r) put("r", cS(rec.r));
-  if(rec.n && rec.n.length) put("n", catB([cAr(rec.n.length), ...rec.n.map(cS)]));
-  // map with insertion order of puts — rebuild as proper map
+  // rec: {v,t,i,h,r?,n?} — see registry/spec/countersigned-scroll-v1.md
   let parts=[], nkeys=0;
   const add=(k,enc)=>{ parts.push(cS(k), enc); nkeys++; };
   add("v", cU(1));
   add("t", cS(rec.t.toLowerCase()));
   add("i", cU(rec.i|0));
   add("h", cS(rec.h.toLowerCase()));
-  if(rec.r) add("r", cS(String(rec.r).slice(0,64)));
-  if(rec.n&&rec.n.length) add("n", catB([cAr(rec.n.length), ...rec.n.map(s=>cS(String(s).slice(0,64)))]));
+  if(rec.r) add("r", cS(truncUtf8(rec.r)));
+  if(rec.n&&rec.n.length) add("n", catB([cAr(rec.n.length), ...rec.n.map(s=>cS(truncUtf8(s)))]));
   const inner=catB([cMp(nkeys), ...parts]);
   const meta=catB([cMp(1), cU(22026), inner]);
   return catB([cTg(259), cMp(1), cU(0), meta]);
