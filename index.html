@@ -367,24 +367,29 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
     <span class="resolver-ic" aria-hidden="true">
      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
     </span>
-    <input id="point" placeholder="paste a pointer — raise it from the ledger&hellip;" spellcheck="false" autocomplete="off" autocapitalize="off">
+    <input id="point" placeholder="paste a Library Policy ID or a scroll pointer&hellip;" spellcheck="false" autocomplete="off" autocapitalize="off">
     <button id="openbtn">Read</button>
    </div>
    <ul class="reads-legend" aria-label="What the reader accepts">
-    <li><code>txHash#ix</code><span>a scroll&rsquo;s manifest &mdash; rebuilds &amp; verifies that file</span></li>
-    <li><code>56-hex policy id</code><span>a publisher channel or NFT-page set &mdash; opens the feed</span></li>
-    <li><code>registry head txin</code><span>someone else&rsquo;s catalog &mdash; swaps this whole library</span></li>
+    <li><code>library policy id</code><span>a whole library &mdash; opens the latest registry head under it</span></li>
+    <li><code>txHash#ix</code><span>a single scroll &mdash; rebuilds &amp; verifies that file</span></li>
+    <li><code>policy.ASSET / tx hash</code><span>a specific registry version, or a channel feed</span></li>
    </ul>
    <p class="resolver-hint">Not a walled garden &mdash; anyone&rsquo;s scrolls, channels, and registries resolve here.</p>
   </div>
 
-  <div class="reg-advert" style="margin:22px auto 6px;max-width:760px;background:#0f131c;border:1px solid #26304a;border-radius:14px;padding:16px 18px">
-   <div style="font:600 14px/1.5 sans-serif;color:#c9d3e6">📇 BEACN’s on-chain registry — paste this key in the bar above to open the whole library:</div>
-   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
-    <code id="regptr-txt" style="flex:1;min-width:240px;font:12.5px/1.4 monospace;color:#8fb4ff;background:#05070d;border:1px solid #1b2436;border-radius:8px;padding:9px 11px;word-break:break-all"></code>
-    <button id="regcopy" class="ghost">Copy key</button>
+  <div class="reg-advert" style="margin:22px auto 6px;max-width:780px;background:linear-gradient(180deg,#0f1420,#0b0f19);border:1px solid #26304a;border-radius:16px;padding:18px 20px;box-shadow:0 10px 40px rgba(0,0,0,.35)">
+   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="display:inline-flex;align-items:center;gap:6px;font:800 12px/1 sans-serif;letter-spacing:.08em;color:#0b0f19;background:linear-gradient(90deg,#7fb0ff,#2f6bff);border-radius:999px;padding:6px 11px">📚 BEACN&nbsp;LIBRARY</span>
+    <span style="font:600 12.5px/1.4 sans-serif;color:#8fa0c4">live on Cardano · always opens the latest catalog</span>
    </div>
-   <div style="font:12.5px/1.5 sans-serif;color:#7f8ba3;margin-top:9px">Nothing here is hardcoded — the shelf is rebuilt live from this NFT’s on-chain data.</div>
+   <div style="font:600 13px/1.5 sans-serif;color:#c9d3e6;margin-top:13px">Library Policy ID — paste this to open the whole library:</div>
+   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
+    <code id="regptr-txt" style="flex:1;min-width:240px;font:12.5px/1.4 monospace;color:#8fb4ff;background:#05070d;border:1px solid #1b2436;border-radius:9px;padding:11px 12px;word-break:break-all"></code>
+    <button id="regcopy" class="ghost">Copy</button>
+    <button id="regopen" style="min-height:38px;padding:0 16px;border:0;border-radius:999px;background:linear-gradient(90deg,#2f6bff,#1f44ff);color:#fff;font:700 14px/1 sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(47,107,255,.35)">Open Library →</button>
+   </div>
+   <div style="font:12.5px/1.5 sans-serif;color:#7f8ba3;margin-top:10px">Nothing is hardcoded — the shelf rebuilds live from the newest <b style="color:#9db4e0">Registry Head</b> NFT under this policy. Mint a new version and it updates itself; this key never changes.</div>
   </div>
 
   <ul class="trust-strip" id="truststrip">
@@ -806,7 +811,7 @@ function drawShelf(){
 }
 
 /* V2 registry: resolve an NFT (policy.ASSET) or tx-hash -> label 22027 list */
-const REGISTRY_PTR = '8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80.LS_REGISTRY_V4';
+const REGISTRY_PTR = '8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80';
 const prettify = n => (n||'').replace(/[-_]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
 const hexEnc = s => [...s].map(c=>c.charCodeAt(0).toString(16).padStart(2,'0')).join('');
 const formOf = k => k==='cip25-pages-v1'?'pages':k==='utxo-inline-datum-bytes-v1'?'lock':'chain';
@@ -854,7 +859,28 @@ async function resolveRegistry(input){
   } else if(/^[0-9a-f]{64}$/i.test(raw)){
     const rows=await api('/tx_metadata',{_tx_hashes:[raw.toLowerCase()]},true);
     meta=rows&&rows[0]&&rows[0].metadata;
-  } else throw new Error('expected a registry NFT (policy.ASSET) or a 64-hex tx hash');
+  } else if(/^[0-9a-f]{56}$/i.test(raw)){
+    // bare POLICY ID → resolve the LATEST "Registry Head" NFT minted under it (auto-head)
+    const policy=raw.toLowerCase();
+    if($('anchorinfo')) $('anchorinfo').textContent='finding the latest registry head under '+policy.slice(0,12)+'…';
+    const list=await api('/policy_asset_list',{_asset_policy:policy},true);
+    const names=(list||[]).map(a=>a.asset_name).filter(Boolean);
+    let cand=names.filter(h=>{ try{ return td.decode(hex2b(h)).toUpperCase().includes('REGISTRY'); }catch(_){ return false; } });
+    if(!cand.length) cand=names;
+    const infos=await api('/asset_info',{_asset_list:cand.map(h=>[policy,h])},true);
+    let best=null,bestV=-1,bestName='';
+    for(const a of (infos||[])){
+      const g=a.minting_tx_metadata&&a.minting_tx_metadata['721']&&a.minting_tx_metadata['721'][policy];
+      const md=g&&(g[a.asset_name_ascii]||Object.values(g)[0]);
+      if(md&&md.Type==='Registry Head'&&a.minting_tx_metadata['22027']){
+        const v=parseInt(md.Version||'0',10)||0;
+        if(v>bestV){ bestV=v; best=a; bestName=a.asset_name_ascii||''; }
+      }
+    }
+    if(!best) throw new Error('no registry head NFT under that policy');
+    meta=best.minting_tx_metadata;
+    if($('anchorinfo')) $('anchorinfo').textContent='latest head: '+bestName+' (v'+bestV+')';
+  } else throw new Error('expected a policy id, a registry NFT (policy.ASSET), or a 64-hex tx hash');
   if(!meta||!meta['22027']) throw new Error('no on-chain registry list (label 22027) at that pointer');
   const entries=meta['22027'].entries||[];
   let regName='On-chain Registry';
@@ -965,7 +991,9 @@ async function openPointer(raw){
   const p=raw.trim().toLowerCase();
   if(isRegistryPointer(raw)){ try{ await resolveRegistry(raw); }catch(e){ alert('registry not found — '+(e.message||e)); } return; }
   if(/^[0-9a-f]{56}$/.test(p)){
-    // a policy: a channel if its assets carry publication pointers, else legacy pages
+    // a policy: first try it as a REGISTRY (latest Registry Head under it → the library)
+    try{ await resolveRegistry(p); return; }catch(_){ /* not a registry — fall through to channel/pages */ }
+    // otherwise: a channel if its assets carry publication pointers, else legacy pages
     try{
       const probe = await api('/policy_asset_list',{_asset_policy:p},true);
       if(!probe?.length){ alert('nothing minted under that policy id'); return; }
@@ -1023,7 +1051,8 @@ $('savehead').onclick=()=>{ const v=($('sethead').value.trim()||REGISTRY_PTR); L
 $('setsrc').value=LS.getItem('ls.source')||''; $('sethead').value=LS.getItem('ls.head')||'';
 
 if($('regptr-txt')) $('regptr-txt').textContent=REGISTRY_PTR;
-$('regcopy') && ($('regcopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(REGISTRY_PTR); $('regcopy').textContent='Copied ✓'; setTimeout(()=>$('regcopy').textContent='Copy key',1500); }catch(_){ prompt('Copy this registry key:',REGISTRY_PTR); } });
+$('regcopy') && ($('regcopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(REGISTRY_PTR); $('regcopy').textContent='Copied ✓'; setTimeout(()=>$('regcopy').textContent='Copy',1500); }catch(_){ prompt('Copy this Library Policy ID:',REGISTRY_PTR); } });
+$('regopen') && ($('regopen').onclick=()=>{ $('point').value=REGISTRY_PTR; openPointer(REGISTRY_PTR); });
 drawShelf();
 route();
 </script>
