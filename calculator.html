@@ -296,7 +296,7 @@ body{padding-bottom:96px}
   <div class="card">
     <h2>⚡ Mint it right now — no node, no command line</h2>
     <p style="font-size:15px">Write <strong>any size file</strong> — poems, photos, PDFs, even short films —
-    to Cardano from <b>Eternl on a laptop</b>. Small files are one signature. Larger ones split into
+    to Cardano from <b>Eternl</b>. Small files are one signature. Larger ones split into
     page transactions your wallet signs one-by-one (or in one bulk approval if Eternl offers it).
     Built locally; nothing leaves your machine except the signed transaction.</p>
     <div id="walletctl"></div>
@@ -304,7 +304,9 @@ body{padding-bottom:96px}
     <!-- STEP 1 · CONNECT -->
     <div class="wizstep" id="wiz1">
       <div class="wizhd"><span class="wizn">1</span> Connect your wallet</div>
-      <p class="wizsub">Click <b>Connect</b> above — your wallet just approves the link, <b>no funds move</b>. Once you're connected we'll walk you through naming and minting.</p>
+      <p class="wizsub"><b>Laptop:</b> install the Eternl extension, then use <b>Connect</b> above.
+      <b>Phone:</b> open this exact page in <b>Eternl → Browser</b> (not Safari/Chrome) — then Connect appears.
+      Connecting only approves the link; <b>no funds move</b> until you mint.</p>
       <details class="assump" style="margin-top:12px">
         <summary>Never used Cardano? Start here (10 minutes, three steps)</summary>
         <ol class="steps" style="margin-top:10px">
@@ -992,18 +994,88 @@ async function fetchNetParams(net){
 
 /* ── CIP-30 ── */
 /* We officially support Eternl for now (the wallet the mint flow is tested
-   and proven against). `ccvault` is Eternl's legacy injection key. */
+   and proven against). `ccvault` is Eternl's legacy injection key.
+   Mobile Safari/Chrome never inject CIP-30 — only Eternl's in-app dApp browser does. */
+function isMobileUA(){
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||"")
+    || ((navigator.maxTouchPoints||0)>1 && Math.min(screen.width,screen.height)<900);
+}
 function listWallets(){
   const out=[];
-  for(const k of Object.keys(window.cardano||{})){
-    const w=window.cardano[k];
-    if(!(w && typeof w.enable==="function" && w.apiVersion)) continue;
-    const id=(k+" "+(w.name||"")).toLowerCase();
-    if(!/eternl|ccvault/.test(id)) continue;         // Eternl only
+  const cardano=window.cardano||{};
+  for(const k of Object.keys(cardano)){
+    const w=cardano[k];
+    if(!(w && typeof w.enable==="function")) continue;
+    const id=(k+" "+(w.name||"")+" "+(w.id||"")).toLowerCase();
+    // Eternl only (incl. legacy ccvault key; some builds omit apiVersion briefly)
+    if(!/eternl|ccvault/.test(id) && k!=="eternl" && k!=="ccvault") continue;
     out.push({key:k,name:w.name||"Eternl",icon:w.icon});
   }
+  // Prefer the modern key if both inject
+  out.sort((a,b)=>(a.key==="eternl"?-1:0)-(b.key==="eternl"?-1:0));
   const seen=new Set();
-  return out.filter(w=>{ const n=w.name.toLowerCase(); if(seen.has(n))return false; seen.add(n); return true; });
+  return out.filter(w=>{ const n=(w.key+"|"+w.name).toLowerCase(); if(seen.has(n))return false; seen.add(n); return true; });
+}
+function noWalletHelpHTML(){
+  const mobile=isMobileUA();
+  const here=location.href.split("#")[0];
+  if(mobile){
+    return `<div class="warnbox" id="nowallet">
+      <b>No wallet detected in this browser — normal on phones.</b>
+      <p style="margin:8px 0 0">Cardano wallets <b>do not</b> connect from Safari/Chrome mobile.
+      Open this page <b>inside the Eternl app</b> (its built-in browser), then the Connect button appears.</p>
+      <ol class="steps" style="margin-top:10px">
+        <li>Install <a href="https://eternl.io">Eternl</a> (App Store / Play Store) if you haven't.</li>
+        <li>Open <b>Eternl → Browser</b> (sometimes labeled dApps / Discover).</li>
+        <li>Paste this URL and go:<br>
+          <code style="word-break:break-all;font-size:12px">${esc(here)}</code>
+          <button type="button" class="wchip" id="wc-copyurl" style="margin-left:6px">copy URL</button></li>
+        <li>Drop your file again → tap <b>Connect Eternl</b>.</li>
+      </ol>
+      <p style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">
+        <button type="button" class="btn" id="wc-rescan">🔍 Look for Eternl again</button>
+        <a class="btn ghost" href="https://eternl.io" target="_blank" rel="noopener">Get Eternl</a>
+      </p>
+      <p style="font-size:12.5px;color:var(--muted);margin:8px 0 0">Easiest path for big files / films: a <b>laptop</b> with the Eternl browser extension.</p>
+    </div>`;
+  }
+  return `<div class="warnbox" id="nowallet">
+    <b>Eternl not found in this browser.</b>
+    <ol class="steps" style="margin-top:10px">
+      <li>Install the <a href="https://eternl.io" target="_blank" rel="noopener">Eternl</a> extension for Chrome/Brave/Edge/Firefox.</li>
+      <li>Pin it, unlock it, then refresh this page.</li>
+      <li>Tap <b>Look for Eternl again</b> if you just installed it.</li>
+    </ol>
+    <p style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">
+      <button type="button" class="btn" id="wc-rescan">🔍 Look for Eternl again</button>
+      <a class="btn ghost" href="https://eternl.io" target="_blank" rel="noopener">Install Eternl</a>
+    </p>
+  </div>`;
+}
+function bindNoWalletHelp(){
+  $("wc-copyurl")?.addEventListener("click",e=>copyText(e.target, location.href.split("#")[0]));
+  $("wc-rescan")?.addEventListener("click",()=>{
+    renderWalletCtl();
+    if(listWallets().length) connectWallet(listWallets()[0].key);
+    else {
+      const b=$("wc-rescan"); if(b){ const t=b.textContent; b.textContent="Still not found…"; setTimeout(()=>b.textContent=t,1600); }
+    }
+  });
+}
+/* Wallets often inject a moment after page load — keep looking briefly. */
+let _walletPoll=null;
+function startWalletPoll(){
+  if(_walletPoll) return;
+  let n=0;
+  _walletPoll=setInterval(()=>{
+    n++;
+    if(M.wapi || listWallets().length){
+      clearInterval(_walletPoll); _walletPoll=null;
+      if(!M.wapi) renderWalletCtl();
+      return;
+    }
+    if(n>=20){ clearInterval(_walletPoll); _walletPoll=null; } // ~20s
+  },1000);
 }
 function hwNote(){
   return `<details class="assump" style="margin-top:10px"><summary>⚠️ Using a Ledger or Trezor hardware wallet? Read this first</summary>
@@ -1130,10 +1202,17 @@ function renderWalletCtl(){
   const el=$("walletctl"); if(!el) return;
   if(!M.wapi){
     const wl=listWallets();
-    el.innerHTML = wl.length
-      ? `<div class="wconnect"><button class="btn" id="wc-connect">🔌 Connect ${esc(wl[0].name)}</button>
-         <span style="font-size:13px;color:var(--muted)">Connect once — then it's all buttons from here.</span></div>` : ``;
-    $("wc-connect")?.addEventListener("click",()=>connectWallet(listWallets()[0].key));
+    if(wl.length){
+      el.innerHTML = `<div class="wconnect">
+        <button class="btn" id="wc-connect" style="min-height:48px;font-size:16px">🔌 Connect ${esc(wl[0].name)}</button>
+        <span style="font-size:13px;color:var(--muted)">Connect once — no funds move until you mint.</span>
+      </div>`;
+      $("wc-connect")?.addEventListener("click",()=>connectWallet(listWallets()[0].key));
+    } else {
+      el.innerHTML = noWalletHelpHTML();
+      bindNoWalletHelp();
+      startWalletPoll();
+    }
     return;
   }
   const net=NETS[M.net];
@@ -1251,12 +1330,14 @@ function renderMint(){
           <p style="font-size:12.5px;color:var(--muted);margin-top:8px">Or download the build bundle above and mint with the
           <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI toolkit</a>.</p>
         </details>`
-      : `<div class="warnbox" style="margin-top:12px"><b>Install Eternl on this laptop first.</b>
-        <ol class="steps" style="margin-top:8px">
-          <li>Get the <a href="https://eternl.io">Eternl</a> browser extension and write down your seed on paper.</li>
-          <li>Send it ~${fmtA(feeGuess+3)} ADA (exchange → receive address).</li>
-          <li>Refresh this page, drop your file again, connect, and mint.</li>
-        </ol>
+      : `<div class="warnbox" style="margin-top:12px"><b>Eternl not detected here.</b>
+        ${isMobileUA()
+          ? `<p style="margin:8px 0 0">On a phone, open this page in <b>Eternl → Browser</b> (not Safari/Chrome), then reload. Or use a laptop with the Eternl extension — much easier for films.</p>`
+          : `<ol class="steps" style="margin-top:8px">
+          <li>Install the <a href="https://eternl.io">Eternl</a> browser extension.</li>
+          <li>Fund it with ~${fmtA(feeGuess+3)} ADA.</li>
+          <li>Refresh, drop your file, connect, mint.</li>
+        </ol>`}
         <p style="margin-top:10px"><button class="btn sub" id="cpstart">Or send pages manually (advanced)</button></p></div>`}
       <div id="cpstage" style="margin-top:14px"></div>`;
     const begin=(key,resume)=>{ startWalletSign(key||M.walletKey||(wl[0]&&wl[0].key), resume); };
@@ -2289,6 +2370,10 @@ document.querySelectorAll(".copy[data-for]").forEach(b =>
 
 fetchPrice();
 autoReconnect();
+startWalletPoll();
+// If a wallet injects after load (common), refresh the connect panel
+window.addEventListener("cardano#initialized",()=>{ if(!M.wapi) renderWalletCtl(); });
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden && !M.wapi && listWallets().length) renderWalletCtl(); });
 </script>
 </body>
 </html>
