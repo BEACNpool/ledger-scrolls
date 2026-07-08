@@ -223,6 +223,27 @@ details.pg pre{max-height:180px;overflow:auto}
 @media(max-width:560px){.wizbar-step span{display:none}}
 body{padding-bottom:96px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* coach + question cards — app-like "what next?" */
+.coach{margin:0 0 16px;padding:14px 16px 14px 18px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--accent-soft),var(--surface-2));border:1px solid color-mix(in srgb,var(--accent) 28%,var(--line));box-shadow:var(--sh-sm)}
+.coach .cue{font:800 12px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:6px}
+.coach .say{font:700 17px/1.35 var(--sans);color:var(--ink);margin:0}
+.coach .hint{margin:8px 0 0;font-size:14px;color:var(--ink-2);line-height:1.45}
+.coach .cta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;align-items:center}
+.qcard{margin-top:14px;padding:14px 16px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface)}
+.qcard h4{font:700 15px/1.3 var(--sans);color:var(--ink);margin:0 0 6px}
+.qcard .why{font-size:13.5px;color:var(--muted);margin:0 0 10px}
+.qchoices{display:flex;flex-direction:column;gap:8px}
+.qchoice{display:flex;align-items:flex-start;gap:10px;text-align:left;width:100%;padding:12px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--line-2);background:var(--surface-2);cursor:pointer;font:600 14.5px/1.35 var(--sans);color:var(--ink);transition:.15s var(--ease)}
+.qchoice:hover{border-color:var(--accent);transform:translateY(-1px)}
+.qchoice.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)}
+.qchoice .mark{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--line-2);display:grid;place-items:center;font:800 12px/1 var(--sans);color:transparent;margin-top:1px}
+.qchoice.sel .mark{border-color:var(--accent);background:var(--accent);color:#fff}
+.qchoice .qbody b{display:block;margin-bottom:2px}
+.qchoice .qbody span{font:500 13px/1.4 var(--sans);color:var(--ink-2)}
+.qdone{display:inline-flex;align-items:center;gap:6px;font:600 13px/1 var(--sans);color:var(--ok);margin-top:8px}
+.nextcue{margin-top:16px;padding:12px 14px;border-radius:var(--radius-sm);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 28%,transparent);font:600 14.5px/1.4 var(--sans);color:#0a6b46}
+.nextcue .go{display:inline-flex;margin-top:10px}
+#mintjump{margin-top:14px}
 </style>
 </head>
 <body>
@@ -244,9 +265,8 @@ body{padding-bottom:96px}
   <span class="eyebrow">Mint a Scroll</span>
   <h1>Price it. Mint it. Forever.</h1>
   <p class="lead">Drop in any file — a photo, a PDF, a song, a short film, a manifesto —
-  and see what forever costs on Cardano: one number, paid once. Then mint it from
-  <strong>Eternl on your laptop</strong>: small files in one click; larger films as page
-  transactions you approve in the wallet. No node, no CLI, no account, no API key.</p>
+  and see what forever costs on Cardano. Then I'll <strong>walk you through minting</strong>
+  step by step with Eternl: connect → a few questions → mint. No node, no CLI, no account.</p>
   <p class="privacy">🔒 Everything runs in your browser. Your file is never uploaded anywhere.</p>
 </section>
 
@@ -294,80 +314,71 @@ body{padding-bottom:96px}
 
 <section class="section" id="mintsec" hidden>
   <div class="card">
-    <h2>⚡ Mint it right now — no node, no command line</h2>
-    <p style="font-size:15px">Write <strong>any size file</strong> — poems, photos, PDFs, even short films —
-    to Cardano from <b>Eternl</b>. Small files are one signature. Larger ones split into
-    page transactions your wallet signs one-by-one (or in one bulk approval if Eternl offers it).
-    Built locally; nothing leaves your machine except the signed transaction.</p>
+    <h2>⚡ Let's mint it — I'll walk you through</h2>
+    <p style="font-size:14.5px;color:var(--ink-2);margin:0 0 4px">One step at a time. I'll tell you exactly what to do next.
+    Your file never leaves this browser except as a signed transaction.</p>
+    <div id="coach" class="coach" aria-live="polite"></div>
     <div id="walletctl"></div>
 
     <!-- STEP 1 · CONNECT -->
     <div class="wizstep" id="wiz1">
-      <div class="wizhd"><span class="wizn">1</span> Connect your wallet</div>
-      <p class="wizsub"><b>Laptop:</b> install the Eternl extension, then use <b>Connect</b> above.
-      <b>Phone:</b> open this exact page in <b>Eternl → Browser</b> (not Safari/Chrome) — then Connect appears.
-      Connecting only approves the link; <b>no funds move</b> until you mint.</p>
-      <details class="assump" style="margin-top:12px">
-        <summary>Never used Cardano? Start here (10 minutes, three steps)</summary>
+      <div class="wizhd"><span class="wizn">1</span> Connect Eternl</div>
+      <p class="wizsub">I need a wallet to build the mint transactions. Connecting only links the app —
+      <b>no ADA moves</b> until you approve a mint later.</p>
+      <div id="wiz1body"></div>
+      <details class="assump" style="margin-top:14px">
+        <summary>Never used Cardano? 10-minute start</summary>
         <ol class="steps" style="margin-top:10px">
-          <li><b>Get a wallet.</b> Install <a href="https://eternl.io">Eternl</a> (desktop browser
-            extension or mobile app). Write the seed phrase on paper — it <i>is</i> the wallet.</li>
-          <li><b>Fund it.</b> Buy ADA on any exchange and withdraw to your wallet's
-            <i>receive address</i>. Drop your file above first — the price it shows plus a couple
-            of ADA for fees is your funding target.</li>
-          <li><b>Come back here in the wallet's browser.</b> Desktop: the same browser as the
-            extension. Mobile: open this page inside the wallet app's built-in dApp browser.
-            Then drop your file and follow the buttons — the page does the rest and proves the
-            result back to you from the chain.</li>
+          <li>Install <a href="https://eternl.io">Eternl</a> (laptop extension or phone app). Write the seed on paper.</li>
+          <li>Send it ADA from an exchange (use the price above + a few ADA spare).</li>
+          <li><b>Laptop:</b> same browser as the extension. <b>Phone:</b> open this page in <b>Eternl → Browser</b>, not Safari/Chrome.</li>
         </ol>
-        <p style="font-size:13.5px;color:var(--muted);margin-top:8px">Plain truth about privacy:
-        a scroll is forever and unsigned by default, but the transaction that minted it traces to
-        the wallet that paid — and exchange accounts are identity-verified. If <i>who minted it</i>
-        must stay secret, have someone you trust mint it for you: the SHA-256 proves your bytes
-        arrived untouched no matter whose wallet paid the fee.</p>
       </details>
-      <div class="warnbox" style="margin-top:12px">🔑 <strong>Using a hardware wallet (Ledger / Trezor)?</strong>
-        Mint from a <strong>software wallet instead.</strong> A scroll transaction carries far more data than
-        an everyday payment, and hardware wallets can freeze or <em>reboot</em> mid-signing when they try to
-        process it — your funds are safe, but the mint won't complete. Fund a fresh hot wallet (a software
-        Eternl account) with a few ADA and use that: you're only spending fees, not guarding
-        savings. Comfortable at a terminal? The <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI</a> works with any key too.</div>
-      <p style="font-size:13px;color:var(--muted);margin-top:12px">On a wallet that can't connect here (some mobile or hardware setups)?
-        <a href="#" id="manualstart">Skip ahead and mint page-by-page manually →</a></p>
+      <details class="assump" style="margin-top:8px">
+        <summary>Hardware wallet (Ledger / Trezor)?</summary>
+        <p style="margin-top:8px;font-size:14px">Use a <b>software Eternl account</b> with fee ADA only. Scroll txs carry lots of metadata;
+        hardware devices often freeze mid-sign. Your scroll doesn't care which key paid the fee.</p>
+      </details>
+      <p style="font-size:13px;color:var(--muted);margin-top:12px">Can't connect?
+        <a href="#" id="manualstart">Skip to manual page-by-page mint →</a></p>
     </div>
 
-    <!-- STEP 2 · DETAILS -->
+    <!-- STEP 2 · QUESTIONS + NAME -->
     <div class="wizstep" id="wiz2" hidden>
-      <div class="wizhd"><span class="wizn">2</span> Name your scroll</div>
-      <p class="wizsub">All optional — this becomes your scroll's public label, its receipt, and its
-      registry entry. Skip anything and sensible defaults fill in (the filename becomes the id).</p>
-      <div class="builder-grid" id="detailform">
-        <div class="field"><label for="b_name">Scroll id (kebab-case)</label>
-          <input type="text" id="b_name" placeholder="my-first-scroll"></div>
-        <div class="field"><label for="b_title">Title</label>
-          <input type="text" id="b_title" placeholder="My First Scroll"></div>
-        <div class="field wide"><label for="b_desc">Description</label>
-          <textarea id="b_desc" rows="2" placeholder="What is this, for a reader in 2050?"></textarea></div>
-        <div class="field"><label for="b_author">Author / publisher</label>
-          <input type="text" id="b_author" placeholder="anonymous"></div>
-        <div class="field"><label for="b_ct">Content type</label>
-          <input type="text" id="b_ct" placeholder="text/plain; charset=utf-8"></div>
-        <div class="field"><label for="b_channel">Publisher channel <span class="note">(optional — unforgeable byline)</span></label>
-          <input type="text" id="b_channel" placeholder="MY_CHANNEL"></div>
-        <div class="field"><label for="b_issue">Issue number <span class="note">(if channel)</span></label>
-          <input type="number" id="b_issue" min="0" placeholder="0"></div>
-      </div>
+      <div class="wizhd"><span class="wizn">2</span> A few quick questions</div>
+      <p class="wizsub">Answer these so I can route you correctly. Naming is optional and comes after.</p>
+      <div id="qbox"></div>
+      <details class="assump" style="margin-top:16px" id="namedetails">
+        <summary>Optional — name this scroll (for receipts &amp; the library)</summary>
+        <div class="builder-grid" id="detailform" style="margin-top:12px">
+          <div class="field"><label for="b_name">Scroll id (kebab-case)</label>
+            <input type="text" id="b_name" placeholder="my-first-scroll"></div>
+          <div class="field"><label for="b_title">Title</label>
+            <input type="text" id="b_title" placeholder="My First Scroll"></div>
+          <div class="field wide"><label for="b_desc">Description</label>
+            <textarea id="b_desc" rows="2" placeholder="What is this, for a reader in 2050?"></textarea></div>
+          <div class="field"><label for="b_author">Author / publisher</label>
+            <input type="text" id="b_author" placeholder="anonymous"></div>
+          <div class="field"><label for="b_ct">Content type</label>
+            <input type="text" id="b_ct" placeholder="text/plain; charset=utf-8"></div>
+          <div class="field"><label for="b_channel">Publisher channel <span class="note">(optional)</span></label>
+            <input type="text" id="b_channel" placeholder="MY_CHANNEL"></div>
+          <div class="field"><label for="b_issue">Issue number</label>
+            <input type="number" id="b_issue" min="0" placeholder="0"></div>
+        </div>
+      </details>
       <div class="wizbtns">
         <button class="btn ghost" type="button" data-wiz="1">← Back</button>
-        <button class="btn" type="button" id="wiz2next">Continue to mint →</button>
+        <button class="btn" type="button" id="wiz2next" disabled>Continue to mint →</button>
       </div>
+      <p id="wiz2gate" style="font-size:13px;color:var(--muted);margin-top:8px"></p>
     </div>
 
     <!-- STEP 3 · MINT -->
     <div class="wizstep" id="wiz3" hidden>
-      <div class="wizhd"><span class="wizn">3</span> Mint on Cardano — forever</div>
+      <div class="wizhd"><span class="wizn">3</span> Mint — forever</div>
       <div id="mintbody"></div>
-      <div class="wizbtns"><button class="btn ghost" type="button" data-wiz="2">← Back to details</button></div>
+      <div class="wizbtns"><button class="btn ghost" type="button" data-wiz="2">← Back to questions</button></div>
     </div>
   </div>
 </section>
@@ -377,7 +388,7 @@ body{padding-bottom:96px}
     <div class="wizbar-track"><div class="wizbar-fill" id="wizfill"></div></div>
     <div class="wizbar-steps">
       <button class="wizbar-step" type="button" data-goto="1"><b>1</b><span>Connect</span></button>
-      <button class="wizbar-step" type="button" data-goto="2"><b>2</b><span>Details</span></button>
+      <button class="wizbar-step" type="button" data-goto="2"><b>2</b><span>Questions</span></button>
       <button class="wizbar-step" type="button" data-goto="3"><b>3</b><span>Mint</span></button>
     </div>
   </div>
@@ -603,7 +614,21 @@ const mediaByExt = ext => MEDIA.find(m => m.exts.includes(ext)) || MEDIA[MEDIA.l
 
 /* ══════════ state & helpers ══════════ */
 const $ = id => document.getElementById(id);
-const S = { raw:0, enc:0, codec:"none", ct:"", name:"", sha:"", shaEnc:"", price:null, priceSrc:"none", media:null, wiz:1, manual:false };
+const S = {
+  raw:0, enc:0, codec:"none", ct:"", name:"", sha:"", shaEnc:"", price:null, priceSrc:"none", media:null,
+  wiz:1, manual:false,
+  /* guided answers — null = not answered yet */
+  q: { net:null, sizeOk:null, forever:null }
+};
+function resetQuestions(){ S.q = { net:null, sizeOk:null, forever:null }; }
+function isFilmish(){ return /video\//i.test(S.ct||"") || (S.media && /video/i.test(S.media.label||"")); }
+function isLargeFile(){ return S.enc > 500*1024; } // >500 KB → size/encode nuance
+function questionsDone(){
+  if(!S.q.forever) return false;
+  if(!S.q.net) return false;
+  if((isFilmish() || isLargeFile()) && !S.q.sizeOk) return false;
+  return true;
+}
 const fmtB = n => n >= 1048576 ? (n/1048576).toFixed(2)+" MB" : n >= 1024 ? (n/1024).toFixed(1)+" KB" : n+" B";
 const fmtA = n => n >= 1000 ? Math.round(n).toLocaleString("en-US") : n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2);
 const fmtN = n => n.toLocaleString("en-US");
@@ -680,6 +705,7 @@ async function analyzeFile(file){
   M.state = "idle"; M.txid = ""; M.mode = "std";        // new file → fresh mint flow
   CP.active = false; CP.pages = []; CP.txids = []; CP.checked = false;
   SGN.pages = []; SGN.done = 0; SGN.spent = new Set(); SGN.running = false;
+  resetQuestions(); S.wiz = 1; S.manual = false;
   const isImg = /^image\/(jpe?g|png|webp)$/i.test(file.type||"");
   let metaStripped=false, ctOverride=null;
   if(isImg && S.stripMeta!==false){
@@ -730,9 +756,15 @@ async function analyzeFile(file){
     $("kv").innerHTML += `<dt>Browser mint</dt><dd>Chain Scroll · ${fmtN(totalSig)} Eternl signatures (pages + seal). Gzip applied when it shrinks the file.</dd>`;
   }
   $("analysis").classList.add("show");
-  $("b_ct").value = S.ct;
-  if(!$("b_name").value) $("b_name").value = file.name.replace(/\.[^.]+$/,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40) || "my-scroll";
+  if($("b_ct")) $("b_ct").value = S.ct;
+  if($("b_name") && !$("b_name").value) $("b_name").value = file.name.replace(/\.[^.]+$/,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40) || "my-scroll";
   render();
+  // App-like: after a real file, scroll to the guided mint coach
+  setTimeout(()=>{
+    const sec=$("mintsec"); if(!sec || sec.hidden) return;
+    sec.scrollIntoView({behavior:"smooth", block:"start"});
+    renderCoach();
+  }, 120);
 }
 
 function analyzeManual(){
@@ -745,6 +777,7 @@ function analyzeManual(){
   M.state = "idle"; M.txid = ""; M.mode = "std";
   CP.active = false; CP.pages = []; CP.txids = []; CP.checked = false;
   SGN.pages = []; SGN.done = 0; SGN.spent = new Set(); SGN.running = false;
+  resetQuestions(); S.wiz = 1; S.manual = false;
   if(media.gz){ S.codec = "gzip"; S.enc = Math.round(bytes * 0.33); }  // typical 3:1 for text
   else { S.codec = "none"; S.enc = bytes; }
   $("kv").innerHTML = `
@@ -767,9 +800,10 @@ drop.addEventListener("drop", e => e.dataTransfer.files[0] && analyzeFile(e.data
 document.addEventListener("click", e=>{
   const back=e.target.closest("[data-wiz]"); if(back){ setWiz(+back.dataset.wiz); return; }
   const go=e.target.closest(".wizbar-step"); if(go && !go.disabled){ setWiz(+go.dataset.goto); return; }
+  const qc=e.target.closest("[data-q]"); if(qc){ answerQ(qc.dataset.q, qc.dataset.v); return; }
 });
-$("wiz2next")?.addEventListener("click",()=>setWiz(3));
-$("manualstart")?.addEventListener("click",e=>{ e.preventDefault(); S.manual=true; setWiz(3); });
+$("wiz2next")?.addEventListener("click",()=>{ if(questionsDone()) setWiz(3); else renderQuestions(); });
+$("manualstart")?.addEventListener("click",e=>{ e.preventDefault(); S.manual=true; S.q.forever=S.q.forever||"yes"; S.q.net=S.q.net||"main"; S.q.sizeOk=S.q.sizeOk||"as-is"; setWiz(3); });
 
 /* ══════════ render results ══════════ */
 function statHTML(big, label){ return `<div class="stat"><div class="n">${big}</div><div class="l">${label}</div></div>`; }
@@ -818,12 +852,29 @@ function render(){
     <button class="copy" id="sharecopy">copy</button>`;
   $("sharecopy")?.addEventListener("click", e => copyText(e.target, $("share").textContent.replace("copy","").trim()));
 
+  // Jump CTA into the guided mint coach
+  let jump=$("mintjump");
+  if(!jump){
+    jump=document.createElement("div"); jump.id="mintjump";
+    $("resultbody")?.parentElement?.appendChild(jump);
+  }
+  if(S.encBytes){
+    jump.innerHTML=`<div class="nextcue">Ready when you are — I'll walk you through connect → questions → mint.
+      <div class="go"><button class="btn" type="button" id="jumpmint">Continue with guided mint →</button></div></div>`;
+    $("jumpmint")?.addEventListener("click",()=>{
+      $("mintsec")?.scrollIntoView({behavior:"smooth",block:"start"});
+      setWiz(M.wapi||S.manual ? (questionsDone()?3:2) : 1);
+    });
+  } else {
+    jump.innerHTML=`<div class="cmp">Drop a <b>real file</b> (not just a size estimate) to unlock guided minting.</div>`;
+  }
+
   buildOutputs();
 }
 
 /* ══════════ metadata builder ══════════ */
 ["b_name","b_title","b_desc","b_author","b_ct","b_channel","b_issue"].forEach(id =>
-  $(id).addEventListener("input", buildOutputs));
+  $(id)?.addEventListener("input", buildOutputs));
 
 function splitLines(s, max=64){
   const out = []; let cur = "";
@@ -1267,9 +1318,11 @@ async function connectWallet(key){
     try{ localStorage.setItem("ls.wallet",key); }catch(e){ void e; }
     try{ M.changeB=hexB(await M.wapi.getChangeAddress()); M.addrBech=b32encode(M.net===1?"addr":"addr_test", M.changeB); }catch(e){ void e; }
     try{ M.params=await fetchNetParams(M.net); }catch(e){ void e; }  // live max_tx → densest pack
-    if((S.wiz||1)<2) S.wiz=2;                          // connecting advances the wizard to "details"
+    // Infer network answer from wallet if user hasn't chosen yet
+    if(!S.q.net) S.q.net = (M.net===0 ? "preview" : "main");
+    if((S.wiz||1)<2) S.wiz=2;                          // connecting advances to questions
     refreshBalance(); renderWiz();
-  }catch(e){ const el=$("walletctl"); if(el) el.innerHTML=`<div class="warnbox">✋ ${esc(String(e.message||e))}</div>`; }
+  }catch(e){ const el=$("walletctl"); if(el) el.innerHTML=`<div class="warnbox">✋ ${esc(String(e.message||e))}</div>`; renderCoach(); }
 }
 function disconnectWallet(){
   M.wapi=null; M.walletKey=""; M.wname=""; M.balance=null; M.addrBech=null; M.state="idle";
@@ -1317,19 +1370,229 @@ async function autoReconnect(){
 const mlog = (cls,msg)=>{ const el=$("mlog"); if(!el) return; const d=document.createElement("div");
   d.className=cls; d.textContent=msg; el.appendChild(d); el.scrollTop=el.scrollHeight; };
 
-/* ── guided 3-step wizard: 1 connect · 2 details · 3 mint ── */
-function setWiz(n){ S.wiz=n; renderWiz(); const sec=$("mintsec"); if(sec && !sec.hidden){ const t=$("wiz"+n); if(t) t.scrollIntoView({behavior:"smooth",block:"start"}); } }
+/* ── guided 3-step wizard: 1 connect · 2 questions · 3 mint ── */
+function coachSay(cue, say, hint, ctas){
+  const el=$("coach"); if(!el) return;
+  el.innerHTML=`<div class="cue">${cue||"Next"}</div>
+    <p class="say">${say}</p>
+    ${hint?`<p class="hint">${hint}</p>`:""}
+    ${ctas?`<div class="cta-row">${ctas}</div>`:""}`;
+  el.querySelectorAll("[data-coach]").forEach(b=>{
+    b.addEventListener("click",()=>{
+      const a=b.dataset.coach;
+      if(a==="connect"){ const wl=listWallets(); if(wl[0]) connectWallet(wl[0].key); else renderWalletCtl(); }
+      else if(a==="wiz2") setWiz(2);
+      else if(a==="wiz3"){ if(questionsDone()) setWiz(3); else setWiz(2); }
+      else if(a==="mintstart"){ const go=$("chain-go")||$("sgngo"); if(go && !go.disabled) go.click(); }
+      else if(a==="scrollfile") $("drop")?.scrollIntoView({behavior:"smooth"});
+    });
+  });
+}
+function renderCoach(){
+  if(!S.enc){ coachSay("Start here","Drop a file above to begin.", "Any photo, PDF, text, or short film. Nothing is uploaded — it stays in this browser."); return; }
+  if(!S.encBytes){
+    coachSay("Almost","That was only a size estimate.",
+      "Drop the real file so I can hash it and mint the exact bytes.",
+      `<button class="btn" type="button" data-coach="scrollfile">Choose file</button>`);
+    return;
+  }
+  const ch=calcChain(S.enc), st=calcStandard(S.enc);
+  const useStd=!!(st && st.total<=ch.total);
+  const n=S.wiz||1;
+  if(n<=1 && !M.wapi && !S.manual){
+    const wl=listWallets();
+    coachSay("Step 1 of 3 — Connect",
+      wl.length ? `I found ${esc(wl[0].name)}. Tap Connect so we can talk to your wallet.` : "I don't see Eternl in this browser yet.",
+      wl.length
+        ? "Connecting spends nothing. We'll only move ADA when you approve the mint."
+        : (isMobileUA()
+          ? "On a phone: open this page inside <b>Eternl → Browser</b> (not Safari/Chrome), then come back here."
+          : "Install the Eternl extension, unlock it, refresh this page, then connect."),
+      wl.length
+        ? `<button class="btn" type="button" data-coach="connect">🔌 Connect ${esc(wl[0].name)}</button>`
+        : `<a class="btn" href="https://eternl.io" target="_blank" rel="noopener">Get Eternl</a>
+           <button class="btn ghost" type="button" id="coach-rescan">Look again</button>`);
+    $("coach-rescan")?.addEventListener("click",()=>{ renderWalletCtl(); renderCoach(); });
+    return;
+  }
+  if(n<=2 && !questionsDone()){
+    const missing=[];
+    if(!S.q.net) missing.push("network");
+    if((isFilmish()||isLargeFile()) && !S.q.sizeOk) missing.push("file size");
+    if(!S.q.forever) missing.push("permanence");
+    coachSay("Step 2 of 3 — Questions",
+      missing.length===3 ? "Answer a few quick questions so I route this correctly."
+        : `Still need: <b>${missing.join(", ")}</b>.`,
+      useStd
+        ? `Your file is small enough for a single-transaction mint (~${fmtA(st.total)} ADA).`
+        : `This will be a Chain Scroll: ~${fmtN(ch.pages)} page signatures + seal, about ${fmtA(ch.total)} ADA.`,
+      `<button class="btn" type="button" data-coach="wiz2">Answer questions →</button>`);
+    return;
+  }
+  if(n<3){
+    coachSay("Ready for step 3",
+      "Questions done. Next I'll hand you the mint button.",
+      useStd ? "One wallet approval and it's permanent."
+        : `Expect about ${fmtN(ch.pages+ch.links)} approvals in Eternl. Leave this tab open — you can resume if interrupted.`,
+      `<button class="btn" type="button" data-coach="wiz3">Continue to mint →</button>`);
+    return;
+  }
+  // step 3
+  if(SGN.running){
+    coachSay("Minting…", `Approving page ${SGN.done+1} of ${SGN.pages.length} in Eternl…`,
+      "Don't close this tab. If you cancel a popup, hit Resume when ready.");
+    return;
+  }
+  if(M.state==="done"){
+    coachSay("Done 📜", "Your scroll is on Cardano.",
+      "Save the pointer and receipts.json below. Verify before you announce.");
+    return;
+  }
+  if(M.state==="minting"||M.state==="quoted"){
+    coachSay("Almost forever", "Approve the seal in Eternl when it asks.",
+      "I'm waiting on your wallet signature, then I'll verify the bytes from the chain.");
+    return;
+  }
+  coachSay("Step 3 of 3 — Mint",
+    useStd ? "One signature will lock this file forever."
+      : `I'll build ${fmtN(ch.pages)} page transactions + ${ch.links} seal${ch.links>1?"s":""}. You approve each in Eternl.`,
+    S.q.net==="preview"
+      ? "You chose Preview practice — make sure Eternl is on the <b>Preview</b> network."
+      : "You chose mainnet — real ADA, permanent.",
+    `<button class="btn" type="button" data-coach="mintstart">I'm ready — show mint controls</button>`);
+}
+
+function choiceHTML(key, val, title, sub){
+  const sel = S.q[key]===val ? " sel" : "";
+  return `<button type="button" class="qchoice${sel}" data-q="${key}" data-v="${val}">
+    <span class="mark">✓</span>
+    <span class="qbody"><b>${title}</b><span>${sub}</span></span>
+  </button>`;
+}
+function answerQ(key, val){
+  if(!(key in S.q)) return;
+  S.q[key]=val;
+  renderQuestions();
+  renderCoach();
+  // soft advance: if all done, nudge
+  if(questionsDone()){
+    const btn=$("wiz2next"); if(btn){ btn.disabled=false; btn.classList.add("pulse"); }
+  }
+}
+function renderQuestions(){
+  const box=$("qbox"); if(!box) return;
+  const ch=calcChain(S.enc), st=calcStandard(S.enc);
+  const useStd=!!(st && st.total<=ch.total);
+  const needSize = isFilmish() || isLargeFile();
+  let html = "";
+
+  html += `<div class="qcard" id="q-net">
+    <h4>1. Where should this live?</h4>
+    <p class="why">Mainnet is permanent and costs real ADA. Preview is free practice with test ADA (same steps).</p>
+    <div class="qchoices">
+      ${choiceHTML("net","main","Mainnet — forever, real ADA", `About ${fmtA(useStd?st.total:ch.total)} ADA once. No undo.`)}
+      ${choiceHTML("net","preview","Preview — rehearse free", "Switch Eternl to the Preview network first, then connect.")}
+    </div>
+    ${S.q.net?`<div class="qdone">✓ Got it — ${S.q.net==="main"?"mainnet":"preview practice"}</div>`:""}
+  </div>`;
+
+  if(needSize){
+    const half=calcChain(Math.ceil(S.enc/2));
+    const label = isFilmish() ? "film / video" : "large file";
+    html += `<div class="qcard" id="q-size">
+      <h4>2. This ${label} is ${fmtB(S.enc)} on-chain — still good?</h4>
+      <p class="why">Smaller bytes = fewer wallet approvals and less ADA. Encode (don't re-host) before minting if you can.
+        Right now: ~${fmtN(ch.pages)} pages · ~${fmtA(ch.total)} ADA. Half the size ≈ ${fmtN(half.pages)} pages · ~${fmtA(half.total)} ADA.</p>
+      <div class="qchoices">
+        ${choiceHTML("sizeOk","as-is","Mint this file as-is", "I'll use the bytes you dropped. Forever means forever.")}
+        ${choiceHTML("sizeOk","later","I'll compress and re-drop first", "Encode smaller (e.g. 480p CRF 30), drop the new file, then continue.")}
+      </div>
+      ${S.q.sizeOk==="as-is"?`<div class="qdone">✓ Minting the file you dropped</div>`:""}
+      ${S.q.sizeOk==="later"?`<div class="nextcue">Re-encode, then drop the new file above. I'll restart the guide with the new hash.
+        <div class="go"><button class="btn ghost" type="button" data-coach="scrollfile" id="q-redrop">Back to file drop</button></div></div>`:""}
+    </div>`;
+  }
+
+  const nq = needSize ? 3 : 2;
+  html += `<div class="qcard" id="q-forever">
+    <h4>${nq}. Do you understand this cannot be edited or deleted?</h4>
+    <p class="why">No admin key. No takedown. No “oops.” Don't inscribe secrets, private data, or anything you may regret.
+      The wallet that pays can be traced — if anonymity matters, use ADA not tied to your identity.</p>
+    <div class="qchoices">
+      ${choiceHTML("forever","yes","Yes — mint forever", "I understand it's permanent and public on Cardano.")}
+      ${choiceHTML("forever","no","Not ready", "Take more time. Nothing is minted until you finish step 3.")}
+    </div>
+    ${S.q.forever==="yes"?`<div class="qdone">✓ Permanence acknowledged</div>`:""}
+    ${S.q.forever==="no"?`<div class="warnbox" style="margin-top:10px">OK — pause here. Come back when you're sure. Your file never left this browser.</div>`:""}
+  </div>`;
+
+  box.innerHTML = html;
+  $("q-redrop")?.addEventListener("click",()=> $("drop")?.scrollIntoView({behavior:"smooth"}));
+
+  const btn=$("wiz2next"), gate=$("wiz2gate");
+  const blocked = S.q.forever==="no" || S.q.sizeOk==="later";
+  const ready = questionsDone() && !blocked;
+  if(btn){ btn.disabled = !ready; btn.textContent = ready ? "Continue to mint →" : "Answer the questions above"; }
+  if(gate){
+    if(ready) gate.textContent = "All set — continue when you're ready.";
+    else if(S.q.forever==="no") gate.textContent = "You chose not ready — I won't advance to mint.";
+    else if(S.q.sizeOk==="later") gate.textContent = "Re-drop a smaller file when you have it.";
+    else {
+      const miss=[];
+      if(!S.q.net) miss.push("where to mint");
+      if(needSize && !S.q.sizeOk) miss.push("file size");
+      if(!S.q.forever) miss.push("permanence");
+      gate.textContent = "Still need: " + miss.join(" · ");
+    }
+  }
+}
+function renderWiz1Body(){
+  const el=$("wiz1body"); if(!el) return;
+  const wl=listWallets();
+  if(M.wapi){
+    el.innerHTML=`<div class="nextcue">Wallet connected. Next up: a few quick questions.
+      <div class="go"><button class="btn" type="button" id="wiz1next">Continue →</button></div></div>`;
+    $("wiz1next")?.addEventListener("click",()=>setWiz(2));
+    return;
+  }
+  if(wl.length){
+    el.innerHTML=`<div class="wbtns"><button class="btn" id="wiz1connect" style="min-height:48px;font-size:16px">🔌 Connect ${esc(wl[0].name)}</button></div>
+      <p style="font-size:13px;color:var(--muted);margin-top:8px">Tip: fund this wallet with a little more than the estimate above.</p>`;
+    $("wiz1connect")?.addEventListener("click",()=>connectWallet(wl[0].key));
+  } else {
+    el.innerHTML = noWalletHelpHTML();
+    bindNoWalletHelp();
+    startWalletPoll();
+  }
+}
+function setWiz(n){ S.wiz=n; renderWiz(); const sec=$("mintsec"); if(sec && !sec.hidden){ const t=$("wiz"+n)||$("coach"); if(t) t.scrollIntoView({behavior:"smooth",block:"start"}); } }
 function renderWiz(){
   const sec=$("mintsec"), bar=$("wizbar");
   if(!S.enc){ if(sec) sec.hidden=true; if(bar) bar.hidden=true; return; }
   sec.hidden=false;
   renderWalletCtl();
   let n=S.wiz||1;
-  if(!M.wapi && !S.manual) n=1;                       // can't advance past connect without a wallet (or manual mode)
-  else if(M.wapi && n<2) n=2;                          // once connected, never sit on the connect step
+  if(!M.wapi && !S.manual) n=1;
+  else if(M.wapi && n<2) n=2;
+  // can't enter mint without questions (unless manual escape)
+  if(n>=3 && !S.manual && !questionsDone()) n=2;
+  if(n>=3 && S.q.forever==="no") n=2;
+  if(n>=3 && S.q.sizeOk==="later") n=2;
   S.wiz=n;
   ["1","2","3"].forEach(k=>{ const el=$("wiz"+k); if(el) el.hidden = (k!==String(n)); });
+  if(n===1) renderWiz1Body();
+  if(n===2) renderQuestions();
   if(n===3) renderMint();
+  renderCoach();
+  // network mismatch soft-warn after questions
+  if(M.wapi && S.q.net==="preview" && M.net===1){
+    const c=$("coach"); if(c) c.insertAdjacentHTML("beforeend",
+      `<p class="hint" style="color:var(--warn)">⚠ Eternl looks like <b>mainnet</b> but you chose Preview — switch the wallet network, reconnect, or change your answer.</p>`);
+  }
+  if(M.wapi && S.q.net==="main" && M.net===0){
+    const c=$("coach"); if(c) c.insertAdjacentHTML("beforeend",
+      `<p class="hint" style="color:var(--warn)">⚠ Eternl is on <b>Preview</b> but you chose mainnet — switch network or change your answer.</p>`);
+  }
   bar.hidden=false;
   const fill=$("wizfill"); if(fill) fill.style.width=((n-1)/2*100)+"%";
   const unlocked = M.wapi || S.manual;
@@ -1337,7 +1600,7 @@ function renderWiz(){
     const s=+b.dataset.goto;
     b.classList.toggle("done", s<n);
     b.classList.toggle("cur", s===n);
-    b.disabled = (s>n) || (s>1 && !unlocked);          // can't jump ahead; nothing past connect until connected/manual
+    b.disabled = (s>n) || (s>1 && !unlocked) || (s===3 && !S.manual && !questionsDone());
   });
 }
 function renderMint(){
@@ -1376,7 +1639,11 @@ function renderMint(){
           ? `<span style="color:var(--ok)">Wallet has ${fmtA(M.balance/1e6)} ADA — enough for this mint.</span>`
           : `<span style="color:var(--warn)">Wallet has ${fmtA(M.balance/1e6)} ADA; budget ≈ <b>${fmtA(feeGuess+3)} ADA</b> (fees + seal + float). Send more ADA first.</span>`)
       : `Fund Eternl with about <b>${fmtA(feeGuess+3)} ADA</b> (fees + seal + a little float).`;
+    const planLine = S.q.net==="preview"
+      ? `<div class="nextcue">You chose <b>Preview practice</b> — confirm Eternl is on Preview before signing.</div>`
+      : `<div class="nextcue">You chose <b>mainnet</b> — real ADA, permanent. Next: start the mint and approve each Eternl popup.</div>`;
     body.innerHTML=`
+      ${planLine}
       <div class="cmp"><b>${isFilm?"Film / large file → Chain Scroll":"Chain Scroll"}</b> — ${reason}.
         Your file is <b>${fmtB(S.enc)}</b> on-chain = <b>${fmtN(sgnPages)} page${sgnPages>1?"s":""}</b>
         + <b>${seals} seal${seals>1?"s":""}</b> (${fmtN(totalTx)} signatures).
@@ -1746,6 +2013,7 @@ async function freshSpendable(){
 }
 async function signAllPages(){
   if(SGN.running) return; SGN.running=true;
+  renderCoach();
   const n=SGN.pages.length;
   const changeB = M.changeB || (M.changeB=hexB(await M.wapi.getChangeAddress()));
   const selfB = changeB;
@@ -1755,6 +2023,7 @@ async function signAllPages(){
       const left=n-k;
       const eta=left>1 ? ` · ~${Math.ceil(left*0.35)} min left` : "";
       sgnStatus(k+1,"sign","building page "+(k+1)+" of "+n+"…"+eta);
+      if(k===SGN.done || k%5===0) renderCoach();
       const aux=pageAux(p), auxHash=blake2b256(aux);
       // wait for a spendable UTxO — previous page's change may still be settling in Eternl
       let utxos=await freshSpendable(), waited=0;
