@@ -367,13 +367,13 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
     <span class="resolver-ic" aria-hidden="true">
      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
     </span>
-    <input id="point" placeholder="paste a Library Policy ID or a scroll pointer&hellip;" spellcheck="false" autocomplete="off" autocapitalize="off">
+    <input id="point" placeholder="paste a $handle, a Library Policy ID, or a scroll pointer&hellip;" spellcheck="false" autocomplete="off" autocapitalize="off">
     <button id="openbtn">Read</button>
    </div>
    <ul class="reads-legend" aria-label="What the reader accepts">
+    <li><code>$handle</code><span>opens that wallet&rsquo;s latest library &mdash; no address to remember</span></li>
     <li><code>library policy id</code><span>a whole library &mdash; opens the latest registry head under it</span></li>
     <li><code>txHash#ix</code><span>a single scroll &mdash; rebuilds &amp; verifies that file</span></li>
-    <li><code>policy.ASSET / tx hash</code><span>a specific registry version, or a channel feed</span></li>
    </ul>
    <p class="resolver-hint">Not a walled garden &mdash; anyone&rsquo;s scrolls, channels, and registries resolve here.</p>
   </div>
@@ -880,7 +880,36 @@ async function resolveRegistry(input){
     if(!best) throw new Error('no registry head NFT under that policy');
     meta=best.minting_tx_metadata;
     if($('anchorinfo')) $('anchorinfo').textContent='latest head: '+bestName+' (v'+bestV+')';
-  } else throw new Error('expected a policy id, a registry NFT (policy.ASSET), or a 64-hex tx hash');
+  } else if(/^\$[a-z0-9._-]{1,63}$/i.test(raw)){
+    // ADA Handle → holder wallet → newest "Registry Head" NFT it holds → the library
+    const name=raw.slice(1).toLowerCase();
+    if($('anchorinfo')) $('anchorinfo').textContent='resolving handle '+raw+'…';
+    const HPOL='f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a';
+    let holder=null;
+    for(const an of ['000de140'+hexEnc(name), hexEnc(name)]){          // CIP-68 (222) first, then legacy plain
+      const r=await api('/asset_addresses',{_asset_policy:HPOL,_asset_name:an},true);
+      if(r&&r[0]&&r[0].stake_address){ holder=r[0]; break; }
+    }
+    if(!holder) throw new Error('handle '+raw+' not found on-chain');
+    const assets=await api('/account_assets',{_stake_addresses:[holder.stake_address]},true);
+    const cands=[];
+    for(const a of (assets||[])){ let asc=''; try{ asc=td.decode(hex2b(a.asset_name||'')); }catch(_){}
+      if(asc.toUpperCase().includes('REGISTRY')) cands.push([a.policy_id,a.asset_name]); }
+    if(!cands.length) throw new Error(raw+" holds no registry NFT — put the registry NFT and this handle in the same wallet");
+    const infos=await api('/asset_info',{_asset_list:cands},true);
+    let best=null,bestV=-1,bestName='';
+    for(const a of (infos||[])){
+      const g=a.minting_tx_metadata&&a.minting_tx_metadata['721']&&a.minting_tx_metadata['721'][a.policy_id];
+      const md=g&&(g[a.asset_name_ascii]||Object.values(g)[0]);
+      if(md&&md.Type==='Registry Head'&&a.minting_tx_metadata['22027']){
+        const v=parseInt(md.Version||'0',10)||0;
+        if(v>bestV){ bestV=v; best=a; bestName=a.asset_name_ascii||''; }
+      }
+    }
+    if(!best) throw new Error(raw+" holds no registry head NFT");
+    meta=best.minting_tx_metadata;
+    if($('anchorinfo')) $('anchorinfo').textContent=raw+' → latest head '+bestName+' (v'+bestV+')';
+  } else throw new Error('expected a $handle, a policy id, a registry NFT (policy.ASSET), or a 64-hex tx hash');
   if(!meta||!meta['22027']) throw new Error('no on-chain registry list (label 22027) at that pointer');
   const entries=meta['22027'].entries||[];
   let regName='On-chain Registry';
@@ -989,6 +1018,7 @@ async function openChannel(policy){
 
 async function openPointer(raw){
   const p=raw.trim().toLowerCase();
+  if(raw.trim().startsWith('$')){ try{ await resolveRegistry(raw.trim()); }catch(e){ alert('handle lookup failed — '+(e.message||e)); } return; }
   if(isRegistryPointer(raw)){ try{ await resolveRegistry(raw); }catch(e){ alert('registry not found — '+(e.message||e)); } return; }
   if(/^[0-9a-f]{56}$/.test(p)){
     // a policy: first try it as a REGISTRY (latest Registry Head under it → the library)
