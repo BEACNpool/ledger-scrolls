@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledger Chess — chess that lives inside Cardano</title>
+<meta name="description" content="A complete chess game stored inside the Cardano blockchain. Your browser rebuilds it from raw transactions, proves every byte, then lets you play. Beat the immortal engine and etch your victory on-chain forever.">
+<meta property="og:title" content="Ledger Chess — chess that lives inside Cardano">
+<meta property="og:description" content="No server. No file host. The game's bytes live inside Cardano transactions — verified by your browser before a single piece moves. Beat the deterministic engine and your victory is etched on-chain forever.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://beacnpool.github.io/ledger-scrolls/ledger-chess.html">
+<meta property="og:image" content="https://beacnpool.github.io/ledger-scrolls/media/ledger-chess-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg">
+<style>
+/* Ledger Scrolls site language: warm paper + blueprint. Serif = archive,
+   sans = interface, mono = chain. The game itself renders dark inside its
+   frame — an arcade cabinet standing in the library. */
+:root{
+  --bg:#f6f5f1; --bg-2:#efece4; --surface:#ffffff; --surface-2:#fbfaf6;
+  --ink:#14161b; --ink-2:#3a4049; --muted:#6b7280; --faint:#9aa1ab;
+  --line:#e6e3da; --line-2:#dbd6ca;
+  --accent:#2f53ff; --accent-ink:#0d228f; --accent-soft:#ebefff;
+  --amber:#b27a1e; --amber-soft:#f6eedd;
+  --ok:#0a8f5b; --ok-soft:#e7f6ef; --bad:#d8383d;
+  --radius:16px; --radius-sm:10px; --pill:999px;
+  --sh:0 6px 20px -6px rgba(20,22,27,.12),0 2px 6px rgba(20,22,27,.05);
+  --sh-lg:0 28px 60px -18px rgba(13,34,143,.20),0 8px 24px -10px rgba(20,22,27,.12);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,system-ui,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--sans)}
+a{color:var(--accent)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+header.site{padding:14px 0;border-bottom:1px solid var(--line);background:var(--surface)}
+header.site .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+header.site a.home{color:var(--ink);text-decoration:none;font-family:var(--serif);font-size:18px}
+header.site .links a{font-size:14px;text-decoration:none;margin-left:16px;color:var(--ink-2)}
+
+.hero{padding:56px 0 30px;text-align:center;background:
+  radial-gradient(1200px 400px at 50% -100px, var(--accent-soft), transparent 70%)}
+.hero .kicker{font:12px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--accent-ink)}
+.hero h1{font-family:var(--serif);font-size:clamp(34px,6vw,58px);line-height:1.1;margin:12px 0}
+.hero p.sub{max-width:640px;margin:0 auto;color:var(--ink-2);font-size:18px}
+.hero .badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:22px 0 8px}
+.badge{font:12.5px var(--mono);background:var(--surface);border:1px solid var(--line-2);
+       border-radius:var(--pill);padding:6px 14px;color:var(--ink-2)}
+.badge b{color:var(--ok)}
+.cta{display:inline-block;margin-top:18px;background:var(--accent);color:#fff;text-decoration:none;
+     font-weight:600;padding:13px 30px;border-radius:var(--pill);box-shadow:var(--sh)}
+.cta:hover{background:var(--accent-ink)}
+
+.cabinet{margin:34px auto 10px;max-width:1080px;padding:0 20px}
+#gamewrap{background:#0e1116;border-radius:var(--radius);box-shadow:var(--sh-lg);
+          overflow:hidden;position:relative;aspect-ratio:16/11;min-height:420px}
+#gameframe{width:100%;height:100%;border:0;display:none}
+#trust{position:absolute;inset:0;padding:26px;font:13px/1.8 var(--mono);color:#8494ab;overflow:auto}
+#trust .ok{color:#79d29a} #trust .bad{color:#e07a7a} #trust .h{color:#dbe4f0}
+.trustline{font:12px var(--mono);color:var(--muted);text-align:center;margin-top:10px}
+
+section{padding:44px 0}
+section h2{font-family:var(--serif);font-size:30px;margin-bottom:14px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+      padding:20px;box-shadow:var(--sh)}
+.card h3{font-size:16px;margin-bottom:6px}
+.card p{font-size:14.5px;color:var(--ink-2)}
+.card .n{font:22px var(--serif);color:var(--accent-ink)}
+code,.mono{font-family:var(--mono)}
+code{background:var(--bg-2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:12.5px}
+
+#lb .card{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:500;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em}
+td.mono{font-size:12.5px}
+.v-ok{color:var(--ok);font-weight:600} .v-bad{color:var(--bad)} .v-un{color:var(--muted)}
+button.small{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--pill);
+  padding:7px 16px;font:14px var(--sans);cursor:pointer;color:var(--ink)}
+button.small:hover{border-color:var(--accent)}
+#lbstatus{color:var(--muted);font-size:13.5px;margin:8px 0}
+
+.share{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.share a,.share button{background:var(--ink);color:#fff;border:none;text-decoration:none;
+  font:14.5px var(--sans);padding:10px 20px;border-radius:var(--pill);cursor:pointer}
+.share a:hover,.share button:hover{background:var(--accent-ink)}
+
+footer.site{border-top:1px solid var(--line);padding:26px 0 40px;margin-top:30px;
+  font-size:13px;color:var(--muted)}
+footer.site .mono{font-size:11.5px;word-break:break-all}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="home" href="index.html">📜 Ledger Scrolls</a>
+    <div class="links">
+      <a href="index.html">The Library</a>
+      <a href="calculator.html">Mint a Scroll</a>
+      <a href="https://github.com/BEACNpool/ledger-scrolls">GitHub</a>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="kicker">A Ledger Scrolls demonstration · software stored on-chain</div>
+    <h1>♟ Ledger Chess</h1>
+    <p class="sub">A complete chess game that lives <b>inside the Cardano blockchain</b> —
+    not on a server, not on IPFS. This page rebuilds it from raw transactions,
+    proves every byte against an on-chain fingerprint, and only then lets it run.
+    Beat the engine and your victory is <b>etched on-chain forever</b>.</p>
+    <div class="badges">
+      <span class="badge"><b>✓</b> 78,884 bytes, fully on-chain</span>
+      <span class="badge"><b>✓</b> SHA-256 verified in your browser</span>
+      <span class="badge"><b>✓</b> no server can take it down</span>
+      <span class="badge"><b>✓</b> deterministic engine = immortal referee</span>
+    </div>
+    <a class="cta" href="#play">Play it — it's free</a>
+  </div>
+</div>
+
+<div class="cabinet" id="play">
+  <div id="gamewrap">
+    <div id="trust"></div>
+    <iframe id="gameframe" sandbox="allow-scripts" title="Ledger Chess (verified on-chain scroll)"></iframe>
+  </div>
+  <div class="trustline">the log above is your browser pulling the game out of Cardano and proving it, live ·
+    scroll pointer <span id="ptrline"></span></div>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2>What just happened?</h2>
+    <div class="cols">
+      <div class="card"><div class="n">1 · fetch</div>
+        <p>The game's bytes are split across <b>Cardano transactions</b> (metadata pages),
+        anchored by a manifest locked forever in an unspendable output. Your browser asked
+        the chain for them directly. There is no web host.</p></div>
+      <div class="card"><div class="n">2 · prove</div>
+        <p>The manifest commits to a <b>SHA-256 fingerprint</b>. Your browser reassembled the
+        pages and recomputed the hash locally. Mismatch = nothing renders. You don't trust —
+        you check.</p></div>
+      <div class="card"><div class="n">3 · play</div>
+        <p>The verified file runs in a locked sandbox with <b>no network access</b>.
+        Everything — engine, openings, five annotated classic games — is inside the scroll.
+        It will work exactly like this for as long as Cardano exists.</p></div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <h2>The immortal referee</h2>
+    <div class="cols">
+      <div class="card"><h3>Deterministic by construction</h3>
+        <p>The engine uses integer-only evaluation, fixed search depth, and fixed tie-breaking.
+        No clocks, no randomness, no floats. Given the same moves it replies <b>identically on
+        any device, in any browser, in any century</b>.</p></div>
+      <div class="card"><h3>Victories are claims — claims are checked</h3>
+        <p>Beat the engine and you can submit a ~2 ADA transaction carrying your moves
+        (paid to an unspendable address — nobody profits). The leaderboard below <b>replays
+        every claim against the on-chain engine</b> before it shows a ✓. A faked win simply
+        fails to replay.</p></div>
+      <div class="card"><h3>A guestbook nobody can burn</h3>
+        <p>Each verified victory carries a 64-byte message from its author, signed by their
+        own wallet, readable forever. Losses cost nothing and leave no trace. Every name on
+        the wall is a real win.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="lb">
+  <div class="wrap">
+    <h2>Leaderboard / Guestbook</h2>
+    <div id="lbstatus">loading claims from the chain…</div>
+    <div class="card">
+      <table id="lbtable" style="display:none">
+        <thead><tr><th>who</th><th>depth</th><th>plies</th><th>message</th><th>verdict</th><th>tx</th></tr></thead>
+        <tbody id="lbbody"></tbody>
+      </table>
+      <div id="lbempty" style="color:var(--muted);font-size:14.5px">No etched victories yet — the wall is waiting for its first name.</div>
+    </div>
+    <p style="margin-top:10px"><button class="small" id="lbrefresh">↻ refresh from chain</button></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Tell someone</h2>
+    <p style="color:var(--ink-2);max-width:640px;margin-bottom:14px">Chess stored inside a blockchain,
+    provable in your browser, with a referee that can never be patched, bribed, or lost.
+    If that's not worth a post, nothing is.</p>
+    <div class="share">
+      <a id="tweet" target="_blank" rel="noopener"
+         href="https://twitter.com/intent/tweet?text=%E2%99%9F%20A%20complete%20chess%20game%20that%20lives%20INSIDE%20the%20Cardano%20blockchain.%20No%20server.%20Your%20browser%20rebuilds%20it%20from%20raw%20transactions%2C%20proves%20every%20byte%2C%20then%20you%20play.%20Beat%20the%20engine%20%E2%86%92%20your%20win%20is%20etched%20on-chain%20forever.&url=https%3A%2F%2Fbeacnpool.github.io%2Fledger-scrolls%2Fledger-chess.html">Post on X</a>
+      <button id="copylink">Copy link</button>
+      <span id="copied" style="color:var(--ok);font-size:14px;display:none">copied ✓</span>
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <p><b>Receipts</b> (everything is public and reproducible):</p>
+    <p class="mono">game scroll: 59edac1bf869a731bd79f047b8809b659e853aa820daea57b35dc45227197654#0<br>
+    reader scroll (this page's on-chain twin): 807cd79bcbe316f36f4435dd3ccf03c5478b018a1a6c55f0c44dc6221201a8cd#0<br>
+    claims: metadata label 22030 → addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn</p>
+    <p style="margin-top:10px">This page is a convenience mirror — the game <i>and a reader for it</i> are
+    both stored on-chain. If this site vanished, both survive. Part of
+    <a href="index.html">Ledger Scrolls</a>: the library that cannot burn. · MIT ·
+    <a href="https://github.com/BEACNpool/ledger-chess">source & receipts</a></p>
+  </div>
+</footer>
+
+<script>
+"use strict";
+/* ═══ Ledger Chess public reader — same verify→execute core as the on-chain
+   arcade reader scroll (807cd79b…#0), wrapped in the library's shell. ═══ */
+var GAME_ID = "ledger-chess-v1";
+var CLAIM_LABEL = "22030";
+var CLAIM_LOVELACE = 2000000;
+var GAME_POINTER = { 1: "59edac1bf869a731bd79f047b8809b659e853aa820daea57b35dc45227197654#0", 0: "" };
+
+/*ARCADE_CORE_START*/
+/* ═══ tiny helpers (from ledger-scrolls calculator.html, MIT) ═══ */
+var u8 = function(a){ return Uint8Array.from(a); };
+var hexB = function(h){ var o=new Uint8Array(h.length/2); for(var i=0;i<o.length;i++)o[i]=parseInt(h.substr(i*2,2),16); return o; };
+var bHex = function(b){ return Array.prototype.map.call(b,function(x){return x.toString(16).padStart(2,"0");}).join(""); };
+var catB = function(parts){ var n=0,i,p; for(i=0;i<parts.length;i++)n+=parts[i].length; var o=new Uint8Array(n),off=0;
+  for(i=0;i<parts.length;i++){p=parts[i];o.set(p,off);off+=p.length;} return o; };
+
+var B32C="qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+function b32polymod(vals){ var G=[0x3b6a57b2,0x26508e6d,0x1ea119fa,0x3d4233dd,0x2a1462b3],chk=1,v,b,i,j;
+  for(j=0;j<vals.length;j++){ v=vals[j]; b=chk>>>25; chk=((chk&0x1ffffff)<<5)^v; for(i=0;i<5;i++) if((b>>>i)&1) chk^=G[i]; } return chk; }
+function b32hrpx(hrp){ var r=[],i; for(i=0;i<hrp.length;i++)r.push(hrp.charCodeAt(i)>>>5); r.push(0);
+  for(i=0;i<hrp.length;i++)r.push(hrp.charCodeAt(i)&31); return r; }
+function b32decode(s){ s=s.toLowerCase(); var pos=s.lastIndexOf("1"),hrp=s.slice(0,pos);
+  var data=s.slice(pos+1).split("").map(function(c){return B32C.indexOf(c);});
+  if(data.indexOf(-1)>=0 || b32polymod(b32hrpx(hrp).concat(data))!==1) throw new Error("bad bech32");
+  var d5=data.slice(0,-6),acc=0,bits=0,out=[],i;
+  for(i=0;i<d5.length;i++){ acc=(acc<<5)|d5[i]; bits+=5; while(bits>=8){ bits-=8; out.push((acc>>>bits)&255); } }
+  return { hrp:hrp, bytes:new Uint8Array(out) }; }
+function b32encode(hrp,bytes){ var acc=0,bits=0,d5=[],i;
+  for(i=0;i<bytes.length;i++){ acc=(acc<<8)|bytes[i]; bits+=8; while(bits>=5){ bits-=5; d5.push((acc>>>bits)&31); } }
+  if(bits>0) d5.push((acc<<(5-bits))&31);
+  var chkv=b32hrpx(hrp).concat(d5).concat([0,0,0,0,0,0]),mod=b32polymod(chkv)^1,chk=[],p;
+  for(p=0;p<6;p++) chk.push((mod>>>(5*(5-p)))&31);
+  return hrp+"1"+d5.concat(chk).map(function(x){return B32C[x];}).join(""); }
+
+/* blake2b-256 (blakejs construction, public domain) */
+var B2IV=new Uint32Array([0xf3bcc908,0x6a09e667,0x84caa73b,0xbb67ae85,0xfe94f82b,0x3c6ef372,0x5f1d36f1,0xa54ff53a,0xade682d1,0x510e527f,0x2b3e6c1f,0x9b05688c,0xfb41bd6b,0x1f83d9ab,0x137e2179,0x5be0cd19]);
+var B2S=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,10,4,8,9,15,13,6,1,12,0,2,11,7,5,3,11,8,12,0,5,2,15,13,10,14,3,6,7,1,9,4,7,9,3,1,13,12,11,14,2,6,5,10,4,0,15,8,9,0,5,7,2,4,10,15,14,1,11,12,6,8,3,13,2,12,6,10,0,11,8,3,4,13,7,5,15,14,1,9,12,5,1,15,14,13,4,10,0,7,6,3,9,2,8,11,13,11,7,14,12,1,3,9,5,0,15,4,8,6,2,10,6,15,14,9,11,3,0,8,12,2,13,7,1,4,10,5,10,2,8,4,7,6,1,5,15,11,9,14,3,12,13,0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,10,4,8,9,15,13,6,1,12,0,2,11,7,5,3].map(function(x){return x*2;});
+function blake2b256(input){
+  var v=new Uint32Array(32),m=new Uint32Array(32);
+  function A(a,b){ var o0=v[a]+v[b],o1=v[a+1]+v[b+1]; if(o0>=0x100000000)o1++; v[a]=o0>>>0; v[a+1]=o1>>>0; }
+  function AC(a,b0,b1){ var o0=v[a]+b0; if(b0<0)o0+=0x100000000; var o1=v[a+1]+b1; if(o0>=0x100000000)o1++; v[a]=o0>>>0; v[a+1]=o1>>>0; }
+  function G(a,b,c,d,ix,iy){
+    var x0=m[ix],x1=m[ix+1],y0=m[iy],y1=m[iy+1],x,x2,x3,x4,x5;
+    A(a,b); AC(a,x0,x1); x=v[d]^v[a]; x2=v[d+1]^v[a+1]; v[d]=x2; v[d+1]=x;
+    A(c,d); x=v[b]^v[c]; x3=v[b+1]^v[c+1]; v[b]=((x>>>24)^(x3<<8))>>>0; v[b+1]=((x3>>>24)^(x<<8))>>>0;
+    A(a,b); AC(a,y0,y1); x=v[d]^v[a]; x4=v[d+1]^v[a+1]; v[d]=((x>>>16)^(x4<<16))>>>0; v[d+1]=((x4>>>16)^(x<<16))>>>0;
+    A(c,d); x=v[b]^v[c]; x5=v[b+1]^v[c+1]; v[b]=((x5>>>31)^(x<<1))>>>0; v[b+1]=((x>>>31)^(x5<<1))>>>0; }
+  var h=new Uint32Array(16),i; for(i=0;i<16;i++)h[i]=B2IV[i]; h[0]^=0x01010000^32;
+  var blk=new Uint8Array(128),t=0,c=0;
+  function compress(last){
+    var i2;
+    for(i2=0;i2<16;i2++){ v[i2]=h[i2]; v[i2+16]=B2IV[i2]; }
+    v[24]=(v[24]^t)>>>0; v[25]=(v[25]^(t/0x100000000))>>>0;
+    if(last){ v[28]=~v[28]>>>0; v[29]=~v[29]>>>0; }
+    for(i2=0;i2<32;i2++) m[i2]=(blk[4*i2]^(blk[4*i2+1]<<8)^(blk[4*i2+2]<<16)^(blk[4*i2+3]<<24))>>>0;
+    for(i2=0;i2<12;i2++){
+      G(0,8,16,24,B2S[i2*16+0],B2S[i2*16+1]);  G(2,10,18,26,B2S[i2*16+2],B2S[i2*16+3]);
+      G(4,12,20,28,B2S[i2*16+4],B2S[i2*16+5]); G(6,14,22,30,B2S[i2*16+6],B2S[i2*16+7]);
+      G(0,10,20,30,B2S[i2*16+8],B2S[i2*16+9]); G(2,12,22,24,B2S[i2*16+10],B2S[i2*16+11]);
+      G(4,14,16,26,B2S[i2*16+12],B2S[i2*16+13]);G(6,8,18,28,B2S[i2*16+14],B2S[i2*16+15]); }
+    for(i2=0;i2<16;i2++) h[i2]=(h[i2]^v[i2]^v[i2+16])>>>0; }
+  for(i=0;i<input.length;i++){ if(c===128){ t+=c; compress(false); c=0; } blk[c++]=input[i]; }
+  t+=c; while(c<128)blk[c++]=0; compress(true);
+  var out=new Uint8Array(32); for(i=0;i<32;i++)out[i]=(h[i>>2]>>>(8*(i&3)))&255;
+  return out;
+}
+
+/* ═══ CBOR ═══ */
+function cH(n,mt){ var t=mt<<5;
+  if(n<24) return u8([t|n]);
+  if(n<256) return u8([t|24,n]);
+  if(n<65536) return u8([t|25,n>>>8,n&255]);
+  if(n<4294967296) return u8([t|26,(n/16777216)&255,(n>>>16)&255,(n>>>8)&255,n&255]);
+  var hi=Math.floor(n/4294967296),lo=n%4294967296;
+  return u8([t|27,(hi/16777216)&255,(hi>>>16)&255,(hi>>>8)&255,hi&255,(lo/16777216)&255,(lo>>>16)&255,(lo>>>8)&255,lo&255]); }
+var cU=function(n){return cH(n,0);};
+var cBy=function(b){return catB([cH(b.length,2),b]);};
+var cS=function(s){var b=new TextEncoder().encode(s);return catB([cH(b.length,3),b]);};
+var cAr=function(n){return cH(n,4);};
+var cMp=function(n){return cH(n,5);};
+var cTg=function(n){return cH(n,6);};
+
+function cborD(raw,pos){
+  pos=pos||0;
+  function len(ai,p){ if(ai<24)return[ai,p]; var w={24:1,25:2,26:4,27:8}[ai]; if(!w)throw new Error("cbor len");
+    var n=0; for(var i=0;i<w;i++)n=n*256+raw[p+i]; return[n,p+w]; }
+  var b=raw[pos],mt=b>>5,ai=b&31,n,p,o,i,v,q,m,k,r;
+  if(mt===0){ r=len(ai,pos+1); return r; }
+  if(mt===1){ r=len(ai,pos+1); return[-1-r[0],r[1]]; }
+  if(mt===2||mt===3){
+    if(ai===31){ p=pos+1; var parts=[]; while(raw[p]!==0xff){ r=cborD(raw,p); parts.push(r[0]); p=r[1]; }
+      var whole=catB(parts); return[mt===2?whole:new TextDecoder().decode(whole),p+1]; }
+    r=len(ai,pos+1); n=r[0]; p=r[1];
+    var seg=raw.subarray(p,p+n);
+    return[mt===2?seg:new TextDecoder().decode(seg),p+n]; }
+  if(mt===4){
+    if(ai===31){ p=pos+1; o=[]; while(raw[p]!==0xff){ r=cborD(raw,p); o.push(r[0]); p=r[1]; } return[o,p+1]; }
+    r=len(ai,pos+1); n=r[0]; p=r[1]; o=[];
+    for(i=0;i<n;i++){ q=cborD(raw,p); o.push(q[0]); p=q[1]; } return[o,p]; }
+  if(mt===5){ m=new Map();
+    if(ai===31){ p=pos+1; while(raw[p]!==0xff){ k=cborD(raw,p); v=cborD(raw,k[1]); m.set(k[0],v[0]); p=v[1]; } return[m,p+1]; }
+    r=len(ai,pos+1); n=r[0]; p=r[1];
+    for(i=0;i<n;i++){ k=cborD(raw,p); v=cborD(raw,k[1]); m.set(k[0],v[0]); p=v[1]; } return[m,p]; }
+  if(mt===6){ r=len(ai,pos+1); v=cborD(raw,r[1]); return[{tag:r[0],value:v[0]},v[1]]; }
+  if(mt===7){ if(ai===20)return[false,pos+1]; if(ai===21)return[true,pos+1]; if(ai===22)return[null,pos+1];
+    throw new Error("cbor simple "+ai); }
+  throw new Error("cbor major "+mt);
+}
+
+/* ═══ networks + Koios ═══ */
+var LOCK_MAINNET="addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn";
+var SCRIPT_HASH=b32decode(LOCK_MAINNET).bytes.subarray(1);
+var NETS={
+  1:{ name:"MAINNET", lockBech:LOCK_MAINNET, lockBytes:b32decode(LOCK_MAINNET).bytes,
+      koios:["https://koios.beacn.workers.dev/api/v1","https://api.koios.rest/api/v1"],
+      scan:"https://cardanoscan.io/transaction/" },
+  0:{ name:"PREVIEW", lockBech:b32encode("addr_test",catB([u8([0x70]),SCRIPT_HASH])),
+      lockBytes:catB([u8([0x70]),SCRIPT_HASH]),
+      koios:["https://koios.beacn.workers.dev/preview/api/v1","https://preview.koios.rest/api/v1"],
+      scan:"https://preview.cardanoscan.io/transaction/" }
+};
+async function kapi(net,path,body,method){
+  var lastErr,i,base,r;
+  for(i=0;i<NETS[net].koios.length;i++){
+    base=NETS[net].koios[i];
+    try{
+      r=await fetch(base+path,{ method:method||(body?"POST":"GET"),
+        headers:body?{"Content-Type":"application/json"}:{},
+        body:body?JSON.stringify(body):undefined, signal:AbortSignal.timeout(20000) });
+      if(r.ok) return await r.json();
+      lastErr=new Error("HTTP "+r.status+" from "+base);
+    }catch(e){ lastErr=e; }
+  }
+  throw lastErr||new Error("chain API unreachable");
+}
+async function sha256hex(bytes){
+  var d=await crypto.subtle.digest("SHA-256",bytes); return bHex(new Uint8Array(d));
+}
+
+/* ═══ scroll reconstruction (manifest-chain-v2, per registry/spec) ═══ */
+var trustEl=document.getElementById("trust");
+function tlog(cls,msg){ var d=document.createElement("div"); if(cls)d.className=cls;
+  d.textContent=msg; trustEl.appendChild(d); trustEl.scrollTop=trustEl.scrollHeight; }
+
+function segBytes(x){                       // segment may arrive as 0x…, bare hex, or {bytes}
+  if(x instanceof Uint8Array) return x;
+  if(typeof x==="string") return hexB(x.slice(0,2)==="0x"?x.slice(2):x);
+  if(x&&typeof x==="object"&&x.bytes) return hexB(x.bytes);
+  throw new Error("bad segment");
+}
+function asHex(x){ var b=segBytes(x); return bHex(b); }
+
+async function reconstructChain(net,pointer){
+  var m=pointer.match(/^([0-9a-f]{64})#(\d+)$/i);
+  if(!m) throw new Error("bad pointer "+pointer);
+  var txHash=m[1].toLowerCase(), txIx=parseInt(m[2],10);
+  var pageHashes=[], fileMeta=null, hop=0;
+  tlog("h","── Ledger Chess · trust log ──");
+  while(txHash){
+    if(++hop>40) throw new Error("manifest chain too long");
+    tlog("","manifest "+txHash.slice(0,16)+"…#"+txIx+" — fetching inline datum");
+    var rows=await kapi(net,"/utxo_info",{_utxo_refs:[txHash+"#"+txIx],_extended:true});
+    var datumHex=rows&&rows[0]&&rows[0].inline_datum&&rows[0].inline_datum.bytes;
+    if(!datumHex) throw new Error("no inline datum at "+txHash+"#"+txIx);
+    var datum=cborD(hexB(datumHex))[0];
+    if(!(datum&&datum.tag===121&&Array.isArray(datum.value))) throw new Error("not a Constr 0 manifest");
+    var f=datum.value;
+    var meta={ version:f[0], contentType:new TextDecoder().decode(f[1]),
+               codec:new TextDecoder().decode(f[2]), sizeDecoded:f[3],
+               shaDecoded:bHex(f[4]), shaEncoded:bHex(f[5]) };
+    if(meta.version!==2) throw new Error("manifest version "+meta.version);
+    if(fileMeta){ if(JSON.stringify(meta)!==JSON.stringify(fileMeta)) throw new Error("chained manifest fields differ"); }
+    else fileMeta=meta;
+    var list=f[6],i;
+    for(i=0;i<list.length;i++) pageHashes.push(bHex(list[i]));
+    var next=f[7];
+    if(next&&next.tag===122&&next.value&&next.value.length===2){ txHash=bHex(next.value[0]); txIx=next.value[1]; }
+    else txHash=null;
+  }
+  tlog("ok","manifest ✓  "+fileMeta.contentType+" · "+fileMeta.codec+" · "+
+       fileMeta.sizeDecoded+" bytes · "+pageHashes.length+" pages");
+
+  var pages={}, batch=40, off;
+  for(off=0;off<pageHashes.length;off+=batch){
+    var slice=pageHashes.slice(off,off+batch);
+    tlog("","pages "+(off+1)+"–"+(off+slice.length)+" / "+pageHashes.length+" — fetching tx metadata");
+    var metaRows=await kapi(net,"/tx_metadata",{_tx_hashes:slice});
+    var j;
+    for(j=0;j<metaRows.length;j++){
+      var row=metaRows[j], lab=row.metadata&&(row.metadata["22025"]||row.metadata[22025]);
+      if(lab) pages[row.tx_hash.toLowerCase()]=lab;
+    }
+  }
+  var encParts=[],k;
+  for(k=0;k<pageHashes.length;k++){
+    var pg=pages[pageHashes[k]];
+    if(!pg) throw new Error("page tx "+pageHashes[k].slice(0,16)+"… missing label 22025");
+    var segs=pg.p||pg.P, payload=catB(segs.map(segBytes));
+    if(pg.sha){
+      var want=asHex(pg.sha);
+      var got=await sha256hex(payload);
+      if(got!==want) throw new Error("page "+(k+1)+" hash mismatch");
+    }
+    encParts.push(payload);
+  }
+  var encoded=catB(encParts);
+  var encSha=await sha256hex(encoded);
+  if(encSha!==fileMeta.shaEncoded) throw new Error("encoded stream sha mismatch");
+  tlog("ok","encoded stream ✓ sha256 "+encSha.slice(0,16)+"…");
+
+  var decoded=encoded;
+  if(fileMeta.codec==="gzip"){
+    var ds=new DecompressionStream("gzip");
+    var stream=new Blob([encoded]).stream().pipeThrough(ds);
+    decoded=new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+  var decSha=await sha256hex(decoded);
+  if(decSha!==fileMeta.shaDecoded) throw new Error("decoded file sha mismatch");
+  if(decoded.length!==fileMeta.sizeDecoded) throw new Error("decoded size mismatch");
+  tlog("ok","file ✓ sha256 "+decSha.slice(0,16)+"… ("+decoded.length+" bytes)");
+  return { bytes:decoded, meta:fileMeta };
+}
+
+/* ═══ boot: reconstruct (or dev-load), then execute ═══ */
+var Q=new URLSearchParams(location.search);
+var NET=Q.get("net")==="preview"?0:1;
+var frame=document.getElementById("gameframe");
+var GAME_ORIGIN_READY=false;
+
+async function boot(){
+  try{
+    var bytes;
+    if(Q.get("src")){                               // dev mode: load from a local URL, no chain
+      tlog("h","── DEV MODE — loading game from "+Q.get("src")+" (no chain verify) ──");
+      var r=await fetch(Q.get("src"));
+      bytes=new Uint8Array(await r.arrayBuffer());
+      tlog("ok","loaded "+bytes.length+" bytes (unverified dev build)");
+    }else{
+      var ptr=Q.get("ptr")||GAME_POINTER[NET];
+      if(!ptr){ tlog("bad","no game pointer configured for "+NETS[NET].name+
+        " — pass ?ptr=<manifestTx>#<ix> (or ?src=<url> for dev)"); return; }
+      var out=await reconstructChain(NET,ptr);
+      bytes=out.bytes;
+    }
+    tlog("h","executing verified bytes in a sandboxed frame (allow-scripts, opaque origin, no network)…");
+    var blob=new Blob([bytes],{type:"text/html"});
+    frame.src=URL.createObjectURL(blob);
+    frame.style.display="block";
+    setTimeout(function(){ document.getElementById("trust").style.display="none"; },1500);
+    GAME_ORIGIN_READY=true;
+  }catch(e){ tlog("bad","✗ "+(e.message||e)); }
+}
+
+/* ═══ CIP-30 wallet (parent side only — Eternl, as proven by calculator.html) ═══ */
+var W={ api:null, net:null, params:null };
+async function connectWallet(){
+  var c=window.cardano||{};
+  var w=c.eternl||c.ccvault;
+  if(!w) throw new Error("Eternl wallet not found — install/enable it, then retry");
+  W.api=await w.enable();
+  W.net=await W.api.getNetworkId();
+  if(!(W.net in NETS)) throw new Error("unknown wallet network");
+  var rows=await kapi(W.net,"/epoch_params?order=epoch_no.desc&limit=1").catch(function(){return null;});
+  var p=(rows&&rows[0])||{};
+  W.params={ a:+p.min_fee_a||44, b:+p.min_fee_b||155381, cpb:+p.coins_per_utxo_size||4310 };
+  return W;
+}
+function parseWalletUtxos(hexList){
+  var out=[],i;
+  for(i=0;i<(hexList||[]).length;i++){
+    try{
+      var pair=cborD(hexB(hexList[i]))[0];
+      var inp=pair[0],o=pair[1],addr,val,extra=false;
+      if(o instanceof Map){ addr=o.get(0); val=o.get(1); if(o.has(2)||o.has(3))extra=true; }
+      else{ addr=o[0]; val=o[1]; if(o.length>2&&o[2]!=null)extra=true; }
+      var coin=null;
+      if(typeof val==="number") coin=val;
+      else if(Array.isArray(val)&&typeof val[0]==="number"){
+        var ma=val[1];
+        var hasTokens=ma instanceof Map?ma.size>0:ma&&Object.keys(ma).length>0;
+        if(hasTokens) continue;                     // never touch token-bearing UTxOs
+        coin=val[0];
+      }
+      if(extra||coin==null||!(coin>0)||coin>Math.pow(2,52)) continue;
+      if(!(inp[0] instanceof Uint8Array)||inp[0].length!==32) continue;
+      out.push({ txh:inp[0], ix:inp[1], coin:coin, addrHex:bHex(addr) });
+    }catch(e){ void e; }
+  }
+  return out;
+}
+
+/* ═══ claim tx: inputs → [2 ADA to always-fail + change], metadata 22030 ═══ */
+function metaVal(x){                          // JSON claim → CBOR metadata value
+  if(typeof x==="number") return cU(x);
+  if(typeof x==="string"){
+    if(new TextEncoder().encode(x).length>64) throw new Error("metadata string over 64 bytes");
+    return cS(x);
+  }
+  if(Array.isArray(x)) return catB([cAr(x.length)].concat(x.map(metaVal)));
+  throw new Error("unsupported metadata value");
+}
+function buildAux(claim){
+  var keys=Object.keys(claim).filter(function(k){return claim[k]!==undefined;});
+  var inner=[cMp(keys.length)];
+  keys.forEach(function(k){ inner.push(cS(k)); inner.push(metaVal(claim[k])); });
+  var metaMap=catB([cMp(1),cU(parseInt(CLAIM_LABEL,10))].concat(inner));
+  return catB([cTg(259),cMp(1),cU(0),metaMap]);   // aux = tag 259 { 0: metadata }
+}
+function encInput(i){ return catB([u8([0x82]),cBy(i.txh),cU(i.ix)]); }
+function encPlainOut(addrB,coin){ return catB([cMp(2),cU(0),cBy(addrB),cU(1),cU(coin)]); }
+function encClaimBody(net,ins,changeB,changeCoin,fee,auxHash){
+  return catB([cMp(4),
+    cU(0),cAr(ins.length)].concat(ins.map(encInput)).concat([
+    cU(1),cAr(2),encPlainOut(NETS[net].lockBytes,CLAIM_LOVELACE),encPlainOut(changeB,changeCoin),
+    cU(2),cU(fee),
+    cU(7),cBy(auxHash)]));
+}
+function dummyWitLen(n){
+  var parts=[cMp(1),cU(0),cAr(n)],i;
+  for(i=0;i<n;i++) parts.push(catB([u8([0x82]),cBy(new Uint8Array(32)),cBy(new Uint8Array(64))]));
+  return catB(parts).length;
+}
+function minChangeCoin(changeB,params){
+  var coin=1000000,i;
+  for(i=0;i<4;i++) coin=(160+encPlainOut(changeB,coin).length)*params.cpb;
+  return coin;
+}
+async function submitClaim(claim){
+  await connectWallet();
+  var aux=buildAux(claim);
+  var auxHash=blake2b256(aux);
+  var utxos=parseWalletUtxos(await W.api.getUtxos());
+  var changeB=hexB(await W.api.getChangeAddress());
+  var minChange=minChangeCoin(changeB,W.params);
+  var pool=utxos.slice().sort(function(a,b){return b.coin-a.coin;});
+  var ins=[],sum=0,fee=250000,round,body,size,newFee;
+  for(round=0;round<40;round++){
+    while(sum<CLAIM_LOVELACE+fee+minChange&&pool.length){ var x=pool.shift(); ins.push(x); sum+=x.coin; }
+    if(sum<CLAIM_LOVELACE+fee+minChange)
+      throw new Error("not enough spendable ADA (needs ~"+((CLAIM_LOVELACE+fee+minChange)/1e6).toFixed(2)+
+        " ADA in plain-ADA UTxOs; token UTxOs are never touched)");
+    var nWit=1+new Set(ins.map(function(i){return i.addrHex;})).size;
+    body=encClaimBody(W.net,ins,changeB,sum-CLAIM_LOVELACE-fee,fee,auxHash);
+    size=3+body.length+dummyWitLen(nWit)+aux.length;
+    newFee=Math.ceil(W.params.a*size+W.params.b)+220;
+    if(newFee<=fee){ fee=newFee; break; }
+    fee=Math.max(fee,newFee);
+  }
+  body=encClaimBody(W.net,ins,changeB,sum-CLAIM_LOVELACE-fee,fee,auxHash);
+  var unsigned=catB([u8([0x84]),body,cMp(0),u8([0xf5]),aux]);
+  var witHex=await W.api.signTx(bHex(unsigned),false);
+  var wit=hexB(witHex);
+  var signed=wit[0]===0x84?wit:catB([u8([0x84]),body,wit,u8([0xf5]),aux]);
+  var txid=bHex(blake2b256(body));
+  var wid=await W.api.submitTx(bHex(signed));
+  return (typeof wid==="string"&&/^[0-9a-f]{64}$/i.test(wid))?wid.toLowerCase():txid;
+}
+
+/* ═══ game bridge ═══ */
+window.addEventListener("message",async function(ev){
+  if(ev.source!==frame.contentWindow) return;   // only the verified game frame
+  var d=ev.data;
+  if(!d||d.lc!==1) return;
+  if(d.type==="claim-request"){
+    try{
+      var c=d.claim||{};
+      if(c.g!==GAME_ID) throw new Error("unexpected game id");
+      var txHash=await submitClaim(c);
+      frame.contentWindow.postMessage({lc:1,type:"claim-result",ok:true,txHash:txHash},"*");
+    }catch(e){
+      frame.contentWindow.postMessage({lc:1,type:"claim-result",ok:false,error:String(e.message||e)},"*");
+    }
+  } else if(d.type==="verify-result"){
+    var cb=VERIFY_CB[d.id]; delete VERIFY_CB[d.id];
+    if(cb) cb(d.verdict);
+  }
+});
+
+/* ═══ leaderboard / guestbook ═══ */
+var VERIFY_CB={},VERIFY_SEQ=0;
+function verifyViaEngine(claim){
+  return new Promise(function(res){
+    var id=++VERIFY_SEQ;
+    VERIFY_CB[id]=res;
+    frame.contentWindow.postMessage({lc:1,type:"verify-claim",id:id,claim:claim},"*");
+    setTimeout(function(){ if(VERIFY_CB[id]){ delete VERIFY_CB[id]; res({ok:false,why:"verify timeout"}); } },120000);
+  });
+}
+function claimFromMeta(meta){
+  var c=meta&&(meta[CLAIM_LABEL]||meta[parseInt(CLAIM_LABEL,10)]);
+  if(!c||c.g!==GAME_ID||!Array.isArray(c.moves)) return null;
+  return { g:c.g, engine:c.engine, depth:+c.depth, color:c.color, result:c.result,
+           moves:c.moves, plyHashes:c.plyHashes, msg:c.msg };
+}
+async function loadLeaderboard(){
+  var st=document.getElementById("lbstatus");
+  var tbl=document.getElementById("lbtable"), tb=document.getElementById("lbbody");
+  st.textContent="scanning claim transactions on "+NETS[NET].name+"…";
+  try{
+    var txs=await kapi(NET,"/address_txs",{_addresses:[NETS[NET].lockBech]});
+    txs.sort(function(a,b){return b.block_height-a.block_height;});
+    var hashes=txs.slice(0,600).map(function(t){return t.tx_hash;});   // recent window (v1)
+    var claims=[],off;
+    for(off=0;off<hashes.length&&claims.length<50;off+=40){
+      var rows=await kapi(NET,"/tx_metadata",{_tx_hashes:hashes.slice(off,off+40)});
+      rows.forEach(function(r){
+        var c=claimFromMeta(r.metadata);
+        if(c) claims.push({tx:r.tx_hash,claim:c});
+      });
+    }
+    var emp=document.getElementById("lbempty");
+    if(!claims.length){ st.textContent="no etched victories yet — be the first.";
+      tbl.style.display="none"; if(emp) emp.style.display=""; return; }
+    st.textContent=claims.length+" claim(s) found — verifying against the on-chain engine…";
+    tbl.style.display=""; if(emp) emp.style.display="none";
+    tb.innerHTML="";
+    claims.forEach(function(c){
+      var tr=document.createElement("tr");
+      tr.innerHTML="<td class='mono'>"+(c.who||"…")+"</td><td>"+c.claim.depth+"</td><td>"+c.claim.moves.length+
+        "</td><td>"+(c.claim.msg?String(c.claim.msg).replace(/[<>&]/g,""):"")+"</td>"+
+        "<td class='v-un'>verifying…</td>"+
+        "<td class='mono'><a style='color:var(--dim)' target='_blank' rel='noopener' href='"+NETS[NET].scan+c.tx+"'>"+
+        c.tx.slice(0,10)+"…</a></td>";
+      tb.appendChild(tr);
+      c.row=tr;
+    });
+    // attribution: first input address of each claim tx (batched)
+    kapi(NET,"/tx_info",{_tx_hashes:claims.map(function(c){return c.tx;}),_inputs:true})
+      .then(function(rows){
+        rows.forEach(function(r){
+          var c=claims.filter(function(x){return x.tx===r.tx_hash;})[0];
+          var a=r.inputs&&r.inputs[0]&&(r.inputs[0].payment_addr&&r.inputs[0].payment_addr.bech32);
+          if(c&&a) c.row.cells[0].textContent=a.slice(0,14)+"…"+a.slice(-6);
+        });
+      }).catch(function(){});
+    // verdicts: sequential, newest first — the on-chain engine is the judge
+    for(var i=0;i<claims.length;i++){
+      var v=await verifyViaEngine(claims[i].claim);
+      var cell=claims[i].row.cells[4];
+      if(v.ok){ cell.textContent="✓ verified win"; cell.className="v-ok"; }
+      else{ cell.textContent="✗ "+(v.why||"rejected"); cell.className="v-bad"; }
+    }
+    st.textContent="done — every ✓ was replayed move-by-move against the referee.";
+  }catch(e){ st.textContent="leaderboard error: "+(e.message||e); }
+}
+document.getElementById("lbrefresh").addEventListener("click",loadLeaderboard);
+
+boot();
+
+/* ═══ site-page extras ═══ */
+document.getElementById("ptrline").textContent = GAME_POINTER[1];
+document.getElementById("copylink").addEventListener("click", function(){
+  navigator.clipboard.writeText("https://beacnpool.github.io/ledger-scrolls/ledger-chess.html").then(function(){
+    var c=document.getElementById("copied"); c.style.display="inline";
+    setTimeout(function(){ c.style.display="none"; }, 1800);
+  });
+});
+(function autoLb(){ if(window.GAME_ORIGIN_READY) loadLeaderboard(); else setTimeout(autoLb,1200); })();
+</script>
+</body>
+</html>

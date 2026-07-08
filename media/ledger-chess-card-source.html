@@ -1,0 +1,43 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  body{margin:0;width:1200px;height:630px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:#0e1116;color:#dbe4f0;display:flex}
+  .left{flex:1;padding:64px 20px 64px 64px;display:flex;flex-direction:column;justify-content:center}
+  .kick{font:600 17px ui-monospace,monospace;letter-spacing:.2em;color:#e8c35a;text-transform:uppercase}
+  h1{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-size:84px;margin:14px 0 10px;color:#fff}
+  p{font-size:27px;line-height:1.45;color:#8494ab;margin:8px 0;max-width:560px}
+  p b{color:#dbe4f0}
+  .tick{margin-top:26px;font:20px ui-monospace,monospace;color:#79d29a}
+  .board{width:430px;height:430px;align-self:center;margin-right:64px;border-radius:12px;overflow:hidden;
+         display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);
+         box-shadow:0 30px 80px rgba(0,0,0,.6);flex-shrink:0}
+  .c{display:flex;align-items:center;justify-content:center;font-size:40px}
+  .l{background:#b8c2d4}.d{background:#5a6b85}
+  .w{color:#f7f3e8;text-shadow:0 2px 3px rgba(0,0,0,.4)}.b{color:#1c222c}
+</style></head>
+<body>
+  <div class="left">
+    <div class="kick">Lives inside Cardano</div>
+    <h1>♟ Ledger Chess</h1>
+    <p>A chess game stored <b>inside the blockchain</b>. Your browser rebuilds it from raw
+    transactions and <b>proves every byte</b> before you play.</p>
+    <p>Beat the immortal engine → your victory is <b>etched on-chain forever</b>.</p>
+    <div class="tick">✓ no server &nbsp;✓ verified &nbsp;✓ forever</div>
+  </div>
+  <div class="board" id="bd"></div>
+  <script>
+    // Opera Game final position: Rd8# — the most famous mate in history
+    var fen="1n1Rkb1r/p4ppp/4q3/4p1B1/4P3/8/PPP2PPP/2K5";
+    var G={p:"♟",n:"♞",b:"♝",r:"♜",q:"♛",k:"♚",P:"♟",N:"♞",B:"♝",R:"♜",Q:"♛",K:"♚"};
+    var bd=document.getElementById("bd"), rows=fen.split("/");
+    for(var r=0;r<8;r++){ var f=0;
+      for(var i=0;i<rows[r].length;i++){ var ch=rows[r][i];
+        if(ch>="1"&&ch<="8"){ for(var e=0;e<+ch;e++){ mk(r,f++,null); } }
+        else mk(r,f++,ch); } }
+    function mk(r,f,ch){ var d=document.createElement("div");
+      d.className="c "+(((r+f)%2)?"d":"l");
+      if(ch){ var w=ch===ch.toUpperCase();
+        d.innerHTML='<span class="'+(w?"w":"b")+'">'+G[ch]+"</span>"; }
+      bd.appendChild(d); }
+  </script>
+</body></html>
