@@ -75,8 +75,12 @@ Each page is a plain transaction (self-send; no mint) carrying metadata under
 - The encoded stream is the concatenation of page payloads in `pageTxHashes`
   order. Page boundaries are arbitrary; `i`/`n` are integrity aids and MUST
   be consistent with the manifest order.
-- RECOMMENDED page payload size: 12,160 bytes (190 segments), keeping each
-  transaction comfortably under the 16,384-byte limit.
+- RECOMMENDED page payload: pack as many 64-byte segments as fit under
+  `max_tx_size − safety_margin` (mainnet `max_tx_size` is typically 16,384;
+  writers use ~400 B margin). Reference tools default to **auto** packing
+  (≈230–243 segments ≈ 14.7–15.5 KB payload). The older 190-segment / 12,160 B
+  choice remains valid and more conservative. Larger full pages amortize the
+  fixed per-tx fee and need fewer signatures.
 
 ## Reconstruction algorithm
 
@@ -98,8 +102,8 @@ Failure semantics follow the v1 proposal §5: any hash mismatch →
 ## Write algorithm
 
 1. Encode: deterministic gzip (`mtime=0`, no filename) if it shrinks the file.
-2. Hash decoded + encoded streams; split encoded stream into pages of 190
-   segments × 64 bytes; hash each page.
+2. Hash decoded + encoded streams; split encoded stream into pages of
+   `segments_per_page × 64` bytes (auto-max recommended); hash each page.
 3. Submit page transactions (chaining each on the previous change output —
    no confirmation waits); record tx hashes in order.
 4. Build the manifest datum from the recorded hashes; lock it with the

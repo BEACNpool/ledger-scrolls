@@ -412,7 +412,8 @@ body{padding-bottom:96px}
     <p style="margin-top:10px">Estimates use Cardano mainnet parameters (2026):
     fee = 0.155381 ADA + 0.000044 ADA per byte of transaction; a locked coin carries
     ≈ 0.00431 ADA per byte of datum. Pages hold 12,160 bytes each
-    (<code>ceil(encoded ÷ 12,160)</code> transactions, plus one manifest per 400 pages).
+    (<code>ceil(encoded ÷ dense page size)</code> transactions — pages auto-fill near Cardano's
+    16&nbsp;KB tx limit for fewer fees &amp; signatures — plus one manifest per ~350 pages).
     Files that fit in a single datum (≤ ~14 KB) are priced as one locked coin when that's
     cheaper. Real costs vary a few percent with wallet layout — the mint tools print the
     exact price before you sign. Gzip here is your browser's; the mint pipeline uses
@@ -470,13 +471,64 @@ body{padding-bottom:96px}
 
 <script>
 "use strict";
-/* ══════════ cost model (pure — mirrored by tests) ══════════ */
+/* ══════════ cost model + dense page packing (matches tools/lschain/prepare.py) ══════════
+   Metadata byte-strings ≤64 B; max_tx_size typically 16384. We pack as many 64 B
+   segments as fit under max_tx_size − safety margin → fewer fixed per-tx fees &
+   fewer wallet signatures. No IPFS, no off-chain host — pure on-chain density. */
+const PACK = {
+  SEG: 64,
+  MAX_TX: 16384,
+  SAFETY: 400,
+  LEGACY_SPP: 190,
+  spp: 230,           // replaced by applyPacking() / live epoch_params
+  page: 230 * 64,
+  maxTxLive: false,
+};
+function _cborUintLen(n){ return n<24?1:n<256?2:n<65536?3:n<4294967296?5:9; }
+function _cborBytesLen(n){ return _cborUintLen(n)+n; }
+/** Conservative CBOR size of a 1-in/1-out page tx with label-22025 aux (sha included). */
+function estimatePageTxBytes(segs, nPages){
+  nPages = nPages||999;
+  let inner = _cborUintLen(5);                 // map i,n,p,sha,v
+  inner += 2 + _cborUintLen(1);                // "i"
+  inner += 2 + _cborUintLen(Math.max(1,nPages));
+  inner += 2 + _cborUintLen(segs) + segs*_cborBytesLen(PACK.SEG); // "p"
+  inner += 4 + _cborBytesLen(32);              // "sha"
+  inner += 2 + _cborUintLen(2);                // "v"
+  const outer = _cborUintLen(1) + _cborUintLen(22025) + inner;
+  const aux = 3 + _cborUintLen(1) + _cborUintLen(0) + outer; // tag 259
+  const body = 120, wit = 110;
+  return 1 + body + wit + 1 + aux;
+}
+function maxSegmentsPerPage(maxTx, safety){
+  maxTx = maxTx||PACK.MAX_TX; safety = safety==null?PACK.SAFETY:safety;
+  const budget = Math.max(1024, maxTx - safety);
+  let lo=1, hi=400, best=PACK.LEGACY_SPP;
+  while(lo<=hi){
+    const mid=(lo+hi)>>1;
+    if(estimatePageTxBytes(mid) <= budget){ best=mid; lo=mid+1; }
+    else hi=mid-1;
+  }
+  return best;
+}
+function applyPacking(spp, meta){
+  spp = Math.max(1, spp|0);
+  PACK.spp = spp;
+  PACK.page = spp * PACK.SEG;
+  P.chainSegs = spp;
+  P.chainPage = PACK.page;
+  // keep fee model overhead consistent with denser pages
+  P.chainTxOverhead = Math.max(200, estimatePageTxBytes(spp) - PACK.page);
+  if(meta && meta.maxTx){ PACK.MAX_TX = meta.maxTx; PACK.maxTxLive = !!meta.live; }
+  if(typeof SGN !== "undefined" && SGN) SGN.SPP = spp;
+  if(typeof BND !== "undefined" && BND){ BND.SPP = spp; BND.PAGE = spp * BND.SEG; }
+}
 const P = {
   feeB: 0.155381, feeA: 0.000044,          // ADA; fee = feeB + feeA*txBytes
   utxoPerByte: 0.00431,                     // ADA per byte of output+datum
-  chainPage: 12160, chainSegs: 190,         // page payload (spec: manifest-chain-v2)
-  chainTxOverhead: 970,                     // skeleton + metadata framing
-  chainPagesPerManifest: 400,
+  chainPage: 230 * 64, chainSegs: 230,      // dense default; applyPacking() may raise
+  chainTxOverhead: 970,                     // refreshed by applyPacking
+  chainPagesPerManifest: 350,               // keep under manifest datum / 16 KB seal
   manifestBase: 140, manifestPerPage: 34,   // manifest datum bytes
   outBase: 200,                             // output overhead for min-UTxO
   legacyPage: 5408, legacySegs: 169,        // legacy page payload (32B segs)
@@ -485,15 +537,20 @@ const P = {
   legacyNftLock: 1.44,                      // min-UTxO carried by each NFT
   stdMax: 14336, stdTxOverhead: 500,
 };
+applyPacking(maxSegmentsPerPage(PACK.MAX_TX, PACK.SAFETY));
 const fee = txBytes => P.feeB + P.feeA * txBytes;
 const minUtxo = datumBytes => (P.outBase + datumBytes) * P.utxoPerByte;
 
 function calcChain(enc){
-  const pages = Math.max(1, Math.ceil(enc / P.chainPage));
+  const page = P.chainPage;
+  const pages = Math.max(1, Math.ceil(enc / page));
   let fees = 0;
   for(let i=0;i<pages;i++){
-    const payload = (i === pages-1) ? enc - P.chainPage*(pages-1) : P.chainPage;
-    fees += fee(payload + P.chainTxOverhead);
+    const payload = (i === pages-1) ? enc - page*(pages-1) : page;
+    // Prefer exact estimate when full pages
+    const txb = (payload === page) ? estimatePageTxBytes(P.chainSegs, pages)
+      : estimatePageTxBytes(Math.max(1, Math.ceil(payload/PACK.SEG)), pages);
+    fees += fee(txb);
   }
   const links = Math.ceil(pages / P.chainPagesPerManifest);
   let locked = 0;
@@ -503,7 +560,7 @@ function calcChain(enc){
     fees += fee(datum + P.stdTxOverhead);
     locked += minUtxo(datum);
   }
-  return { pages, nfts: 0, links, fees, locked, total: fees + locked };
+  return { pages, nfts: 0, links, fees, locked, total: fees + locked, segs: P.chainSegs, pageBytes: page };
 }
 function calcStandard(enc){
   if(enc > P.stdMax) return null;
@@ -656,14 +713,21 @@ async function analyzeFile(file){
     <dt>SHA-256 (original)</dt><dd>${S.sha}</dd>
     ${S.codec==="gzip" ? `<dt>SHA-256 (gzip)</dt><dd>${S.shaEnc}</dd>` : ""}`;
   $("stripmeta")?.addEventListener("change",e=>{ S.stripMeta=e.target.checked; if(S.file) analyzeFile(S.file); });
-  // Film / large-file preflight note on the analysis card
-  const pagesGuess = Math.max(1, Math.ceil(S.enc / (64*190)));
-  if(pagesGuess > 1 && /video\//i.test(S.ct)){
-    $("kv").innerHTML += `<dt>Film mint path</dt><dd><b>Chain Scroll</b> — ${fmtN(pagesGuess)} page tx${pagesGuess>1?"s":""} + seal.
-      On a laptop with <b>Eternl</b>, step 3 walks you through signing each page (resume-safe if interrupted).
-      ${pagesGuess>200?`<span style="color:var(--warn)">⚠ ${fmtN(pagesGuess)} approvals is a long session — compress further if you can, or use the bulk one-approval option if Eternl offers it.</span>`:""}</dd>`;
-  } else if(pagesGuess > 40){
-    $("kv").innerHTML += `<dt>Browser mint</dt><dd>Chain Scroll · ${fmtN(pagesGuess)} page signatures + 1 seal via Eternl (resume if you reload).</dd>`;
+  // Dense packing + film preflight (encode smaller before mint to cut ADA & signatures)
+  const ch0 = calcChain(S.enc);
+  const pagesGuess = ch0.pages, sealsGuess = ch0.links, totalSig = pagesGuess + sealsGuess;
+  $("kv").innerHTML += `<dt>Dense packing</dt><dd>${P.chainSegs}×64 B = ${fmtB(P.chainPage)}/page ·
+    <b>${fmtN(pagesGuess)}</b> page${pagesGuess>1?"s":""}${sealsGuess>1?` + ${sealsGuess} seals`:""} ·
+    est. <b>${fmtA(ch0.total)} ADA</b>${S.price?` (~$${(ch0.total*S.price).toFixed(2)})`:""}
+    ${PACK.maxTxLive?"":" · live max_tx applied when wallet connects"}</dd>`;
+  if(pagesGuess > 1 && /video\//i.test(S.ct||"")){
+    const half = calcChain(Math.ceil(S.enc/2));
+    $("kv").innerHTML += `<dt>Film mint path</dt><dd><b>Chain Scroll</b> via Eternl — <b>${fmtN(totalSig)}</b> signature${totalSig>1?"s":""} (resume-safe).
+      Encode smaller before mint (same forever guarantee): half the bytes ≈ <b>${fmtA(half.total)} ADA</b> / ${fmtN(half.pages+half.links)} sigs.
+      Tips: ≤480p, CRF 28–32, <code>-movflags +faststart</code>, prefer WebM/AV1 when you can.
+      ${pagesGuess>150?`<br><span style="color:var(--warn)">⚠ Long session — laptop + Eternl extension; leave this tab open.</span>`:""}</dd>`;
+  } else if(pagesGuess > 20){
+    $("kv").innerHTML += `<dt>Browser mint</dt><dd>Chain Scroll · ${fmtN(totalSig)} Eternl signatures (pages + seal). Gzip applied when it shrinks the file.</dd>`;
   }
   $("analysis").classList.add("show");
   $("b_ct").value = S.ct;
@@ -743,7 +807,7 @@ function render(){
     </div>
     <div class="method">${useStd
       ? "Written as a <b>single locked coin</b> — your whole file fits inside the manifest itself, readable from any Cardano node with one query, forever."
-      : `Written as <b>${fmtN(ch.pages)} page transaction${ch.pages > 1 ? "s" : ""}</b> plus ${ch.links > 1 ? fmtN(ch.links) + " locked manifests" : "one locked manifest"} that lists every page and seals the file's SHA-256 fingerprint.`}</div>`;
+      : `Written as <b>${fmtN(ch.pages)} page transaction${ch.pages > 1 ? "s" : ""}</b> (${fmtB(P.chainPage)} dense pack · ${P.chainSegs}×64&nbsp;B segs) plus ${ch.links > 1 ? fmtN(ch.links) + " locked manifests" : "one locked manifest"} that lists every page and seals the SHA-256. No IPFS — every byte on Cardano.`}</div>`;
 
   renderWiz();
 
@@ -988,8 +1052,23 @@ async function fetchNetParams(net){
   try{
     const rows = await kapi(net,"/epoch_params?order=epoch_no.desc&limit=1");
     const p = rows?.[0]||{};
-    return { a:+p.min_fee_a||44, b:+p.min_fee_b||155381, cpb:+p.coins_per_utxo_size||4310, live:!!rows?.[0] };
-  }catch(e){ return { a:44, b:155381, cpb:4310, live:false }; }
+    const out = {
+      a:+p.min_fee_a||44, b:+p.min_fee_b||155381, cpb:+p.coins_per_utxo_size||4310,
+      maxTx:+p.max_tx_size||PACK.MAX_TX, live:!!rows?.[0]
+    };
+    // densest safe packing for this network + live fee curve
+    P.feeA = out.a / 1e6; P.feeB = out.b / 1e6; P.utxoPerByte = out.cpb / 1e6;
+    applyPacking(maxSegmentsPerPage(out.maxTx, PACK.SAFETY), { maxTx: out.maxTx, live: out.live });
+    return out;
+  }catch(e){ return { a:44, b:155381, cpb:4310, maxTx:PACK.MAX_TX, live:false }; }
+}
+/** Refresh packing from mainnet (or connected wallet network) for accurate quotes. */
+async function refreshPacking(net){
+  try{
+    const p = await fetchNetParams(net==null?1:net);
+    if(S.enc) render();
+    return p;
+  }catch(e){ return null; }
 }
 
 /* ── CIP-30 ── */
@@ -1187,6 +1266,7 @@ async function connectWallet(key){
     M.net=await M.wapi.getNetworkId(); if(!(M.net in NETS)) throw new Error("Unknown network id "+M.net);
     try{ localStorage.setItem("ls.wallet",key); }catch(e){ void e; }
     try{ M.changeB=hexB(await M.wapi.getChangeAddress()); M.addrBech=b32encode(M.net===1?"addr":"addr_test", M.changeB); }catch(e){ void e; }
+    try{ M.params=await fetchNetParams(M.net); }catch(e){ void e; }  // live max_tx → densest pack
     if((S.wiz||1)<2) S.wiz=2;                          // connecting advances the wizard to "details"
     refreshBalance(); renderWiz();
   }catch(e){ const el=$("walletctl"); if(el) el.innerHTML=`<div class="warnbox">✋ ${esc(String(e.message||e))}</div>`; }
@@ -1283,7 +1363,7 @@ function renderMint(){
     const sgnPages=Math.max(1,Math.ceil(S.enc/(SGN.SEG*SGN.SPP)));
     const seals=Math.max(1,Math.ceil(sgnPages/SGN.MAX_PER_MAN));
     const totalTx=sgnPages+seals;
-    const feeGuess=fee(SGN.SPP*66+1200)*sgnPages + 2.0*seals;
+    const feeGuess=fee(estimatePageTxBytes(PACK.spp, sgnPages))*sgnPages + 2.0*seals;
     const mins=Math.max(1,Math.ceil(totalTx*0.35)); // ~20s/tx with wallet UX
     const reason = S.enc > P.stdMax
       ? `bigger than the ~14 KB one-tx Standard Scroll`
@@ -1383,10 +1463,10 @@ function renderMint(){
    per spec) to stay under the 64-char text limit; the manifest's stream hash
    still guards every byte. */
 const CP = { active:false, pages:[], txids:[], hashB:null, net:1, checked:false };
-const CP_SEG=31, CP_SEGSPP=200, CP_PAGE=CP_SEG*CP_SEGSPP;
+const CP_SEG=31, CP_SEGSPP=200, CP_PAGE=CP_SEG*CP_SEGSPP; // manual paste path: hex text, intentionally less dense
 
 /* ═══════ build bundle: prepare.py-equivalent .zip (page-NNNN.json + plan.json), consumed as-is by tools/lschain/mint.sh ═══════ */
-const BND_SEG=64, BND_SPP=190, BND_PAGE=BND_SEG*BND_SPP;   // 12,160-byte pages — matches prepare.py + the cost estimate
+const BND = { SEG:64, SPP:PACK.spp, PAGE:PACK.page };   // dense pack — applyPacking keeps in sync
 function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++){ c^=u8[i]; for(let k=0;k<8;k++) c=(c>>>1)^(0xEDB88320 & -(c&1)); } return (c^0xFFFFFFFF)>>>0; }
 function zipStore(files){   // files:[{name,data:Uint8Array}] → Uint8Array (ZIP, store/no-compress)
   const enc=new TextEncoder(), locals=[], central=[]; let off=0;
@@ -1437,17 +1517,20 @@ async function buildBundle(){
   const bs=$("bundlestat"), btn=$("dlbundle"); if(btn) btn.disabled=true; if(bs) bs.textContent="building…";
   try{
     const bytes=S.encBytes, te=new TextEncoder();
-    const n=Math.max(1,Math.ceil(bytes.length/BND_PAGE)), files=[], pageShas=[];
+    BND.SPP=PACK.spp; BND.PAGE=PACK.page;
+    const n=Math.max(1,Math.ceil(bytes.length/BND.PAGE)), files=[], pageShas=[];
     for(let i=0;i<n;i++){
-      const payload=bytes.subarray(i*BND_PAGE, Math.min((i+1)*BND_PAGE, bytes.length));
+      const payload=bytes.subarray(i*BND.PAGE, Math.min((i+1)*BND.PAGE, bytes.length));
       const sh=await sha256hex(payload); pageShas.push(sh);
-      const segs=[]; for(let o=0;o<payload.length;o+=BND_SEG) segs.push("0x"+bHex(payload.subarray(o,Math.min(o+BND_SEG,payload.length))));
+      const segs=[]; for(let o=0;o<payload.length;o+=BND.SEG) segs.push("0x"+bHex(payload.subarray(o,Math.min(o+BND.SEG,payload.length))));
       const meta={"22025":{v:2,i:i+1,n,sha:"0x"+sh,p:segs}};
       files.push({name:"page-"+String(i+1).padStart(4,"0")+".json", data:te.encode(JSON.stringify(meta))});
     }
     const plan={format:"ls-chain-v2-plan", sourceFile:(S.name||"scroll"), contentType:S.ct, codec:S.codec,
       sizeDecoded:S.raw, sizeEncoded:S.enc, sha256Decoded:S.sha, sha256Encoded:S.shaEnc,
-      pages:n, segmentBytes:BND_SEG, segmentsPerPage:BND_SPP, pageSha256:pageShas, metadataLabel:22025};
+      pages:n, segmentBytes:BND.SEG, segmentsPerPage:BND.SPP, pagePayloadBytes:BND.PAGE,
+      maxTxSize:PACK.MAX_TX, estimatedPageTxBytes:estimatePageTxBytes(BND.SPP,n),
+      pageSha256:pageShas, metadataLabel:22025};
     files.push({name:"plan.json", data:te.encode(JSON.stringify(plan,null,2)+"\n")});
     const reg=($("o_reg")?.textContent||"").trim(); if(reg) files.push({name:"registry-entry.json", data:te.encode(reg+"\n")});
     files.push({name:"README.txt", data:te.encode(bundleReadme(plan))});
@@ -1609,9 +1692,11 @@ function downloadPacket(){
    attach arbitrary metadata. Because we build the CBOR ourselves, segments
    are efficient 64-byte byte strings (matches the headline estimate).
    ══════════════════════════════════════════════════════════════════════ */
-/* MAX_PER_MAN: page hashes per locked manifest (~spec ~400; 350 leaves headroom under 16 KB). */
-const SGN = { SEG:64, SPP:190, MAX_PER_MAN:350, pages:[], done:0, spent:new Set(), running:false };
+/* MAX_PER_MAN: page hashes per locked manifest (~spec ~400; 350 leaves headroom under 16 KB).
+   SPP tracks PACK.spp (dense auto-pack). */
+const SGN = { SEG:PACK.SEG, SPP:PACK.spp, MAX_PER_MAN:350, pages:[], done:0, spent:new Set(), running:false };
 function buildSignPages(bytes){
+  SGN.SPP = PACK.spp; SGN.SEG = PACK.SEG;
   const PG=SGN.SEG*SGN.SPP, n=Math.max(1,Math.ceil(bytes.length/PG)), pages=[];
   for(let i=0;i<n;i++){
     const payload=bytes.subarray(i*PG,Math.min((i+1)*PG,bytes.length));
@@ -1893,7 +1978,7 @@ async function startWalletSign(key, resume){
     const n=SGN.pages.length, nnet=NETS[M.net];
     const seals=Math.max(1,Math.ceil(n/SGN.MAX_PER_MAN));
     const total=n+seals;
-    const feeGuess=fee(SGN.SPP*66+1200)*n + 2.0*seals;
+    const feeGuess=fee(estimatePageTxBytes(PACK.spp, n))*n + 2.0*seals;
     const mins=Math.max(1,Math.ceil(total*0.35));
     const bulk= n<=SGN.MAX_PER_MAN ? bulkSignApi(M.wapi) : null; // bulk only when single seal fits
     const showRows=n<=48; // large films: progress bar only (don't freeze the DOM)
@@ -1909,6 +1994,9 @@ async function startWalletSign(key, resume){
           ${statHTML("~"+fmtA(feeGuess), "ADA fees")}
           ${statHTML("~"+mins+"m", "session")}
         </div>
+        <p style="font-size:12.5px;color:var(--muted);margin:6px 0 0">Dense on-chain pack: <b>${PACK.spp}×64&nbsp;B = ${fmtB(PACK.page)}/page</b>
+          (≈${Math.round(100*PACK.page/estimatePageTxBytes(PACK.spp,n))}% of each tx is payload${PACK.maxTxLive?" · live max_tx":""}).
+          No IPFS — every byte on Cardano.</p>
         ${!balOk?`<div class="warnbox" style="margin:10px 0">Wallet may be short — send ~${fmtA(feeGuess+3)} ADA to this account, then refresh balance and continue.</div>`:""}
         <div class="consent" style="margin-top:12px"><input type="checkbox" id="sgnconsent">
           <label for="sgnconsent"><b>I understand this is permanent and public.</b> No edit, no delete —
@@ -2371,6 +2459,7 @@ document.querySelectorAll(".copy[data-for]").forEach(b =>
 fetchPrice();
 autoReconnect();
 startWalletPoll();
+refreshPacking(1); // mainnet max_tx_size → densest pack for quotes before wallet connect
 // If a wallet injects after load (common), refresh the connect panel
 window.addEventListener("cardano#initialized",()=>{ if(!M.wapi) renderWalletCtl(); });
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden && !M.wapi && listWallets().length) renderWalletCtl(); });

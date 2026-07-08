@@ -335,8 +335,8 @@ p{color:var(--ink-2)}
 const P = {
   feeB: 0.155381, feeA: 0.000044,
   utxoPerByte: 0.00431,
-  chainPage: 12160, chainTxOverhead: 970,
-  chainPagesPerManifest: 400,
+  chainPage: 14720, chainTxOverhead: 900,   // dense pack ~230×64 B (matches prepare.py auto)
+  chainPagesPerManifest: 350,
   manifestBase: 140, manifestPerPage: 34,
   outBase: 200,
   stdMax: 14336, stdTxOverhead: 500,

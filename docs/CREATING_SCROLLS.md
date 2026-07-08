@@ -267,7 +267,8 @@ one `<video>` element — there is no separate "audio scroll" to manage.
 - **The real levers are bytes, not the container:** drop resolution (≤480p),
   trim duration hard, raise CRF. Each KB is ~0.06 ADA on-chain — permanence is
   not a video host.
-- **Budget first:** pages ≈ `ceil(bytes / 12160)`; at ~0.06 ADA/KB
+- **Budget first:** pages ≈ `ceil(bytes / page_payload)` where page_payload is
+  ~14.7–15.5 KB with dense auto-pack (or 12,160 B legacy); at ~0.058–0.06 ADA/KB
   with **nothing locked**, a 5 MB clip ≈ **~310 ADA** (≈431 pages). The same clip
   on the old CIP-25 path was ~1,300 ADA plus ~1.4 ADA locked in each of ~925 NFTs.
 - Mint a Standard Scroll "poster" (title card or text description + the video's
@@ -353,7 +354,7 @@ A scroll nobody can find is not preserved. Do all three:
 
 **Cost rules of thumb (mainnet):** Standard ≈ 0.2 ADA fee + 2–15 ADA locked
 forever (scales with datum size). **Chain Scroll ≈ 0.06 ADA/KB, nothing locked**
-(`ceil(encoded_bytes / 12160)` page txs + one manifest). Legacy CIP-25 pages ≈
+(`ceil(encoded_bytes / page_payload)` page txs + seal; dense auto-pack ~14.7–15.5 KB/page). Legacy CIP-25 pages ≈
 (0.2 ADA fee + ~1.4 ADA locked min-UTxO) × `ceil(encoded_bytes / 5408)` pages —
 avoid for new scrolls.
 
