@@ -692,7 +692,7 @@ const fmtB = n => n >= 1048576 ? (n/1048576).toFixed(2)+" MB" : n >= 1024 ? (n/1
 const fmtA = n => n >= 1000 ? Math.round(n).toLocaleString("en-US") : n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2);
 const fmtN = n => n.toLocaleString("en-US");
 const usd  = a => S.price ? `≈ $${(a*S.price).toLocaleString("en-US",{maximumFractionDigits:2})}` : "";
-const esc  = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const esc  = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");  // quotes too — esc() output lands in HTML attributes
 
 MEDIA.forEach((m,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=m.label; $("mtype").appendChild(o); });
 
@@ -1790,6 +1790,11 @@ function renderMint(){
           <button class="btn" id="resume-go">Resume minting</button>
           <button class="btn ghost" id="resume-fresh">Start over instead</button>
         </div></div>` : ""}
+      <p style="margin:8px 0 0;font-size:12.5px;color:var(--muted)">
+        Switched browsers or cleared storage mid-mint?
+        <button class="copy" id="resume-import" type="button">resume from a progress file</button>
+        <input type="file" id="resume-file" accept="application/json,.json" hidden>
+        <span id="resume-import-line"></span></p>
       ${connected || wl.length ? `
         <div class="wbtns" style="margin-top:14px">
           <button class="btn" id="chain-go" style="min-height:48px;font-size:16px">
@@ -1821,6 +1826,34 @@ function renderMint(){
     $("chain-go")?.addEventListener("click",()=>begin(connected?M.walletKey:(wl[0]&&wl[0].key), null));
     $("resume-go")?.addEventListener("click",()=>begin(connected?M.walletKey:(wl[0]&&wl[0].key), loadResume()));
     $("resume-fresh")?.addEventListener("click",()=>{ clearResume(); renderMint(); });
+    $("resume-import")?.addEventListener("click",()=>$("resume-file")?.click());
+    $("resume-file")?.addEventListener("change",async e=>{
+      const f=e.target.files?.[0]; if(!f) return;
+      // look the line node up at call time — renderMint() replaces the DOM
+      const say=t=>{ const l=$("resume-import-line"); if(l) l.textContent=" "+t; };
+      try{
+        const r=JSON.parse(await f.text());
+        if(!r || r.sha!==S.sha) throw new Error("that progress file is for a different file — drop the SAME original file first");
+        if(!(r.done>0) || !Array.isArray(r.txids) || !(r.pages>0)) throw new Error("not a mint-progress file");
+        if(!(r.spp>=1 && r.spp<=400)) throw new Error("progress file predates the packing fix — resuming it could corrupt the scroll");
+        if(r.done>r.pages) throw new Error("corrupt progress file (done > pages)");
+        if(r.net!==0 && r.net!==1) throw new Error("corrupt progress file (unknown network)");
+        const hex64=/^[0-9a-f]{64}$/i;
+        if(r.txids.slice(0,r.done).length<r.done || r.txids.slice(0,r.done).some(t=>!hex64.test(String(t))))
+          throw new Error("corrupt progress file (page tx list is incomplete) — pages already paid can't be located, refusing");
+        const maxTx=(+r.maxTx>=4096 && +r.maxTx<=16384)?+r.maxTx:16384;
+        // the file's packing must reproduce this exact file's page count
+        const expectPages=Math.max(1,Math.ceil(S.enc/(64*r.spp)));
+        if(expectPages!==r.pages) throw new Error(`progress file doesn't match this file (${r.pages} pages recorded, ${expectPages} at its page size) — wrong file or edited record`);
+        localStorage.setItem(RESUME_KEY, JSON.stringify({
+          sha:r.sha, net:r.net, txids:r.txids.slice(0,r.done), done:r.done, pages:r.pages,
+          spp:r.spp, seg:r.seg||64, maxTx, sealTxids:(Array.isArray(r.sealTxids)?r.sealTxids:[]).slice(),
+          name:r.name||S.name, enc:S.enc, ts:Date.now() }));
+        renderMint();
+        say("✓ progress restored — "+r.done+" of "+r.pages+" pages already paid");
+      }catch(err){ say("✗ "+String(err?.message||err)); }
+      e.target.value="";
+    });
     $("cpstart")?.addEventListener("click",renderChainAssistant);
     // Already connected and no active stage → jump straight into the signing console
     if(connected && !canResume && !$("cpstage")?.dataset.live){
@@ -2499,9 +2532,12 @@ async function startWalletSign(key, resume){
       applyPacking(resume.spp, { maxTx: resume.maxTx||PACK.MAX_TX, live:false });  // pin
     }
     SGN.pages=buildSignPages(S.encBytes); SGN.spent=new Set();
-    if(resume && resume.done>0 && resume.done<=SGN.pages.length && resume.net===M.net){
+    if(resume && resume.done>0){
+      // explicit refusals — silently falling back to a fresh mint would re-pay pages
       if(resume.pages!==SGN.pages.length)
         throw new Error(`Resume mismatch: the saved mint had ${resume.pages} pages but this file now splits into ${SGN.pages.length}. Refusing to resume — that would corrupt the scroll.`);
+      if(resume.done>SGN.pages.length)
+        throw new Error(`Corrupt resume record (${resume.done} pages done of ${SGN.pages.length}) — refusing to resume.`);
       SGN.done=resume.done; CP.txids=resume.txids.slice();
       SGN.sealTxids=(resume.sealTxids||[]).slice();
       SGN.feesSpent=0; // unknown prior fees on resume
@@ -2561,6 +2597,7 @@ async function startWalletSign(key, resume){
     sgnProgress();
     const unlock=()=>{ const on=$("sgnconsent")?.checked; if($("sgngo")) $("sgngo").disabled=!on; if($("sgnbulk")&&$("sgnbulk").tagName==="BUTTON") $("sgnbulk").disabled=!on; };
     $("sgnconsent")?.addEventListener("change",unlock);
+    $("utxo-merge")?.addEventListener("click",consolidateUtxos);
     if(bulk) $("sgnbulk").addEventListener("click",async()=>{
       $("sgnbulk").disabled=true; $("sgngo").disabled=true; SGN.done=0;
       try{ await signAllBulk(bulk); }
@@ -3043,12 +3080,80 @@ function vaultSave(list){
   catch(e){ return false; }  // quota — caller must tell the user, not pretend it saved
 }
 function vaultAdd(receipt){
-  const list=vaultLoad().filter(x=>x.lockTxIn!==receipt.lockTxIn && x.pointer?.txHash!==receipt.pointer?.txHash);
+  // dedupe only on DEFINED keys — undefined===undefined must never match
+  // (a countersign receipt has no lockTxIn; it must not evict other countersigns)
+  const list=vaultLoad().filter(x=>{
+    const sameLock = x.lockTxIn && receipt.lockTxIn && x.lockTxIn===receipt.lockTxIn;
+    const samePtr  = x.pointer?.txHash && receipt.pointer?.txHash && x.pointer.txHash===receipt.pointer.txHash;
+    return !(sameLock || samePtr);
+  });
   // Slim copy: pageTxHashes can be hundreds of hashes per film — they live in
   // the downloadable receipts.json; storing them here exhausts localStorage.
   const slim={...receipt}; delete slim.pageTxHashes;
   list.unshift(slim);
   return vaultSave(list);
+}
+/* Re-verify a vault entry from the chain — the same reconstruction a stranger's
+   reader would do, against the hashes recorded at mint time. Read-only. */
+async function vaultVerify(i){
+  const list=vaultLoad(), r=list[i];
+  const say=t=>{ const l=$("vverify-"+i); if(l) l.textContent=t; };  // call-time lookup — renders replace the node
+  if(!r || !(r.pointer?.txHash)) { say("no pointer recorded"); return; }
+  try{
+    say("verifying from chain…");
+    const net=(r.networkId===0)?0:1;
+    const rows=await kapi(net,"/utxo_info",{_utxo_refs:[r.pointer.txHash+"#"+(r.pointer.txIx||0)],_extended:true});
+    const hexd=rows?.[0]?.inline_datum?.bytes;
+    if(!hexd) throw new Error("pointer UTxO not found (not indexed yet, or spent)");
+    let stream;
+    if((r.format||"").startsWith("chain")){
+      // follow the manifest chain, then rebuild the full stream from page metadata
+      let hashes=[], cur=hexB(hexd), hops=0;
+      for(;;){
+        const [v]=cborD(cur);
+        if(!v || v.tag!==121 || !Array.isArray(v.value) || v.value.length<8 || v.value[0]!==2)
+          throw new Error("manifest datum in an unexpected shape");
+        for(const h of v.value[6]) hashes.push(bHex(h));
+        const nxt=v.value[7];
+        if(nxt && nxt.tag===122 && Array.isArray(nxt.value) && nxt.value[0]){
+          const r2=await kapi(net,"/utxo_info",{_utxo_refs:[bHex(nxt.value[0])+"#"+(nxt.value[1]|0)],_extended:true});
+          const h2=r2?.[0]?.inline_datum?.bytes;
+          if(!h2) throw new Error("continuation manifest not found");
+          cur=hexB(h2); if(++hops>32) throw new Error("manifest chain too long");
+        } else break;
+      }
+      say(`verifying ${hashes.length} pages…`);
+      const map={};
+      for(let o=0;o<hashes.length;o+=25){
+        const r3=await kapi(net,"/tx_metadata",{_tx_hashes:hashes.slice(o,o+25)});
+        for(const t of r3||[]) map[t.tx_hash]=t.metadata||{};
+      }
+      stream=catB(hashes.map(t=>{
+        const md=map[t]?.["22025"] ?? map[t]?.[22025];
+        if(!md) throw new Error("page metadata missing: "+t.slice(0,12)+"…");
+        return catB((md.p||[]).map(segBytes));
+      }));
+    } else {
+      const [v]=cborD(hexB(hexd));
+      const bytes=(v instanceof Uint8Array)?v:(v && v.tag===121 && v.value?.[0] instanceof Uint8Array)?v.value[0]:null;
+      if(!bytes) throw new Error("datum in an unexpected shape");
+      stream=bytes;
+    }
+    if(r.sha256Encoded){
+      const encHash=await sha256hex(stream.slice().buffer);
+      if(encHash!==r.sha256Encoded) throw new Error("ENCODED HASH MISMATCH — on-chain bytes differ from this receipt");
+    }
+    let dec=stream;
+    if(r.codec==="gzip") dec=await gunzipB(dec);
+    const decHash=await sha256hex(dec.slice().buffer);
+    if(r.sha256Decoded && decHash!==r.sha256Decoded) throw new Error("DECODED HASH MISMATCH — on-chain bytes differ from this receipt");
+    // re-load at save time: the vault may have changed during the async work
+    const fresh=vaultLoad();
+    const j=fresh.findIndex(x=>!x.type && x.pointer?.txHash===r.pointer.txHash);
+    if(j>=0){ fresh[j].verifiedFromChain=true; fresh[j].verifiedAt=new Date().toISOString(); vaultSave(fresh); }
+    renderVault();
+    say("✓ every byte re-verified from the chain ("+decHash.slice(0,16)+"…)");
+  }catch(e){ say("✗ "+String(e?.message||e)); }
 }
 function renderVault(){
   const el=$("vaultlist"); if(!el) return;
@@ -3060,23 +3165,41 @@ function renderVault(){
   el.innerHTML=list.map((r,i)=>{
     const tx=r.pointer?.txHash||(r.lockTxIn||"").split("#")[0];
     const ptr=r.lockTxIn||(tx?tx+"#0":"");
-    const reader=r.networkId===0?"":`./index.html#open=${tx}`;
     const title=esc(r.title||r.scroll||r.file||"scroll");
+    if(r.type==="countersign"){
+      const tgt=r.target?`${r.target.txHash}#${r.target.txIx||0}`:"";
+      return `<div class="vault-card" data-vi="${i}">
+        <h4>🖋 ${title}</h4>
+        <div class="meta">${esc(r.network||"")} · ${esc((r.mintedAt||"").slice(0,19).replace("T"," "))}
+          <br>accepts ${esc(tgt)}
+          <br>tx ${esc(tx)}</div>
+        <div class="acts">
+          <button class="btn ghost" type="button" data-vcopy="${esc(tx)}">Copy tx</button>
+          <button class="btn ghost" type="button" data-vdel="${i}">Remove</button>
+        </div>
+      </div>`;
+    }
+    const reader=r.networkId===0?"":`./index.html#open=${tx}`;
+    const signs=list.filter(x=>x.type==="countersign" && x.target?.txHash===tx);
     return `<div class="vault-card" data-vi="${i}">
       <h4>${title}</h4>
       <div class="meta">${esc(r.network||"")} · ${esc(r.format||"")} · ${esc((r.mintedAt||"").slice(0,19).replace("T"," "))}
         ${r.verifiedFromChain?" · ✓ verified":" · unverified"}
+        ${signs.length?` · 🖋 ${signs.length} countersign${signs.length>1?"s":""}`:""}
         <br>${esc(ptr)}
         <br>sha256 ${esc((r.sha256Decoded||"").slice(0,16))}…</div>
       <div class="acts">
         ${reader?`<a class="btn sub" href="${reader}" target="_blank" rel="noopener">Open</a>`:""}
+        <button class="btn ghost" type="button" data-vverify="${i}">Verify from chain</button>
         <button class="btn ghost" type="button" data-vcopy="${esc(ptr)}">Copy pointer</button>
         <button class="btn ghost" type="button" data-vcard="${i}">Share card</button>
         <button class="btn ghost" type="button" data-vdel="${i}">Remove</button>
       </div>
+      <div class="meta" id="vverify-${i}"></div>
       <div class="sharecard-wrap" id="vcard-${i}" hidden></div>
     </div>`;
   }).join("");
+  el.querySelectorAll("[data-vverify]").forEach(b=>b.addEventListener("click",()=>vaultVerify(+b.dataset.vverify)));
   el.querySelectorAll("[data-vcopy]").forEach(b=>b.addEventListener("click",e=>copyText(e.target,b.dataset.vcopy)));
   el.querySelectorAll("[data-vdel]").forEach(b=>b.addEventListener("click",()=>{
     const list=vaultLoad(); list.splice(+b.dataset.vdel,1); vaultSave(list); renderVault();
@@ -3142,12 +3265,59 @@ async function assessUtxoReadiness(){
       Spendable plain ADA: <b>${fmtA(bal/1e6)}</b> across <b>${utxos.length}</b> UTxO${utxos.length===1?"":"s"}
       (largest ${fmtA(largest/1e6)}). Budget ≈ <b>${fmtA(needAda)}</b> ADA.
       ${bal<needL?`<br>⚠ Send ~${fmtA(needAda-bal/1e6)} more ADA to this account.`:""}
-      ${frag?`<br>⚠ Many small UTxOs — in Eternl, send-to-self once to consolidate before a long film mint.`:""}
+      ${frag||utxos.length>=8?`<br>⚠ Many small UTxOs — merge them first or page transactions can outgrow the size limit.
+        <p style="margin:8px 0 0"><button class="btn sub" type="button" id="utxo-merge">🧹 Merge my ADA into one UTxO (one signature)</button>
+        <span id="utxo-merge-line" style="font-size:12.5px;color:var(--muted)"></span></p>`:""}
       ${ok?`<br>✓ Looks ready to mint.`:`<br>Fix the warning(s), then refresh.`}
     </div>`;
     return { ok: bal>=needL, bal, largest, count:utxos.length, html };
   }catch(e){
     return { ok:false, html:`<div class="readybox warn">Couldn't read UTxOs: ${esc(String(e.message||e))}</div>` };
+  }
+}
+
+/* plain self-send body (no metadata, no datum): {0: ins, 1: [change], 2: fee} */
+function encPlainBody(ins, selfB, out, fee){
+  return catB([u8([0xa3]),
+    cU(0), cAr(ins.length), ...ins.map(encInput),
+    cU(1), cAr(1), encChangeOut(selfB, out),
+    cU(2), cU(fee)]);
+}
+/* Merge the wallet's plain-ADA UTxOs into one — fragmented wallets need
+   several inputs per page tx, which can push a dense page over max_tx_size. */
+async function consolidateUtxos(){
+  const line=$("utxo-merge-line"), btn=$("utxo-merge");
+  const say=t=>{ if(line) line.textContent=" "+t; };
+  try{
+    if(btn) btn.disabled=true;
+    if(SGN.running || M.state==="minting") throw new Error("a mint is in progress — pause or finish it first (merging now would spend the UTxOs the mint is using)");
+    if(!M.wapi) throw new Error("connect the wallet first");
+    if(!M.params) M.params=await fetchNetParams(M.net);
+    if(!M.changeB) M.changeB=hexB(await M.wapi.getChangeAddress());
+    const utxos=parseWalletUtxos(await M.wapi.getUtxos());
+    if(utxos.length<2){ say("already a single UTxO — nothing to merge."); return; }
+    const ins=[...utxos].sort((a,b)=>b.coin-a.coin).slice(0,40);  // 40 inputs stays far under tx-size limits
+    const sum=ins.reduce((s,u)=>s+u.coin,0);
+    let fee=200000;
+    for(let r=0;r<10;r++){
+      const body=encPlainBody(ins, M.changeB, sum-fee, fee);
+      const nWit=new Set(ins.map(i=>i.addrHex)).size+1;
+      const nf=Math.ceil(M.params.a*(3+body.length+dummyWitLen(nWit))+M.params.b)+220;
+      if(nf<=fee) break; fee=nf;
+    }
+    const out=sum-fee;
+    if(out<1000000) throw new Error("balance too small to be worth merging");
+    say(`merging ${ins.length} UTxOs (fee ~${(fee/1e6).toFixed(3)} ADA) — approve in ${M.wname}…`);
+    const body=encPlainBody(ins, M.changeB, out, fee);
+    const unsigned=catB([u8([0x84]), body, u8([0xa0]), u8([0xf5,0xf6])]);
+    const witHex=await M.wapi.signTx(bHex(unsigned), false);
+    const wit=hexB(witHex);
+    const signed=wit[0]===0x84 ? wit : catB([u8([0x84]), body, wit, u8([0xf5,0xf6])]);
+    await M.wapi.submitTx(bHex(signed));
+    say(`✓ merged ${ins.length} → 1 UTxO. Give ${M.wname} ~30 s to see it, then start the mint.`);
+  }catch(e){
+    say("✗ "+String(e?.message||e));
+    if(btn) btn.disabled=false;
   }
 }
 
@@ -3232,6 +3402,11 @@ async function doCountersign(){
     const wid=await M.wapi.submitTx(bHex(signed));
     const txid=(typeof wid==="string" && /^[0-9a-f]{64}$/i.test(wid))?wid.toLowerCase():localTxid;
     const acceptance={ label:22026, acceptanceTx:txid, scrollPointer:`${th}#${ix}`, sha256Decoded:h, role:role||null, name:name||null, network:NETS[M.net].name, at:new Date().toISOString() };
+    // discovery is receipt-based — keep the countersign in the vault next to its scroll
+    vaultAdd({ type:"countersign", title:`Countersign · ${role||name||"acceptance"}`,
+      pointer:{ kind:"countersign-22026", txHash:txid, txIx:0 }, target:{ txHash:th, txIx:ix },
+      network:NETS[M.net].name, networkId:M.net, sha256Decoded:h, mintedAt:acceptance.at, wallet:M.wname });
+    renderVault();
     out.innerHTML=`<div class="okbox"><b>Acceptance submitted.</b><br>
       Tx <span class="mono">${txid}</span> <button class="copy" id="cs-txcopy">copy</button><br>
       Keep this hash with the scroll pointer — discovery is receipt-based (no global search).<br>
