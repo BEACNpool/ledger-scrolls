@@ -56,6 +56,19 @@
         "pageCount": 2,
         "encodedSha256": "af78ec9efa567a4f0282ab2563890cf669c0341100f2694a892d92018bed6621",
         "reconstructedSha256": "f82ca11529c221207ff8b7184d07df314cf92f8001ba164425e0c8ced7e6789e"
+      },
+      {
+        "manifest": "fixtures/chain/vector-004-head.hex",
+        "pages": "fixtures/chain/vector-004-pages.json",
+        "manifests": {
+          "58d254f74be7853f045a407a098f5c0ed0af89d5c5862c16951737035c74975f#0": "fixtures/chain/vector-004-tail.hex"
+        },
+        "contentType": "text/plain; charset=utf-8",
+        "codec": "none",
+        "pageCount": 4,
+        "parts": 2,
+        "encodedSha256": "5923c2984ce92dbf8711e80e6d3ad363bf5b03b1e7b88ba49029e0402abd0edc",
+        "reconstructedSha256": "5923c2984ce92dbf8711e80e6d3ad363bf5b03b1e7b88ba49029e0402abd0edc"
       }
     ],
     "pointers": {

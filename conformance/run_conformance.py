@@ -148,15 +148,38 @@ def decode_cbor(raw: bytes, pos: int = 0):
     raise ValueError(f"unsupported CBOR major type {mt}")
 
 
-def reconstruct_chain(manifest_hex: str, pages_by_tx: dict):
-    m, _ = decode_cbor(bytes.fromhex(manifest_hex))
-    assert m[0] == "tag" and m[1] == 121, "manifest must be Constr 0"
-    f = m[2]
-    info = {
-        "version": f[0], "contentType": f[1].decode(), "codec": f[2].decode(),
-        "sizeDecoded": f[3], "sha256Decoded": f[4].hex(), "sha256Encoded": f[5].hex(),
-        "pageTxHashes": [h.hex() for h in f[6]],
-    }
+def reconstruct_chain(manifest_hex: str, pages_by_tx: dict, manifests_by_ptr: dict | None = None):
+    """Reconstruct a scroll from its head manifest, following `next` pointers
+    (field 7: Constr 0 [] = end, Constr 1 [txHash, ix] = continuation).
+    manifests_by_ptr maps "txhash#ix" -> manifest hex for continuation parts."""
+    info = None
+    hashes = []
+    cur = manifest_hex
+    parts = 0
+    while True:
+        m, _ = decode_cbor(bytes.fromhex(cur))
+        assert m[0] == "tag" and m[1] == 121, "manifest must be Constr 0"
+        f = m[2]
+        parts += 1
+        if info is None:
+            info = {
+                "version": f[0], "contentType": f[1].decode(), "codec": f[2].decode(),
+                "sizeDecoded": f[3], "sha256Decoded": f[4].hex(), "sha256Encoded": f[5].hex(),
+            }
+        else:
+            assert (f[0] == info["version"] and f[1].decode() == info["contentType"]
+                    and f[4].hex() == info["sha256Decoded"]), "continuation file fields mismatch"
+        hashes.extend(h.hex() for h in f[6])
+        nxt = f[7] if len(f) > 7 else None
+        if isinstance(nxt, tuple) and nxt[0] == "tag" and nxt[1] == 122 and nxt[2]:
+            key = f"{nxt[2][0].hex()}#{nxt[2][1]}"
+            assert manifests_by_ptr and key in manifests_by_ptr, f"continuation manifest missing: {key}"
+            cur = manifests_by_ptr[key]
+            assert parts <= 32, "manifest chain too long"
+        else:
+            break
+    info["pageTxHashes"] = hashes
+    info["parts"] = parts
     encoded = bytearray()
     for tx in info["pageTxHashes"]:
         page = pages_by_tx[tx]["22025"]
@@ -239,9 +262,12 @@ def main() -> int:
     for v in vectors.get("chain", []):
         mhex = (ROOT / v["manifest"]).read_text().strip()
         pages = json.loads((ROOT / v["pages"]).read_text())
-        info, encoded, decoded = reconstruct_chain(mhex, pages)
+        conts = {ptr: (ROOT / path).read_text().strip()
+                 for ptr, path in (v.get("manifests") or {}).items()}
+        info, encoded, decoded = reconstruct_chain(mhex, pages, conts)
         check(f"{v['manifest']} fields", info["contentType"] == v["contentType"]
-              and info["codec"] == v["codec"] and len(info["pageTxHashes"]) == v["pageCount"])
+              and info["codec"] == v["codec"] and len(info["pageTxHashes"]) == v["pageCount"]
+              and info["parts"] == v.get("parts", 1))
         check(f"{v['manifest']} encoded sha256", sha256_hex(encoded) == v["encodedSha256"]
               and info["sha256Encoded"] == v["encodedSha256"])
         check(f"{v['manifest']} decoded sha256", sha256_hex(decoded) == v["reconstructedSha256"]

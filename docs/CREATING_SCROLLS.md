@@ -56,6 +56,12 @@ today — the worked examples are real, with receipts.
 > a tutorial that is itself on-chain — lives in
 > `examples/eternal-scroll-tutorial/`. The CIP-25 pages guidance below
 > remains for reading legacy scrolls.
+>
+> **Reproducing a mint:** `prepare.py` defaults to *auto* packing against the
+> live `max_tx_size`, so a later run can split pages differently. To re-derive
+> an existing mint byte-for-byte (e.g. to verify a browser mint), pass the
+> original plan.json's `segmentsPerPage` explicitly:
+> `python3 tools/lschain/prepare.py FILE --segments-per-page N`.
 
 ## Choosing a Format
 

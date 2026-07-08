@@ -549,6 +549,9 @@ const PACK = {
   page: 230 * 64,
   maxTxLive: false,
 };
+/* Pages per sealed manifest — ONE constant (spec: manifest-chain-v2.md).
+   350×34 B + base stays well under the 16 KB seal-tx datum budget. */
+const MAX_PAGES_PER_MANIFEST = 350;
 function _cborUintLen(n){ return n<24?1:n<256?2:n<65536?3:n<4294967296?5:9; }
 function _cborBytesLen(n){ return _cborUintLen(n)+n; }
 /** Conservative CBOR size of a 1-in/1-out page tx with label-22025 aux (sha included). */
@@ -593,7 +596,7 @@ const P = {
   utxoPerByte: 0.00431,                     // ADA per byte of output+datum
   chainPage: 230 * 64, chainSegs: 230,      // dense default; applyPacking() may raise
   chainTxOverhead: 970,                     // refreshed by applyPacking
-  chainPagesPerManifest: 350,               // keep under manifest datum / 16 KB seal
+  chainPagesPerManifest: MAX_PAGES_PER_MANIFEST,
   manifestBase: 140, manifestPerPage: 34,   // manifest datum bytes
   outBase: 200,                             // output overhead for min-UTxO
   legacyPage: 5408, legacySegs: 169,        // legacy page payload (32B segs)
@@ -1923,7 +1926,9 @@ async function buildBundle(){
     const plan={format:"ls-chain-v2-plan", sourceFile:(S.name||"scroll"), contentType:S.ct, codec:S.codec,
       sizeDecoded:S.raw, sizeEncoded:S.enc, sha256Decoded:S.sha, sha256Encoded:S.shaEnc,
       pages:n, segmentBytes:BND.SEG, segmentsPerPage:BND.SPP, pagePayloadBytes:BND.PAGE,
-      maxTxSize:PACK.MAX_TX, estimatedPageTxBytes:estimatePageTxBytes(BND.SPP,n),
+      maxTxSize:PACK.MAX_TX, safetyMargin:PACK.SAFETY, estimatedPageTxBytes:estimatePageTxBytes(BND.SPP,n),
+      // static protocol fee curve (44/155381), same as prepare.py — advisory field
+      estimatedFeePerPageAda:Math.round((155381+44*estimatePageTxBytes(BND.SPP,n)))/1e6,
       pageSha256:pageShas, metadataLabel:22025};
     files.push({name:"plan.json", data:te.encode(JSON.stringify(plan,null,2)+"\n")});
     const reg=($("o_reg")?.textContent||"").trim(); if(reg) files.push({name:"registry-entry.json", data:te.encode(reg+"\n")});
@@ -2086,9 +2091,8 @@ function downloadPacket(){
    attach arbitrary metadata. Because we build the CBOR ourselves, segments
    are efficient 64-byte byte strings (matches the headline estimate).
    ══════════════════════════════════════════════════════════════════════ */
-/* MAX_PER_MAN: page hashes per locked manifest (~spec ~400; 350 leaves headroom under 16 KB).
-   SPP tracks PACK.spp (dense auto-pack). */
-const SGN = { SEG:PACK.SEG, SPP:PACK.spp, MAX_PER_MAN:350, pages:[], done:0, spent:new Set(), running:false,
+/* SPP tracks PACK.spp (dense auto-pack). */
+const SGN = { SEG:PACK.SEG, SPP:PACK.spp, MAX_PER_MAN:MAX_PAGES_PER_MANIFEST, pages:[], done:0, spent:new Set(), running:false,
   paused:false, feesSpent:0, startedAt:0, lastFee:0, sealTxids:[] };
 function buildSignPages(bytes){
   SGN.SPP = PACK.spp; SGN.SEG = PACK.SEG;

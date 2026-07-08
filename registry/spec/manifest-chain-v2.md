@@ -47,8 +47,10 @@ Constr 0 [                       -- CBOR tag 121
 ```
 
 - All byte strings are ≤ 64 bytes, satisfying Plutus Data chunk limits.
-- `next` chains manifests for files whose page list exceeds one datum
-  (~400 page hashes per manifest ≈ 4.8 MB per link at default page size).
+- `next` chains manifests for files whose page list exceeds one datum.
+  Reference writers seal **at most 350 page hashes per manifest**
+  (`MAX_PAGES_PER_MANIFEST`; ≈ 5.3 MB per link at default page size) —
+  readers MUST accept any count that fits the datum.
   Page lists concatenate in chain order; every manifest in the chain repeats
   the file-level fields, which MUST be identical.
 
@@ -77,10 +79,14 @@ Each page is a plain transaction (self-send; no mint) carrying metadata under
   be consistent with the manifest order.
 - RECOMMENDED page payload: pack as many 64-byte segments as fit under
   `max_tx_size − safety_margin` (mainnet `max_tx_size` is typically 16,384;
-  writers use ~400 B margin). Reference tools default to **auto** packing
-  (≈230–243 segments ≈ 14.7–15.5 KB payload). The older 190-segment / 12,160 B
+  writers use a 400 B margin). Reference tools default to **auto** packing —
+  at 16,384/400 both calculator.html and prepare.py compute **237 segments
+  (15,168 B payload)**; `conformance/` and `scripts/check_cost_model_sync.mjs`
+  hold the implementations to the same model. The older 190-segment / 12,160 B
   choice remains valid and more conservative. Larger full pages amortize the
-  fixed per-tx fee and need fewer signatures.
+  fixed per-tx fee and need fewer signatures. To REPRODUCE an existing mint's
+  page splits, pass the plan.json's `segmentsPerPage` to
+  `prepare.py --segments-per-page N` instead of auto.
 
 ## Reconstruction algorithm
 

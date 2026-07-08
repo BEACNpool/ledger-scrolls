@@ -134,19 +134,44 @@ function decodeCbor(raw, pos = 0) {
     throw new Error(`unsupported CBOR major type ${mt}`);
 }
 
-function reconstructChain(manifestHex, pagesByTx) {
-    const [m] = decodeCbor(Buffer.from(manifestHex, 'hex'));
-    if (m.tag !== 121) throw new Error('manifest must be Constr 0');
-    const f = m.value;
-    const info = {
-        version: f[0],
-        contentType: Buffer.from(f[1]).toString('utf8'),
-        codec: Buffer.from(f[2]).toString('utf8'),
-        sizeDecoded: f[3],
-        sha256Decoded: Buffer.from(f[4]).toString('hex'),
-        sha256Encoded: Buffer.from(f[5]).toString('hex'),
-        pageTxHashes: f[6].map(h => Buffer.from(h).toString('hex')),
-    };
+/* Reconstruct a scroll from its head manifest, following `next` pointers
+   (field 7: Constr 0 [] = end, Constr 1 [txHash, ix] = continuation).
+   manifestsByPtr maps "txhash#ix" -> manifest hex for continuation parts. */
+function reconstructChain(manifestHex, pagesByTx, manifestsByPtr = {}) {
+    let info = null;
+    const hashes = [];
+    let cur = manifestHex;
+    let parts = 0;
+    for (;;) {
+        const [m] = decodeCbor(Buffer.from(cur, 'hex'));
+        if (m.tag !== 121) throw new Error('manifest must be Constr 0');
+        const f = m.value;
+        parts++;
+        if (!info) {
+            info = {
+                version: f[0],
+                contentType: Buffer.from(f[1]).toString('utf8'),
+                codec: Buffer.from(f[2]).toString('utf8'),
+                sizeDecoded: f[3],
+                sha256Decoded: Buffer.from(f[4]).toString('hex'),
+                sha256Encoded: Buffer.from(f[5]).toString('hex'),
+            };
+        } else if (f[0] !== info.version
+            || Buffer.from(f[1]).toString('utf8') !== info.contentType
+            || Buffer.from(f[4]).toString('hex') !== info.sha256Decoded) {
+            throw new Error('continuation file fields mismatch');
+        }
+        for (const h of f[6]) hashes.push(Buffer.from(h).toString('hex'));
+        const nxt = f.length > 7 ? f[7] : null;
+        if (nxt && nxt.tag === 122 && Array.isArray(nxt.value) && nxt.value.length) {
+            const key = `${Buffer.from(nxt.value[0]).toString('hex')}#${nxt.value[1]}`;
+            if (!manifestsByPtr[key]) throw new Error('continuation manifest missing: ' + key);
+            cur = manifestsByPtr[key];
+            if (parts > 32) throw new Error('manifest chain too long');
+        } else break;
+    }
+    info.pageTxHashes = hashes;
+    info.parts = parts;
     const chunks = [];
     for (const tx of info.pageTxHashes) {
         const page = pagesByTx[tx]['22025'];
@@ -214,9 +239,12 @@ console.log('== ls-chain v2 ==');
 for (const v of vectors.chain ?? []) {
     const mhex = readFileSync(join(ROOT, v.manifest), 'utf8').trim();
     const pages = JSON.parse(readFileSync(join(ROOT, v.pages), 'utf8'));
-    const [info, encoded, decoded] = reconstructChain(mhex, pages);
+    const conts = Object.fromEntries(Object.entries(v.manifests ?? {})
+        .map(([ptr, path]) => [ptr, readFileSync(join(ROOT, path), 'utf8').trim()]));
+    const [info, encoded, decoded] = reconstructChain(mhex, pages, conts);
     check(`${v.manifest} fields`, info.contentType === v.contentType
-        && info.codec === v.codec && info.pageTxHashes.length === v.pageCount);
+        && info.codec === v.codec && info.pageTxHashes.length === v.pageCount
+        && info.parts === (v.parts ?? 1));
     check(`${v.manifest} encoded sha256`, sha256Hex(encoded) === v.encodedSha256
         && info.sha256Encoded === v.encodedSha256);
     check(`${v.manifest} decoded sha256`, sha256Hex(decoded) === v.reconstructedSha256

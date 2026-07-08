@@ -331,11 +331,13 @@ p{color:var(--ink-2)}
 
 <script>
 "use strict";
-/* Cost model — identical constants to calculator.html (kept in sync by test in scripts/). */
+/* Cost model — MUST match calculator.html's post-applyPacking defaults
+   (max_tx 16384, safety 400 → 237 segs). Checked by scripts/check_cost_model_sync.mjs,
+   which computes the truth by executing calculator.html's packing model. */
 const P = {
   feeB: 0.155381, feeA: 0.000044,
   utxoPerByte: 0.00431,
-  chainPage: 14720, chainTxOverhead: 900,   // dense pack ~230×64 B (matches prepare.py auto)
+  chainPage: 15168, chainTxOverhead: 769,   // dense pack 237×64 B (= prepare.py auto at 16384/400)
   chainPagesPerManifest: 350,
   manifestBase: 140, manifestPerPage: 34,
   outBase: 200,
