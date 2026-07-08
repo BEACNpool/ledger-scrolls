@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Ledger Scrolls — A Library That Cannot Burn</title>
 <meta name="description" content="Read and verify immutable media stored on the Cardano blockchain. This site hosts nothing: your browser queries the chain, rebuilds the bytes, and verifies every hash.">
-<meta name="theme-color" content="#f6f5f1">
+<meta name="theme-color" content="#2f53ff">
+<link rel="manifest" href="./manifest.webmanifest">
 <meta property="og:title" content="Ledger Scrolls — A Library That Cannot Burn">
 <meta property="og:description" content="Immutable media on Cardano. Your browser queries the chain, rebuilds the bytes, and verifies every hash before a single word is shown.">
 <meta property="og:type" content="website">
@@ -1081,6 +1082,7 @@ $('setsrc').value=LS.getItem('ls.source')||''; $('sethead').value=LS.getItem('ls
 $('regopen') && ($('regopen').onclick=()=>{ $('point').value='$beacn'; openPointer('$beacn'); });
 drawShelf();
 route();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});
 </script>
 </body>
 </html>

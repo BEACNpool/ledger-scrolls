@@ -1,0 +1,19 @@
+{
+  "name": "Ledger Scrolls — Scroll Press",
+  "short_name": "Scroll Press",
+  "description": "Mint and keep immutable media on Cardano. No node, no account, no upload.",
+  "start_url": "./calculator.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f5f1",
+  "theme_color": "#2f53ff",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

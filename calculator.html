@@ -5,11 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Mint a Scroll — Ledger Scrolls</title>
 <meta name="description" content="Drop any file, see exactly what forever costs, and mint it on Cardano right from your browser wallet — no node, no CLI, no API key. Computed locally; nothing is uploaded.">
-<meta name="theme-color" content="#f6f5f1">
+<meta name="theme-color" content="#2f53ff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Scroll Press">
 <meta property="og:title" content="Mint a Scroll — Ledger Scrolls">
 <meta property="og:description" content="What does forever cost? Drop a file in, see one number, and mint it with the wallet you already have — no node needed.">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./favicon.svg">
 <link rel="canonical" href="https://beacnpool.github.io/ledger-scrolls/calculator.html">
 <meta property="og:url" content="https://beacnpool.github.io/ledger-scrolls/calculator.html">
 <meta property="og:image" content="https://beacnpool.github.io/ledger-scrolls/media/og-card.png">
@@ -244,6 +249,28 @@ body{padding-bottom:96px}
 .nextcue{margin-top:16px;padding:12px 14px;border-radius:var(--radius-sm);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 28%,transparent);font:600 14.5px/1.4 var(--sans);color:#0a6b46}
 .nextcue .go{display:inline-flex;margin-top:10px}
 #mintjump{margin-top:14px}
+/* app features: vault · dashboard · readiness · share · countersign */
+.appshell{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.appshell a,.appshell button{font:600 13px/1 var(--sans)}
+.vault-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.vault-card{border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:12px 14px;background:var(--surface-2)}
+.vault-card h4{margin:0 0 4px;font:700 15px/1.3 var(--sans)}
+.vault-card .meta{font:12.5px/1.45 var(--mono);color:var(--muted);word-break:break-all}
+.vault-card .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.dash{margin-top:14px;padding:14px 16px;border-radius:var(--radius-sm);background:#0e1118;color:#e6e3da;border:1px solid #1d2433}
+.dash .drow{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin-top:8px}
+.dash .dstat{font:700 13px/1.2 var(--sans)}
+.dash .dstat b{display:block;font:800 22px/1.1 var(--sans);color:#fff;margin-top:4px}
+.dash .dbar{height:10px;border-radius:var(--pill);background:#1d2433;overflow:hidden;margin-top:12px}
+.dash .dbar span{display:block;height:100%;background:linear-gradient(90deg,#2f53ff,#5ad196);transition:width .3s}
+.readybox{margin-top:12px;padding:12px 14px;border-radius:var(--radius-sm);border:1px solid var(--line-2);background:var(--surface-2);font-size:14px}
+.readybox.ok{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft)}
+.readybox.warn{border-color:color-mix(in srgb,var(--warn) 35%,transparent);background:var(--warn-soft)}
+.sharecard-wrap{margin-top:14px;padding:14px;border:1px dashed var(--line-2);border-radius:var(--radius-sm);background:var(--surface-2);text-align:center}
+.sharecard-wrap canvas{max-width:100%;height:auto;border-radius:8px;box-shadow:var(--sh-sm);background:#fff}
+.tabbar{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.tabbar button{font:600 13px/1 var(--sans);padding:8px 12px;border-radius:var(--pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.tabbar button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -256,6 +283,8 @@ body{padding-bottom:96px}
     <a class="ghost" href="./index.html">Main Viewer</a>
     <a class="ghost" href="./build-a-reader/">Build a reader</a>
     <a class="ghost" href="./index.html">The Library</a>
+    <a class="ghost" href="#vaultsec">My Scrolls</a>
+    <a class="ghost" href="#cssec">Countersign</a>
   </div>
 </header>
 
@@ -393,6 +422,31 @@ body{padding-bottom:96px}
     </div>
   </div>
 </div>
+
+<!-- ═══ MY SCROLLS VAULT ═══ -->
+<section class="section" id="vaultsec">
+  <div class="card">
+    <h2>📚 My Scrolls</h2>
+    <p style="font-size:14.5px;color:var(--ink-2)">Scrolls you mint on this device are saved here (browser storage only — export a backup).
+      No account, no server. Open, re-verify, or share anytime.</p>
+    <div class="appshell">
+      <button class="btn sub" type="button" id="vault-export">⬇ Export vault JSON</button>
+      <label class="btn ghost" style="cursor:pointer">⬆ Import<input type="file" id="vault-import" accept="application/json,.json" hidden></label>
+      <button class="btn ghost" type="button" id="vault-refresh">↻ Refresh</button>
+    </div>
+    <div id="vaultlist" class="vault-list"></div>
+  </div>
+</section>
+
+<!-- ═══ COUNTERSIGN WIZARD ═══ -->
+<section class="section" id="cssec">
+  <div class="card">
+    <h2>✓ Countersign a scroll</h2>
+    <p style="font-size:14.5px;color:var(--ink-2)">Endorse exact on-chain bytes with a small self-send (metadata label <code>22026</code>).
+      The chain records your key, the hash, and the time — no signing platform.</p>
+    <div id="csbody"></div>
+  </div>
+</section>
 
 <section class="section" id="learnsec" hidden>
   <div class="card">
@@ -1321,7 +1375,7 @@ async function connectWallet(key){
     // Infer network answer from wallet if user hasn't chosen yet
     if(!S.q.net) S.q.net = (M.net===0 ? "preview" : "main");
     if((S.wiz||1)<2) S.wiz=2;                          // connecting advances to questions
-    refreshBalance(); renderWiz();
+    refreshBalance(); renderWiz(); renderCountersign();
   }catch(e){ const el=$("walletctl"); if(el) el.innerHTML=`<div class="warnbox">✋ ${esc(String(e.message||e))}</div>`; renderCoach(); }
 }
 function disconnectWallet(){
@@ -1961,7 +2015,8 @@ function downloadPacket(){
    ══════════════════════════════════════════════════════════════════════ */
 /* MAX_PER_MAN: page hashes per locked manifest (~spec ~400; 350 leaves headroom under 16 KB).
    SPP tracks PACK.spp (dense auto-pack). */
-const SGN = { SEG:PACK.SEG, SPP:PACK.spp, MAX_PER_MAN:350, pages:[], done:0, spent:new Set(), running:false };
+const SGN = { SEG:PACK.SEG, SPP:PACK.spp, MAX_PER_MAN:350, pages:[], done:0, spent:new Set(), running:false,
+  paused:false, feesSpent:0, startedAt:0, lastFee:0 };
 function buildSignPages(bytes){
   SGN.SPP = PACK.spp; SGN.SEG = PACK.SEG;
   const PG=SGN.SEG*SGN.SPP, n=Math.max(1,Math.ceil(bytes.length/PG)), pages=[];
@@ -2011,30 +2066,97 @@ async function freshSpendable(){
   const raw=parseWalletUtxos(await M.wapi.getUtxos());
   return raw.filter(u=>!SGN.spent.has(utxoKey(u)));
 }
+async function waitIfPaused(){
+  while(SGN.paused && SGN.running){
+    updateMintDash("paused");
+    await new Promise(r=>setTimeout(r,400));
+  }
+}
+function ensureMintDash(){
+  let d=$("mintdash");
+  if(d) return d;
+  const host=$("cpstage")||$("mintbody");
+  if(!host) return null;
+  d=document.createElement("div"); d.id="mintdash"; d.className="dash";
+  host.insertBefore(d, host.firstChild);
+  return d;
+}
+function updateMintDash(phase){
+  const d=ensureMintDash(); if(!d) return;
+  const n=Math.max(1,SGN.pages.length), done=SGN.done;
+  const pct=Math.round(100*done/n);
+  const elapsed=SGN.startedAt? (Date.now()-SGN.startedAt)/1000 : 0;
+  const rate=done>0 ? elapsed/done : 22;
+  const left=Math.max(0,n-done);
+  const etaMin=Math.max(0, Math.ceil(left*rate/60));
+  const feesAda=(SGN.feesSpent||0)/1e6;
+  const estLeft=left * ((SGN.lastFee||estimatePageTxBytes(PACK.spp,n)*44+155381)/1e6);
+  d.innerHTML=`
+    <div style="font:700 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#8ea2ff">Live mint dashboard</div>
+    <div class="drow">
+      <div class="dstat">Pages<b>${done} / ${n}</b></div>
+      <div class="dstat">Progress<b>${pct}%</b></div>
+      <div class="dstat">Fees so far<b>${fmtA(feesAda)} ₳</b></div>
+      <div class="dstat">ETA<b>${SGN.paused?"paused":(left?("~"+etaMin+"m"):"seal next")}</b></div>
+      <div class="dstat">Est. remaining<b>~${fmtA(estLeft)} ₳</b></div>
+    </div>
+    <div class="dbar"><span style="width:${pct}%"></span></div>
+    <p style="margin:10px 0 0;font:13px/1.4 var(--sans);color:#c8ceda">${
+      phase==="paused" ? "⏸ Paused — no new signatures until you resume."
+      : phase==="waiting" ? "Waiting for Eternl to see the previous transaction…"
+      : phase==="sign" ? "→ Approve the open Eternl popup."
+      : phase==="done-pages" ? "All pages on chain — seal when ready."
+      : "Minting… leave this tab open."
+    }</p>
+    <p style="margin:10px 0 0;display:flex;flex-wrap:wrap;gap:8px">
+      <button type="button" class="btn sub" id="dash-pause">${SGN.paused?"▶ Resume signing":"⏸ Pause after this page"}</button>
+      <button type="button" class="btn ghost" id="dash-export">⬇ Export progress JSON</button>
+    </p>`;
+  $("dash-pause")?.addEventListener("click",()=>{
+    SGN.paused=!SGN.paused;
+    if(!SGN.paused && !SGN.running && SGN.done<SGN.pages.length) signAllPages();
+    updateMintDash(SGN.paused?"paused":"sign");
+  });
+  $("dash-export")?.addEventListener("click",()=>{
+    const blob=new Blob([JSON.stringify({
+      sha:S.sha, name:S.name, done:SGN.done, pages:SGN.pages.length, txids:CP.txids.slice(),
+      feesSpent:SGN.feesSpent, net:M.net, ts:Date.now()
+    },null,2)],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    a.download=`mint-progress-${(S.name||"scroll").replace(/[^a-zA-Z0-9._-]+/g,"_")}.json`;
+    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  });
+}
 async function signAllPages(){
-  if(SGN.running) return; SGN.running=true;
-  renderCoach();
+  if(SGN.running) return; SGN.running=true; SGN.paused=false;
+  if(!SGN.startedAt) SGN.startedAt=Date.now();
+  renderCoach(); updateMintDash("sign");
   const n=SGN.pages.length;
   const changeB = M.changeB || (M.changeB=hexB(await M.wapi.getChangeAddress()));
   const selfB = changeB;
   try{
     for(let k=SGN.done; k<n; k++){
+      await waitIfPaused();
+      if(!SGN.running) return;
       const p=SGN.pages[k];
       const left=n-k;
       const eta=left>1 ? ` · ~${Math.ceil(left*0.35)} min left` : "";
       sgnStatus(k+1,"sign","building page "+(k+1)+" of "+n+"…"+eta);
-      if(k===SGN.done || k%5===0) renderCoach();
+      updateMintDash("sign");
+      if(k===SGN.done || k%3===0) renderCoach();
       const aux=pageAux(p), auxHash=blake2b256(aux);
-      // wait for a spendable UTxO — previous page's change may still be settling in Eternl
       let utxos=await freshSpendable(), waited=0;
       while(!utxos.length && waited<180){
+        updateMintDash("waiting");
         sgnStatus(k+1,"sign",`waiting for Eternl to see the previous tx… (${waited}s)`);
         await new Promise(r=>setTimeout(r,5000)); waited+=5; utxos=await freshSpendable();
       }
       if(!utxos.length) throw new Error("wallet shows no spendable ADA yet — give Eternl ~30s after the last transaction, then Resume.");
       const plan=planPage(utxos, aux, auxHash, selfB, M.params);
+      SGN.lastFee=plan.fee;
       const unsigned=catB([u8([0x84]), plan.body, u8([0xa0]), u8([0xf5]), aux]);
       sgnStatus(k+1,"sign","→ approve page "+(k+1)+" of "+n+" in Eternl…"+eta);
+      updateMintDash("sign");
       const witHex=await M.wapi.signTx(bHex(unsigned), false);
       const wit=hexB(witHex);
       const signed = wit[0]===0x84 ? wit : catB([u8([0x84]), plan.body, wit, u8([0xf5]), aux]);
@@ -2044,19 +2166,22 @@ async function signAllPages(){
       CP.txids[k]=txid;
       plan.ins.forEach(i=>SGN.spent.add(utxoKey(i)));
       SGN.done=k+1;
-      saveResume();      // persist each landed page so a reload can resume
+      SGN.feesSpent=(SGN.feesSpent||0)+plan.fee;
+      saveResume();
       sgnStatus(k+1,"ok","page "+(k+1)+" on chain ✓ "+txid.slice(0,12)+"…");
       sgnProgress();
+      updateMintDash("sign");
     }
-    // all pages signed → seal (one or more manifests if file spans multi-part seals)
     CP.net = M.net; CP.checked=true;
     CP.hashB = CP.txids.map(hexB);
+    updateMintDash("done-pages");
     sgnDoneUI();
   }catch(e){
     SGN.running=false;
     const msg=String(e?.info||e?.message||e);
     sgnStatus(SGN.done+1,"bad", /decline|refus|cancel|denied/i.test(msg) ? "you declined — nothing sent for this page; tap Resume when ready" : msg);
     $("sgnresume") && ($("sgnresume").hidden=false);
+    updateMintDash("paused");
     return;
   }
   SGN.running=false;
@@ -2072,6 +2197,7 @@ function sgnProgress(){
   if(bar) bar.style.width=(100*SGN.done/Math.max(1,n))+"%";
   if(cnt) cnt.textContent=`${SGN.done} of ${n} pages on chain`;
   const pct=$("sgnpct"); if(pct) pct.textContent=Math.round(100*SGN.done/Math.max(1,n))+"%";
+  updateMintDash("sign");
 }
 function sgnDoneUI(){
   const line=$("sgnline"); if(line) line.textContent="";
@@ -2243,7 +2369,8 @@ async function startWalletSign(key, resume){
     SGN.pages=buildSignPages(S.encBytes); SGN.spent=new Set();
     if(resume && resume.done>0 && resume.done<SGN.pages.length && resume.net===M.net){
       SGN.done=resume.done; CP.txids=resume.txids.slice();
-    } else { SGN.done=0; CP.txids=[]; }
+      SGN.feesSpent=0; // unknown prior fees on resume
+    } else { SGN.done=0; CP.txids=[]; SGN.feesSpent=0; SGN.startedAt=0; }
     const n=SGN.pages.length, nnet=NETS[M.net];
     const seals=Math.max(1,Math.ceil(n/SGN.MAX_PER_MAN));
     const total=n+seals;
@@ -2252,6 +2379,7 @@ async function startWalletSign(key, resume){
     const bulk= n<=SGN.MAX_PER_MAN ? bulkSignApi(M.wapi) : null; // bulk only when single seal fits
     const showRows=n<=48; // large films: progress bar only (don't freeze the DOM)
     const balOk = M.balance==null || M.balance/1e6 >= feeGuess+2;
+    const ready=await assessUtxoReadiness();
     stage.innerHTML=`
       <div style="border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:16px 18px;background:var(--surface-2);margin-top:4px">
         <p style="margin:0 0 8px"><span class="netbadge ${nnet.cls}">${nnet.name}</span>
@@ -2266,6 +2394,7 @@ async function startWalletSign(key, resume){
         <p style="font-size:12.5px;color:var(--muted);margin:6px 0 0">Dense on-chain pack: <b>${PACK.spp}×64&nbsp;B = ${fmtB(PACK.page)}/page</b>
           (≈${Math.round(100*PACK.page/estimatePageTxBytes(PACK.spp,n))}% of each tx is payload${PACK.maxTxLive?" · live max_tx":""}).
           No IPFS — every byte on Cardano.</p>
+        ${ready.html}
         ${!balOk?`<div class="warnbox" style="margin:10px 0">Wallet may be short — send ~${fmtA(feeGuess+3)} ADA to this account, then refresh balance and continue.</div>`:""}
         <div class="consent" style="margin-top:12px"><input type="checkbox" id="sgnconsent">
           <label for="sgnconsent"><b>I understand this is permanent and public.</b> No edit, no delete —
@@ -2684,54 +2813,328 @@ function mintSuccess(unverified){
   M.state="done";
   clearResume();
   const n=NETS[M.net], ptr=M.txid+"#0", chain=M.mode==="chain";
-  const receipts={ scroll:$("b_name").value.trim()||S.name, file:S.name, network:n.name,
+  const title=($("b_title")?.value||"").trim()||($("b_name")?.value||"").trim()||S.name||"scroll";
+  const receipts={ scroll:($("b_name")?.value||"").trim()||S.name, title, file:S.name, network:n.name, networkId:M.net,
     format: chain ? "chain-scroll (manifest-chain-v2)" : "standard-scroll (utxo-inline-datum-bytes-v1)",
     pointer:{ kind: chain?"manifest-chain-v2":"utxo-inline-datum-bytes-v1", txHash:M.txid, txIx:0 },
     ...(chain?{ pageTxHashes:CP.txids.slice(), pages:CP.txids.length }:{}),
     lockAddress:n.lockBech, lockTxIn:ptr, contentType:S.ct, codec:S.codec,
     sizeDecoded:S.raw, sizeEncoded:S.enc, sha256Decoded:S.sha, sha256Encoded:S.shaEnc,
-    lockedLovelace:M.plan.lockCoin, feeLovelace:M.plan.fee,
+    lockedLovelace:M.plan?.lockCoin||0, feeLovelace:M.plan?.fee||0, pageFeesLovelace:SGN.feesSpent||0,
     mintedAt:new Date().toISOString(), verifiedFromChain:!unverified, wallet:M.wname };
+  vaultAdd(receipts);
   const blob=new Blob([JSON.stringify(receipts,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
+  const absReader = M.net===1
+    ? `https://beacnpool.github.io/ledger-scrolls/index.html#open=${M.txid}`
+    : "";
   const readerUrl = M.net===1 ? `./index.html#open=${M.txid}` : "";
   const tweet = "https://twitter.com/intent/tweet?text="+encodeURIComponent(
-    `I just wrote this to Cardano forever — no server, no node, minted from my laptop with @eternlwallet.\n\nRead it straight from the chain, verify every byte:`)
-    + (readerUrl?"&url="+encodeURIComponent("https://beacnpool.github.io/ledger-scrolls/index.html#open="+M.txid):"");
-  $("mintstage").insertAdjacentHTML("beforeend",`
+    `I just wrote this to Cardano forever — no server, no node, minted with @eternlwallet.\n\nVerify every byte:`)
+    + (absReader?"&url="+encodeURIComponent(absReader):"");
+  const stage=$("mintstage")||$("mintbody");
+  if(!stage) return;
+  stage.insertAdjacentHTML("beforeend",`
+    <div class="coach" style="margin-top:16px">
+      <div class="cue">Step 4 — After mint</div>
+      <p class="say">${unverified?"Minted — verify from chain before announcing.":"Your scroll is eternal — verified from the chain."}</p>
+      <p class="hint">Do these next (in order). Everything below stays on this device unless you export.</p>
+      <ol class="steps" style="margin-top:10px">
+        <li><b>Save receipts</b> — JSON + share card (screenshot or download PNG).</li>
+        <li><b>Open in the Library</b> and confirm it renders.</li>
+        <li><b>Share the pointer</b> (or verified reader link) — not a hosted file.</li>
+        <li>Optional: <a href="#cssec">countersign</a> with another party, or PR into the public registry.</li>
+      </ol>
+    </div>
     <div class="okbox">
-      <b>📜 ${unverified?"Minted (verify from chain before announcing!)":"Your scroll is eternal — verified from the chain."}</b><br>
-      Pointer (this is how civilization finds it — keep it):<br>
+      <b>Pointer (civilization finds it with this):</b><br>
       <span class="mono">${ptr}</span> <button class="copy" id="ptrcopy">copy</button><br>
+      <span class="mono" style="font-size:12px;display:block;margin-top:6px">SHA-256 ${S.sha}</span>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
-        ${readerUrl?`<a class="btn sub" href="${readerUrl}" target="_blank" rel="noopener">📖 Read it in the viewer</a>`:""}
+        ${readerUrl?`<a class="btn" href="${readerUrl}" target="_blank" rel="noopener">📖 Open in Library</a>`:""}
         <a class="btn sub" href="${n.scan}${M.txid}" target="_blank" rel="noopener">🔎 Cardanoscan</a>
         ${readerUrl?`<a class="btn sub" href="${tweet}" target="_blank" rel="noopener">𝕏 Share</a>`:""}
         <a class="btn sub" href="${url}" download="receipts-${(S.name||"scroll").replace(/[^a-zA-Z0-9._-]+/g,"_")}.json">⬇ receipts.json</a>
+        <a class="btn sub" href="#vaultsec">📚 My Scrolls</a>
+        <a class="btn sub" href="#cssec">✓ Countersign</a>
       </div>
-      <span style="font-size:13px;color:#0a6b46;display:block;margin-top:10px">Want it on the public Library shelf? The registry entry below carries your real transaction hash —
-      PR it into <a href="https://github.com/BEACNpool/ledger-scrolls/tree/main/registry">the registry</a>.</span>
+    </div>
+    <div class="sharecard-wrap">
+      <canvas id="sharecanvas" width="720" height="420" aria-label="share card"></canvas>
+      <p style="margin:10px 0 0;font-size:13px;color:var(--muted)">Share card (drawn locally — no upload)</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px">
+        <button class="btn sub" type="button" id="sharepng">⬇ Download PNG</button>
+        <button class="btn ghost" type="button" id="sharecopyurl">${absReader?"Copy reader link":"Copy pointer"}</button>
+      </div>
     </div>`);
-  $("ptrcopy").addEventListener("click",e=>copyText(e.target,ptr));
+  $("ptrcopy")?.addEventListener("click",e=>copyText(e.target,ptr));
+  drawShareCard(receipts, absReader||ptr);
+  $("sharepng")?.addEventListener("click",()=>{
+    const c=$("sharecanvas"); if(!c) return;
+    const a=document.createElement("a"); a.href=c.toDataURL("image/png");
+    a.download=`scroll-card-${M.txid.slice(0,12)}.png`; a.click();
+  });
+  $("sharecopyurl")?.addEventListener("click",e=>copyText(e.target, absReader||ptr));
+  coachSay("Done 📜", "Saved to My Scrolls on this device.",
+    "Export the vault if you switch browsers. Verify in the Library before you announce.");
+  renderVault();
   buildOutputs();
+}
+
+/* ══════════ My Scrolls vault (localStorage only) ══════════ */
+const VAULT_KEY="ls.vault.v1";
+function vaultLoad(){ try{ const a=JSON.parse(localStorage.getItem(VAULT_KEY)||"[]"); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function vaultSave(list){ try{ localStorage.setItem(VAULT_KEY, JSON.stringify(list.slice(0,200))); }catch(e){ void e; } }
+function vaultAdd(receipt){
+  const list=vaultLoad().filter(x=>x.lockTxIn!==receipt.lockTxIn && x.pointer?.txHash!==receipt.pointer?.txHash);
+  list.unshift(receipt);
+  vaultSave(list);
+}
+function renderVault(){
+  const el=$("vaultlist"); if(!el) return;
+  const list=vaultLoad();
+  if(!list.length){
+    el.innerHTML=`<div class="cmp">No scrolls saved on this device yet. Mint one above — it lands here automatically.</div>`;
+    return;
+  }
+  el.innerHTML=list.map((r,i)=>{
+    const tx=r.pointer?.txHash||(r.lockTxIn||"").split("#")[0];
+    const ptr=r.lockTxIn||(tx?tx+"#0":"");
+    const reader=r.networkId===0?"":`./index.html#open=${tx}`;
+    const title=esc(r.title||r.scroll||r.file||"scroll");
+    return `<div class="vault-card" data-vi="${i}">
+      <h4>${title}</h4>
+      <div class="meta">${esc(r.network||"")} · ${esc(r.format||"")} · ${esc((r.mintedAt||"").slice(0,19).replace("T"," "))}
+        ${r.verifiedFromChain?" · ✓ verified":" · unverified"}
+        <br>${esc(ptr)}
+        <br>sha256 ${esc((r.sha256Decoded||"").slice(0,16))}…</div>
+      <div class="acts">
+        ${reader?`<a class="btn sub" href="${reader}" target="_blank" rel="noopener">Open</a>`:""}
+        <button class="btn ghost" type="button" data-vcopy="${esc(ptr)}">Copy pointer</button>
+        <button class="btn ghost" type="button" data-vcard="${i}">Share card</button>
+        <button class="btn ghost" type="button" data-vdel="${i}">Remove</button>
+      </div>
+      <div class="sharecard-wrap" id="vcard-${i}" hidden></div>
+    </div>`;
+  }).join("");
+  el.querySelectorAll("[data-vcopy]").forEach(b=>b.addEventListener("click",e=>copyText(e.target,b.dataset.vcopy)));
+  el.querySelectorAll("[data-vdel]").forEach(b=>b.addEventListener("click",()=>{
+    const list=vaultLoad(); list.splice(+b.dataset.vdel,1); vaultSave(list); renderVault();
+  }));
+  el.querySelectorAll("[data-vcard]").forEach(b=>b.addEventListener("click",()=>{
+    const i=+b.dataset.vcard, r=vaultLoad()[i]; if(!r) return;
+    const box=$(`vcard-${i}`); if(!box) return;
+    box.hidden=false;
+    box.innerHTML=`<canvas id="vc-${i}" width="720" height="420"></canvas>
+      <p style="margin-top:8px"><button class="btn sub" type="button" id="vcdn-${i}">⬇ PNG</button></p>`;
+    const abs=r.networkId===0?"":`https://beacnpool.github.io/ledger-scrolls/index.html#open=${r.pointer?.txHash}`;
+    drawShareCard(r, abs||r.lockTxIn, $(`vc-${i}`));
+    $(`vcdn-${i}`)?.addEventListener("click",()=>{
+      const c=$(`vc-${i}`); const a=document.createElement("a");
+      a.href=c.toDataURL("image/png"); a.download=`scroll-card-${(r.pointer?.txHash||"x").slice(0,12)}.png`; a.click();
+    });
+  }));
+}
+
+/* ══════════ Share / verify card (canvas, local only) ══════════ */
+function drawShareCard(r, link, canvas){
+  const c=canvas||$("sharecanvas"); if(!c||!c.getContext) return;
+  const ctx=c.getContext("2d"), W=c.width, H=c.height;
+  // paper background
+  ctx.fillStyle="#f6f5f1"; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="#2f53ff"; ctx.fillRect(0,0,W,8);
+  ctx.fillStyle="#14161b"; ctx.font="800 28px system-ui,sans-serif";
+  ctx.fillText("Ledger Scroll", 40, 56);
+  ctx.fillStyle="#6b7280"; ctx.font="600 14px system-ui,sans-serif";
+  ctx.fillText("on-chain · hash-verified · no landlord", 40, 82);
+  ctx.fillStyle="#14161b"; ctx.font="700 22px system-ui,sans-serif";
+  const title=(r.title||r.scroll||r.file||"Scroll").slice(0,48);
+  ctx.fillText(title, 40, 130);
+  ctx.fillStyle="#3a4049"; ctx.font="600 13px ui-monospace,monospace";
+  const ptr=r.lockTxIn||((r.pointer?.txHash||"")+"#0");
+  ctx.fillText("Pointer  "+ptr, 40, 170);
+  ctx.fillText("SHA-256  "+(r.sha256Decoded||""), 40, 198);
+  ctx.fillText("Network  "+(r.network||"")+(r.verifiedFromChain?"  ·  verified from chain":""), 40, 226);
+  if(r.contentType) ctx.fillText("Type     "+r.contentType+"  ·  "+(r.sizeDecoded||0)+" bytes", 40, 254);
+  ctx.fillStyle="#0d228f"; ctx.font="600 13px system-ui,sans-serif";
+  const url=(link||"").slice(0,78);
+  ctx.fillText(url, 40, 300);
+  ctx.fillStyle="#9aa1ab"; ctx.font="500 12px system-ui,sans-serif";
+  ctx.fillText("Bytes live on Cardano. Readers recompute SHA-256. This card is not a host.", 40, 340);
+  ctx.fillText("beacnpool.github.io/ledger-scrolls", 40, 380);
+}
+
+/* ══════════ UTxO readiness ══════════ */
+async function assessUtxoReadiness(){
+  if(!M.wapi) return { ok:false, html:`<div class="readybox warn">Connect Eternl first so I can check spendable ADA.</div>` };
+  try{
+    const utxos=parseWalletUtxos(await M.wapi.getUtxos());
+    const bal=utxos.reduce((s,u)=>s+u.coin,0);
+    const largest=utxos.length?Math.max(...utxos.map(u=>u.coin)):0;
+    const ch=calcChain(S.enc||0), st=calcStandard(S.enc||0);
+    const useStd=!!(st && st.total<=ch.total);
+    const needAda=(useStd?(st?.total||2):ch.total)+2;
+    const needL=needAda*1e6;
+    const frag=utxos.length>=8 && largest < needL*0.5;
+    const ok=bal>=needL && !frag;
+    let html=`<div class="readybox ${ok?"ok":"warn"}">
+      <b>Wallet readiness</b><br>
+      Spendable plain ADA: <b>${fmtA(bal/1e6)}</b> across <b>${utxos.length}</b> UTxO${utxos.length===1?"":"s"}
+      (largest ${fmtA(largest/1e6)}). Budget ≈ <b>${fmtA(needAda)}</b> ADA.
+      ${bal<needL?`<br>⚠ Send ~${fmtA(needAda-bal/1e6)} more ADA to this account.`:""}
+      ${frag?`<br>⚠ Many small UTxOs — in Eternl, send-to-self once to consolidate before a long film mint.`:""}
+      ${ok?`<br>✓ Looks ready to mint.`:`<br>Fix the warning(s), then refresh.`}
+    </div>`;
+    return { ok: bal>=needL, bal, largest, count:utxos.length, html };
+  }catch(e){
+    return { ok:false, html:`<div class="readybox warn">Couldn't read UTxOs: ${esc(String(e.message||e))}</div>` };
+  }
+}
+
+/* ══════════ Countersign wizard (label 22026) ══════════ */
+function csAux(rec){
+  // rec: {v,t,i,h,r?,n?}
+  const fields=[];
+  const put=(k,val)=>{ fields.push(cS(k), val); };
+  put("v", cU(rec.v));
+  put("t", cS(rec.t));
+  put("i", cU(rec.i));
+  put("h", cS(rec.h));
+  if(rec.r) put("r", cS(rec.r));
+  if(rec.n && rec.n.length) put("n", catB([cAr(rec.n.length), ...rec.n.map(cS)]));
+  // map with insertion order of puts — rebuild as proper map
+  let parts=[], nkeys=0;
+  const add=(k,enc)=>{ parts.push(cS(k), enc); nkeys++; };
+  add("v", cU(1));
+  add("t", cS(rec.t.toLowerCase()));
+  add("i", cU(rec.i|0));
+  add("h", cS(rec.h.toLowerCase()));
+  if(rec.r) add("r", cS(String(rec.r).slice(0,64)));
+  if(rec.n&&rec.n.length) add("n", catB([cAr(rec.n.length), ...rec.n.map(s=>cS(String(s).slice(0,64)))]));
+  const inner=catB([cMp(nkeys), ...parts]);
+  const meta=catB([cMp(1), cU(22026), inner]);
+  return catB([cTg(259), cMp(1), cU(0), meta]);
+}
+function renderCountersign(){
+  const el=$("csbody"); if(!el) return;
+  const vault=vaultLoad();
+  el.innerHTML=`
+    <div class="field" style="margin-top:8px"><label>Scroll pointer (txHash or txHash#ix)</label>
+      <input type="text" id="cs-ptr" placeholder="abc123…#0" style="width:100%;max-width:520px;font:13px/1.4 var(--mono);padding:9px 12px;border:1px solid var(--line-2);border-radius:var(--radius-sm)">
+    </div>
+    ${vault.length?`<p style="font-size:13px;color:var(--muted);margin:8px 0">Or pick from My Scrolls:
+      <select id="cs-pick"><option value="">—</option>${vault.map((r,i)=>
+        `<option value="${i}">${esc(r.title||r.scroll||r.file||r.pointer?.txHash||"")}</option>`).join("")}</select></p>`:""}
+    <div class="field" style="margin-top:10px"><label>Decoded SHA-256 (from receipts — required)</label>
+      <input type="text" id="cs-hash" placeholder="64 hex chars" style="width:100%;max-width:520px;font:13px/1.4 var(--mono);padding:9px 12px;border:1px solid var(--line-2);border-radius:var(--radius-sm)">
+    </div>
+    <div class="field" style="margin-top:10px"><label>Your role (optional)</label>
+      <input type="text" id="cs-role" placeholder="partyA / buyer / witness" style="width:100%;max-width:320px;padding:9px 12px;border:1px solid var(--line-2);border-radius:var(--radius-sm)">
+    </div>
+    <div class="field" style="margin-top:10px"><label>Display name (optional)</label>
+      <input type="text" id="cs-name" placeholder="Ada Lovelace" style="width:100%;max-width:320px;padding:9px 12px;border:1px solid var(--line-2);border-radius:var(--radius-sm)">
+    </div>
+    <div id="cswallet" style="margin-top:12px"></div>
+    <p style="margin-top:14px"><button class="btn" type="button" id="cs-go">✓ Sign acceptance with Eternl</button></p>
+    <div id="csout" style="margin-top:12px"></div>`;
+  $("cs-pick")?.addEventListener("change",()=>{
+    const r=vaultLoad()[+$("cs-pick").value]; if(!r) return;
+    $("cs-ptr").value=r.lockTxIn||(r.pointer?.txHash+"#0");
+    $("cs-hash").value=r.sha256Decoded||"";
+  });
+  const wl=listWallets();
+  $("cswallet").innerHTML = M.wapi
+    ? `<span class="wpanel" style="display:inline-flex">🟢 ${esc(M.wname)} connected</span>`
+    : (wl.length
+      ? `<button class="btn sub" type="button" id="cs-conn">Connect ${esc(wl[0].name)}</button>`
+      : noWalletHelpHTML());
+  $("cs-conn")?.addEventListener("click",()=>connectWallet(listWallets()[0].key).then(()=>renderCountersign()));
+  bindNoWalletHelp();
+  $("cs-go")?.addEventListener("click", doCountersign);
+}
+async function doCountersign(){
+  const out=$("csout"); if(!out) return;
+  try{
+    if(!M.wapi){ const wl=listWallets(); if(!wl.length) throw new Error("Connect Eternl first"); await connectWallet(wl[0].key); }
+    let ptr=($("cs-ptr")?.value||"").trim().toLowerCase();
+    let ix=0, th=ptr;
+    const m=ptr.match(/^([0-9a-f]{64})(?:#(\d+))?$/);
+    if(!m) throw new Error("Pointer must be 64-hex or 64-hex#index");
+    th=m[1]; ix=+(m[2]||0);
+    const h=($("cs-hash")?.value||"").trim().toLowerCase().replace(/^0x/,"");
+    if(!/^[0-9a-f]{64}$/.test(h)) throw new Error("Need the 64-hex decoded SHA-256 from the scroll receipts");
+    const role=($("cs-role")?.value||"").trim();
+    const name=($("cs-name")?.value||"").trim();
+    const rec={ v:1, t:th, i:ix, h, ...(role?{r:role}:{}) , ...(name?{n:[name]}:{}) };
+    M.net=await M.wapi.getNetworkId();
+    M.params=await fetchNetParams(M.net);
+    M.changeB=hexB(await M.wapi.getChangeAddress());
+    const aux=csAux(rec), auxHash=blake2b256(aux);
+    const utxos=parseWalletUtxos(await M.wapi.getUtxos());
+    const plan=planPage(utxos, aux, auxHash, M.changeB, M.params);
+    out.innerHTML=`<div class="cmp">Approve a small self-send (~${fmtA(plan.fee/1e6)} ADA fee) carrying acceptance metadata…</div>`;
+    const unsigned=catB([u8([0x84]), plan.body, u8([0xa0]), u8([0xf5]), aux]);
+    const witHex=await M.wapi.signTx(bHex(unsigned), false);
+    const wit=hexB(witHex);
+    const signed=wit[0]===0x84?wit:catB([u8([0x84]), plan.body, wit, u8([0xf5]), aux]);
+    const localTxid=bHex(blake2b256(plan.body));
+    const wid=await M.wapi.submitTx(bHex(signed));
+    const txid=(typeof wid==="string" && /^[0-9a-f]{64}$/i.test(wid))?wid.toLowerCase():localTxid;
+    const acceptance={ label:22026, acceptanceTx:txid, scrollPointer:`${th}#${ix}`, sha256Decoded:h, role:role||null, name:name||null, network:NETS[M.net].name, at:new Date().toISOString() };
+    out.innerHTML=`<div class="okbox"><b>Acceptance submitted.</b><br>
+      Tx <span class="mono">${txid}</span> <button class="copy" id="cs-txcopy">copy</button><br>
+      Keep this hash with the scroll pointer — discovery is receipt-based (no global search).<br>
+      <a class="btn sub" style="margin-top:8px" href="${NETS[M.net].scan}${txid}" target="_blank" rel="noopener">Cardanoscan</a>
+      <a class="btn sub" href="${URL.createObjectURL(new Blob([JSON.stringify(acceptance,null,2)],{type:"application/json"}))}" download="acceptance-${txid.slice(0,12)}.json">⬇ acceptance receipt</a>
+    </div>`;
+    $("cs-txcopy")?.addEventListener("click",e=>copyText(e.target,txid));
+  }catch(e){
+    out.innerHTML=`<div class="warnbox">✋ ${esc(String(e?.info||e?.message||e))}</div>`;
+  }
 }
 
 function copyText(btn, text){
   navigator.clipboard?.writeText(text).then(()=>{
     const old = btn.textContent; btn.textContent = "copied ✓";
     setTimeout(()=>btn.textContent = old, 1400);
-  });
+  }).catch(()=>{ /* ignore */ });
 }
 document.querySelectorAll(".copy[data-for]").forEach(b =>
   b.addEventListener("click", () => copyText(b, $(b.dataset.for).textContent)));
 
+/* vault controls + PWA */
+$("vault-export")?.addEventListener("click",()=>{
+  const blob=new Blob([JSON.stringify(vaultLoad(),null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`ledger-scrolls-vault-${new Date().toISOString().slice(0,10)}.json`; a.click();
+});
+$("vault-import")?.addEventListener("change",async e=>{
+  const f=e.target.files?.[0]; if(!f) return;
+  try{
+    const data=JSON.parse(await f.text());
+    const incoming=Array.isArray(data)?data:(data.scrolls||[]);
+    const cur=vaultLoad();
+    const keys=new Set(cur.map(x=>x.lockTxIn||x.pointer?.txHash));
+    for(const r of incoming){
+      const k=r.lockTxIn||r.pointer?.txHash; if(k && !keys.has(k)){ cur.push(r); keys.add(k); }
+    }
+    vaultSave(cur); renderVault();
+  }catch(err){ alert("Import failed: "+err.message); }
+});
+$("vault-refresh")?.addEventListener("click", renderVault);
+
 fetchPrice();
 autoReconnect();
 startWalletPoll();
-refreshPacking(1); // mainnet max_tx_size → densest pack for quotes before wallet connect
-// If a wallet injects after load (common), refresh the connect panel
+refreshPacking(1);
+renderVault();
+renderCountersign();
 window.addEventListener("cardano#initialized",()=>{ if(!M.wapi) renderWalletCtl(); });
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden && !M.wapi && listWallets().length) renderWalletCtl(); });
+// PWA shell — caches UI only, never scroll bytes
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw.js",{scope:"./"}).catch(()=>{});
+}
 </script>
 </body>
 </html>
