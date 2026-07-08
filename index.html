@@ -383,13 +383,11 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
     <span style="display:inline-flex;align-items:center;gap:6px;font:800 12px/1 sans-serif;letter-spacing:.08em;color:#0b0f19;background:linear-gradient(90deg,#7fb0ff,#2f6bff);border-radius:999px;padding:6px 11px">📚 BEACN&nbsp;LIBRARY</span>
     <span style="font:600 12.5px/1.4 sans-serif;color:#8fa0c4">live on Cardano · always opens the latest catalog</span>
    </div>
-   <div style="font:600 13px/1.5 sans-serif;color:#c9d3e6;margin-top:13px">Library Policy ID — paste this to open the whole library:</div>
-   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
-    <code id="regptr-txt" style="flex:1;min-width:240px;font:12.5px/1.4 monospace;color:#8fb4ff;background:#05070d;border:1px solid #1b2436;border-radius:9px;padding:11px 12px;word-break:break-all"></code>
-    <button id="regcopy" class="ghost">Copy</button>
-    <button id="regopen" style="min-height:38px;padding:0 16px;border:0;border-radius:999px;background:linear-gradient(90deg,#2f6bff,#1f44ff);color:#fff;font:700 14px/1 sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(47,107,255,.35)">Open Library →</button>
+   <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px">
+    <span style="font:600 15px/1.5 sans-serif;color:#c9d3e6">To visit BEACN&rsquo;s Library, visit</span>
+    <button id="regopen" style="min-height:46px;padding:0 24px;border:0;border-radius:999px;background:linear-gradient(90deg,#2f6bff,#1f44ff);color:#fff;font:800 19px/1 monospace;letter-spacing:.01em;cursor:pointer;box-shadow:0 4px 14px rgba(47,107,255,.35)">$beacn&nbsp;→</button>
    </div>
-   <div style="font:12.5px/1.5 sans-serif;color:#7f8ba3;margin-top:10px">Nothing is hardcoded — the shelf rebuilds live from the newest <b style="color:#9db4e0">Registry Head</b> NFT under this policy. Mint a new version and it updates itself; this key never changes.</div>
+   <div style="font:12.5px/1.5 sans-serif;color:#7f8ba3;margin-top:10px">Your ADA Handle is your library card — the reader looks up the wallet behind <b style="color:#9db4e0">$beacn</b> and opens its newest <b style="color:#9db4e0">Registry Head</b>. Nothing hardcoded; mint a new catalog version and the shelf updates itself.</div>
   </div>
 
   <ul class="trust-strip" id="truststrip">
@@ -1080,9 +1078,7 @@ $('savesrc').onclick=()=>{ const v=$('setsrc').value.trim().replace(/\/+$/,''); 
 $('savehead').onclick=()=>{ const v=($('sethead').value.trim()||REGISTRY_PTR); LS.setItem('ls.reg',v); resolveRegistry(v).catch(e=>alert(e.message||e)); };
 $('setsrc').value=LS.getItem('ls.source')||''; $('sethead').value=LS.getItem('ls.head')||'';
 
-if($('regptr-txt')) $('regptr-txt').textContent=REGISTRY_PTR;
-$('regcopy') && ($('regcopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(REGISTRY_PTR); $('regcopy').textContent='Copied ✓'; setTimeout(()=>$('regcopy').textContent='Copy',1500); }catch(_){ prompt('Copy this Library Policy ID:',REGISTRY_PTR); } });
-$('regopen') && ($('regopen').onclick=()=>{ $('point').value=REGISTRY_PTR; openPointer(REGISTRY_PTR); });
+$('regopen') && ($('regopen').onclick=()=>{ $('point').value='$beacn'; openPointer('$beacn'); });
 drawShelf();
 route();
 </script>
