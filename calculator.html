@@ -243,10 +243,10 @@ body{padding-bottom:96px}
 <section class="hero">
   <span class="eyebrow">Mint a Scroll</span>
   <h1>Price it. Mint it. Forever.</h1>
-  <p class="lead">Drop in any file — a photo, a PDF, a song, a manifesto — and see
-  what it costs to make it permanent on Cardano: one number, paid once. Small files
-  mint <strong>right here, from the wallet you already have</strong> — no node, no
-  command line, no account, no API key.</p>
+  <p class="lead">Drop in any file — a photo, a PDF, a song, a short film, a manifesto —
+  and see what forever costs on Cardano: one number, paid once. Then mint it from
+  <strong>Eternl on your laptop</strong>: small files in one click; larger films as page
+  transactions you approve in the wallet. No node, no CLI, no account, no API key.</p>
   <p class="privacy">🔒 Everything runs in your browser. Your file is never uploaded anywhere.</p>
 </section>
 
@@ -255,7 +255,7 @@ body{padding-bottom:96px}
     <label class="drop" id="drop">
       <input type="file" id="file">
       <div class="big">Drop a file here, or click to choose</div>
-      <div class="hint">HTML · PDF · JPG/PNG · TXT/MD · MP4/WebM · MP3/Opus · JSON/CSV — any file works</div>
+      <div class="hint">HTML · PDF · JPG/PNG · TXT/MD · MP4/WebM (films) · MP3/Opus · JSON/CSV — any size; large files mint as Chain Scrolls via Eternl</div>
     </label>
     <div class="orline">OR ESTIMATE WITHOUT A FILE</div>
     <div class="manual">
@@ -295,10 +295,10 @@ body{padding-bottom:96px}
 <section class="section" id="mintsec" hidden>
   <div class="card">
     <h2>⚡ Mint it right now — no node, no command line</h2>
-    <p style="font-size:15px">This page can write your file to Cardano <strong>directly from
-    your browser wallet</strong> — <b>Eternl</b>, on a laptop. The transaction is built
-    locally, your wallet shows you exactly what it spends before you approve, and nothing —
-    not the file, not a key — ever leaves your machine except the signed transaction itself.</p>
+    <p style="font-size:15px">Write <strong>any size file</strong> — poems, photos, PDFs, even short films —
+    to Cardano from <b>Eternl on a laptop</b>. Small files are one signature. Larger ones split into
+    page transactions your wallet signs one-by-one (or in one bulk approval if Eternl offers it).
+    Built locally; nothing leaves your machine except the signed transaction.</p>
     <div id="walletctl"></div>
 
     <!-- STEP 1 · CONNECT -->
@@ -536,8 +536,8 @@ const MEDIA = [
   { label:"Audio — Opus/OGG",      ct:"audio/ogg; codecs=opus",    gz:false, exts:["ogg","opus"],          tip:"Opus 24–32 kbps mono for speech, 64–96 kbps for music." },
   { label:"Audio — MP3",           ct:"audio/mpeg",                gz:false, exts:["mp3"],                 tip:"Use only for maximum legacy-player compatibility." },
   { label:"Audio — WAV (convert!)",ct:"audio/wav",                 gz:false, exts:["wav"],                 tip:"Uncompressed — convert to Opus first; ~10× smaller." },
-  { label:"Video — MP4 (H.264+AAC)",ct:"video/mp4",                gz:false, exts:["mp4","m4v","mov"],     tip:"≤480p, CRF 30, -movflags +faststart. Sound rides in the same file." },
-  { label:"Video — WebM (AV1/VP9+Opus)",ct:"video/webm",           gz:false, exts:["webm","mkv"],          tip:"~30–50% smaller than H.264; plays in modern browsers." },
+  { label:"Video — MP4 (H.264+AAC)",ct:"video/mp4",                gz:false, exts:["mp4","m4v","mov"],     tip:"Compress first: ≤480p, CRF 28–32, -movflags +faststart. ~1–5 MB short films mint cleanly from the browser; bigger works but means more wallet approvals." },
+  { label:"Video — WebM (AV1/VP9+Opus)",ct:"video/webm",           gz:false, exts:["webm","mkv"],          tip:"~30–50% smaller than H.264; plays in modern browsers. Prefer WebM when you can — fewer pages to sign." },
   { label:"Other / binary",        ct:"application/octet-stream",  gz:true,  exts:[],                      tip:"Stored byte-for-byte; downloads from the viewer." },
 ];
 const mediaByExt = ext => MEDIA.find(m => m.exts.includes(ext)) || MEDIA[MEDIA.length-1];
@@ -654,6 +654,15 @@ async function analyzeFile(file){
     <dt>SHA-256 (original)</dt><dd>${S.sha}</dd>
     ${S.codec==="gzip" ? `<dt>SHA-256 (gzip)</dt><dd>${S.shaEnc}</dd>` : ""}`;
   $("stripmeta")?.addEventListener("change",e=>{ S.stripMeta=e.target.checked; if(S.file) analyzeFile(S.file); });
+  // Film / large-file preflight note on the analysis card
+  const pagesGuess = Math.max(1, Math.ceil(S.enc / (64*190)));
+  if(pagesGuess > 1 && /video\//i.test(S.ct)){
+    $("kv").innerHTML += `<dt>Film mint path</dt><dd><b>Chain Scroll</b> — ${fmtN(pagesGuess)} page tx${pagesGuess>1?"s":""} + seal.
+      On a laptop with <b>Eternl</b>, step 3 walks you through signing each page (resume-safe if interrupted).
+      ${pagesGuess>200?`<span style="color:var(--warn)">⚠ ${fmtN(pagesGuess)} approvals is a long session — compress further if you can, or use the bulk one-approval option if Eternl offers it.</span>`:""}</dd>`;
+  } else if(pagesGuess > 40){
+    $("kv").innerHTML += `<dt>Browser mint</dt><dd>Chain Scroll · ${fmtN(pagesGuess)} page signatures + 1 seal via Eternl (resume if you reload).</dd>`;
+  }
   $("analysis").classList.add("show");
   $("b_ct").value = S.ct;
   if(!$("b_name").value) $("b_name").value = file.name.replace(/\.[^.]+$/,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40) || "my-scroll";
@@ -1078,7 +1087,7 @@ function planTx(net,utxos,datum,changeB,params){
   const change=sum-lockCoin-fee;
   const body=encBody(net,ins,datum,lockCoin,changeB,change,fee);
   if(3+body.length+dummyWitLen(ins.length+1) > 16200)
-    throw new Error("Transaction would exceed Cardano's 16 KB limit — this file needs the Chain Scroll CLI path.");
+    throw new Error("Transaction would exceed Cardano's 16 KB limit — split into a Chain Scroll (page mint) or use a smaller file chunk.");
   return { ins, lockCoin, fee, change, body };
 }
 
@@ -1176,7 +1185,10 @@ function renderMint(){
   if(!S.enc) return;
   const body=$("mintbody"); if(!body) return;
   if(M.state==="quoted"||M.state==="minting"||M.state==="done") return;   // don't clobber an active flow
-  if(SGN.running || (SGN.pages.length && SGN.done>0 && SGN.done<SGN.pages.length)) return;   // don't clobber page-signing
+  // don't clobber an open chain-mint session (signing console, in-progress, or seal step)
+  if(SGN.running || (SGN.pages.length && $("cpstage")?.dataset?.live) ||
+     (SGN.pages.length && SGN.done>0 && SGN.done<SGN.pages.length) ||
+     ($("sgnmanifest") && !$("sgnmanifest").hidden && SGN.pages.length)) return;
   if(!S.encBytes){
     body.innerHTML=`<div class="cmp">Drop a <b>real file</b> above (not a size estimate) and it can be minted from here.</div>`;
     return;
@@ -1190,31 +1202,72 @@ function renderMint(){
   if(!useStd){
     const wl=listWallets();
     const sgnPages=Math.max(1,Math.ceil(S.enc/(SGN.SEG*SGN.SPP)));
+    const seals=Math.max(1,Math.ceil(sgnPages/SGN.MAX_PER_MAN));
+    const totalTx=sgnPages+seals;
+    const feeGuess=fee(SGN.SPP*66+1200)*sgnPages + 2.0*seals;
+    const mins=Math.max(1,Math.ceil(totalTx*0.35)); // ~20s/tx with wallet UX
     const reason = S.enc > P.stdMax
-      ? `bigger than the ~14 KB that fits a one-transaction Standard Scroll`
-      : `cheaper this way than locking it all in a single coin`;
+      ? `bigger than the ~14 KB one-tx Standard Scroll`
+      : `cheaper as pages than locking the whole file`;
     const rz=loadResume(); const canResume = !!(rz && rz.sha===S.sha && rz.done>0 && rz.done<rz.pages);
-    body.innerHTML=`<div class="cmp">This file is <b>${fmtB(S.enc)}</b> on-chain — ${reason}, so it mints as a <b>Chain Scroll</b>: ${sgnPages} page${sgnPages>1?"s":""} plus one seal.</div>
-      ${canResume && wl.length ? `<div class="okbox" style="margin:12px 0">↩ <b>Resume an interrupted mint.</b>
-        ${rz.done} of ${rz.pages} pages for this file are already on-chain — pick up where you left off (no double-spending):
-        <div class="wbtns" style="margin-top:8px">${wl.map(w=>`<button class="wbtn" data-resume="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} Resume with ${esc(w.name)}</button>`).join("")}</div></div>` : ""}
-      ${wl.length ? `
-        <p style="margin:12px 0 4px;font-weight:600">${canResume?"Or start over — ":""}Best on a laptop with a browser wallet — just click to sign each page:</p>
-        <div class="wbtns">${wl.map(w=>`<button class="wbtn" data-sgn="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} Sign ${sgnPages+1} transactions with ${esc(w.name)}</button>`).join("")}</div>
-        <p style="font-size:12.5px;color:var(--muted);margin:6px 0 0">The page builds each transaction; your wallet only signs — no metadata to paste, nothing to download.</p>
+    const isFilm=/video\//i.test(S.ct||"");
+    const connected = !!(M.wapi && M.walletKey);
+    const balNote = (M.balance!=null)
+      ? (M.balance/1e6 >= feeGuess+3
+          ? `<span style="color:var(--ok)">Wallet has ${fmtA(M.balance/1e6)} ADA — enough for this mint.</span>`
+          : `<span style="color:var(--warn)">Wallet has ${fmtA(M.balance/1e6)} ADA; budget ≈ <b>${fmtA(feeGuess+3)} ADA</b> (fees + seal + float). Send more ADA first.</span>`)
+      : `Fund Eternl with about <b>${fmtA(feeGuess+3)} ADA</b> (fees + seal + a little float).`;
+    body.innerHTML=`
+      <div class="cmp"><b>${isFilm?"Film / large file → Chain Scroll":"Chain Scroll"}</b> — ${reason}.
+        Your file is <b>${fmtB(S.enc)}</b> on-chain = <b>${fmtN(sgnPages)} page${sgnPages>1?"s":""}</b>
+        + <b>${seals} seal${seals>1?"s":""}</b> (${fmtN(totalTx)} signatures).
+        Est. fees ≈ <b>${fmtA(feeGuess)} ADA</b>${S.price?` (~$${(feeGuess*S.price).toFixed(2)})`:""};
+        plan ~${mins} min on a laptop${seals>1?" · multi-part seal (automatic)":""}.</div>
+      <div class="rows" style="margin-top:10px">
+        <div><span>What you do</span><span>Approve each tx in <b>Eternl</b> (password once per approval)</span></div>
+        <div><span>What this page does</span><span>Builds every page + seal; verifies SHA-256 from chain before “done”</span></div>
+        <div><span>If you reload</span><span>Safe to resume — already-paid pages are remembered</span></div>
+        <div><span>Wallet float</span><span>${balNote}</span></div>
+      </div>
+      ${canResume ? `<div class="okbox" style="margin:12px 0">↩ <b>Resume interrupted mint</b> — ${rz.done} of ${rz.pages} pages already on-chain.
+        <div class="wbtns" style="margin-top:8px">
+          <button class="btn" id="resume-go">Resume minting</button>
+          <button class="btn ghost" id="resume-fresh">Start over instead</button>
+        </div></div>` : ""}
+      ${connected || wl.length ? `
+        <div class="wbtns" style="margin-top:14px">
+          <button class="btn" id="chain-go" style="min-height:48px;font-size:16px">
+            📜 ${connected?"Mint this file with "+esc(M.wname):"Connect Eternl & mint"} — ${fmtN(totalTx)} signatures
+          </button>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin:8px 0 0">
+          Laptop + Eternl extension recommended. Leave this tab open; each Eternl popup is one page.
+          Hardware wallets (Ledger/Trezor): use a software Eternl account funded with fee ADA only.
+        </p>
         ${hwNote()}
-        <details class="assump" style="margin-top:12px"><summary>Other ways (manual paste · CLI)</summary>
+        <details class="assump" style="margin-top:12px"><summary>Other ways (manual paste · CLI · bundle)</summary>
           <p style="margin-top:8px"><button class="btn sub" id="cpstart">Send pages manually (copy-paste metadata)</button>
-          <span style="font-size:12.5px;color:var(--muted)">&nbsp;— only if your wallet's Send screen supports custom metadata (many don't; Eternl's does not for this).</span></p>
-          <p style="font-size:12.5px;color:var(--muted);margin-top:8px">Comfortable at a terminal? The <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI toolkit</a> mints in one command.</p>
+          <span style="font-size:12.5px;color:var(--muted)"> — advanced; Eternl Send metadata is awkward for this.</span></p>
+          <p style="font-size:12.5px;color:var(--muted);margin-top:8px">Or download the build bundle above and mint with the
+          <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/docs/YOUR_FIRST_SCROLL.md">CLI toolkit</a>.</p>
         </details>`
-      : `<div class="warnbox" style="margin-top:12px">No <b>Eternl</b> wallet found. On a <b>laptop</b>, install the
-        <a href="https://eternl.io">Eternl</a> extension, fund it with a few ADA, refresh, and drop your file again — then you just click to sign each page.</div>
-        <p style="margin-top:10px"><button class="btn sub" id="cpstart">Or send pages manually (advanced)</button></p>`}
+      : `<div class="warnbox" style="margin-top:12px"><b>Install Eternl on this laptop first.</b>
+        <ol class="steps" style="margin-top:8px">
+          <li>Get the <a href="https://eternl.io">Eternl</a> browser extension and write down your seed on paper.</li>
+          <li>Send it ~${fmtA(feeGuess+3)} ADA (exchange → receive address).</li>
+          <li>Refresh this page, drop your file again, connect, and mint.</li>
+        </ol>
+        <p style="margin-top:10px"><button class="btn sub" id="cpstart">Or send pages manually (advanced)</button></p></div>`}
       <div id="cpstage" style="margin-top:14px"></div>`;
-    body.querySelectorAll("[data-sgn]").forEach(b=>b.addEventListener("click",()=>startWalletSign(b.dataset.sgn)));
-    body.querySelectorAll("[data-resume]").forEach(b=>b.addEventListener("click",()=>startWalletSign(b.dataset.resume, loadResume())));
+    const begin=(key,resume)=>{ startWalletSign(key||M.walletKey||(wl[0]&&wl[0].key), resume); };
+    $("chain-go")?.addEventListener("click",()=>begin(connected?M.walletKey:(wl[0]&&wl[0].key), null));
+    $("resume-go")?.addEventListener("click",()=>begin(connected?M.walletKey:(wl[0]&&wl[0].key), loadResume()));
+    $("resume-fresh")?.addEventListener("click",()=>{ clearResume(); renderMint(); });
     $("cpstart")?.addEventListener("click",renderChainAssistant);
+    // Already connected and no active stage → jump straight into the signing console
+    if(connected && !canResume && !$("cpstage")?.dataset.live){
+      // keep the preflight visible; user still clicks the big button (consent / intentional)
+    }
     return;
   }
   const st=calcStandard(S.enc), ch=calcChain(S.enc);
@@ -1342,12 +1395,18 @@ function segBytes(s){
   if(!/^[0-9a-fA-F]*$/.test(s)||s.length%2) throw new Error("segment not hex");
   return hexB(s);
 }
-function buildManifestDatum(){
-  /* byte-identical to tools/lschain/make_manifest.py: definite lists throughout */
+function buildManifestDatum(hashList, nextPtr){
+  /* byte-identical to tools/lschain/make_manifest.py when next is none.
+     hashList: array of 32-byte Uint8Array (defaults to CP.hashB).
+     nextPtr: null | { txHash: 64-hex string|Uint8Array, ix: number } → Constr 1 [hash, ix] */
   const te=new TextEncoder();
-  const list=catB([cH(CP.hashB.length,4),...CP.hashB.map(h=>cBy(h))]);
+  const hashes = hashList || CP.hashB;
+  const list=catB([cH(hashes.length,4),...hashes.map(h=>cBy(h instanceof Uint8Array ? h : hexB(h)))]);
+  const next = nextPtr
+    ? catB([cTg(122), cH(2,4), cBy(typeof nextPtr.txHash==="string" ? hexB(nextPtr.txHash) : nextPtr.txHash), cU(nextPtr.ix|0)])
+    : catB([cTg(121), cH(0,4)]);
   const fields=[cU(2),cBy(te.encode(S.ct)),cBy(te.encode(S.codec)),cU(S.raw),
-                cBy(hexB(S.sha)),cBy(hexB(S.shaEnc)),list,catB([cTg(121),cH(0,4)])];
+                cBy(hexB(S.sha)),cBy(hexB(S.shaEnc)),list,next];
   return catB([cTg(121),cH(fields.length,4),...fields]);
 }
 const setChip=(i,cls,txt)=>{ const c=$("pgchip-"+i); if(c){ c.className="pgchip "+cls; c.style.cssText=""; c.textContent=txt; } };
@@ -1469,7 +1528,8 @@ function downloadPacket(){
    attach arbitrary metadata. Because we build the CBOR ourselves, segments
    are efficient 64-byte byte strings (matches the headline estimate).
    ══════════════════════════════════════════════════════════════════════ */
-const SGN = { SEG:64, SPP:190, pages:[], done:0, spent:new Set(), running:false };
+/* MAX_PER_MAN: page hashes per locked manifest (~spec ~400; 350 leaves headroom under 16 KB). */
+const SGN = { SEG:64, SPP:190, MAX_PER_MAN:350, pages:[], done:0, spent:new Set(), running:false };
 function buildSignPages(bytes){
   const PG=SGN.SEG*SGN.SPP, n=Math.max(1,Math.ceil(bytes.length/PG)), pages=[];
   for(let i=0;i<n;i++){
@@ -1480,9 +1540,10 @@ function buildSignPages(bytes){
   }
   return pages;
 }
-/* auxiliary data (Alonzo tag-259): { 0: { 22025: {"v":2,"i":i,"n":n,"p":[bytes]} } } */
+/* auxiliary data (Alonzo tag-259): { 0: { 22025: {"v":2,"i":i,"n":n,"sha":bytes,"p":[bytes]} } } */
 function pageAux(p){
-  // canonical CBOR map key order (same as cardano-cli): i, n, p, v
+  // canonical CBOR map key order (lexicographic keys as strings): i, n, p, sha, v — sha optional
+  // Match prepare.py field set when sha present; omit sha to keep aux smaller (still valid).
   const md = catB([cMp(4), cS("i"),cU(p.i), cS("n"),cU(p.n),
                    cS("p"), catB([cAr(p.segs.length), ...p.segs.map(cBy)]), cS("v"),cU(2)]);
   const meta = catB([cMp(1), cU(22025), md]);
@@ -1525,15 +1586,20 @@ async function signAllPages(){
   try{
     for(let k=SGN.done; k<n; k++){
       const p=SGN.pages[k];
-      sgnStatus(k+1,"sign","building page "+(k+1)+"…");
+      const left=n-k;
+      const eta=left>1 ? ` · ~${Math.ceil(left*0.35)} min left` : "";
+      sgnStatus(k+1,"sign","building page "+(k+1)+" of "+n+"…"+eta);
       const aux=pageAux(p), auxHash=blake2b256(aux);
-      // wait (briefly) for a spendable UTxO — the previous page's change may be settling
+      // wait for a spendable UTxO — previous page's change may still be settling in Eternl
       let utxos=await freshSpendable(), waited=0;
-      while(!utxos.length && waited<120){ sgnStatus(k+1,"sign",`waiting for your wallet to see the previous transaction… (${waited}s)`); await new Promise(r=>setTimeout(r,6000)); waited+=6; utxos=await freshSpendable(); }
-      if(!utxos.length) throw new Error("wallet shows no spendable ADA yet — give Eternl a few seconds after the last transaction, then Resume.");
+      while(!utxos.length && waited<180){
+        sgnStatus(k+1,"sign",`waiting for Eternl to see the previous tx… (${waited}s)`);
+        await new Promise(r=>setTimeout(r,5000)); waited+=5; utxos=await freshSpendable();
+      }
+      if(!utxos.length) throw new Error("wallet shows no spendable ADA yet — give Eternl ~30s after the last transaction, then Resume.");
       const plan=planPage(utxos, aux, auxHash, selfB, M.params);
       const unsigned=catB([u8([0x84]), plan.body, u8([0xa0]), u8([0xf5]), aux]);
-      sgnStatus(k+1,"sign","approve page "+(k+1)+" in your wallet…");
+      sgnStatus(k+1,"sign","→ approve page "+(k+1)+" of "+n+" in Eternl…"+eta);
       const witHex=await M.wapi.signTx(bHex(unsigned), false);
       const wit=hexB(witHex);
       const signed = wit[0]===0x84 ? wit : catB([u8([0x84]), plan.body, wit, u8([0xf5]), aux]);
@@ -1547,7 +1613,7 @@ async function signAllPages(){
       sgnStatus(k+1,"ok","page "+(k+1)+" on chain ✓ "+txid.slice(0,12)+"…");
       sgnProgress();
     }
-    // all pages signed → set up manifest state and hand off to the manifest signer
+    // all pages signed → seal (one or more manifests if file spans multi-part seals)
     CP.net = M.net; CP.checked=true;
     CP.hashB = CP.txids.map(hexB);
     sgnDoneUI();
@@ -1563,22 +1629,87 @@ async function signAllPages(){
 function sgnStatus(page1,cls,txt){
   const el=$("sgnrow-"+page1); if(el){ const c=el.querySelector(".pgchip");
     c.className="pgchip "+(cls==="ok"?"ok":cls==="bad"?"bad":"wait"); c.textContent=txt; }
+  const cur=$("sgncur"); if(cur && (cls==="sign"||cls==="bad")) cur.textContent=txt;
   const line=$("sgnline"); if(line && cls!=="ok") line.textContent=txt;
 }
 function sgnProgress(){
   const n=SGN.pages.length, bar=$("sgnbar"), cnt=$("sgncount");
-  if(bar) bar.style.width=(100*SGN.done/n)+"%";
+  if(bar) bar.style.width=(100*SGN.done/Math.max(1,n))+"%";
   if(cnt) cnt.textContent=`${SGN.done} of ${n} pages on chain`;
+  const pct=$("sgnpct"); if(pct) pct.textContent=Math.round(100*SGN.done/Math.max(1,n))+"%";
 }
 function sgnDoneUI(){
   const line=$("sgnline"); if(line) line.textContent="";
   const box=$("sgnmanifest"); if(!box) return;
   box.hidden=false;
-  box.innerHTML=`<div class="okbox"><b>All ${SGN.pages.length} pages are on the chain.</b> One last signature
-    seals them into a scroll — a tiny locked coin that lists your pages and your file's fingerprint.</div>
-    <p style="margin-top:10px"><button class="btn" id="sgnlock">📜 Sign the seal — finish the scroll</button></p>
+  const seals=Math.max(1,Math.ceil(SGN.pages.length/SGN.MAX_PER_MAN));
+  box.innerHTML=`<div class="okbox"><b>All ${SGN.pages.length} pages are on the chain.</b>
+    ${seals===1
+      ? "One last signature seals them into a scroll — a locked coin listing every page and your file's fingerprint."
+      : `This film needs <b>${seals} seal transactions</b> (manifest chain — automatic). Approve each in Eternl; the first seal is your permanent pointer.`}</div>
+    <p style="margin-top:10px"><button class="btn" id="sgnlock">📜 Sign the seal${seals>1?"s":""} — finish the scroll</button></p>
     <div id="mintstage"></div>`;
-  $("sgnlock").addEventListener("click",()=>connectAndQuote(M.walletKey,"chain"));
+  $("sgnlock").addEventListener("click",()=>sealChainManifests());
+}
+
+/* Lock one or more manifests (multi-part when pages > MAX_PER_MAN). Mints last→first so
+   each "next" pointer is known. Head (first chunk) is the permanent reader pointer. */
+async function sealChainManifests(){
+  const stage=$("mintstage")||$("sgnmanifest");
+  const btn=$("sgnlock"); if(btn) btn.disabled=true;
+  if(!stage.querySelector("#mlog")) stage.insertAdjacentHTML("beforeend",`<div id="mlog" class="mlog"></div>`);
+  try{
+    if(!M.wapi) throw new Error("Wallet disconnected — reconnect Eternl and try again.");
+    M.net=await M.wapi.getNetworkId();
+    M.params=await fetchNetParams(M.net);
+    M.changeB=hexB(await M.wapi.getChangeAddress());
+    M.mode="chain";
+    const allTxids=CP.txids.slice();
+    if(!allTxids.length) throw new Error("No page transactions recorded.");
+    const CHUNK=SGN.MAX_PER_MAN;
+    const chunks=[];
+    for(let i=0;i<allTxids.length;i+=CHUNK) chunks.push(allTxids.slice(i,i+CHUNK));
+    mlog("h",`── sealing ${allTxids.length} pages in ${chunks.length} manifest${chunks.length>1?"s":""} on ${NETS[M.net].name}`);
+    let nextPtr=null, headTxid=null, lastPlan=null, lastDatum=null;
+    // last chunk first so next pointers resolve
+    for(let c=chunks.length-1; c>=0; c--){
+      const hashes=chunks[c].map(hexB);
+      const datum=buildManifestDatum(hashes, nextPtr);
+      const utxos=parseWalletUtxos(await M.wapi.getUtxos()).filter(u=>!SGN.spent.has(utxoKey(u)));
+      const plan=planTx(M.net, utxos, datum, M.changeB, M.params);
+      mlog("",`manifest ${chunks.length-c}/${chunks.length}: ${chunks[c].length} pages · lock ${(plan.lockCoin/1e6).toFixed(2)} ADA · fee ${(plan.fee/1e6).toFixed(3)} ADA${nextPtr?" · next→"+nextPtr.txHash.slice(0,12)+"…":""}`);
+      mlog("",`approve seal ${chunks.length-c} of ${chunks.length} in ${M.wname}…`);
+      const unsigned=catB([u8([0x84]), plan.body, u8([0xa0]), u8([0xf5,0xf6])]);
+      const witHex=await M.wapi.signTx(bHex(unsigned), false);
+      const wit=hexB(witHex);
+      const signed=wit[0]===0x84 ? wit : catB([u8([0x84]), plan.body, wit, u8([0xf5,0xf6])]);
+      const localTxid=bHex(blake2b256(plan.body));
+      const wid=await M.wapi.submitTx(bHex(signed));
+      const txid=(typeof wid==="string" && /^[0-9a-f]{64}$/i.test(wid)) ? wid.toLowerCase() : localTxid;
+      plan.ins.forEach(i=>SGN.spent.add(utxoKey(i)));
+      mlog("ok",`seal ${chunks.length-c}/${chunks.length} submitted ✓ ${txid.slice(0,16)}…`);
+      nextPtr={ txHash:txid, ix:0 };
+      if(c===0){ headTxid=txid; lastPlan=plan; lastDatum=datum; }
+      // brief settle so next seal sees change
+      if(c>0) await new Promise(r=>setTimeout(r,4000));
+    }
+    CP.hashB=allTxids.map(hexB);
+    CP.txids=allTxids;
+    M.txid=headTxid;
+    M.plan=lastPlan;
+    M.datum=lastDatum;
+    M.state="minting";
+    mlog("h","── verifying from the chain (never announce before this passes)");
+    clearResume();
+    await verifyBack();
+  }catch(e){
+    const msg=String(e?.info||e?.message||e);
+    mlog("err","✗ "+msg);
+    mlog("", /decline|refus|cancel|denied/i.test(msg)
+      ? "You declined — pages are already permanent; re-click seal when ready (no re-pay for pages)."
+      : "Pages already on-chain are safe. Fix the issue and click seal again.");
+    if(btn){ btn.disabled=false; btn.textContent="📜 Retry seal"; }
+  }
 }
 
 /* ── CIP-103 bulk signing: build the whole chain up front, sign it all in
@@ -1615,6 +1746,8 @@ function buildChainedTxs(net, funding, selfB, params){
     cur={txh:hexB(txid),ix:0,coin:out,addrHex:cur.addrHex};
   }
   CP.txids=pageTxids.slice(); CP.hashB=pageTxids.map(hexB);
+  if(pageTxids.length > SGN.MAX_PER_MAN)
+    throw new Error("File needs multi-part seals — use page-by-page minting (one approval can't chain multi-seal yet).");
   const datum=buildManifestDatum(), lockCoin=minLockCoin(net,datum,params);
   let mfee=300000;
   for(let r=0;r<8;r++){ const ch=cur.coin-lockCoin-mfee;
@@ -1659,8 +1792,11 @@ async function signAllBulk(bulk){
 function sgnBulkLine(t){ const l=$("sgnline"); if(l) l.textContent=t; }
 
 async function startWalletSign(key, resume){
-  const stage=$("cpstage"); stage.innerHTML=`<div class="cmp">Connecting to ${esc(key)}…</div>`;
+  const stage=$("cpstage"); if(!stage) return;
+  stage.dataset.live="1";
+  stage.innerHTML=`<div class="cmp">Connecting to ${esc(key||"wallet")}…</div>`;
   try{
+    if(!key) throw new Error("No wallet selected — install Eternl and refresh.");
     M.wapi=(M.wapi && M.walletKey===key)?M.wapi:await window.cardano[key].enable(); M.wname=window.cardano[key].name||key; M.walletKey=key;
     M.net=await M.wapi.getNetworkId();
     if(!(M.net in NETS)) throw new Error("Unknown network id "+M.net);
@@ -1668,32 +1804,61 @@ async function startWalletSign(key, resume){
     M.params=await fetchNetParams(M.net);
     M.changeB=hexB(await M.wapi.getChangeAddress());
     try{ M.addrBech=b32encode(M.net===1?"addr":"addr_test", M.changeB); }catch(e){ void e; }
+    try{ M.balance=decodeBalance(await M.wapi.getBalance()); }catch(e){ M.balance=null; }
     SGN.pages=buildSignPages(S.encBytes); SGN.spent=new Set();
     if(resume && resume.done>0 && resume.done<SGN.pages.length && resume.net===M.net){
       SGN.done=resume.done; CP.txids=resume.txids.slice();
     } else { SGN.done=0; CP.txids=[]; }
-    const n=SGN.pages.length, nnet=NETS[M.net], total=n+1;
-    const feeGuess=fee(SGN.SPP*66+1200)*n;
-    const bulk=bulkSignApi(M.wapi);
+    const n=SGN.pages.length, nnet=NETS[M.net];
+    const seals=Math.max(1,Math.ceil(n/SGN.MAX_PER_MAN));
+    const total=n+seals;
+    const feeGuess=fee(SGN.SPP*66+1200)*n + 2.0*seals;
+    const mins=Math.max(1,Math.ceil(total*0.35));
+    const bulk= n<=SGN.MAX_PER_MAN ? bulkSignApi(M.wapi) : null; // bulk only when single seal fits
+    const showRows=n<=48; // large films: progress bar only (don't freeze the DOM)
+    const balOk = M.balance==null || M.balance/1e6 >= feeGuess+2;
     stage.innerHTML=`
-      <p style="margin:6px 0"><span class="netbadge ${nnet.cls}">${nnet.name}</span>
-        <span style="font-size:13px;color:var(--muted)">&nbsp;connected: ${esc(M.wname)}${M.params.live?"":" · fallback fee params"}</span></p>
-      <div class="cmp">Your file is <b>${n} page${n>1?"s":""}</b> + 1 seal = <b>${total} transactions</b>. The page
-        builds every one; your wallet just signs. Budget ≈ <b>${fmtA(feeGuess)} ADA</b> in fees plus the seal.</div>
-      <div class="prog"><span id="sgncount">0 of ${n} pages on chain</span>
-        <span class="bar"><span id="sgnbar" style="width:0%"></span></span></div>
-      ${SGN.pages.map(p=>`<div class="pg" id="sgnrow-${p.i}" style="padding:10px 14px;display:flex;align-items:center;gap:10px">
-        <b style="font:600 14px/1 var(--sans)">Page ${p.i} of ${p.n}</b>
-        <span class="pgchip wait" style="margin-left:auto">queued</span></div>`).join("")}
-      <p id="sgnline" style="font-size:13px;color:var(--muted);margin:8px 0 0"></p>
-      <p style="margin-top:14px"><button class="btn" id="sgngo">✍️ Start minting — sign each transaction</button>
-        <button class="btn sub" id="sgnresume" hidden style="margin-left:8px">Resume</button></p>
-      <p style="font-size:12.5px;color:var(--muted);margin:6px 0 0">Your wallet asks for your spending password once per transaction — ${n} page${n>1?"s":""}, then the seal. This is the reliable path; each transaction confirms before the next.</p>
-      ${bulk?`<p style="margin-top:12px"><button class="btn sub" id="sgnbulk">⚡ Advanced: try one approval (CIP-103)</button>
-        <span style="font-size:12px;color:var(--muted)">&nbsp;experimental — signs all ${total} at once; if your wallet can't chain, it falls back to one-at-a-time.</span></p>`
-        :`<span id="sgnbulk" hidden></span>`}
-      <p style="margin-top:12px"><button class="copy" id="sgnmanual">send pages manually instead</button></p>
-      <div id="sgnmanifest" hidden></div>`;
+      <div style="border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:16px 18px;background:var(--surface-2);margin-top:4px">
+        <p style="margin:0 0 8px"><span class="netbadge ${nnet.cls}">${nnet.name}</span>
+          <span style="font-size:13px;color:var(--muted)">&nbsp;${esc(M.wname)}${M.params.live?"":" · fallback fees"}
+          ${M.balance!=null?` · ${fmtA(M.balance/1e6)} ADA`:""}</span></p>
+        <div class="statrow" style="margin:8px 0 4px">
+          ${statHTML(fmtN(n), "pages")}
+          ${statHTML(fmtN(seals), seals>1?"seals":"seal")}
+          ${statHTML("~"+fmtA(feeGuess), "ADA fees")}
+          ${statHTML("~"+mins+"m", "session")}
+        </div>
+        ${!balOk?`<div class="warnbox" style="margin:10px 0">Wallet may be short — send ~${fmtA(feeGuess+3)} ADA to this account, then refresh balance and continue.</div>`:""}
+        <div class="consent" style="margin-top:12px"><input type="checkbox" id="sgnconsent">
+          <label for="sgnconsent"><b>I understand this is permanent and public.</b> No edit, no delete —
+          ${n} page${n>1?"s":""} will be written forever, then sealed.</label></div>
+        <div class="prog" style="margin-top:14px"><span id="sgncount">${SGN.done} of ${n} pages on chain</span>
+          <span class="bar"><span id="sgnbar" style="width:${100*SGN.done/Math.max(1,n)}%"></span></span>
+          <span id="sgnpct" style="font:700 13px/1 var(--mono);color:var(--accent-ink)">${Math.round(100*SGN.done/Math.max(1,n))}%</span></div>
+        <p id="sgncur" style="font-size:14px;color:var(--ink-2);margin:8px 0 0;min-height:1.3em">${SGN.done?`Resumed at page ${SGN.done+1}.`:""}</p>
+        ${showRows?SGN.pages.map(p=>`<div class="pg" id="sgnrow-${p.i}" style="padding:8px 12px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--line)">
+          <b style="font:600 13px/1 var(--sans)">Page ${p.i}/${p.n}</b>
+          <span class="pgchip wait" style="margin-left:auto">${p.i<=SGN.done?"on chain ✓":"queued"}</span></div>`).join("")
+          :`<p style="font-size:13px;color:var(--muted);margin:10px 0 0">${fmtN(n)} pages — progress bar tracks them (row list hidden so your laptop stays snappy).</p>`}
+        <p id="sgnline" style="font-size:13px;color:var(--muted);margin:8px 0 0"></p>
+        <p style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+          <button class="btn" id="sgngo" disabled style="min-height:48px;font-size:16px">✍️ Start minting — sign each page</button>
+          <button class="btn sub" id="sgnresume" ${SGN.done>0?"":"hidden"}>Resume</button>
+          ${bulk?`<button class="btn ghost" id="sgnbulk" disabled>⚡ One approval (CIP-103)</button>`:`<span id="sgnbulk" hidden></span>`}
+        </p>
+        <p style="font-size:12.5px;color:var(--muted);margin:8px 0 0">
+          <b>Recommended:</b> sign each page (reliable). Keep Eternl open; approve every popup.
+          ${seals>1?` After pages, you'll seal ${seals} times (automatic multi-part manifest).`:""}
+          Leave this tab open — reloading mid-mint is OK (resume).
+        </p>
+        <p style="margin-top:10px"><button class="copy" id="sgnmanual">send pages manually instead</button></p>
+        <div id="sgnmanifest" hidden></div>
+      </div>`;
+    // mark resumed pages
+    if(showRows) for(let i=1;i<=SGN.done;i++) sgnStatus(i,"ok","on chain ✓");
+    sgnProgress();
+    const unlock=()=>{ const on=$("sgnconsent")?.checked; if($("sgngo")) $("sgngo").disabled=!on; if($("sgnbulk")&&$("sgnbulk").tagName==="BUTTON") $("sgnbulk").disabled=!on; };
+    $("sgnconsent")?.addEventListener("change",unlock);
     if(bulk) $("sgnbulk").addEventListener("click",async()=>{
       $("sgnbulk").disabled=true; $("sgngo").disabled=true; SGN.done=0;
       try{ await signAllBulk(bulk); }
@@ -1701,16 +1866,17 @@ async function startWalletSign(key, resume){
         sgnBulkLine("");
         const box=$("sgnmanifest"); if(box){ box.hidden=false;
           box.innerHTML=`<div class="warnbox">One-approval signing didn't go through (${esc(msg)}). Nothing was spent — click
-            <b>“✍️ Start minting — sign each transaction”</b> ${SGN.done>0?"or <b>Resume</b> ":""}above to finish page by page (this way always works).</div>`; }
+            <b>Start minting</b> ${SGN.done>0?"or <b>Resume</b> ":""}to finish page by page.</div>`; }
         if(SGN.done>0) $("sgnresume").hidden=false;
         $("sgngo").disabled=false; $("sgnbulk").disabled=false; }
     });
-    $("sgngo").addEventListener("click",()=>{ $("sgngo").disabled=true; if($("sgnbulk"))$("sgnbulk").disabled=true; $("sgnresume").hidden=true; signAllPages(); });
+    $("sgngo").addEventListener("click",()=>{ $("sgngo").disabled=true; if($("sgnbulk")&&$("sgnbulk").tagName==="BUTTON")$("sgnbulk").disabled=true; $("sgnresume").hidden=true; signAllPages(); });
     $("sgnresume").addEventListener("click",()=>{ $("sgnresume").hidden=true; signAllPages(); });
     $("sgnmanual").addEventListener("click",()=>{ CP.active=true; renderChainAssistant(); });
-    if(resume && SGN.done>0){                       // resuming: skip bulk, continue signing the rest
-      $("sgngo").disabled=true; if($("sgnbulk"))$("sgnbulk").disabled=true;
-      for(let i=1;i<=SGN.done;i++) sgnStatus(i,"ok","on chain ✓"); sgnProgress();
+    stage.scrollIntoView({behavior:"smooth",block:"start"});
+    if(resume && SGN.done>0){                       // resuming: continue signing the rest
+      $("sgnconsent").checked=true; unlock();
+      $("sgngo").disabled=true; if($("sgnbulk")&&$("sgnbulk").tagName==="BUTTON")$("sgnbulk").disabled=true;
       signAllPages();
     }
   }catch(e){
@@ -1764,10 +1930,19 @@ function renderChainAssistant(){
 
     <div class="phase"><span class="pn">3</span> Paste each transaction id back here</div>
     <p style="margin:0 0 2px;font-size:14.5px;color:var(--ink-2)">As each send confirms, paste its id into the
-      matching page. Order doesn't matter — fill them all in.</p>
+      matching page. Order doesn't matter — fill them all in.
+      ${n>60?`<br><b>Tip:</b> for ${n} pages, the <b>Eternl wallet-signed path</b> (back → Mint button) is much easier than paste.` : ""}</p>
     <div class="prog"><span id="cpcount">0 of ${n} ids entered</span>
       <span class="bar"><span id="cpbar" style="width:0%"></span></span></div>
-    ${CP.pages.map(p=>`
+    ${n>80
+      ? `<div class="warnbox">Showing a compact id list (${n} pages). Prefer the wallet-signed path for films.
+         <div style="max-height:320px;overflow:auto;margin-top:8px">${CP.pages.map(p=>`
+           <div style="display:flex;gap:8px;align-items:center;margin:4px 0;font-size:13px">
+             <span style="min-width:4.5em">p${p.i}</span>
+             <span class="pgchip wait" id="pgchip-${p.i}">no id</span>
+             <input class="txin" id="pgtx-${p.i}" placeholder="tx id for page ${p.i}" value="${CP.txids[p.i-1]||""}" style="flex:1">
+           </div>`).join("")}</div></div>`
+      : CP.pages.map(p=>`
       <details class="pg" ${p.n===1?"open":""}>
         <summary>Page ${p.i} of ${p.n} · <span style="font-family:var(--mono);font-size:12px;color:var(--muted)">page-${nn(p.i)}-of-${nn(n)}.json</span> <span class="pgchip wait" id="pgchip-${p.i}">no id yet</span></summary>
         <div class="pgbody">
@@ -1856,25 +2031,40 @@ async function checkPages(){
     if(all){
       CP.txids=txids; CP.hashB=txids.map(hexB); CP.checked=true;
       const wallets=listWallets();
-      const datum=buildManifestDatum();
+      const seals=Math.max(1,Math.ceil(n/SGN.MAX_PER_MAN));
+      const datum=buildManifestDatum(txids.slice(0,Math.min(n,SGN.MAX_PER_MAN)).map(hexB), null);
       $("cpmanifest").hidden=false;
       $("cpmanifest").innerHTML=`
         <div class="okbox"><b>All ${n} page${n>1?"s":""} verified from the chain, byte for byte.</b>
-        One step left: lock the manifest — a small coin at the always-fail address that lists your pages
-        and seals the file's fingerprint. That's what makes it a scroll.</div>
+        ${seals===1
+          ? "One step left: lock the manifest — a small coin that lists your pages and seals the fingerprint."
+          : `This file needs <b>${seals} seal transactions</b> (multi-part manifest). Eternl will sign each automatically.`}</div>
         ${wallets.length?`<div class="wbtns">${wallets.map(w=>`
-          <button class="wbtn" data-w="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"} Lock the manifest with ${esc(w.name)}</button>`).join("")}</div>`
-        :`<div class="warnbox">No CIP-30 wallet in this browser for the manifest step — use the CLI below.</div>`}
-        <details class="assump" style="margin-top:12px"><summary>CLI instead (cardano-cli)</summary>
+          <button class="wbtn" data-w="${esc(w.key)}">${w.icon?`<img src="${w.icon}" alt="">`:"👛"}
+            Lock the seal${seals>1?"s":""} with ${esc(w.name)}</button>`).join("")}</div>`
+        :`<div class="warnbox">No Eternl in this browser for the seal step — use the CLI below (single-seal files only) or the build bundle.</div>`}
+        ${seals===1?`<details class="assump" style="margin-top:12px"><summary>CLI instead (cardano-cli)</summary>
         <pre>echo "${bHex(datum)}" | xxd -r -p &gt; manifest.cbor
 cardano-cli conway transaction build ${CP.net===1?"--mainnet":"--testnet-magic 2"} \\
   --tx-in &lt;A_PURE_ADA_UTXO&gt; \\
   --tx-out "${NETS[CP.net].lockBech}+${minLockCoin(CP.net,datum,{a:44,b:155381,cpb:4310})}" \\
   --tx-out-inline-datum-cbor-file manifest.cbor \\
   --change-address &lt;YOUR_ADDR&gt; --out-file tx.raw
-# then sign + submit as usual</pre></details>`;
+# then sign + submit as usual</pre></details>`:""}
+        <div id="mintstage"></div>`;
       $("cpmanifest").querySelectorAll(".wbtn").forEach(b=>
-        b.addEventListener("click",()=>connectAndQuote(b.dataset.w,"chain")));
+        b.addEventListener("click",async()=>{
+          const key=b.dataset.w;
+          try{
+            M.wapi=(M.wapi&&M.walletKey===key)?M.wapi:await window.cardano[key].enable();
+            M.walletKey=key; M.wname=window.cardano[key].name||key;
+            M.net=await M.wapi.getNetworkId();
+            if(M.net!==CP.net) throw new Error("Wallet network must match the page network selector.");
+            SGN.pages=SGN.pages.length?SGN.pages:buildSignPages(S.encBytes);
+            SGN.done=SGN.pages.length; // pages already done via manual path
+            await sealChainManifests();
+          }catch(e){ alert(String(e.message||e)); }
+        }));
     }
   }catch(e){
     alert("Chain lookup failed: "+String(e.message||e));
@@ -2004,14 +2194,34 @@ async function verifyStandard(raw){
   mintSuccess();
 }
 async function verifyManifest(raw){
-  const [v]=cborD(raw);
-  if(!v || v.tag!==121 || !Array.isArray(v.value) || v.value.length<8 || v.value[0]!==2)
-    throw new Error("manifest datum came back in an unexpected shape");
-  const hashes=v.value[6];
-  if(!Array.isArray(hashes) || hashes.length!==CP.txids.length
-     || hashes.some((h,i)=>bHex(h)!==CP.txids[i]))
+  /* Follow next-links (multi-part seals) so large films verify the same way the reader does. */
+  let hashes=[], cur=raw, hops=0;
+  while(true){
+    const [v]=cborD(cur);
+    if(!v || v.tag!==121 || !Array.isArray(v.value) || v.value.length<8 || v.value[0]!==2)
+      throw new Error("manifest datum came back in an unexpected shape");
+    const pageList=v.value[6];
+    if(!Array.isArray(pageList)) throw new Error("manifest page list missing");
+    for(const h of pageList) hashes.push(bHex(h));
+    const nxt=v.value[7];
+    if(nxt && nxt.tag===122 && Array.isArray(nxt.value) && nxt.value[0]){
+      const ntx=bHex(nxt.value[0]), nix=nxt.value[1]|0;
+      mlog("",`following seal continuation → ${ntx.slice(0,12)}…#${nix}`);
+      let hexd=null;
+      for(let t=0;t<20 && !hexd;t++){
+        if(t) await new Promise(r=>setTimeout(r,8000));
+        try{
+          const rows=await kapi(M.net,"/utxo_info",{_utxo_refs:[ntx+"#"+nix],_extended:true});
+          hexd=rows?.[0]?.inline_datum?.bytes||null;
+        }catch(e){ void e; }
+      }
+      if(!hexd) throw new Error("continuation manifest not found on chain yet: "+ntx.slice(0,16));
+      cur=hexB(hexd); hops++; if(hops>32) throw new Error("manifest chain too long");
+    } else break;
+  }
+  if(hashes.length!==CP.txids.length || hashes.some((h,i)=>h!==CP.txids[i]))
     throw new Error("manifest page list mismatch — expected your verified pages");
-  mlog("ok",`manifest ✓ lists all ${hashes.length} page transaction${hashes.length>1?"s":""} in order`);
+  mlog("ok",`manifest ✓ lists all ${hashes.length} page transaction${hashes.length>1?"s":""} in order${hops?` (${hops+1} seals)`:""}`);
   mlog("h",`── full reconstruction, like any reader would do it`);
   const map={};
   for(let o=0;o<CP.txids.length;o+=25){
@@ -2019,7 +2229,7 @@ async function verifyManifest(raw){
     for(const r of rows||[]) map[r.tx_hash]=r.metadata||{};
   }
   let stream=catB(CP.txids.map(t=>{
-    const md=map[t]?.["22025"]; if(!md) throw new Error("page metadata vanished?! "+t.slice(0,12));
+    const md=map[t]?.["22025"] ?? map[t]?.[22025]; if(!md) throw new Error("page metadata vanished?! "+t.slice(0,12));
     return catB((md.p||[]).map(segBytes));
   }));
   const encHash=await sha256hex(stream.slice().buffer);
