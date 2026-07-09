@@ -62,6 +62,24 @@ A conforming signature transaction:
   `addr1…`), and new signatures follow the handle. Address-referenced books are
   immune to this.
 
+## Book NFTs — mintable books
+
+A book MAY be represented by an NFT so it can be owned, displayed, and moved:
+
+- Mint 1 asset under a **sig-type native script policy** keyed to the minter's
+  payment key hash (`policyId = blake2b224(0x00 ‖ script_cbor)`, where
+  `script_cbor = [0, keyhash]`).
+- CIP-25 (label 721) metadata SHOULD include `Type: "Ledger Book"` and
+  `protocol: "ledger-book-v1"`, plus a human name and a reader deep link in
+  `description`.
+- The book's address is **wherever the NFT currently lives**: readers resolve
+  `policy.AssetName` via the asset's holding address (same mechanics as $handle
+  books). Moving the NFT moves the book; old signatures stay with the old
+  address, new ones follow the NFT.
+- Reference minter: `ledger-book.html` → "Mint a Ledger Book" (in-browser,
+  CIP-30; the only cost is the network fee — the min-UTxO travels with the NFT
+  into the minter's own wallet).
+
 ## Hosting a book
 
 There is nothing to deploy. Share a link to any conforming reader with your

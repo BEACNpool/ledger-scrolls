@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ledger Book — every wallet is a yearbook</title>
-<meta name="description" content="An open protocol for guestbooks that live inside Cardano. Every wallet is a book. Sign someone's book with one small transaction — your words become part of the chain, forever.">
+<meta name="description" content="An open protocol for guestbooks that live inside Cardano. Search any book by $handle, address, or book NFT — or mint your own Ledger Book NFT so others can sign it. Forever.">
 <meta property="og:title" content="Ledger Book — every wallet is a yearbook">
-<meta property="og:description" content="Sign a book that cannot burn. One ~1 ADA transaction writes your name and message into Cardano forever — anchored to the book owner's wallet. Open protocol: anyone can host a book, anyone can read one.">
+<meta property="og:description" content="Sign a book that cannot burn. One ~1 ADA transaction writes your name into Cardano forever — anchored to the book owner's wallet. Mint your own Ledger Book NFT and collect signatures.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://beacnpool.github.io/ledger-scrolls/ledger-book.html">
 <meta property="og:image" content="https://beacnpool.github.io/ledger-scrolls/media/ledger-book-card.png">
@@ -40,18 +40,26 @@ header.site .wrap{display:flex;align-items:center;justify-content:space-between;
 header.site a.home{color:var(--ink);text-decoration:none;font-family:var(--serif);font-size:18px}
 header.site .links a{font-size:14px;text-decoration:none;margin-left:16px;color:var(--ink-2)}
 
-.hero{padding:48px 0 24px;text-align:center;background:
-  radial-gradient(1200px 400px at 50% -100px, var(--amber-soft), transparent 70%)}
-.hero .kicker{font:12px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--amber)}
-.hero h1{font-family:var(--serif);font-size:clamp(34px,6vw,56px);line-height:1.1;margin:12px 0}
-.hero p.sub{max-width:640px;margin:0 auto;color:var(--ink-2);font-size:18px}
-.hero .badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:20px 0 6px}
-.badge{font:12.5px var(--mono);background:var(--surface);border:1px solid var(--line-2);
-       border-radius:var(--pill);padding:6px 14px;color:var(--ink-2)}
-.badge b{color:var(--ok)}
-.cta{display:inline-block;margin-top:16px;background:var(--ink);color:#fff;text-decoration:none;
-     font-weight:600;padding:13px 30px;border-radius:var(--pill);box-shadow:var(--sh)}
-.cta:hover{background:var(--accent-ink)}
+/* ── landing: just the search ── */
+#landing{min-height:calc(100dvh - 60px);display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(1200px 500px at 50% -100px, var(--amber-soft), transparent 70%)}
+#landing .inner{text-align:center;padding:40px 20px;max-width:720px;width:100%}
+#landing .kicker{font:12px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--amber)}
+#landing h1{font-family:var(--serif);font-size:clamp(38px,7vw,64px);line-height:1.08;margin:14px 0 8px}
+#landing p.sub{color:var(--ink-2);font-size:18px;max-width:560px;margin:0 auto 28px}
+#searchbar{display:flex;gap:10px;max-width:620px;margin:0 auto}
+#searchbar input{flex:1;min-width:0;border:1px solid var(--line-2);border-radius:var(--pill);
+  padding:16px 22px;font:17px var(--mono);background:var(--surface);color:var(--ink);box-shadow:var(--sh)}
+#searchbar input:focus{outline:3px solid var(--accent-soft);border-color:var(--accent)}
+#searchbar button{border:none;background:var(--ink);color:#fff;border-radius:var(--pill);
+  padding:16px 30px;font:600 16px var(--sans);cursor:pointer;min-height:56px}
+#searchbar button:hover{background:var(--accent-ink)}
+#searcherr{min-height:1.5em;margin-top:12px;font-size:14px;color:var(--bad)}
+#landing .hints{font:13px var(--mono);color:var(--faint);margin-top:6px}
+#landing .hints span{cursor:pointer;border-bottom:1px dotted var(--faint)}
+#landing .hints span:hover{color:var(--accent)}
+#landing .mintlink{margin-top:36px;font-size:16px}
+#landing .mintlink a{font-weight:600}
 
 section{padding:36px 0}
 section h2{font-family:var(--serif);font-size:28px;margin-bottom:14px}
@@ -61,28 +69,24 @@ section h2{font-family:var(--serif);font-size:28px;margin-bottom:14px}
 #bookid .whose{font-family:var(--serif);font-size:24px}
 #bookid .whose b{color:var(--amber)}
 #bookid .addr{font:12px var(--mono);color:var(--faint);word-break:break-all;margin-top:4px}
-#switch{display:flex;gap:8px;max-width:520px;margin:14px auto 0}
-#switch input{flex:1;border:1px solid var(--line-2);border-radius:var(--pill);padding:10px 16px;
-  font:14px var(--mono);background:var(--surface);color:var(--ink);min-width:0}
-#switch button{border:1px solid var(--line-2);background:var(--surface);border-radius:var(--pill);
-  padding:10px 18px;font:14px var(--sans);cursor:pointer;min-height:44px}
-#switch button:hover{border-color:var(--accent)}
+#bookid .back{margin-top:10px}
+#bookid .back a{font-size:13.5px}
 
 /* sign panel */
 #signcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   padding:26px;box-shadow:var(--sh-lg);max-width:560px;margin:0 auto}
-#signcard label{display:block;font:12.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;
+#signcard label,#mintcard label{display:block;font:12.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;
   color:var(--muted);margin:14px 0 6px}
-#signcard input,#signcard textarea{width:100%;border:1px solid var(--line-2);border-radius:var(--radius-sm);
+#signcard input,#signcard textarea,#mintcard input{width:100%;border:1px solid var(--line-2);border-radius:var(--radius-sm);
   padding:11px 13px;font:16px var(--serif);background:var(--surface-2);color:var(--ink);resize:none}
-#signcard input:focus,#signcard textarea:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+#signcard input:focus,#signcard textarea:focus,#mintcard input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
 .bytec{font:11.5px var(--mono);color:var(--faint);text-align:right;margin-top:3px}
-#signbtn{width:100%;margin-top:18px;background:var(--ink);color:#fff;border:none;border-radius:var(--pill);
+#signbtn,#mintbtn{width:100%;margin-top:18px;background:var(--ink);color:#fff;border:none;border-radius:var(--pill);
   padding:14px;font:600 16px var(--sans);cursor:pointer;min-height:50px}
-#signbtn:hover{background:var(--accent-ink)}
-#signbtn:disabled{opacity:.5;cursor:default}
-#signnote{font-size:13.5px;color:var(--muted);margin-top:10px;min-height:1.4em;text-align:center}
-#signnote .ok{color:var(--ok);font-weight:600} #signnote .bad{color:var(--bad)}
+#signbtn:hover,#mintbtn:hover{background:var(--accent-ink)}
+#signbtn:disabled,#mintbtn:disabled{opacity:.5;cursor:default}
+#signnote,#mintnote{font-size:13.5px;color:var(--muted);margin-top:10px;min-height:1.4em;text-align:center;word-break:break-word}
+#signnote .ok,#mintnote .ok{color:var(--ok);font-weight:600} #signnote .bad,#mintnote .bad{color:var(--bad)}
 .pricerow{display:flex;justify-content:space-between;font-size:14px;color:var(--ink-2);
   border-top:1px dashed var(--line-2);margin-top:16px;padding-top:12px;gap:12px}
 .pricerow.noline{border:none;margin-top:2px;padding-top:2px}
@@ -102,6 +106,14 @@ section h2{font-family:var(--serif);font-size:28px;margin-bottom:14px}
   border:1px dashed var(--line-2);border-radius:var(--radius);padding:40px 24px;color:var(--muted);
   font-family:var(--serif);font-size:19px;font-style:italic}
 
+/* mint */
+#mintcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:26px;box-shadow:var(--sh-lg);max-width:560px;margin:0 auto}
+#mintresult{display:none;margin-top:16px;background:var(--amber-soft);border:1px solid var(--line-2);
+  border-radius:var(--radius-sm);padding:14px;font-size:14px}
+#mintresult .mono{font-family:var(--mono);font-size:12px;word-break:break-all}
+#mintresult button{margin-top:8px}
+
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--sh)}
 .card h3{font-size:16px;margin-bottom:6px}
@@ -113,10 +125,14 @@ button.small:hover{border-color:var(--accent)}
 footer.site{border-top:1px solid var(--line);padding:26px 0 40px;margin-top:30px;font-size:13px;color:var(--muted)}
 footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
 
+.view{display:none}
+.view.on{display:block}
+
 @media (max-width:720px){
-  .hero{padding:34px 0 18px}
-  #signcard{padding:20px}
+  #signcard,#mintcard{padding:20px}
   section{padding:26px 0}
+  #searchbar{flex-direction:column}
+  #searchbar button{width:100%}
 }
 </style>
 </head>
@@ -128,37 +144,38 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
     <div class="links">
       <a href="index.html">The Library</a>
       <a href="ledger-chess.html">Ledger Chess</a>
-      <a href="https://github.com/BEACNpool/ledger-scrolls">GitHub</a>
+      <a href="#" id="navmint">Mint a Ledger Book</a>
     </div>
   </div>
 </header>
 
-<div class="hero">
-  <div class="wrap">
+<!-- ═══ LANDING: just the search ═══ -->
+<div id="landing" class="view on">
+  <div class="inner">
     <div class="kicker">An open protocol · every wallet is a yearbook</div>
     <h1>✒️ Ledger Book</h1>
-    <p class="sub">A guestbook that lives <b>inside Cardano</b>. Every wallet is a book:
-    signing sends one small transaction to the book owner's address, and your name and
-    message become part of the chain — <b>no account, no server, no delete button, ever</b>.
-    Anyone can host a book. Anyone can read one. This page is just a reader.</p>
-    <div class="badges">
-      <span class="badge"><b>✓</b> signatures live in transactions, forever</span>
-      <span class="badge"><b>✓</b> ~1 ADA anchor goes to the book's owner</span>
-      <span class="badge"><b>✓</b> open protocol — host your own with any wallet</span>
+    <p class="sub">Guestbooks that live inside Cardano. Find one, read it, sign it —
+    your words become part of the chain, forever.</p>
+    <div id="searchbar">
+      <input id="searchinput" placeholder="$handle · addr1… · policy.BookName" autofocus>
+      <button id="searchgo">Open book</button>
     </div>
-    <a class="cta" href="#sign">Sign this book</a>
+    <div class="hints">try: <span data-x="$beacn">$beacn</span></div>
+    <div id="searcherr"></div>
+    <div class="mintlink">📖 Want your own? <a href="#" id="mintlink">Mint a Ledger Book</a> —
+      an NFT that <i>is</i> your book. Whoever holds it, holds the book others sign.</div>
   </div>
 </div>
 
+<!-- ═══ BOOK VIEW ═══ -->
+<div id="bookpage" class="view">
 <section id="bookview">
   <div class="wrap">
     <div id="bookid">
-      <div class="whose">You are reading the book of <b id="bookref">…</b></div>
+      <div class="whose">The book of <b id="bookref">…</b></div>
       <div class="addr" id="bookaddr"></div>
-      <div id="switch">
-        <input id="bookinput" placeholder="open another book: $handle or addr1…">
-        <button id="bookgo">Open</button>
-      </div>
+      <div class="back"><a href="#" id="backtosearch">← search for another book</a> ·
+        <a href="#" id="sharebook">copy link to this book</a> <span id="shared" style="color:var(--ok);display:none">copied ✓</span></div>
     </div>
     <div id="bookstatus">opening the book…</div>
     <div id="bookempty" style="display:none">This page is blank.<br>Someone has to be first — and first is forever.</div>
@@ -185,31 +202,64 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
       <p style="font-size:12.5px;color:var(--faint);margin-top:12px;text-align:center">
         Wallet: Eternl (desktop or mobile dapp browser) officially supported · VESPR dapp browser
         works (experimental) · Think before you sign — this is <b>permanent and public</b>.
-        The anchor is a small gift to whoever hosts the book; the fee goes to the protocol.</p>
+        The anchor is a small gift to whoever holds the book; the fee goes to the protocol.</p>
     </div>
   </div>
 </section>
+</div>
 
+<!-- ═══ MINT VIEW ═══ -->
+<div id="mintpage" class="view">
 <section>
+  <div class="wrap">
+    <h2 style="text-align:center">Mint a Ledger Book</h2>
+    <p style="text-align:center;color:var(--ink-2);max-width:600px;margin:0 auto 20px">
+      Your book is an <b>NFT</b>. Minting sends it to your wallet; whoever holds it, holds the
+      book — signatures anchor to the wallet where the NFT lives, and follow it if it moves.
+      Share your book link and start collecting signatures (each one tips you its ~1 ADA anchor).</p>
+    <div id="mintcard">
+      <label for="mname">Name your book</label>
+      <input id="mname" placeholder="e.g. BEACN Guestbook" maxlength="28">
+      <div class="bytec" id="mnameb">0 / 28 characters (A–Z a–z 0–9 space _ -)</div>
+      <div class="pricerow"><span>Travels with the NFT into your wallet (min-UTxO — still yours)</span><span class="mono">~1.2 ADA</span></div>
+      <div class="pricerow noline"><span>Network fee (approx.)</span><span class="mono">~0.19 ADA</span></div>
+      <div class="pricerow noline"><span><b>True cost of a book that outlives you</b></span><span class="mono"><b>~0.19 ADA</b></span></div>
+      <button id="mintbtn">📖 Mint my Ledger Book</button>
+      <div id="mintnote"></div>
+      <div id="mintresult">
+        <b>Your book exists.</b> Share this link — anyone who opens it can sign your book:
+        <div class="mono" id="mintlinkout" style="margin-top:6px"></div>
+        <button class="small" id="mintcopy">copy link</button>
+        <button class="small" id="mintopen">open my book</button>
+      </div>
+      <p style="font-size:12.5px;color:var(--faint);margin-top:12px;text-align:center">
+        The minting policy is derived from your own wallet key — only you could have minted it.
+        Minting the same name twice from the same wallet creates a duplicate; pick a new name instead.</p>
+    </div>
+    <p style="text-align:center;margin-top:18px"><a href="#" id="backtosearch2">← back to search</a></p>
+  </div>
+</section>
+</div>
+
+<section id="howitworks">
   <div class="wrap">
     <h2>How it works — the whole protocol</h2>
     <div class="cols">
-      <div class="card"><h3>A book is just an address</h3>
-        <p>Any Cardano wallet is a Ledger Book. A signature is a transaction paying the
-        protocol-minimum anchor (~1 ADA) <b>to the book owner's address</b>, carrying the
-        entry in metadata label <span style="font-family:var(--mono)">22031</span>.
-        Books can be addressed by <b>$handle</b> — this one lives with <b>$beacn</b>.</p></div>
+      <div class="card"><h3>A book is a wallet (or an NFT)</h3>
+        <p>A signature is a transaction paying the protocol-minimum anchor (~1 ADA)
+        <b>to the book's address</b>, carrying the entry in metadata label
+        <span style="font-family:var(--mono)">22031</span>. Books are found by
+        <b>$handle</b>, <b>address</b>, or <b>book NFT</b> (<span style="font-family:var(--mono)">policy.Name</span>) —
+        an NFT book lives wherever its holder's wallet is.</p></div>
       <div class="card"><h3>Any reader can read any book</h3>
         <p>This page holds no database — it asks the chain for transactions to the book's
-        address and lays out the pages fresh. Open any book with
-        <span style="font-family:var(--mono)">?book=$handle</span> or
-        <span style="font-family:var(--mono)">?book=addr1…</span>. Mirror this file anywhere;
+        address and lays out the pages fresh. Deep-link any book with
+        <span style="font-family:var(--mono)">?book=…</span>. Mirror this file anywhere;
         the books follow, because the books <i>are</i> the chain.</p></div>
       <div class="card"><h3>Open source, open protocol</h3>
         <p>The format is <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/ledger-book-v1.md">specified and MIT-licensed</a>
-        — build your own reader, skin it, embed it, host your book anywhere. Attribution is
-        cryptographic: every entry is signed by its author's own wallet keys, and each card
-        links to its transaction.</p></div>
+        — build your own reader, skin it, embed it. Attribution is cryptographic: every entry
+        is signed by its author's own wallet keys, and each card links to its transaction.</p></div>
     </div>
   </div>
 </section>
@@ -218,8 +268,8 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
   <div class="wrap">
     <p><b>Receipts:</b></p>
     <p class="mono">protocol: metadata label 22031 · anchor = min-UTxO paid to the book address ·
-    spec: registry/spec/ledger-book-v1.md<br>
-    this book: <span id="bookaddr2"></span></p>
+    book NFTs: CIP-25, policy = sig-script of the minter's key ·
+    spec: registry/spec/ledger-book-v1.md</p>
     <p style="margin-top:10px">Part of <a href="index.html">Ledger Scrolls</a>: the library that cannot burn ·
     sibling of <a href="ledger-chess.html">Ledger Chess</a> · MIT</p>
   </div>
@@ -227,17 +277,18 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
 
 <script>
 "use strict";
-/* ═══ Ledger Book v1 — open protocol reader + writer.
-   A book = any Cardano address. A signature = a tx paying the min-UTxO anchor
-   to that address, carrying metadata label 22031:
-     { b:"ledger-book-v1", n:<name ≤64B>, m:[<message lines ≤64B>] }
-   Spec: registry/spec/ledger-book-v1.md (MIT).
-   Chain/tx machinery shared with Ledger Chess (proven on mainnet). ═══ */
+/* ═══ Ledger Book v1 — open protocol reader + writer + book-NFT minter.
+   A book = any Cardano address, found by $handle / addr / book-NFT (policy.Name).
+   A signature = tx paying the min-UTxO anchor to that address with metadata
+   label 22031: { b:"ledger-book-v1", n:≤64B, m:[≤64B lines] }.
+   Book NFT: CIP-25 mint under a sig-native-script policy of the minter's key
+   (policyId = blake2b224(0x00‖script) — validated against cardano-cli).
+   Spec: registry/spec/ledger-book-v1.md (MIT). ═══ */
 var BOOK_ID = "ledger-book-v1";
 var CLAIM_LABEL = "22031";
 var CLAIM_LOVELACE = 1000000;   // replaced at signing with the live protocol minimum
-var DEFAULT_BOOK = "$beacn";
 var HANDLE_POLICY = "f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a";
+var READER_URL = "https://beacnpool.github.io/ledger-scrolls/ledger-book.html";
 
 /* ═══ tiny helpers (from ledger-scrolls calculator.html, MIT) ═══ */
 var u8 = function(a){ return Uint8Array.from(a); };
@@ -267,7 +318,7 @@ function b32encode(hrp,bytes){ var acc=0,bits=0,d5=[],i;
 /* blake2b-256 (blakejs construction, public domain) */
 var B2IV=new Uint32Array([0xf3bcc908,0x6a09e667,0x84caa73b,0xbb67ae85,0xfe94f82b,0x3c6ef372,0x5f1d36f1,0xa54ff53a,0xade682d1,0x510e527f,0x2b3e6c1f,0x9b05688c,0xfb41bd6b,0x1f83d9ab,0x137e2179,0x5be0cd19]);
 var B2S=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,10,4,8,9,15,13,6,1,12,0,2,11,7,5,3,11,8,12,0,5,2,15,13,10,14,3,6,7,1,9,4,7,9,3,1,13,12,11,14,2,6,5,10,4,0,15,8,9,0,5,7,2,4,10,15,14,1,11,12,6,8,3,13,2,12,6,10,0,11,8,3,4,13,7,5,15,14,1,9,12,5,1,15,14,13,4,10,0,7,6,3,9,2,8,11,13,11,7,14,12,1,3,9,5,0,15,4,8,6,2,10,6,15,14,9,11,3,0,8,12,2,13,7,1,4,10,5,10,2,8,4,7,6,1,5,15,11,9,14,3,12,13,0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,10,4,8,9,15,13,6,1,12,0,2,11,7,5,3].map(function(x){return x*2;});
-function blake2b256(input){
+function blake2bN(input,outlen){
   var v=new Uint32Array(32),m=new Uint32Array(32);
   function A(a,b){ var o0=v[a]+v[b],o1=v[a+1]+v[b+1]; if(o0>=0x100000000)o1++; v[a]=o0>>>0; v[a+1]=o1>>>0; }
   function AC(a,b0,b1){ var o0=v[a]+b0; if(b0<0)o0+=0x100000000; var o1=v[a+1]+b1; if(o0>=0x100000000)o1++; v[a]=o0>>>0; v[a+1]=o1>>>0; }
@@ -277,7 +328,7 @@ function blake2b256(input){
     A(c,d); x=v[b]^v[c]; x3=v[b+1]^v[c+1]; v[b]=((x>>>24)^(x3<<8))>>>0; v[b+1]=((x3>>>24)^(x<<8))>>>0;
     A(a,b); AC(a,y0,y1); x=v[d]^v[a]; x4=v[d+1]^v[a+1]; v[d]=((x>>>16)^(x4<<16))>>>0; v[d+1]=((x4>>>16)^(x<<16))>>>0;
     A(c,d); x=v[b]^v[c]; x5=v[b+1]^v[c+1]; v[b]=((x5>>>31)^(x<<1))>>>0; v[b+1]=((x>>>31)^(x5<<1))>>>0; }
-  var h=new Uint32Array(16),i; for(i=0;i<16;i++)h[i]=B2IV[i]; h[0]^=0x01010000^32;
+  var h=new Uint32Array(16),i; for(i=0;i<16;i++)h[i]=B2IV[i]; h[0]^=0x01010000^outlen;
   var blk=new Uint8Array(128),t=0,c=0;
   function compress(last){
     var i2;
@@ -293,9 +344,11 @@ function blake2b256(input){
     for(i2=0;i2<16;i2++) h[i2]=(h[i2]^v[i2]^v[i2+16])>>>0; }
   for(i=0;i<input.length;i++){ if(c===128){ t+=c; compress(false); c=0; } blk[c++]=input[i]; }
   t+=c; while(c<128)blk[c++]=0; compress(true);
-  var out=new Uint8Array(32); for(i=0;i<32;i++)out[i]=(h[i>>2]>>>(8*(i&3)))&255;
+  var out=new Uint8Array(outlen); for(i=0;i<outlen;i++)out[i]=(h[i>>2]>>>(8*(i&3)))&255;
   return out;
 }
+
+function blake2b256(input){ return blake2bN(input,32); }
 
 /* ═══ CBOR ═══ */
 function cH(n,mt){ var t=mt<<5;
@@ -494,6 +547,9 @@ async function submitClaim(claim){
 
 
 
+/* ═══ blake2b-224 (policy ids) — same construction as blake2b256, outlen 28 ═══ */
+function blake2b224(input){ return blake2bN(input, 28); }
+
 /* ═══ byte-safe helpers ═══ */
 var ENC = new TextEncoder();
 function bytesOf(s){ return ENC.encode(s).length; }
@@ -512,23 +568,54 @@ function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
 function hexEnc(s){ return Array.prototype.map.call(ENC.encode(s),
   function(b){ return b.toString(16).padStart(2, "0"); }).join(""); }
 
-/* ═══ the book: resolve ?book= ($handle or addr1…) ═══ */
+/* ═══ views ═══ */
+function show(view){
+  ["landing", "bookpage", "mintpage"].forEach(function(v){
+    document.getElementById(v).classList.toggle("on", v === view);
+  });
+  window.scrollTo(0, 0);
+}
+
+/* ═══ resolve a book reference: $handle | addr1… | policy.Name | bare policy ═══ */
 var BOOK = { ref: "", addr: "", addrBytes: null };
+
+async function assetHolder(policy, nameHex){
+  var rows = await kapi(1, "/asset_addresses", { _asset_policy: policy, _asset_name: nameHex });
+  return (rows && rows[0] && rows[0].payment_address) || null;
+}
 
 async function resolveBook(ref){
   ref = (ref || "").trim();
-  if (!ref) throw new Error("empty book reference");
+  if (!ref) throw new Error("type a book reference first");
   if (ref[0] === "$") {
     var name = ref.slice(1).toLowerCase();
-    if (!/^[a-z0-9._-]{1,63}$/.test(name)) throw new Error("bad handle");
+    if (!/^[a-z0-9._-]{1,63}$/.test(name)) throw new Error("that doesn't look like a valid $handle");
     var names = ["000de140" + hexEnc(name), hexEnc(name)];   // CIP-68 first, legacy fallback
     for (var i = 0; i < names.length; i++) {
-      var rows = await kapi(1, "/asset_addresses",
-        { _asset_policy: HANDLE_POLICY, _asset_name: names[i] });
-      if (rows && rows[0] && rows[0].payment_address)
-        return { ref: "$" + name, addr: rows[0].payment_address };
+      var a = await assetHolder(HANDLE_POLICY, names[i]);
+      if (a) return { ref: "$" + name, addr: a };
     }
     throw new Error("handle " + ref + " not found on-chain");
+  }
+  var mAsset = ref.match(/^([0-9a-f]{56})\.(.+)$/i);
+  if (mAsset) {                                              // book NFT: policy.Name
+    var pol = mAsset[1].toLowerCase(), an = mAsset[2];
+    var tries = /^[0-9a-f]+$/i.test(an) && an.length % 2 === 0
+      ? [hexEnc(an), an.toLowerCase()] : [hexEnc(an)];
+    for (var j = 0; j < tries.length; j++) {
+      var h = await assetHolder(pol, tries[j]);
+      if (h) return { ref: "📖 " + an, addr: h };
+    }
+    throw new Error("book NFT not found under that policy");
+  }
+  if (/^[0-9a-f]{56}$/i.test(ref)) {                         // bare policy id
+    var assets = await kapi(1, "/policy_asset_list", { _asset_policy: ref.toLowerCase() });
+    if (!assets || !assets.length) throw new Error("no assets under that policy");
+    if (assets.length > 1) throw new Error("that policy has " + assets.length +
+      " assets — use policy.Name to pick the book");
+    var holder = await assetHolder(ref.toLowerCase(), assets[0].asset_name || "");
+    if (!holder) throw new Error("could not locate the NFT's wallet");
+    return { ref: "📖 " + (assets[0].asset_name_ascii || "book"), addr: holder };
   }
   var dec = b32decode(ref);                                  // throws on bad bech32
   if (dec.hrp !== "addr") throw new Error("not a mainnet address");
@@ -539,30 +626,61 @@ function setBookUi(){
   document.getElementById("bookref").textContent = BOOK.ref;
   document.getElementById("bookref2").textContent = BOOK.ref;
   document.getElementById("bookaddr").textContent = BOOK.addr;
-  document.getElementById("bookaddr2").textContent = BOOK.ref + " → " + BOOK.addr;
 }
 
-async function openBook(ref){
-  var st = document.getElementById("bookstatus");
+async function openBook(refRaw){
+  var err = document.getElementById("searcherr");
+  err.textContent = "";
   try {
-    st.textContent = "resolving " + ref + "…";
-    var r = await resolveBook(ref);
+    document.getElementById("searchgo").disabled = true;
+    var r = await resolveBook(refRaw);
     BOOK.ref = r.ref; BOOK.addr = r.addr;
     BOOK.addrBytes = b32decode(r.addr).bytes;
+    BOOK.linkRef = refRaw.trim();
     setBookUi();
     var url = new URL(location.href);
-    url.searchParams.set("book", ref);
+    url.searchParams.set("book", BOOK.linkRef);
     history.replaceState(null, "", url.pathname + "?" + url.searchParams.toString());
+    show("bookpage");
     await loadBook();
-  } catch (e) { st.textContent = String(e.message || e); }
+  } catch (e) {
+    err.textContent = String(e.message || e);
+    show("landing");
+  } finally { document.getElementById("searchgo").disabled = false; }
 }
 
-document.getElementById("bookgo").addEventListener("click", function(){
-  var v = document.getElementById("bookinput").value.trim();
-  if (v) openBook(v);
+document.getElementById("searchgo").addEventListener("click", function(){
+  openBook(document.getElementById("searchinput").value);
 });
-document.getElementById("bookinput").addEventListener("keydown", function(e){
-  if (e.key === "Enter") document.getElementById("bookgo").click();
+document.getElementById("searchinput").addEventListener("keydown", function(e){
+  if (e.key === "Enter") document.getElementById("searchgo").click();
+});
+document.querySelectorAll("#landing .hints span").forEach(function(s){
+  s.addEventListener("click", function(){
+    document.getElementById("searchinput").value = s.dataset.x;
+    openBook(s.dataset.x);
+  });
+});
+["backtosearch", "backtosearch2"].forEach(function(id){
+  document.getElementById(id).addEventListener("click", function(e){
+    e.preventDefault();
+    history.replaceState(null, "", location.pathname);
+    show("landing");
+  });
+});
+["navmint", "mintlink"].forEach(function(id){
+  document.getElementById(id).addEventListener("click", function(e){
+    e.preventDefault();
+    show("mintpage");
+  });
+});
+document.getElementById("sharebook").addEventListener("click", function(e){
+  e.preventDefault();
+  navigator.clipboard.writeText(READER_URL + "?book=" + encodeURIComponent(BOOK.linkRef)).then(function(){
+    var c = document.getElementById("shared");
+    c.style.display = "inline";
+    setTimeout(function(){ c.style.display = "none"; }, 1800);
+  });
 });
 
 /* ═══ sign panel ═══ */
@@ -619,6 +737,7 @@ async function loadBook(){
   var st = document.getElementById("bookstatus");
   var bookEl = document.getElementById("book"), emptyEl = document.getElementById("bookempty");
   st.textContent = "reading signatures out of the chain…";
+  bookEl.innerHTML = ""; emptyEl.style.display = "none";
   try {
     var txs = await kapi(1, "/address_txs", { _addresses: [BOOK.addr] });
     txs.sort(function(a, b){ return b.block_height - a.block_height; });
@@ -634,13 +753,11 @@ async function loadBook(){
                     m: Array.isArray(c.m) ? c.m.join("") : (c.m || "") });
       });
     }
-    bookEl.innerHTML = "";
     if (!sigs.length) {
       emptyEl.style.display = "";
       st.textContent = "0 signatures — the book of " + BOOK.ref + " is waiting for its first.";
       return;
     }
-    emptyEl.style.display = "none";
     sigs.forEach(function(s){ bookEl.appendChild(sigCard(s)); });
     st.textContent = sigs.length + " signature" + (sigs.length > 1 ? "s" : "") +
       " in the book of " + BOOK.ref + " — every one etched into Cardano forever";
@@ -658,7 +775,130 @@ async function loadBook(){
 }
 document.getElementById("bookrefresh").addEventListener("click", loadBook);
 
-openBook(new URLSearchParams(location.search).get("book") || DEFAULT_BOOK);
+/* ═══ mint a Ledger Book (CIP-25 NFT, sig-script policy of the minter's key) ═══ */
+var mnameEl = document.getElementById("mname");
+mnameEl.addEventListener("input", function(){
+  mnameEl.value = mnameEl.value.replace(/[^A-Za-z0-9 _-]/g, "").slice(0, 28);
+  document.getElementById("mnameb").textContent = mnameEl.value.length + " / 28 characters (A–Z a–z 0–9 space _ -)";
+});
+function mnote(html){ document.getElementById("mintnote").innerHTML = html; }
+
+// CBOR map → raw value spans per (uint) key; accepts a full tx (0x84 array) too
+function witSpans(raw){
+  if ((raw[0] >> 5) === 4) {                     // wallet returned a whole tx
+    var p = 1;                                   // 0x84 header
+    p = cborD(raw, p)[1];                        // skip body
+    var end = cborD(raw, p)[1];                  // witness set span
+    raw = raw.subarray(p, end);
+  }
+  if ((raw[0] >> 5) !== 5) throw new Error("unexpected witness encoding");
+  var b = raw[0] & 31, n, pos;
+  if (b < 24) { n = b; pos = 1; }
+  else if (b === 24) { n = raw[1]; pos = 2; }
+  else throw new Error("witness map too large");
+  var out = [];
+  for (var i = 0; i < n; i++) {
+    var k = cborD(raw, pos); var vStart = k[1]; var vEnd = cborD(raw, vStart)[1];
+    out.push({ key: k[0], span: raw.subarray(vStart, vEnd) });
+    pos = vEnd;
+  }
+  return out;
+}
+
+function encNftOut(addrB, coin, policyB, assetB){
+  return catB([cMp(2), cU(0), cBy(addrB),
+    cU(1), cAr(2), cU(coin),
+    cMp(1), cBy(policyB), cMp(1), cBy(assetB), cU(1)]);
+}
+function encMintBody(ins, changeB, changeCoin, fee, auxHash, nftOut, policyB, assetB){
+  return catB([cMp(5),
+    cU(0), cAr(ins.length)].concat(ins.map(encInput)).concat([
+    cU(1), cAr(2), nftOut, encPlainOut(changeB, changeCoin),
+    cU(2), cU(fee),
+    cU(7), cBy(auxHash),
+    cU(9), cMp(1), cBy(policyB), cMp(1), cBy(assetB), cU(1)]));
+}
+
+document.getElementById("mintbtn").addEventListener("click", async function(){
+  var display = mnameEl.value.trim();
+  if (!display) { mnote('<span class="bad">name your book first</span>'); return; }
+  var btn = this;
+  btn.disabled = true;
+  try {
+    mnote("connecting wallet…");
+    await connectWallet();
+    var changeB = hexB(await W.api.getChangeAddress());
+    if ((changeB[0] >> 4) & 1) throw new Error("script-based wallet — mint needs a key wallet");
+    var keyHash = changeB.subarray(1, 29);
+    var script = catB([u8([0x82, 0x00, 0x58, 0x1c]), keyHash]);      // [0, keyhash]
+    var policyB = blake2b224(catB([u8([0x00]), script]));
+    var policyHex = bHex(policyB);
+    var assetName = display.replace(/ /g, "_");
+    var assetB = ENC.encode(assetName);
+
+    // CIP-25 metadata (label 721)
+    var link = READER_URL + "?book=" + policyHex + "." + assetName;
+    var m721 = catB([cMp(1), cS(policyHex), cMp(1), cS(assetName), cMp(4),
+      cS("name"), cS(clampBytes(display + " — Ledger Book", 64)),
+      cS("Type"), cS("Ledger Book"),
+      cS("protocol"), cS(BOOK_ID),
+      cS("description"), (function(){
+        var lines = splitBytes("Sign my Ledger Book: " + link, 64);
+        return catB([cAr(lines.length)].concat(lines.map(cS)));
+      })()]);
+    var aux = catB([cTg(259), cMp(1), cU(721), m721]);
+    var auxHash = blake2b256(aux);
+
+    mnote("building the mint…");
+    var utxos = parseWalletUtxos(await W.api.getUtxos());
+    var minChange = minChangeCoin(changeB, W.params);
+    var nftCoin = 1000000;
+    for (var k = 0; k < 4; k++)
+      nftCoin = (160 + encNftOut(changeB, nftCoin, policyB, assetB).length) * W.params.cpb;
+    var pool = utxos.slice().sort(function(a, b){ return b.coin - a.coin; });
+    var ins = [], sum = 0, fee = 250000, body, size, newFee;
+    for (var round = 0; round < 40; round++) {
+      while (sum < nftCoin + fee + minChange && pool.length) { var x = pool.shift(); ins.push(x); sum += x.coin; }
+      if (sum < nftCoin + fee + minChange)
+        throw new Error("not enough spendable ADA (~" + ((nftCoin + fee + minChange) / 1e6).toFixed(2) + " needed; token UTxOs are never touched)");
+      var nWit = 1 + new Set(ins.map(function(i){ return i.addrHex; })).size;
+      body = encMintBody(ins, changeB, sum - nftCoin - fee, fee, auxHash,
+                         encNftOut(changeB, nftCoin, policyB, assetB), policyB, assetB);
+      size = 3 + body.length + dummyWitLen(nWit) + script.length + 6 + aux.length;
+      newFee = Math.ceil(W.params.a * size + W.params.b) + 220;
+      if (newFee <= fee) { fee = newFee; break; }
+      fee = Math.max(fee, newFee);
+    }
+    body = encMintBody(ins, changeB, sum - nftCoin - fee, fee, auxHash,
+                       encNftOut(changeB, nftCoin, policyB, assetB), policyB, assetB);
+    var unsigned = catB([u8([0x84]), body, cMp(0), u8([0xf5]), aux]);
+    mnote("check the wallet window — you are minting 1 “" + esc(assetName) + "” to yourself…");
+    var witHex = await W.api.signTx(bHex(unsigned), true);
+    var spans = witSpans(hexB(witHex)).filter(function(e){ return e.key !== 1; });
+    var parts = [cMp(spans.length + 1)];
+    spans.forEach(function(e){ parts.push(cU(e.key)); parts.push(e.span); });
+    parts.push(cU(1)); parts.push(cAr(1)); parts.push(script);
+    var finalWit = catB(parts);
+    var signed = catB([u8([0x84]), body, finalWit, u8([0xf5]), aux]);
+    var txid = bHex(blake2b256(body));
+    var wid = await W.api.submitTx(bHex(signed));
+    txid = (typeof wid === "string" && /^[0-9a-f]{64}$/i.test(wid)) ? wid.toLowerCase() : txid;
+    mnote('<span class="ok">Minted.</span> tx ' + txid.slice(0, 16) + "…");
+    document.getElementById("mintlinkout").textContent = link;
+    document.getElementById("mintresult").style.display = "block";
+    document.getElementById("mintcopy").onclick = function(){ navigator.clipboard.writeText(link); };
+    document.getElementById("mintopen").onclick = function(){
+      openBook(policyHex + "." + assetName);
+    };
+  } catch (e) {
+    mnote('<span class="bad">' + esc(String(e.message || e)) + "</span>");
+    btn.disabled = false;
+  }
+});
+
+/* ═══ boot: deep link or landing ═══ */
+var qBook = new URLSearchParams(location.search).get("book");
+if (qBook) openBook(qBook); else show("landing");
 </script>
 </body>
 </html>
