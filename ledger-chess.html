@@ -123,11 +123,21 @@ footer.site .mono{font-size:11.5px;word-break:break-all}
       <span class="badge"><b>✓</b> no server can take it down</span>
       <span class="badge"><b>✓</b> deterministic engine = immortal referee</span>
     </div>
+    <div class="badges">
+      <span class="badge">🖥 desktop experience — mobile can watch the proof, not play (yet)</span>
+      <span class="badge">👛 victory etching supports the <b style="color:var(--amber)">Eternl</b> wallet</span>
+    </div>
     <a class="cta" href="#play">Play it — it's free</a>
   </div>
 </div>
 
 <div class="cabinet" id="play">
+  <div id="mobilenote" style="display:none;background:var(--amber-soft);border:1px solid var(--line-2);
+       border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:12px;font-size:14px;color:var(--ink-2)">
+    📱 <b>You're on a phone.</b> Ledger Chess is a desktop experience for now — the board below
+    won't be comfortably playable on a small screen. The trust log still runs, so you can watch
+    your phone pull the game out of Cardano and prove it. Come back on a computer to play and etch.
+  </div>
   <div id="gamewrap">
     <div id="trust"></div>
     <iframe id="gameframe" sandbox="allow-scripts" title="Ledger Chess (verified on-chain scroll)"></iframe>
@@ -189,6 +199,11 @@ footer.site .mono{font-size:11.5px;word-break:break-all}
       <div id="lbempty" style="color:var(--muted);font-size:14.5px">No etched victories yet — the wall is waiting for its first name.</div>
     </div>
     <p style="margin-top:10px"><button class="small" id="lbrefresh">↻ refresh from chain</button></p>
+    <p style="margin-top:14px;font-size:13.5px;color:var(--muted)">
+      <b>Requirements for etching:</b> a desktop browser with the
+      <a href="https://eternl.io" target="_blank" rel="noopener">Eternl</a> wallet extension and ~2.2 ADA.
+      Eternl is the only officially supported wallet — others implementing CIP-30 may work, but are
+      untested and unsupported. Playing needs nothing at all: no wallet, no account, no ADA.</p>
   </div>
 </section>
 
@@ -672,6 +687,9 @@ boot();
 
 /* ═══ site-page extras ═══ */
 document.getElementById("ptrline").textContent = GAME_POINTER[1];
+if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints > 1 && Math.min(screen.width, screen.height) < 900))
+  document.getElementById("mobilenote").style.display = "block";
 document.getElementById("copylink").addEventListener("click", function(){
   navigator.clipboard.writeText("https://beacnpool.github.io/ledger-scrolls/ledger-chess.html").then(function(){
     var c=document.getElementById("copied"); c.style.display="inline";
