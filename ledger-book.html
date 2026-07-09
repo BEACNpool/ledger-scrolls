@@ -601,6 +601,13 @@ async function submitClaim(claim){
 /* ═══ blake2b-224 (policy ids) — same construction as blake2b256, outlen 28 ═══ */
 function blake2b224(input){ return blake2bN(input, 28); }
 
+/* CIP-30 APIError is a plain {code, info} object — String() gives "[object Object]" */
+function errText(e){
+  if (e && (e.info || e.message)) return String(e.info || e.message);
+  if (typeof e === "object") { try { return JSON.stringify(e); } catch (x) { void x; } }
+  return String(e);
+}
+
 /* ═══ byte-safe helpers ═══ */
 var ENC = new TextEncoder();
 function bytesOf(s){ return ENC.encode(s).length; }
@@ -811,7 +818,7 @@ async function openBook(refRaw){
     show("bookpage");
     await loadBook();
   } catch (e) {
-    err.textContent = String(e.message || e);
+    err.textContent = errText(e);
     show("landing");
   } finally { document.getElementById("searchgo").disabled = false; }
 }
@@ -877,7 +884,7 @@ document.getElementById("signbtn").addEventListener("click", async function(){
     note('<span class="ok">Signed forever.</span> tx <a target="_blank" rel="noopener" href="https://cardanoscan.io/transaction/' +
          txHash + '">' + txHash.slice(0, 16) + '…</a> — it will appear in the book once the chain confirms (1–2 min).');
   } catch (e) {
-    note('<span class="bad">' + esc(String(e.message || e)) + "</span>");
+    note('<span class="bad">' + esc(errText(e)) + "</span>");
     btn.disabled = false;
   }
 });
@@ -945,7 +952,7 @@ async function loadBook(){
         bookEl.innerHTML = "";
         sigs.forEach(function(x){ bookEl.appendChild(sigCard(x)); });
       }).catch(function(){});
-  } catch (e) { st.textContent = "couldn't open the book: " + (e.message || e); }
+  } catch (e) { st.textContent = "couldn't open the book: " + errText(e); }
 }
 document.getElementById("bookrefresh").addEventListener("click", loadBook);
 
@@ -1062,7 +1069,7 @@ document.getElementById("mintbtn").addEventListener("click", async function(){
         var lines = splitBytes("Sign my Ledger Book: " + link, 64);
         return catB([cAr(lines.length)].concat(lines.map(cS)));
       })()]);
-    var aux = catB([cTg(259), cMp(1), cU(721), m721]);
+    var aux = catB([cTg(259), cMp(1), cU(0), cMp(1), cU(721), m721]);   // tag 259 { 0: { 721: … } }
     var auxHash = blake2b256(aux);
 
     mnote("building the mint…");
@@ -1114,7 +1121,7 @@ document.getElementById("mintbtn").addEventListener("click", async function(){
       openBook(policyHex + "." + assetName);
     };
   } catch (e) {
-    mnote('<span class="bad">' + esc(String(e.message || e)) + "</span>");
+    mnote('<span class="bad">' + esc(errText(e)) + "</span>");
     btn.disabled = false;
   }
 });
