@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Ledger Yearbook — earn your line on Cardano</title>
+<meta name="description" content="A one-thumb pulse game. Beat the qualifier, then spend ~2 ADA to sign the on-chain yearbook forever. Replay-verified scores — fake metadata fails the wall.">
+<meta name="theme-color" content="#0b0f1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Yearbook">
+<meta property="og:title" content="Ledger Yearbook — earn your line on Cardano">
+<meta property="og:description" content="Play free. Qualify. Sign the book with ~2 ADA. Your name, score, and message live on Cardano forever.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://beacnpool.github.io/ledger-scrolls/yearbook.html">
+<meta property="og:image" content="https://beacnpool.github.io/ledger-scrolls/media/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg">
+<link rel="manifest" href="yearbook-manifest.webmanifest">
+<style>
+:root{
+  --bg:#0b0f1a; --panel:#121826; --edge:#1e2a3d; --ink:#e8eef8; --dim:#7d8da6;
+  --accent:#3d6bff; --gold:#f0c14b; --ok:#3dd68c; --bad:#ff6b7a; --pink:#ff4d8d;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  overscroll-behavior:none;user-select:none;-webkit-user-select:none}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--sans);
+  min-height:100dvh;display:flex;flex-direction:column}
+a{color:var(--accent)}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:calc(10px + var(--safe-t)) 14px 10px;border-bottom:1px solid var(--edge);
+  background:rgba(11,15,26,.92);backdrop-filter:blur(10px);position:sticky;top:0;z-index:20}
+.topbar .brand{font-weight:800;letter-spacing:.02em}
+.topbar .brand span{color:var(--gold);font-weight:600;font-size:12px;display:block;letter-spacing:.14em;text-transform:uppercase}
+.topbar a.ghost{color:var(--dim);font-size:13px;text-decoration:none;padding:8px 10px}
+.stage{flex:1;display:flex;flex-direction:column;min-height:0}
+
+/* screens */
+.screen{display:none;flex:1;flex-direction:column;min-height:0;padding:16px 16px calc(20px + var(--safe-b))}
+.screen.on{display:flex}
+.hero-copy{text-align:center;padding:8px 4px 16px}
+.hero-copy h1{font-size:clamp(28px,7vw,40px);line-height:1.1;margin-bottom:8px}
+.hero-copy p{color:var(--dim);font-size:15px;max-width:34ch;margin:0 auto}
+.badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0}
+.badge{font:12px var(--mono);border:1px solid var(--edge);border-radius:999px;padding:6px 12px;color:var(--dim)}
+.badge b{color:var(--ok)}
+.cta{display:block;width:100%;max-width:360px;margin:10px auto 0;min-height:54px;border-radius:999px;
+  background:linear-gradient(135deg,var(--accent),#7a3dff);color:#fff;font-weight:800;font-size:17px}
+.cta.gold{background:linear-gradient(135deg,var(--gold),#ff8a3d);color:#1a1205}
+.cta:disabled{opacity:.45}
+.cta.ghost{background:transparent;border:1px solid var(--edge);color:var(--ink);font-weight:600}
+.fine{text-align:center;font-size:12.5px;color:var(--dim);margin-top:12px;max-width:40ch;margin-left:auto;margin-right:auto}
+.fine strong{color:var(--ink)}
+
+/* play arena */
+#arena{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;min-height:320px;margin:0 -4px}
+.hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;
+  padding:4px 8px;font:700 14px var(--mono);z-index:2}
+.hud .combo{color:var(--gold)}
+.hud .lives{color:var(--bad);letter-spacing:.15em}
+.ring-wrap{position:relative;width:min(78vw,340px);aspect-ratio:1;display:grid;place-items:center}
+.ring-target{position:absolute;inset:18%;border:3px solid rgba(240,193,75,.35);border-radius:50%}
+.ring-pulse{position:absolute;border-radius:50%;border:3px solid var(--accent);
+  width:20%;height:20%;opacity:0;pointer-events:none}
+.ring-pulse.go{animation:none}
+.hit-flash{position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0}
+.tap-zone{position:absolute;inset:0;border-radius:50%;cursor:pointer;
+  background:radial-gradient(circle at 50% 45%,rgba(61,107,255,.12),transparent 60%)}
+.center-score{font:800 clamp(40px,12vw,64px)/1 var(--sans);z-index:1;pointer-events:none}
+.center-sub{position:absolute;bottom:22%;font:600 13px var(--mono);color:var(--dim);z-index:1;pointer-events:none}
+.play-hint{text-align:center;color:var(--dim);font-size:14px;margin-top:12px;min-height:1.4em}
+
+/* result / sign sheet */
+.sheet{margin-top:auto;background:var(--panel);border:1px solid var(--edge);border-radius:18px 18px 0 0;
+  padding:16px 16px calc(16px + var(--safe-b));box-shadow:0 -12px 40px rgba(0,0,0,.4)}
+.sheet h2{font-size:22px;margin-bottom:6px}
+.sheet .big{font:800 42px/1 var(--sans);color:var(--gold);margin:8px 0}
+.sheet p{color:var(--dim);font-size:14px;margin-bottom:10px}
+.sheet label{display:block;font-size:12px;color:var(--dim);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.08em}
+.sheet input,.sheet textarea{width:100%;background:#0b0f1a;border:1px solid var(--edge);border-radius:10px;
+  color:var(--ink);padding:12px;font:16px var(--sans)} /* 16px avoids iOS zoom */
+.sheet textarea{resize:none;min-height:64px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.row .cta{margin:0;flex:1;min-width:120px}
+#signnote{font:13px var(--mono);color:var(--dim);margin-top:10px;min-height:1.3em;word-break:break-all}
+#signnote.ok{color:var(--ok)} #signnote.bad{color:var(--bad)}
+
+/* yearbook wall */
+.wall{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px}
+.wall-card{background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:14px;margin-bottom:10px}
+.wall-card .who{font:600 12px var(--mono);color:var(--dim);word-break:break-all}
+.wall-card .score{font:800 28px/1 var(--sans);color:var(--gold);margin:6px 0}
+.wall-card .msg{font-size:15px;color:var(--ink)}
+.wall-card .meta{font:12px var(--mono);color:var(--dim);margin-top:8px}
+.wall-card .v-ok{color:var(--ok);font-weight:700}
+.wall-card .v-bad{color:var(--bad)}
+.tabs{display:flex;gap:6px;margin:8px 0 14px}
+.tabs button{flex:1;min-height:42px;border-radius:999px;border:1px solid var(--edge);color:var(--dim);font-weight:600}
+.tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.honest{background:rgba(240,193,75,.08);border:1px solid rgba(240,193,75,.25);border-radius:12px;
+  padding:12px 14px;font-size:13px;color:var(--dim);margin:12px 0}
+.honest b{color:var(--gold)}
+
+@media (min-width:820px){
+  body{align-items:center}
+  .stage{width:100%;max-width:480px;border-left:1px solid var(--edge);border-right:1px solid var(--edge);
+    min-height:100dvh;box-shadow:0 0 80px rgba(61,107,255,.08)}
+  .topbar{width:100%;max-width:480px}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">📒 Yearbook<span>Ledger Scrolls</span></div>
+  <div>
+    <a class="ghost" href="index.html">Library</a>
+    <a class="ghost" href="#wall" id="nav-wall">Wall</a>
+  </div>
+</header>
+
+<main class="stage">
+  <!-- HOME -->
+  <section class="screen on" id="sc-home">
+    <div class="hero-copy">
+      <h1>Earn your line<br>on the chain.</h1>
+      <p>One thumb. Pulse timing. Hit the qualifier, then spend ~2&nbsp;ADA to <b>sign the yearbook</b> forever.</p>
+    </div>
+    <div class="badges">
+      <span class="badge"><b>Free</b> to play</span>
+      <span class="badge"><b>~2 ADA</b> to sign</span>
+      <span class="badge"><b>Replay-verified</b> scores</span>
+    </div>
+    <button class="cta" id="btn-play" type="button">Play — it's free</button>
+    <button class="cta ghost" id="btn-wall" type="button">View the yearbook wall</button>
+    <p class="fine">No account. No server scoreboard. Qualifying runs are checked from your <strong>seed + taps</strong> before a name appears on the wall.</p>
+    <div class="honest">
+      <b>About fakes:</b> Anyone can post metadata — but the wall <b>replays</b> each claim. If the taps don't produce that score from that seed, it shows ✗. This stops casual bragging edits; it is not a bank vault. Proud scores still get the social flex.
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section class="screen" id="sc-play">
+    <div id="arena">
+      <div class="hud">
+        <div>SCORE <span id="hud-score">0</span></div>
+        <div class="combo">×<span id="hud-combo">1</span></div>
+        <div class="lives" id="hud-lives">♥♥♥</div>
+      </div>
+      <div class="ring-wrap" id="ringwrap">
+        <div class="ring-target"></div>
+        <div class="ring-pulse" id="pulse"></div>
+        <div class="hit-flash" id="flash"></div>
+        <div class="tap-zone" id="tapzone" role="button" aria-label="Tap on the beat"></div>
+        <div class="center-score" id="center">GO</div>
+        <div class="center-sub" id="centersub">tap the pulse</div>
+      </div>
+      <div class="play-hint" id="playhint">Tap when the ring hits the gold zone</div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="cta ghost" type="button" id="btn-quit">Quit</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="sc-result">
+    <div class="sheet" style="border-radius:18px;margin:auto 0;max-width:420px;width:100%">
+      <h2 id="result-title">Run over</h2>
+      <div class="big" id="result-score">0</div>
+      <p id="result-blurb">Play again or try for the yearbook.</p>
+      <div id="qualify-box" hidden>
+        <p style="color:var(--ok);font-weight:700">✓ You qualified to sign the yearbook.</p>
+        <label for="yb-msg">Your line (optional, 64 bytes)</label>
+        <textarea id="yb-msg" maxlength="80" placeholder="Class of forever — say something true"></textarea>
+        <div class="fine" id="yb-count" style="text-align:right;margin:4px 0 0">0 / 64</div>
+        <button class="cta gold" type="button" id="btn-sign">Sign the yearbook (~2 ADA)</button>
+        <div id="signnote"></div>
+        <p class="fine" style="margin-top:10px">Use <b>Eternl</b> (extension or mobile dApp browser). Same always-fail vault as Ledger Chess — nobody pockets the ADA.</p>
+      </div>
+      <div class="row">
+        <button class="cta" type="button" id="btn-again">Play again</button>
+        <button class="cta ghost" type="button" id="btn-to-wall">Yearbook wall</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- WALL -->
+  <section class="screen" id="sc-wall">
+    <h2 style="font-size:22px;margin-bottom:4px">The yearbook wall</h2>
+    <p class="fine" style="text-align:left;margin:0 0 8px;max-width:none">On-chain signatures, newest first. Every ✓ was replayed from seed + taps in your browser.</p>
+    <div class="tabs">
+      <button type="button" class="on" data-filter="all">All</button>
+      <button type="button" data-filter="ok">Verified only</button>
+    </div>
+    <div id="wallstatus" class="fine" style="text-align:left;margin:0 0 10px">Loading…</div>
+    <div class="wall" id="wall"></div>
+    <div class="row">
+      <button class="cta ghost" type="button" id="btn-refresh">↻ Refresh from chain</button>
+      <button class="cta" type="button" id="btn-play2">Play</button>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+/* ═══════════════════════════════════════════════════════════════
+   Ledger Yearbook — viral pulse game + on-chain yearbook claims
+   Claim pattern mirrors ledger-chess (CIP-30, always-fail 2 ADA,
+   metadata label, address scan + local replay verify).
+   ═══════════════════════════════════════════════════════════════ */
+var GAME_ID = "ledger-yearbook-v1";
+var CLAIM_LABEL = "22032";
+var CLAIM_LOVELACE = 2000000;
+var QUALIFY_SCORE = 400;          // proud but reachable
+var MAX_TAPS = 48;                // keep claim metadata small
+var MAX_MISSES = 3;
+var GAME_VERSION = 1;
+
+/* ── tiny CBOR / bech32 / crypto (same family as calculator + chess) ── */
+var u8 = function(a){ return Uint8Array.from(a); };
+var hexB = function(h){ h=String(h).replace(/^0x/i,""); var o=new Uint8Array(h.length/2);
+  for(var i=0;i<o.length;i++) o[i]=parseInt(h.substr(i*2,2),16); return o; };
+var bHex = function(b){ return Array.prototype.map.call(b,function(x){return x.toString(16).padStart(2,"0");}).join(""); };
+var catB = function(parts){ var n=0,i; for(i=0;i<parts.length;i++) n+=parts[i].length;
+  var o=new Uint8Array(n),off=0; for(i=0;i<parts.length;i++){ o.set(parts[i],off); off+=parts[i].length; } return o; };
+function cH(n,mt){ var t=mt<<5;
+  if(n<24) return u8([t|n]);
+  if(n<256) return u8([t|24,n]);
+  if(n<65536) return u8([t|25,n>>>8,n&255]);
+  return u8([t|26,(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255]); }
+var cU=function(n){ return cH(n,0); };
+var cBy=function(b){ return catB([cH(b.length,2),b]); };
+var cS=function(s){ var b=new TextEncoder().encode(s); return catB([cH(b.length,3),b]); };
+var cAr=function(n){ return cH(n,4); };
+var cMp=function(n){ return cH(n,5); };
+var cTg=function(n){ return cH(n,6); };
+function cborD(raw,pos){ pos=pos||0;
+  var len=function(ai,p){ if(ai<24)return[ai,p]; var w={24:1,25:2,26:4,27:8}[ai]; if(!w)throw new Error("cbor");
+    var n=0,i; for(i=0;i<w;i++)n=n*256+raw[p+i]; return[n,p+w]; };
+  var mt=raw[pos]>>>5, ai=raw[pos]&31;
+  if(mt===0) return len(ai,pos+1);
+  if(mt===1){ var u=len(ai,pos+1); return[-1-u[0],u[1]]; }
+  if(mt===2||mt===3){ var L=len(ai,pos+1),v=raw.subarray(L[1],L[1]+L[0]);
+    return[mt===2?v:new TextDecoder().decode(v),L[1]+L[0]]; }
+  if(mt===4){ var n=len(ai,pos+1),o=[],p=n[1],i,x; for(i=0;i<n[0];i++){ x=cborD(raw,p); o.push(x[0]); p=x[1]; } return[o,p]; }
+  if(mt===5){ var m=new Map(),nn=len(ai,pos+1),pp=nn[1],j,k,vv;
+    for(j=0;j<nn[0];j++){ k=cborD(raw,pp); vv=cborD(raw,k[1]); m.set(k[0],vv[0]); pp=vv[1]; } return[m,pp]; }
+  if(mt===6){ var tg=len(ai,pos+1), val=cborD(raw,tg[1]); return[{tag:tg[0],value:val[0]},val[1]]; }
+  if(mt===7){ if(ai===20)return[false,pos+1]; if(ai===21)return[true,pos+1]; if(ai===22)return[null,pos+1];
+    var z=len(ai,pos+1); return[z[0],z[1]]; }
+  throw new Error("cbor mt "+mt);
+}
+var B32C="qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+function b32polymod(vals){ var G=[0x3b6a57b2,0x26508e6d,0x1ea119fa,0x3d4233dd,0x2a1462b3],chk=1,v,b,i,j;
+  for(j=0;j<vals.length;j++){ v=vals[j]; b=chk>>>25; chk=((chk&0x1ffffff)<<5)^v; for(i=0;i<5;i++) if((b>>>i)&1) chk^=G[i]; } return chk; }
+function b32hrpx(hrp){ var r=[],i; for(i=0;i<hrp.length;i++)r.push(hrp.charCodeAt(i)>>>5); r.push(0);
+  for(i=0;i<hrp.length;i++)r.push(hrp.charCodeAt(i)&31); return r; }
+function b32decode(s){ s=s.toLowerCase(); var pos=s.lastIndexOf("1"),hrp=s.slice(0,pos);
+  var data=s.slice(pos+1).split("").map(function(c){return B32C.indexOf(c);});
+  if(data.indexOf(-1)>=0||b32polymod(b32hrpx(hrp).concat(data))!==1) throw new Error("bad bech32");
+  var d5=data.slice(0,-6),acc=0,bits=0,out=[],i;
+  for(i=0;i<d5.length;i++){ acc=(acc<<5)|d5[i]; bits+=5; if(bits>=8){ bits-=8; out.push((acc>>>bits)&255); } }
+  return {hrp:hrp,bytes:new Uint8Array(out)}; }
+function b32encode(hrp,bytes){ var acc=0,bits=0,d5=[],i,b;
+  for(i=0;i<bytes.length;i++){ b=bytes[i]; acc=(acc<<8)|b; bits+=8; while(bits>=5){ bits-=5; d5.push((acc>>>bits)&31); } }
+  if(bits>0) d5.push((acc<<(5-bits))&31);
+  var chkv=b32hrpx(hrp).concat(d5).concat([0,0,0,0,0,0]), mod=b32polymod(chkv)^1,chk=[],p;
+  for(p=0;p<6;p++) chk.push((mod>>>(5*(5-p)))&31);
+  return hrp+"1"+d5.concat(chk).map(function(i){return B32C[i];}).join(""); }
+var B2IV=new Uint32Array([0xf3bcc908,0x6a09e667,0x84caa73b,0xbb67ae85,0xfe94f82b,0x3c6ef372,0x5f1d36f1,0xa54ff53a,0xade682d1,0x510e527f,0x2b3e6c1f,0x9b05688c,0xfb41bd6b,0x1f83d9ab,0x137e2179,0x5be0cd19]);
+var B2S=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,10,4,8,9,15,13,6,1,12,0,2,11,7,5,3,11,8,12,0,5,2,15,13,10,14,3,6,7,1,9,4,7,9,3,1,13,12,11,14,2,6,5,10,4,0,15,8,9,0,5,7,2,4,10,15,14,1,11,12,6,8,3,13,2,12,6,10,0,11,8,3,4,13,7,5,15,14,1,9,12,5,1,15,14,13,4,10,0,7,6,3,9,2,8,11,13,11,7,14,12,1,3,9,5,0,15,4,8,6,2,10,6,15,14,9,11,3,0,8,12,2,13,7,1,4,10,5,10,2,8,4,7,6,1,5,15,11,9,14,3,12,13,0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,10,4,8,9,15,13,6,1,12,0,2,11,7,5,3].map(function(x){return x*2;});
+function blake2b256(input){
+  var v=new Uint32Array(32),m=new Uint32Array(32);
+  var A=function(a,b){ var o0=v[a]+v[b],o1=v[a+1]+v[b+1]; if(o0>=0x100000000)o1++; v[a]=o0>>>0; v[a+1]=o1>>>0; };
+  var AC=function(a,b0,b1){ var o0=v[a]+b0; if(b0<0)o0+=0x100000000; var o1=v[a+1]+b1; if(o0>=0x100000000)o1++; v[a]=o0>>>0; v[a+1]=o1>>>0; };
+  var G=function(a,b,c,d,ix,iy){ var x0=m[ix],x1=m[ix+1],y0=m[iy],y1=m[iy+1],x;
+    A(a,b); AC(a,x0,x1); x=v[d]^v[a]; var x2=v[d+1]^v[a+1]; v[d]=x2; v[d+1]=x;
+    A(c,d); x=v[b]^v[c]; var x3=v[b+1]^v[c+1]; v[b]=((x>>>24)^(x3<<8))>>>0; v[b+1]=((x3>>>24)^(x<<8))>>>0;
+    A(a,b); AC(a,y0,y1); x=v[d]^v[a]; var x4=v[d+1]^v[a+1]; v[d]=((x>>>16)^(x4<<16))>>>0; v[d+1]=((x4>>>16)^(x<<16))>>>0;
+    A(c,d); x=v[b]^v[c]; var x5=v[b+1]^v[c+1]; v[b]=((x5>>>31)^(x<<1))>>>0; v[b+1]=((x>>>31)^(x5<<1))>>>0; };
+  var h=new Uint32Array(16),i; for(i=0;i<16;i++)h[i]=B2IV[i]; h[0]^=0x01010000^32;
+  var blk=new Uint8Array(128),t=0,c=0;
+  var compress=function(last){ var i;
+    for(i=0;i<16;i++){ v[i]=h[i]; v[i+16]=B2IV[i]; }
+    v[24]=(v[24]^t)>>>0; v[25]=(v[25]^(t/0x100000000))>>>0;
+    if(last){ v[28]=~v[28]>>>0; v[29]=~v[29]>>>0; }
+    for(i=0;i<32;i++) m[i]=(blk[4*i]^(blk[4*i+1]<<8)^(blk[4*i+2]<<16)^(blk[4*i+3]<<24))>>>0;
+    for(i=0;i<12;i++){
+      G(0,8,16,24,B2S[i*16+0],B2S[i*16+1]); G(2,10,18,26,B2S[i*16+2],B2S[i*16+3]);
+      G(4,12,20,28,B2S[i*16+4],B2S[i*16+5]); G(6,14,22,30,B2S[i*16+6],B2S[i*16+7]);
+      G(0,10,20,30,B2S[i*16+8],B2S[i*16+9]); G(2,12,22,24,B2S[i*16+10],B2S[i*16+11]);
+      G(4,14,16,26,B2S[i*16+12],B2S[i*16+13]); G(6,8,18,28,B2S[i*16+14],B2S[i*16+15]); }
+    for(i=0;i<16;i++) h[i]=(h[i]^v[i]^v[i+16])>>>0; };
+  for(i=0;i<input.length;i++){ if(c===128){ t+=c; compress(false); c=0; } blk[c++]=input[i]; }
+  t+=c; while(c<128) blk[c++]=0; compress(true);
+  var out=new Uint8Array(32); for(i=0;i<32;i++) out[i]=(h[i>>2]>>>(8*(i&3)))&255; return out;
+}
+
+var LOCK_MAINNET="addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn";
+var SCRIPT_HASH=b32decode(LOCK_MAINNET).bytes.subarray(1);
+var NETS={
+  1:{ name:"MAINNET", lockBech:LOCK_MAINNET, lockBytes:b32decode(LOCK_MAINNET).bytes,
+      koios:["https://koios.beacn.workers.dev/api/v1","https://api.koios.rest/api/v1"],
+      scan:"https://cardanoscan.io/transaction/" },
+  0:{ name:"PREVIEW", lockBech:b32encode("addr_test",catB([u8([0x70]),SCRIPT_HASH])),
+      lockBytes:catB([u8([0x70]),SCRIPT_HASH]),
+      koios:["https://koios.beacn.workers.dev/preview/api/v1","https://preview.koios.rest/api/v1"],
+      scan:"https://preview.cardanoscan.io/transaction/" }
+};
+
+async function kapi(net,path,body){
+  var bases=NETS[net].koios, last,i;
+  for(i=0;i<bases.length;i++){
+    try{
+      var r=await fetch(bases[i]+path,{method:body?"POST":"GET",
+        headers:body?{"Content-Type":"application/json"}:{},
+        body:body?JSON.stringify(body):undefined, signal:AbortSignal.timeout(15000)});
+      if(r.ok) return await r.json();
+      last=new Error("HTTP "+r.status);
+    }catch(e){ last=e; }
+  }
+  throw last||new Error("chain API unreachable");
+}
+
+/* ── deterministic game core (shared by play + verify) ── */
+function mulberry32(a){
+  return function(){ var t=a+=0x6D2B79F5; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61);
+    return ((t^t>>>14)>>>0)/4294967296; };
+}
+function seedFromBytes(b){ // first 4 bytes as uint32
+  return ((b[0]<<24)|(b[1]<<16)|(b[2]<<8)|b[3])>>>0;
+}
+function newSeedHex(){
+  var b=new Uint8Array(8); crypto.getRandomValues(b); return bHex(b);
+}
+/** Build beat schedule from seed. Pure function — verifier uses the same path. */
+function buildBeats(seedHex){
+  var seed=seedFromBytes(hexB(seedHex));
+  var rng=mulberry32(seed);
+  var beats=[], t=700, i, interval, window;
+  for(i=0;i<MAX_TAPS+8;i++){
+    interval=Math.round(880 - Math.min(420, i*11) + rng()*160);
+    t+=interval;
+    window=Math.max(85, Math.round(175 - i*1.8));
+    beats.push({ t:t, window:window });
+  }
+  return beats;
+}
+/**
+ * Replay taps against seed. taps = sorted array of ms from run start.
+ * Returns { score, comboMax, hits, misses, okReason? }
+ */
+function scoreRun(seedHex, taps){
+  if(!/^[0-9a-f]{16}$/i.test(seedHex)) return { score:0, hits:0, misses:99, why:"bad seed" };
+  if(!Array.isArray(taps)) return { score:0, hits:0, misses:99, why:"bad taps" };
+  var beats=buildBeats(seedHex);
+  var ti=0, bi=0, score=0, combo=0, comboMax=0, hits=0, misses=0;
+  var used=new Array(beats.length); // mark consumed beats
+  // normalize taps
+  var T=taps.map(function(x){ return x|0; }).filter(function(x){ return x>=0 && x<120000; });
+  T.sort(function(a,b){ return a-b; });
+  if(T.length>MAX_TAPS) return { score:0, hits:0, misses:99, why:"too many taps" };
+
+  // Process in time order: for each beat, see if a tap falls in window before miss
+  var events=[];
+  for(bi=0;bi<beats.length;bi++){
+    events.push({ kind:"beat", t:beats[bi].t + beats[bi].window, bi:bi });
+  }
+  for(ti=0;ti<T.length;ti++) events.push({ kind:"tap", t:T[ti], ti:ti });
+  events.sort(function(a,b){ return a.t-b.t || (a.kind==="tap"?-1:1); });
+
+  var tapIdx=0;
+  var openBeat=-1;
+  // Better approach: sequential — walk beats in order; for each beat find best unused tap in window
+  var tapUsed=new Array(T.length);
+  for(bi=0;bi<beats.length;bi++){
+    if(misses>=MAX_MISSES) break;
+    var b=beats[bi], best=-1, bestAbs=1e9, j, dt, abs;
+    for(j=0;j<T.length;j++){
+      if(tapUsed[j]) continue;
+      dt=T[j]-b.t; abs=dt<0?-dt:dt;
+      if(abs<=b.window && abs<bestAbs){ bestAbs=abs; best=j; }
+      if(T[j] > b.t + b.window) break;
+    }
+    if(best<0){
+      misses++;
+      combo=0;
+      continue;
+    }
+    tapUsed[best]=true;
+    hits++;
+    if(bestAbs<=40){ score+=100 + combo*12; combo++; }
+    else if(bestAbs<=90){ score+=60 + combo*6; combo++; }
+    else { score+=30 + combo*2; combo++; }
+    if(combo>comboMax) comboMax=combo;
+  }
+  // extra taps that never matched don't add score (anti-spam)
+  return { score:score|0, hits:hits, misses:misses, comboMax:comboMax };
+}
+
+function verifyClaim(c){
+  try{
+    if(!c || c.g!==GAME_ID) return { ok:false, why:"wrong game" };
+    if((c.v|0)!==GAME_VERSION) return { ok:false, why:"bad version" };
+    if(typeof c.seed!=="string" || !/^[0-9a-f]{16}$/i.test(c.seed)) return { ok:false, why:"bad seed" };
+    if(!Array.isArray(c.taps)) return { ok:false, why:"no taps" };
+    var claimed=c.score|0;
+    if(claimed < QUALIFY_SCORE) return { ok:false, why:"below qualify" };
+    var r=scoreRun(c.seed.toLowerCase(), c.taps);
+    if(r.why) return { ok:false, why:r.why };
+    if(r.score !== claimed) return { ok:false, why:"score mismatch (replay "+r.score+" ≠ claim "+claimed+")" };
+    if(r.misses > MAX_MISSES) return { ok:false, why:"too many misses" };
+    return { ok:true, score:r.score, hits:r.hits };
+  }catch(e){ return { ok:false, why:String(e.message||e) }; }
+}
+
+/* ── live play state ── */
+var G=null; // { seed, beats, taps, score, combo, misses, start, bi, raf, last }
+var $ = function(id){ return document.getElementById(id); };
+function show(id){
+  ["sc-home","sc-play","sc-result","sc-wall"].forEach(function(s){
+    $(s).classList.toggle("on", s===id);
+  });
+  if(id==="sc-wall") loadWall();
+}
+function hap(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms||12); }catch(e){} }
+
+function startGame(){
+  var seed=newSeedHex();
+  G={
+    seed:seed, beats:buildBeats(seed), taps:[], score:0, combo:0, misses:0,
+    start:0, bi:0, matched:{}, running:true, pending:null
+  };
+  $("hud-score").textContent="0";
+  $("hud-combo").textContent="1";
+  $("hud-lives").textContent="♥♥♥";
+  $("center").textContent="3";
+  $("centersub").textContent="get ready";
+  $("playhint").textContent="Tap when the ring hits the gold zone";
+  show("sc-play");
+  var n=3;
+  var cd=setInterval(function(){
+    n--;
+    if(n>0){ $("center").textContent=String(n); hap(8); }
+    else{
+      clearInterval(cd);
+      $("center").textContent="0";
+      G.start=performance.now();
+      G.raf=requestAnimationFrame(tick);
+      hap(16);
+    }
+  }, 550);
+}
+
+function livesStr(){
+  var s="",i; for(i=0;i<MAX_MISSES;i++) s+= i< (MAX_MISSES-G.misses) ? "♥" : "♡";
+  return s;
+}
+
+function tick(now){
+  if(!G||!G.running) return;
+  var elapsed=now-G.start;
+  // expire missed beats
+  while(G.bi < G.beats.length && G.beats[G.bi].t + G.beats[G.bi].window < elapsed){
+    if(!G.matched[G.bi]){
+      G.misses++; G.combo=0;
+      $("hud-lives").textContent=livesStr();
+      $("hud-combo").textContent=String(1+G.combo);
+      flash("#ff6b7a");
+      hap(30);
+      if(G.misses>=MAX_MISSES){ endGame(); return; }
+    }
+    G.bi++;
+  }
+  // animate next unmatched beat pulse
+  var bi=G.bi;
+  while(bi<G.beats.length && G.matched[bi]) bi++;
+  var pulse=$("pulse");
+  if(bi<G.beats.length){
+    var b=G.beats[bi];
+    var lead=Math.max(280, b.window*3.2);
+    var t0=b.t-lead, t1=b.t;
+    var p=(elapsed-t0)/(t1-t0);
+    if(p<0) p=0; if(p>1.4) p=1.4;
+    // expand from 20% to ~100% at hit time
+    var size=20 + p*80;
+    pulse.style.width=size+"%"; pulse.style.height=size+"%";
+    pulse.style.opacity=String(Math.max(0, 1.05-p*0.55));
+    pulse.style.borderColor = p>0.92 && p<1.08 ? "var(--gold)" : "var(--accent)";
+    $("centersub").textContent = p>0.85 && p<1.15 ? "NOW" : "wait…";
+  } else {
+    pulse.style.opacity="0";
+  }
+  // soft time cap ~75s of beats
+  if(elapsed > G.beats[Math.min(G.beats.length-1, MAX_TAPS)].t + 500){
+    endGame(); return;
+  }
+  G.raf=requestAnimationFrame(tick);
+}
+
+function flash(color){
+  var f=$("flash");
+  f.style.background=color||"var(--gold)";
+  f.style.opacity="0.35";
+  setTimeout(function(){ f.style.opacity="0"; }, 120);
+}
+
+function onTap(){
+  if(!G||!G.running||!G.start) return;
+  if(G.taps.length>=MAX_TAPS) return;
+  var elapsed=Math.round(performance.now()-G.start);
+  G.taps.push(elapsed);
+  // find nearest open beat
+  var best=-1, bestAbs=1e9, i, b, abs;
+  for(i=Math.max(0,G.bi-1); i<Math.min(G.beats.length, G.bi+4); i++){
+    if(G.matched[i]) continue;
+    b=G.beats[i]; abs=Math.abs(elapsed-b.t);
+    if(abs<=b.window && abs<bestAbs){ bestAbs=abs; best=i; }
+  }
+  if(best<0){
+    // early/late stray tap — no miss, no points (spam does nothing useful)
+    $("playhint").textContent="off-beat";
+    hap(6);
+    return;
+  }
+  G.matched[best]=true;
+  var pts;
+  if(bestAbs<=40){ pts=100+G.combo*12; G.combo++; $("playhint").textContent="PERFECT"; flash("var(--gold)"); hap(14); }
+  else if(bestAbs<=90){ pts=60+G.combo*6; G.combo++; $("playhint").textContent="good"; flash("var(--accent)"); hap(10); }
+  else { pts=30+G.combo*2; G.combo++; $("playhint").textContent="ok"; hap(8); }
+  G.score+=pts;
+  $("hud-score").textContent=String(G.score);
+  $("hud-combo").textContent=String(1+G.combo);
+  $("center").textContent=String(G.score);
+  // advance bi past matched
+  while(G.bi<G.beats.length && G.matched[G.bi]) G.bi++;
+}
+
+function endGame(){
+  if(!G) return;
+  G.running=false;
+  if(G.raf) cancelAnimationFrame(G.raf);
+  // authoritative score from pure function (same as chain verify)
+  var r=scoreRun(G.seed, G.taps);
+  G.finalScore=r.score;
+  G.hits=r.hits;
+  var ok=r.score>=QUALIFY_SCORE;
+  $("result-score").textContent=String(r.score);
+  $("result-title").textContent=ok ? "You made the cut" : "So close";
+  $("result-blurb").textContent=ok
+    ? ("Qualifier is "+QUALIFY_SCORE+". Sign the yearbook to put your line on Cardano forever.")
+    : ("Need "+QUALIFY_SCORE+" to sign. You scored "+r.score+" — run it back.");
+  $("qualify-box").hidden=!ok;
+  $("signnote").textContent="";
+  $("signnote").className="";
+  $("btn-sign").disabled=false;
+  show("sc-result");
+  // stash last run for signing
+  window.__LAST_RUN={
+    g:GAME_ID, v:GAME_VERSION, seed:G.seed, taps:G.taps.slice(), score:r.score, hits:r.hits
+  };
+}
+
+/* ── wallet + claim (chess-pattern, label 22032) ── */
+var W={ api:null, net:null, params:null };
+function pickWallet(){
+  var c=window.cardano||{};
+  if(c.eternl) return c.eternl;
+  if(c.ccvault) return c.ccvault;
+  if(c.vespr) return c.vespr;
+  var keys=Object.keys(c),i,w;
+  for(i=0;i<keys.length;i++){ w=c[keys[i]]; if(w&&typeof w.enable==="function") return w; }
+  return null;
+}
+async function connectWallet(){
+  var w=pickWallet();
+  if(!w) throw new Error("No wallet — open this page in Eternl (extension or mobile dApp browser)");
+  W.api=await w.enable();
+  W.net=await W.api.getNetworkId();
+  if(!(W.net in NETS)) throw new Error("unknown network");
+  var rows=await kapi(W.net,"/epoch_params?order=epoch_no.desc&limit=1").catch(function(){return null;});
+  var p=(rows&&rows[0])||{};
+  W.params={ a:+p.min_fee_a||44, b:+p.min_fee_b||155381, cpb:+p.coins_per_utxo_size||4310 };
+  return W;
+}
+function parseWalletUtxos(hexList){
+  var out=[],i;
+  for(i=0;i<(hexList||[]).length;i++){
+    try{
+      var pair=cborD(hexB(hexList[i]))[0], inp=pair[0], o=pair[1], addr,val,extra=false;
+      if(o instanceof Map){ addr=o.get(0); val=o.get(1); if(o.has(2)||o.has(3))extra=true; }
+      else{ addr=o[0]; val=o[1]; if(o.length>2&&o[2]!=null)extra=true; }
+      var coin=null;
+      if(typeof val==="number") coin=val;
+      else if(Array.isArray(val)&&typeof val[0]==="number"){
+        var ma=val[1], has=ma instanceof Map?ma.size>0:ma&&Object.keys(ma).length>0;
+        if(has) continue; coin=val[0];
+      }
+      if(extra||coin==null||!(coin>0)||coin>Math.pow(2,52)) continue;
+      if(!(inp[0] instanceof Uint8Array)||inp[0].length!==32) continue;
+      out.push({ txh:inp[0], ix:inp[1], coin:coin, addrHex:bHex(addr) });
+    }catch(e){ void e; }
+  }
+  return out;
+}
+function metaVal(x){
+  if(typeof x==="number"){ if(x<0||x!==(x|0)) throw new Error("bad int"); return cU(x); }
+  if(typeof x==="string"){
+    if(new TextEncoder().encode(x).length>64) throw new Error("string over 64 bytes");
+    return cS(x);
+  }
+  if(Array.isArray(x)) return catB([cAr(x.length)].concat(x.map(metaVal)));
+  throw new Error("unsupported metadata");
+}
+function buildAux(claim){
+  // keep key order stable-ish; only defined fields
+  var keys=["g","v","seed","score","hits","taps"];
+  if(claim.msg) keys.push("msg");
+  var inner=[cMp(keys.length)],i;
+  for(i=0;i<keys.length;i++){ inner.push(cS(keys[i])); inner.push(metaVal(claim[keys[i]])); }
+  var metaMap=catB([cMp(1),cU(parseInt(CLAIM_LABEL,10))].concat(inner));
+  return catB([cTg(259),cMp(1),cU(0),metaMap]);
+}
+function encInput(i){ return catB([u8([0x82]),cBy(i.txh),cU(i.ix)]); }
+function encPlainOut(addrB,coin){ return catB([cMp(2),cU(0),cBy(addrB),cU(1),cU(coin)]); }
+function encClaimBody(net,ins,changeB,changeCoin,fee,auxHash){
+  return catB([cMp(4),
+    cU(0),cAr(ins.length)].concat(ins.map(encInput)).concat([
+    cU(1),cAr(2),encPlainOut(NETS[net].lockBytes,CLAIM_LOVELACE),encPlainOut(changeB,changeCoin),
+    cU(2),cU(fee), cU(7),cBy(auxHash)]));
+}
+function dummyWitLen(n){
+  var parts=[cMp(1),cU(0),cAr(n)],i;
+  for(i=0;i<n;i++) parts.push(catB([u8([0x82]),cBy(new Uint8Array(32)),cBy(new Uint8Array(64))]));
+  return catB(parts).length;
+}
+function minChangeCoin(changeB,params){
+  var coin=1000000,i;
+  for(i=0;i<4;i++) coin=(160+encPlainOut(changeB,coin).length)*params.cpb;
+  return coin;
+}
+async function submitClaim(claim){
+  // local verify first — never ask wallet to sign a junk flex
+  var v=verifyClaim(claim);
+  if(!v.ok) throw new Error("claim failed local verify: "+v.why);
+  await connectWallet();
+  var aux=buildAux(claim);
+  var auxHash=blake2b256(aux);
+  var utxos=parseWalletUtxos(await W.api.getUtxos());
+  var changeB=hexB(await W.api.getChangeAddress());
+  var minChange=minChangeCoin(changeB,W.params);
+  var pool=utxos.slice().sort(function(a,b){return b.coin-a.coin;});
+  var ins=[],sum=0,fee=250000,round,body,size,newFee;
+  for(round=0;round<40;round++){
+    while(sum<CLAIM_LOVELACE+fee+minChange&&pool.length){ var x=pool.shift(); ins.push(x); sum+=x.coin; }
+    if(sum<CLAIM_LOVELACE+fee+minChange)
+      throw new Error("need ~"+((CLAIM_LOVELACE+fee+minChange)/1e6).toFixed(2)+" ADA in plain-ADA UTxOs");
+    var nWit=1+new Set(ins.map(function(i){return i.addrHex;})).size;
+    body=encClaimBody(W.net,ins,changeB,sum-CLAIM_LOVELACE-fee,fee,auxHash);
+    size=3+body.length+dummyWitLen(nWit)+aux.length;
+    newFee=Math.ceil(W.params.a*size+W.params.b)+220;
+    if(newFee<=fee){ fee=newFee; break; }
+    fee=Math.max(fee,newFee);
+  }
+  body=encClaimBody(W.net,ins,changeB,sum-CLAIM_LOVELACE-fee,fee,auxHash);
+  var unsigned=catB([u8([0x84]),body,cMp(0),u8([0xf5]),aux]);
+  var witHex=await W.api.signTx(bHex(unsigned),false);
+  var wit=hexB(witHex);
+  var signed=wit[0]===0x84?wit:catB([u8([0x84]),body,wit,u8([0xf5]),aux]);
+  var txid=bHex(blake2b256(body));
+  var wid=await W.api.submitTx(bHex(signed));
+  return (typeof wid==="string"&&/^[0-9a-f]{64}$/i.test(wid))?wid.toLowerCase():txid;
+}
+
+async function signYearbook(){
+  var note=$("signnote"), btn=$("btn-sign");
+  var run=window.__LAST_RUN;
+  if(!run){ note.textContent="No run to sign — play first."; note.className="bad"; return; }
+  var msg=($("yb-msg").value||"").trim();
+  var enc=new TextEncoder().encode(msg);
+  while(enc.length>64){ msg=msg.slice(0,-1); enc=new TextEncoder().encode(msg); }
+  var claim={
+    g:GAME_ID, v:GAME_VERSION, seed:run.seed, score:run.score|0, hits:run.hits|0,
+    taps:run.taps.slice(0,MAX_TAPS)
+  };
+  if(msg) claim.msg=msg;
+  btn.disabled=true;
+  note.className="";
+  note.textContent="Checking replay… then wallet…";
+  try{
+    var v=verifyClaim(claim);
+    if(!v.ok) throw new Error(v.why);
+    note.textContent="Approve in Eternl (~2 ADA to the forever vault)…";
+    var tx=await submitClaim(claim);
+    note.className="ok";
+    note.innerHTML='Signed forever. Tx <a target="_blank" rel="noopener" href="'+NETS[W.net].scan+tx+'">'+tx.slice(0,14)+'…</a>';
+    hap([10,40,20]);
+  }catch(e){
+    note.className="bad";
+    note.textContent=String(e.message||e);
+    btn.disabled=false;
+  }
+}
+
+/* ── yearbook wall ── */
+var WALL_FILTER="all";
+function claimFromMeta(meta){
+  var c=meta&&(meta[CLAIM_LABEL]||meta[parseInt(CLAIM_LABEL,10)]);
+  if(!c||c.g!==GAME_ID) return null;
+  return {
+    g:c.g, v:+c.v, seed:String(c.seed||"").toLowerCase(), score:+c.score,
+    hits:+c.hits||0, taps:c.taps||[], msg:c.msg
+  };
+}
+async function loadWall(){
+  var st=$("wallstatus"), wall=$("wall");
+  st.textContent="Scanning yearbook claims on mainnet…";
+  wall.innerHTML="";
+  try{
+    var net=1; // yearbook wall is mainnet social object
+    var txs=await kapi(net,"/address_txs",{_addresses:[NETS[net].lockBech]});
+    txs.sort(function(a,b){ return b.block_height-a.block_height; });
+    var hashes=txs.slice(0,500).map(function(t){ return t.tx_hash; });
+    var claims=[], off;
+    for(off=0;off<hashes.length && claims.length<40; off+=40){
+      var rows=await kapi(net,"/tx_metadata",{_tx_hashes:hashes.slice(off,off+40)});
+      (rows||[]).forEach(function(r){
+        var c=claimFromMeta(r.metadata);
+        if(c) claims.push({ tx:r.tx_hash, claim:c });
+      });
+    }
+    if(!claims.length){
+      st.textContent="No signatures yet — be the first name in the book.";
+      return;
+    }
+    st.textContent=claims.length+" claim(s) — replaying scores…";
+    // attribution
+    var info=await kapi(net,"/tx_info",{_tx_hashes:claims.map(function(c){return c.tx;}),_inputs:true}).catch(function(){return [];});
+    var who={};
+    (info||[]).forEach(function(r){
+      var a=r.inputs&&r.inputs[0]&&r.inputs[0].payment_addr&&r.inputs[0].payment_addr.bech32;
+      if(a) who[r.tx_hash]=a;
+    });
+    var html="", shown=0;
+    claims.forEach(function(c){
+      var v=verifyClaim(c.claim);
+      if(WALL_FILTER==="ok" && !v.ok) return;
+      shown++;
+      var addr=who[c.tx]||"unknown";
+      var short=addr.length>20?addr.slice(0,12)+"…"+addr.slice(-6):addr;
+      html+='<div class="wall-card">'+
+        '<div class="who">'+short+'</div>'+
+        '<div class="score">'+((c.claim.score|0))+'</div>'+
+        (c.claim.msg?'<div class="msg">'+String(c.claim.msg).replace(/[<>&]/g,"")+'</div>':'')+
+        '<div class="meta"><span class="'+(v.ok?"v-ok":"v-bad")+'">'+(v.ok?"✓ verified replay":"✗ "+(v.why||"rejected"))+
+        '</span> · <a target="_blank" rel="noopener" href="'+NETS[net].scan+c.tx+'">'+c.tx.slice(0,10)+'…</a></div></div>';
+    });
+    wall.innerHTML=html||'<p class="fine">No entries match this filter.</p>';
+    st.textContent=shown+" shown · verified in your browser from on-chain metadata";
+  }catch(e){
+    st.textContent="Wall error: "+(e.message||e);
+  }
+}
+
+/* ── wire UI ── */
+$("btn-play").onclick=startGame;
+$("btn-play2").onclick=startGame;
+$("btn-again").onclick=startGame;
+$("btn-quit").onclick=function(){ if(G){ G.running=false; if(G.raf)cancelAnimationFrame(G.raf);} show("sc-home"); };
+$("btn-wall").onclick=function(){ show("sc-wall"); };
+$("btn-to-wall").onclick=function(){ show("sc-wall"); };
+$("nav-wall").onclick=function(e){ e.preventDefault(); show("sc-wall"); };
+$("btn-refresh").onclick=loadWall;
+$("btn-sign").onclick=signYearbook;
+$("tapzone").addEventListener("pointerdown", function(e){ e.preventDefault(); onTap(); });
+// also space/enter for desktop
+window.addEventListener("keydown", function(e){
+  if(e.code==="Space"||e.code==="Enter"){
+    if($("sc-play").classList.contains("on")){ e.preventDefault(); onTap(); }
+  }
+});
+$("yb-msg").addEventListener("input", function(){
+  var enc=new TextEncoder().encode($("yb-msg").value);
+  while(enc.length>64){ $("yb-msg").value=$("yb-msg").value.slice(0,-1); enc=new TextEncoder().encode($("yb-msg").value); }
+  $("yb-count").textContent=enc.length+" / 64";
+});
+document.querySelectorAll(".tabs button").forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll(".tabs button").forEach(function(x){ x.classList.remove("on"); });
+    b.classList.add("on"); WALL_FILTER=b.getAttribute("data-filter"); loadWall();
+  };
+});
+
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw-yearbook.js",{scope:"./"}).catch(function(){});
+}
+</script>
+</body>
+</html>
