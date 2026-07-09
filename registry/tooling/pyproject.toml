@@ -5,6 +5,7 @@ description = "Reference tooling for Ledger Scrolls Registry (DNS for Scrolls)"
 requires-python = ">=3.10"
 dependencies = [
   "requests>=2.31.0",
+  "cryptography>=42.0.0",
 ]
 
 [project.scripts]

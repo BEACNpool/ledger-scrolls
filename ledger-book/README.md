@@ -1,5 +1,11 @@
 # Ledger Book ✒️
 
+> Compatibility note: books minted before the v2 hardening remain readable.
+> New books use `ledger-book-v2`: their native mint policy requires the
+> minter's signature and expires one hour after construction, preventing later
+> duplicate minting. Canonical identity uses policy id plus raw asset-name hex.
+> See [the v2 specification](../registry/spec/ledger-book-v2.md).
+
 **Guestbooks that live inside Cardano — as NFTs.**
 *Sign something that outlives the light.*
 
@@ -10,8 +16,8 @@ dependency-free file at the repo root — **[ledger-book.html](../ledger-book.ht
 the link minted into every Book NFT's on-chain metadata points there, forever.
 This folder is the product's home for everything else.
 
-- **Protocol spec (MIT):** [registry/spec/ledger-book-v1.md](../registry/spec/ledger-book-v1.md)
-- **Metadata label:** `22031` (signatures) · book NFTs are CIP-25, policy = sig-script of the minter's key
+- **Protocol specs (MIT):** [v1 compatibility](../registry/spec/ledger-book-v1.md) · [v2 current](../registry/spec/ledger-book-v2.md)
+- **Metadata label:** `22031` (signatures) · v2 book NFTs are CIP-25 under a signature + expiring-slot native policy
 - **Live since:** 2026-07-09 — first book `BEACN_Book` (find it by searching **$beacn**),
   first signature *"First — Welcome to BEACN Book <3"*, both on mainnet forever.
 

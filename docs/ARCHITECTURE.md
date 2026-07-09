@@ -73,3 +73,16 @@ the same source discipline.
 - Minted sources in `examples/` stay byte-exact, forever.
 - Wire identifiers live in specs; humans read "Ledger Scroll."
 - No secret, no key, no personal data ever enters the repo or a scroll.
+
+## Verification is a set of facts
+
+The UI must not collapse several different guarantees into one green badge:
+
+- **integrity** — reconstructed bytes match the committed SHA-256;
+- **permanence** — the manifest/standard datum is at the canonical always-fail address;
+- **catalog authenticity** — the entry descends from the user's selected registry trust root;
+- **provenance** — a transaction proves control of a key, while human identity requires an external key-to-person link; and
+- **completeness** — the provider returned the entire requested history rather than a capped page.
+
+Unknown is not failure, but it must be visible. A provider can hide data even
+when it cannot forge hash-valid bytes.

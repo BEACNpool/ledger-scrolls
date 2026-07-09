@@ -298,7 +298,7 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
         <span style="font-family:var(--mono)">?book=…</span>. Mirror this file anywhere;
         the books follow, because the books <i>are</i> the chain.</p></div>
       <div class="card"><h3>Open source, open protocol</h3>
-        <p>The format is <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/ledger-book-v1.md">specified and MIT-licensed</a>
+        <p>The format is <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/ledger-book-v2.md">specified and MIT-licensed</a>
         — build your own reader, skin it, embed it. Attribution is cryptographic: every entry
         is signed by its author's own wallet keys, and each card links to its transaction.</p></div>
       <div class="card"><h3>Why a signature costs something</h3>
@@ -317,8 +317,8 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
   <div class="wrap">
     <p><b>Receipts:</b></p>
     <p class="mono">protocol: metadata label 22031 · anchor = min-UTxO paid to the book address ·
-    book NFTs: CIP-25, policy = sig-script of the minter's key ·
-    spec: registry/spec/ledger-book-v1.md</p>
+    book NFTs: CIP-25, signature + expiring-slot policy ·
+    specs: registry/spec/ledger-book-v1.md · ledger-book-v2.md</p>
     <p style="margin-top:10px">Part of <a href="index.html">Ledger Scrolls</a>: the library that cannot burn ·
     sibling of <a href="ledger-chess.html">Ledger Chess</a> · MIT</p>
   </div>
@@ -326,18 +326,19 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
 
 <script>
 "use strict";
-/* ═══ Ledger Book v1 — open protocol reader + writer + book-NFT minter.
-   A book = any Cardano address, found by $handle / addr / book-NFT (policy.Name).
+/* ═══ Ledger Book v1/v2 — open protocol reader + writer + book-NFT minter.
+   A book = an NFT, found by $handle / holder address / book asset id.
    A signature = tx paying the min-UTxO anchor to that address with metadata
    label 22031: { b:"ledger-book-v1", n:≤64B, m:[≤64B lines] }.
-   Book NFT: CIP-25 mint under a sig-native-script policy of the minter's key
-   (policyId = blake2b224(0x00‖script) — validated against cardano-cli).
-   Spec: registry/spec/ledger-book-v1.md (MIT). ═══ */
-var BOOK_ID = "ledger-book-v1";
+   New Book NFTs use a signature + expiring-slot native policy so supply cannot
+   be increased later. Specs: registry/spec/ledger-book-{v1,v2}.md (MIT). ═══ */
+var BOOK_ID = "ledger-book-v1";          // signature envelope remains v1-compatible
+var BOOK_NFT_PROTOCOL = "ledger-book-v2";
 var CLAIM_LABEL = "22031";
 var CLAIM_LOVELACE = 1000000;   // replaced at signing with the live protocol minimum
 var HANDLE_POLICY = "f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a";
 var READER_URL = "https://beacnpool.github.io/ledger-scrolls/ledger-book.html";
+var ACTIVE_NET = new URLSearchParams(location.search).get("network") === "preview" ? 0 : 1;
 
 /* ═══ tiny helpers (from ledger-scrolls calculator.html, MIT) ═══ */
 var u8 = function(a){ return Uint8Array.from(a); };
@@ -472,7 +473,7 @@ async function sha256hex(bytes){
 }
 
 /* ═══ CIP-30 wallet (parent side only — Eternl, as proven by calculator.html) ═══ */
-var W={ api:null, net:null, params:null };
+var W={ api:null, net:null, params:null, tipSlot:null };
 function pickWallet(){
   var c=window.cardano||{};
   if(c.eternl) return c.eternl;
@@ -495,6 +496,8 @@ async function connectWallet(){
   var rows=await kapi(W.net,"/epoch_params?order=epoch_no.desc&limit=1").catch(function(){return null;});
   var p=(rows&&rows[0])||{};
   W.params={ a:+p.min_fee_a||44, b:+p.min_fee_b||155381, cpb:+p.coins_per_utxo_size||4310 };
+  var tip=await kapi(W.net,"/tip").catch(function(){return null;});
+  W.tipSlot=+(tip&&tip[0]&&tip[0].abs_slot)||null;
   return W;
 }
 var MA_SPAN=null;
@@ -606,6 +609,7 @@ function minAnchorCoin(params){
 }
 async function submitClaim(claim){
   await connectWallet();
+  if(W.net!==ACTIVE_NET)throw new Error("wallet is on "+NETS[W.net].name+" but this book is on "+NETS[ACTIVE_NET].name);
   CLAIM_LOVELACE=minAnchorCoin(W.params);   // exact protocol minimum to the book owner
   var aux=buildAux(claim);
   var auxHash=blake2b256(aux);
@@ -684,27 +688,44 @@ function show(view){
 }
 
 /* ═══ resolve a book reference: $handle | addr1… | policy.Name | bare policy ═══ */
-var BOOK = { ref: "", addr: "", addrBytes: null, key: null, history: null };
+var BOOK = { ref: "", addr: "", addrBytes: null, key: null, keyHex: null,
+             history: null, historyComplete: true, validation: null };
 
 async function nftBook(policy, nameHex, nameAscii, viaHandle){
+  var infos=await kapi(ACTIVE_NET,"/asset_info",{_asset_list:[[policy,nameHex]]});
+  var ai=infos&&infos[0];
+  if(!ai)throw new Error("book asset metadata not found");
+  var group=ai.minting_tx_metadata&&ai.minting_tx_metadata["721"]&&ai.minting_tx_metadata["721"][policy];
+  var md=group&&(group[ai.asset_name_ascii]||group[nameAscii]||Object.values(group)[0]);
+  if(!md||md.Type!=="Ledger Book")throw new Error("asset is not marked as a Ledger Book");
+  var proto=md.protocol||"ledger-book-v1";
+  if(proto!=="ledger-book-v1"&&proto!==BOOK_NFT_PROTOCOL)throw new Error("unsupported Ledger Book protocol "+proto);
+  if(String(ai.total_supply||"1")!=="1")throw new Error("book asset supply is not exactly one");
   var addr = await assetHolder(policy, nameHex);
   if (!addr) throw new Error("could not locate the book NFT's wallet");
   var key = policy + "." + nameAscii;
-  var history = await bookAddressHistory(policy, nameHex, addr);
+  var keyHex = policy + "." + nameHex;
+  var hist = await bookAddressHistory(policy, nameHex, addr);
   return { ref: "📖 " + nameAscii + (viaHandle ? " (" + viaHandle + ")" : ""),
-           addr: addr, key: key, history: history };
+           addr: addr, key: key, keyHex:keyHex, history: hist.addresses,
+           historyComplete:hist.complete, historyError:hist.error,
+           validation:{protocol:proto,supplyOne:true,
+             timeLockClaimed:proto===BOOK_NFT_PROTOCOL&&Number.isFinite(Number(md.mintBeforeSlot)),
+             timeLockVerified:null} };
 }
 
 async function assetHolder(policy, nameHex){
-  var rows = await kapi(1, "/asset_addresses", { _asset_policy: policy, _asset_name: nameHex });
-  return (rows && rows[0] && rows[0].payment_address) || null;
+  var rows = await kapi(ACTIVE_NET, "/asset_addresses", { _asset_policy: policy, _asset_name: nameHex });
+  var live=(rows||[]).filter(function(r){return String(r.quantity||"1")!=="0"&&r.payment_address;});
+  if(live.length>1) throw new Error("book asset has multiple current holders — NFT uniqueness is not verifiable");
+  return (live[0] && live[0].payment_address) || null;
 }
 
 // scan a stake account for ALL Ledger Book NFTs (CIP-25 Type:"Ledger Book").
 // Big wallets are real (David's holds 450+ assets): scan up to 1000 candidates,
 // 20 per asset_info call (Koios 413s big ones), 6 calls in flight, progress shown.
 async function findBookNfts(stakeAddr){
-  var assets = await kapi(1, "/account_assets", { _stake_addresses: [stakeAddr] });
+  var assets = await kapi(ACTIVE_NET, "/account_assets", { _stake_addresses: [stakeAddr] });
   var all = (assets || []).filter(function(a){
     return a.policy_id !== HANDLE_POLICY && String(a.quantity || "1") === "1";
   });
@@ -718,14 +739,16 @@ async function findBookNfts(stakeAddr){
   async function worker(){
     while (batches.length) {
       var b = batches.shift();
-      var infos = await kapi(1, "/asset_info", { _asset_list: b });
+      var infos = await kapi(ACTIVE_NET, "/asset_info", { _asset_list: b });
       (infos || []).forEach(function(a){
         var g = a.minting_tx_metadata && a.minting_tx_metadata["721"] &&
                 a.minting_tx_metadata["721"][a.policy_id];
         var md = g && (g[a.asset_name_ascii] || Object.values(g)[0]);
-        if (md && md.Type === "Ledger Book")
+        var proto=md&&(md.protocol||"ledger-book-v1");
+        var supply=String(a.total_supply||a.quantity||"1");
+        if (md && md.Type === "Ledger Book" && (proto === "ledger-book-v1" || proto === BOOK_NFT_PROTOCOL) && supply === "1")
           books.push({ policy: a.policy_id, nameHex: a.asset_name || "",
-                       name: a.asset_name_ascii || "book" });
+                       name: a.asset_name_ascii || a.asset_name || "book", protocol:proto });
       });
       done += b.length;
       if (prog && cands.length > 60)
@@ -744,10 +767,11 @@ async function bookAddressHistory(policy, nameHex, currentAddr){
   var addrs = {};
   addrs[currentAddr] = 1;
   try {
-    var txs = await kapi(1, "/asset_txs", { _asset_policy: policy, _asset_name: nameHex, _history: true });
-    var hashes = (txs || []).map(function(t){ return t.tx_hash; }).slice(0, 40);
+    var txs = await kapi(ACTIVE_NET, "/asset_txs", { _asset_policy: policy, _asset_name: nameHex, _history: true });
+    var hashes = Array.from(new Set((txs || []).map(function(t){ return t.tx_hash; })));
+    if(hashes.length>5000) throw new Error("ownership history exceeds safe scan limit (5000 transfers)");
     for (var off = 0; off < hashes.length; off += 20) {
-      var rows = await kapi(1, "/tx_info", { _tx_hashes: hashes.slice(off, off + 20), _assets: true });
+      var rows = await kapi(ACTIVE_NET, "/tx_info", { _tx_hashes: hashes.slice(off, off + 20), _assets: true });
       (rows || []).forEach(function(r){
         (r.outputs || []).forEach(function(o){
           if ((o.asset_list || []).some(function(a){
@@ -757,8 +781,10 @@ async function bookAddressHistory(policy, nameHex, currentAddr){
         });
       });
     }
-  } catch (e) { void e; }                    // history is best-effort; current holder always included
-  return Object.keys(addrs);
+    return {addresses:Object.keys(addrs),complete:true,error:null};
+  } catch (e) {
+    return {addresses:Object.keys(addrs),complete:false,error:errText(e)};
+  }
 }
 
 async function resolveBook(ref){
@@ -770,7 +796,7 @@ async function resolveBook(ref){
     var holder = null;
     var names = ["000de140" + hexEnc(name), hexEnc(name)];   // CIP-68 first, legacy fallback
     for (var i = 0; i < names.length; i++) {
-      var rows = await kapi(1, "/asset_addresses", { _asset_policy: HANDLE_POLICY, _asset_name: names[i] });
+      var rows = await kapi(ACTIVE_NET, "/asset_addresses", { _asset_policy: HANDLE_POLICY, _asset_name: names[i] });
       if (rows && rows[0] && rows[0].payment_address) { holder = rows[0]; break; }
     }
     if (!holder) throw new Error("handle " + ref + " not found on-chain");
@@ -802,7 +828,7 @@ async function resolveBook(ref){
     throw new Error("book NFT not found under that policy");
   }
   if (/^[0-9a-f]{56}$/i.test(ref)) {                         // bare policy id
-    var assets = await kapi(1, "/policy_asset_list", { _asset_policy: ref.toLowerCase() });
+    var assets = await kapi(ACTIVE_NET, "/policy_asset_list", { _asset_policy: ref.toLowerCase() });
     if (!assets || !assets.length) throw new Error("no assets under that policy");
     if (assets.length > 1) throw new Error("that policy has " + assets.length +
       " assets — use policy.Name to pick the book");
@@ -810,9 +836,9 @@ async function resolveBook(ref){
                          assets[0].asset_name_ascii || "book", null);
   }
   var dec = b32decode(ref);                                  // throws on bad bech32
-  if (dec.hrp !== "addr") throw new Error("not a mainnet address");
+  if (dec.hrp !== (ACTIVE_NET===1?"addr":"addr_test")) throw new Error("address is on the wrong network");
   var short = ref.slice(0, 14) + "…" + ref.slice(-6);
-  var info = await kapi(1, "/address_info", { _addresses: [ref] });
+  var info = await kapi(ACTIVE_NET, "/address_info", { _addresses: [ref] });
   var stake = info && info[0] && info[0].stake_address;
   if (stake) {
     var books2 = await findBookNfts(stake);
@@ -891,7 +917,9 @@ async function openBook(refRaw){
     if (r.choice) { showChooser(r.choice, r.via); show("landing"); return; }
     if (r.none) { showNoBooks(r.via, r.addr); show("landing"); return; }
     BOOK.ref = r.ref; BOOK.addr = r.addr;
-    BOOK.key = r.key || null; BOOK.history = r.history || null;
+    BOOK.key = r.key || null; BOOK.keyHex=r.keyHex||null; BOOK.history = r.history || null;
+    BOOK.historyComplete=r.historyComplete!==false;
+    BOOK.validation=r.validation||null;
     BOOK.addrBytes = b32decode(r.addr).bytes;
     BOOK.linkRef = refRaw.trim();
     setBookUi();
@@ -934,7 +962,7 @@ document.querySelectorAll("#landing .hints span").forEach(function(s){
 });
 document.getElementById("sharebook").addEventListener("click", function(e){
   e.preventDefault();
-  navigator.clipboard.writeText(READER_URL + "?book=" + encodeURIComponent(BOOK.linkRef)).then(function(){
+  navigator.clipboard.writeText(READER_URL + "?" + (ACTIVE_NET===0?"network=preview&":"") + "book=" + encodeURIComponent(BOOK.linkRef)).then(function(){
     var c = document.getElementById("shared");
     c.style.display = "inline";
     setTimeout(function(){ c.style.display = "none"; }, 1800);
@@ -962,7 +990,9 @@ document.getElementById("signbtn").addEventListener("click", async function(){
     // [policy, assetName]: the joined "policy.Name" form breaks the 64-byte
     // metadata string cap for names over 7 chars (day-one sig got truncated)
     var kdot = BOOK.key.indexOf(".");
-    entry.k = [BOOK.key.slice(0, kdot), BOOK.key.slice(kdot + 1)];
+    entry.k = BOOK.validation&&BOOK.validation.protocol===BOOK_NFT_PROTOCOL
+      ? [BOOK.keyHex.slice(0,56),BOOK.keyHex.slice(57)]
+      : [BOOK.key.slice(0, kdot), BOOK.key.slice(kdot + 1)];
   }
   if (msg) entry.m = splitBytes(msg, 64);
   var btn = this;
@@ -970,7 +1000,7 @@ document.getElementById("signbtn").addEventListener("click", async function(){
   try {
     note("connecting wallet…");
     var txHash = await submitClaim(entry);
-    note('<span class="ok">Signed forever.</span> tx <a target="_blank" rel="noopener" href="https://cardanoscan.io/transaction/' +
+    note('<span class="ok">Signed forever.</span> tx <a target="_blank" rel="noopener" href="' + NETS[ACTIVE_NET].scan +
          txHash + '">' + txHash.slice(0, 16) + '…</a> — it will appear in the book once the chain confirms (1–2 min). ' +
          '<a href="#" id="aftersign">📖 open the book</a>');
     document.getElementById("aftersign").addEventListener("click", function(e){
@@ -997,8 +1027,9 @@ function sigCard(s){
     '<div class="meta"><span' + (s.whoFull ? ' title="signed from ' + esc(s.whoFull) + '"' : "") + '>' +
     (s.time ? new Date(s.time * 1000).toLocaleDateString(undefined,
         { year: "numeric", month: "short", day: "numeric" }) : "") +
-    (s.who ? " · " + esc(s.who) : "") + "</span>" +
-    '<a target="_blank" rel="noopener" href="https://cardanoscan.io/transaction/' + s.tx + '">tx↗</a></div>';
+    (s.who ? " · " + esc(s.who) : "") +
+    (s.anchor===false ? " · ⚠ anchor not verified" : "") + "</span>" +
+    '<a target="_blank" rel="noopener" href="' + NETS[ACTIVE_NET].scan + s.tx + '">tx↗</a></div>';
   return d;
 }
 
@@ -1006,10 +1037,10 @@ function sigCard(s){
 // "policy.Name" string (early clients, names ≤7 chars) · 64-byte truncation
 // of that string (day-one clamp bug — one signature lives on-chain with it)
 function kMatches(k){
-  if (Array.isArray(k)) return k.join(".") === BOOK.key;
+  if (Array.isArray(k)) return k.join(".") === BOOK.key || k.join(".") === BOOK.keyHex;
   k = String(k || "");
   if (k === BOOK.key) return true;
-  return bytesOf(k) === 64 && BOOK.key.indexOf(k) === 0;
+  return bytesOf(k) === 64 && (BOOK.key.indexOf(k) === 0 || (BOOK.keyHex||"").indexOf(k)===0);
 }
 
 async function loadBook(){
@@ -1020,12 +1051,13 @@ async function loadBook(){
   bookEl.innerHTML = ""; emptyEl.style.display = "none";
   try {
     var scanAddrs = (BOOK.key && BOOK.history && BOOK.history.length) ? BOOK.history : [BOOK.addr];
-    var txs = await kapi(1, "/address_txs", { _addresses: scanAddrs });
+    var txs = await kapi(ACTIVE_NET, "/address_txs", { _addresses: scanAddrs });
     txs.sort(function(a, b){ return b.block_height - a.block_height; });
-    var recent = txs.slice(0, 800), sigs = [], seen = {};
+    var recent = txs, sigs = [], seen = {};
+    var scanComplete=BOOK.historyComplete && recent.length<1000;
     for (var off = 0; off < recent.length; off += 40) {
       var slice = recent.slice(off, off + 40);
-      var rows = await kapi(1, "/tx_metadata", { _tx_hashes: slice.map(function(t){ return t.tx_hash; }) });
+      var rows = await kapi(ACTIVE_NET, "/tx_metadata", { _tx_hashes: slice.map(function(t){ return t.tx_hash; }) });
       rows.forEach(function(r){
         var c = r.metadata && (r.metadata[CLAIM_LABEL] || r.metadata[parseInt(CLAIM_LABEL, 10)]);
         if (!c || c.b !== BOOK_ID || !c.n) return;
@@ -1040,24 +1072,36 @@ async function loadBook(){
     sigs.sort(function(a, b){ return (b.time || 0) - (a.time || 0); });
     if (!sigs.length) {
       emptyEl.style.display = "";
-      st.textContent = "0 signatures — the book of " + BOOK.ref + " is waiting for its first.";
+      st.textContent = "0 signatures — the book of " + BOOK.ref + " is waiting for its first."+
+        (scanComplete?"":" WARNING: provider returned a partial history.");
       doorSub("0 signatures — the book is waiting for its first");
       return;
     }
+    // Validate attribution and the protocol anchor in bounded batches. Metadata
+    // alone is not a conforming signature: the tx must pay a historical keeper.
+    for(var ti=0;ti<sigs.length;ti+=20){
+      var infoRows=await kapi(ACTIVE_NET,"/tx_info",{_tx_hashes:sigs.slice(ti,ti+20).map(function(s){return s.tx;}),_inputs:true});
+      (infoRows||[]).forEach(function(r){
+        var s=sigs.filter(function(x){return x.tx===r.tx_hash;})[0]; if(!s)return;
+        var a=r.inputs&&r.inputs[0]&&r.inputs[0].payment_addr&&r.inputs[0].payment_addr.bech32;
+        if(a){s.who=a.slice(0,10)+"…"+a.slice(-4);s.whoFull=a;}
+        var understood=false,paid=false;
+        (r.outputs||[]).forEach(function(o){
+          var oa=o.payment_addr&&o.payment_addr.bech32;
+          var coin=Number(o.value||o.output_value||o.lovelace);
+          if(Number.isFinite(coin))understood=true;
+          // A confirmed Cardano output already passed the ledger's min-UTxO
+          // rule for its exact shape and epoch; presence is the durable proof.
+          if(scanAddrs.indexOf(oa)>=0&&Number.isFinite(coin)&&coin>0)paid=true;
+        });
+        s.anchor=understood?paid:null;
+      });
+    }
     sigs.forEach(function(s){ bookEl.appendChild(sigCard(s)); });
     st.textContent = sigs.length + " signature" + (sigs.length > 1 ? "s" : "") +
-      " in the book of " + BOOK.ref + " — every one etched into Cardano forever";
+      " in the book of " + BOOK.ref + " — every one etched into Cardano forever"+
+      (scanComplete?"":" · WARNING: provider returned a partial history");
     doorSub(sigs.length + " signature" + (sigs.length > 1 ? "s" : "") + " etched forever");
-    kapi(1, "/tx_info", { _tx_hashes: sigs.map(function(s){ return s.tx; }), _inputs: true })
-      .then(function(rows){
-        rows.forEach(function(r){
-          var s = sigs.filter(function(x){ return x.tx === r.tx_hash; })[0];
-          var a = r.inputs && r.inputs[0] && r.inputs[0].payment_addr && r.inputs[0].payment_addr.bech32;
-          if (s && a) { s.who = a.slice(0, 10) + "…" + a.slice(-4); s.whoFull = a; }
-        });
-        bookEl.innerHTML = "";
-        sigs.forEach(function(x){ bookEl.appendChild(sigCard(x)); });
-      }).catch(function(){});
   } catch (e) {
     st.textContent = "couldn't open the book: " + errText(e);
     doorSub("couldn't read the book — open to retry");
@@ -1065,7 +1109,7 @@ async function loadBook(){
 }
 document.getElementById("bookrefresh").addEventListener("click", loadBook);
 
-/* ═══ mint a Ledger Book (CIP-25 NFT, sig-script policy of the minter's key) ═══ */
+/* ═══ mint a Ledger Book (CIP-25 NFT, signature + expiring-slot policy) ═══ */
 function bookCoverSvg(name){
   var fs = name.length > 20 ? 20 : name.length > 14 ? 25 : 30;
   var safe = name.replace(/&/g,"&amp;").replace(/</g,"&lt;");
@@ -1139,11 +1183,12 @@ function encNftOut(addrB, coin, policyB, assetB){
     cU(1), cAr(2), cU(coin),
     cMp(1), cBy(policyB), cMp(1), cBy(assetB), cU(1)]);
 }
-function encMintBody(ins, changeB, changeCoin, fee, auxHash, nftOut, policyB, assetB){
-  return catB([cMp(5),
+function encMintBody(ins, changeB, changeCoin, fee, auxHash, nftOut, policyB, assetB, ttl){
+  return catB([cMp(6),
     cU(0), cAr(ins.length)].concat(ins.map(encInput)).concat([
     cU(1), cAr(2), nftOut, encChangeOutMA(changeB, changeCoin, MA_SPAN),
     cU(2), cU(fee),
+    cU(3), cU(ttl),
     cU(7), cBy(auxHash),
     cU(9), cMp(1), cBy(policyB), cMp(1), cBy(assetB), cU(1)]));
 }
@@ -1156,24 +1201,30 @@ document.getElementById("mintbtn").addEventListener("click", async function(){
   try {
     mnote("connecting wallet…");
     await connectWallet();
+    ACTIVE_NET=W.net;
     var changeB = hexB(await W.api.getChangeAddress());
     if ((changeB[0] >> 4) & 1) throw new Error("script-based wallet — mint needs a key wallet");
     var keyHash = changeB.subarray(1, 29);
-    var script = catB([u8([0x82, 0x00, 0x58, 0x1c]), keyHash]);      // [0, keyhash]
+    if(!W.tipSlot) throw new Error("could not obtain the current slot — refusing to create an unbounded mint policy");
+    var expirySlot=W.tipSlot+3600;                                   // one hour to sign/submit
+    var sigScript = catB([u8([0x82, 0x00, 0x58, 0x1c]), keyHash]);   // [0,keyhash]
+    var beforeScript=catB([cAr(2),cU(5),cU(expirySlot)]);            // [5,before-slot]
+    var script=catB([cAr(2),cU(1),cAr(2),sigScript,beforeScript]);   // [1,[sig,before]]
     var policyB = blake2b224(catB([u8([0x00]), script]));
     var policyHex = bHex(policyB);
     var assetName = display.replace(/ /g, "_");
     var assetB = ENC.encode(assetName);
 
     // CIP-25 metadata (label 721)
-    var link = READER_URL + "?book=" + policyHex + "." + assetName;
+    var link = READER_URL + "?" + (W.net===0?"network=preview&":"") + "book=" + policyHex + "." + assetName;
     var chunks = imageChunks(bookCoverSvg(display));
-    var m721 = catB([cMp(1), cS(policyHex), cMp(1), cS(assetName), cMp(6),
+    var m721 = catB([cMp(1), cS(policyHex), cMp(1), cS(assetName), cMp(7),
       cS("name"), cS(clampBytes(display + " — Ledger Book", 64)),
       cS("image"), catB([cAr(chunks.length)].concat(chunks.map(cS))),
       cS("mediaType"), cS("image/svg+xml"),
       cS("Type"), cS("Ledger Book"),
-      cS("protocol"), cS(BOOK_ID),
+      cS("protocol"), cS(BOOK_NFT_PROTOCOL),
+      cS("mintBeforeSlot"), cU(expirySlot),
       cS("description"), (function(){
         var lines = splitBytes("Sign my Ledger Book: " + link, 64);
         return catB([cAr(lines.length)].concat(lines.map(cS)));
@@ -1202,14 +1253,14 @@ document.getElementById("mintbtn").addEventListener("click", async function(){
         throw new Error("not enough spendable ADA (~" + ((nftCoin + fee + minChange) / 1e6).toFixed(2) + " needed; token UTxOs are never touched)");
       var nWit = 1 + new Set(ins.map(function(i){ return i.addrHex; })).size;
       body = encMintBody(ins, changeB, sum - nftCoin - fee, fee, auxHash,
-                         encNftOut(changeB, nftCoin, policyB, assetB), policyB, assetB);
+                         encNftOut(changeB, nftCoin, policyB, assetB), policyB, assetB, expirySlot);
       size = 3 + body.length + dummyWitLen(nWit) + script.length + 6 + aux.length;
       newFee = Math.ceil(W.params.a * size + W.params.b) + 220;
       if (newFee <= fee) { fee = newFee; break; }
       fee = Math.max(fee, newFee);
     }
     body = encMintBody(ins, changeB, sum - nftCoin - fee, fee, auxHash,
-                       encNftOut(changeB, nftCoin, policyB, assetB), policyB, assetB);
+                       encNftOut(changeB, nftCoin, policyB, assetB), policyB, assetB, expirySlot);
     var unsigned = catB([u8([0x84]), body, cMp(0), u8([0xf5]), aux]);
     mnote("check the wallet window — you are minting 1 “" + esc(assetName) + "” to yourself…");
     var witHex = await W.api.signTx(bHex(unsigned), true);

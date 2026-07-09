@@ -27,11 +27,23 @@ LOCK_ADA="${4:-}"
 ROOT_TXIN="${5:-}"
 [ -f "$ADDR" ] && ADDR=$(cat "$ADDR")
 
-NETWORK="--mainnet"
+NETWORK_NAME="${LSCHAIN_NETWORK:-mainnet}"
+case "$NETWORK_NAME" in
+  mainnet) NETWORK="--mainnet" ;;
+  preview) NETWORK="--testnet-magic 2" ;;
+  *) echo "LSCHAIN_NETWORK must be mainnet or preview"; exit 1 ;;
+esac
 SOCKET="${CARDANO_NODE_SOCKET_PATH:?set CARDANO_NODE_SOCKET_PATH}"
 CLI="cardano-cli latest"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 LOCK_SCRIPT="$SCRIPT_DIR/../../templates/standard-scroll/always-fail.plutus"
+
+# Verification is part of minting, not an optional follow-up. Fail before any
+# permanent transaction if the reference reconstructor cannot run.
+PYTHONPATH="$REPO_ROOT/koios-viewer" python3 -c 'import cbor2, lsview' 2>/dev/null || {
+  echo "Python verifier dependencies missing; install koios-viewer/requirements.txt before minting"; exit 1;
+}
 
 # Sending a datum to a script address needs only the address, not the
 # script witness. LSCHAIN_LOCK_ADDR overrides; default derives from the
@@ -122,10 +134,26 @@ $CLI transaction sign --tx-body-file "$WORK/tx-manifest.raw" \
 $CLI transaction submit $NETWORK --socket-path "$SOCKET" --tx-file "$WORK/tx-manifest.signed"
 MANIFEST_TXID=$($CLI transaction txid --tx-file "$WORK/tx-manifest.signed" | grep -oE '[0-9a-f]{64}' | head -1)
 
+echo "Waiting for manifest confirmation, then reconstructing from chain..."
+wait_for_utxo "$MANIFEST_TXID#0"
+verified=0
+if [ "$NETWORK_NAME" = preview ]; then KOIOS_URL="https://preview.koios.rest/api/v1"; else KOIOS_URL="https://api.koios.rest/api/v1"; fi
+for attempt in $(seq 1 30); do
+  if LS_KOIOS="$KOIOS_URL" LS_EXPECTED_LOCK="$LOCK_ADDR" PYTHONPATH="$REPO_ROOT/koios-viewer" python3 -m lsview reconstruct-chain \
+       --txin "$MANIFEST_TXID#0" --out "$WORK/readback.bin"; then verified=1; break; fi
+  echo "Indexer has not caught up yet ($attempt/30); retrying in 10s..."
+  sleep 10
+done
+[ "$verified" -eq 1 ] || { echo "Mint confirmed locally, but public read-back did not become available; do not announce until verification succeeds"; exit 1; }
+EXPECTED=$(jq -r '.sha256Decoded' "$WORK/plan.json")
+ACTUAL=$(sha256sum "$WORK/readback.bin" | awk '{print $1}')
+[ "$ACTUAL" = "$EXPECTED" ] || { echo "FATAL: read-back hash mismatch: $ACTUAL != $EXPECTED"; exit 1; }
+
 jq -n --arg m "$MANIFEST_TXID" --arg lock "$LOCK_ADDR" \
+      --arg network "$NETWORK_NAME" \
       --slurpfile plan "$WORK/plan.json" \
       --rawfile pages "$WORK/page_txids.txt" '{
-  format: "ls-chain-v2-receipts",
+  format: "ls-chain-v2-receipts", network: $network,
   pointer: { kind: "manifest-chain-v2", txHash: $m, txIx: 0 },
   lockAddress: $lock,
   pageTxHashes: ($pages | split("\n") | map(select(. != ""))),
@@ -136,5 +164,5 @@ echo ""
 echo "═══════════════════════════════════════════════════════"
 echo " MANIFEST TXIN: $MANIFEST_TXID#0"
 echo " Receipts:      $WORK/receipts.json"
-echo " Verify:        lsview reconstruct-chain --txin $MANIFEST_TXID#0 --out check.bin"
+echo " Verified:      read back from chain, sha256 $ACTUAL"
 echo "═══════════════════════════════════════════════════════"

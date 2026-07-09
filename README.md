@@ -17,12 +17,12 @@ Once a scroll is written:
 - **Anyone can read it.** No account, no permission, no fee to read.
 - **Everyone can verify it.** The bytes are checked against a SHA-256
   fingerprint on every read. Readers don't trust — they check.
-- **No crawler can find it.** A scroll has no URL — it exists as fragments
+- **Ordinary web crawlers do not index it as a page.** A scroll has no conventional content URL — it exists as fragments
   spread across transactions, and only becomes a file again when someone
-  holding the pointer reassembles it. Search engines, scrapers, and
-  content-ID systems see nothing; anyone you hand the pointer sees
-  everything. Hidden from the web's machinery, not from people — the
-  chain itself is radically public.
+  holding the pointer reassembles it. Ordinary search engines do not follow
+  that reconstruction path, but blockchain indexers can discover metadata,
+  policies, and payloads. Pointer sharing is obscurity from the conventional
+  web, never privacy — the chain itself is radically public.
 
 That combination has never existed before. Books burn. Servers go dark.
 Links rot. Platforms moderate, archives get edited, companies fold. A
@@ -64,9 +64,10 @@ What the money actually buys:
   field an admin can edit. A block height is a fact thousands of independent
   machines will swear to. The cloud can *assert* when — only a chain can
   *prove* it.
-- **Cryptographic authorship.** Scrolls arrive signed by their author's own
-  keys — an unforgeable byline. In the deepfake era, *"I provably published
-  exactly these words, on exactly this date, from this key"* is not a
+- **Cryptographic provenance.** Publishing transactions prove control of a
+  Cardano key; identity comes from independently linking that key to a person
+  or organization. In the deepfake era, *"this key provably published exactly
+  these words on this date"* is not a
   gimmick; it's a defense.
 - **A complement, not a replacement.** Cloud storage answers *"where do I
   put 10 terabytes?"* Ledger Scrolls answers *"how do I make 10 kilobytes
@@ -314,7 +315,8 @@ power more than a library:
   filter: spam costs the spammer real money, pays their victim, and leaves the
   spammer's own wallet address on the page forever. Product home:
   [ledger-book/](ledger-book/README.md) · spec:
-  [registry/spec/ledger-book-v1.md](registry/spec/ledger-book-v1.md).
+  [v1 compatibility](registry/spec/ledger-book-v1.md) ·
+  [v2 current](registry/spec/ledger-book-v2.md).
 - **♟️ [Ledger Chess](https://beacnpool.github.io/ledger-scrolls/ledger-chess.html)** —
   a chess arcade whose deterministic referee engine is itself minted on-chain;
   beat it and etch your victory into Cardano forever (label `22030`).

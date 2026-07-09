@@ -78,7 +78,8 @@ on the Preview testnet first (same pipeline, free mistakes).
 
 ```bash
 cd scripts
-./mint-standard-scroll.sh /path/to/yourfile /path/to/payment.skey /path/to/payment.addr
+./mint-standard-scroll.sh /path/to/yourfile /path/to/payment.skey /path/to/payment.addr --preview
+# After the read-back hash verifies on Preview, repeat deliberately with --mainnet.
 ```
 
 **Chain Scroll (everything larger):**
@@ -87,11 +88,13 @@ cd scripts
 # Prepare: gzip-if-it-helps, hash, split into page payloads
 python3 tools/lschain/prepare.py /path/to/yourfile --out build/
 
-# Mint the page transactions, then build + lock the manifest datum
-tools/lschain/mint.sh build/ /path/to/payment.skey /path/to/payment.addr
+# Mint the page transactions, then build + lock the manifest datum on Preview
+LSCHAIN_NETWORK=preview tools/lschain/mint.sh build/ /path/to/payment.skey /path/to/payment.addr
+# Repeat with LSCHAIN_NETWORK=mainnet only after the Preview read-back verifies.
 ```
 
-Keep every tx hash, the manifest txin (or lock address), the content hash, size,
+Both reference minters wait for confirmation and perform a chain read-back
+hash check before printing a verified result. Keep every tx hash, the manifest txin (or lock address), the content hash, size,
 and codec in a `receipts.json`. Your scroll is only as findable as its pointer.
 
 ## Step 5 — Verify from chain (do not skip)

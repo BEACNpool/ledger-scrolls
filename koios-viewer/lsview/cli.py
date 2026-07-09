@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import zlib
 import hashlib
 import json
+import os
 from typing import Any, Dict, List, Optional, Tuple
 
 import cbor2
@@ -20,14 +22,40 @@ from .koios import (
 
 
 PUBLIC_REGISTRY_HEAD_TXIN = "a9c56fb3d4d8b526fe7a0aa7c2416615154af30c2c09ce747a899a886ba8bad9#0"
+CANONICAL_SCROLL_LOCK = "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn"
 
 
 class RegistryError(RuntimeError):
     pass
 
 
+def require_canonical_lock(row: Dict[str, Any]) -> None:
+    """Reject a spendable look-alike when the provider supplies its address."""
+    addr = row.get("address")
+    if not addr and isinstance(row.get("payment_addr"), dict):
+        addr = row["payment_addr"].get("bech32")
+    expected = os.environ.get("LS_EXPECTED_LOCK", CANONICAL_SCROLL_LOCK)
+    if addr and addr != expected:
+        raise RegistryError(f"Scroll output is not at the expected always-fail address: {addr}")
+
+
 def sha256_hex(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
+
+
+def gunzip_bounded(data: bytes, expected_size: int, hard_limit: int = 128 * 1024 * 1024) -> bytes:
+    """Decompress without allowing a small gzip member to exhaust memory."""
+    limit = min(expected_size, hard_limit)
+    if expected_size < 0 or expected_size > hard_limit:
+        raise RegistryError(f"Decoded size exceeds safe limit ({hard_limit} bytes)")
+    dec = zlib.decompressobj(16 + zlib.MAX_WBITS)
+    out = dec.decompress(data, limit + 1)
+    if len(out) > limit or dec.unconsumed_tail:
+        raise RegistryError("Decoded stream exceeds declared size")
+    out += dec.flush(limit + 1 - len(out))
+    if len(out) != expected_size:
+        raise RegistryError(f"Decoded size mismatch: got {len(out)} expected {expected_size}")
+    return out
 
 
 def _hex_to_ascii(hex_str: str) -> str:
@@ -104,6 +132,7 @@ def _parse_txin(txin: str) -> Tuple[str, int]:
 
 def reconstruct_standard_from_txin(txin: str, expected_sha256: Optional[str] = None) -> Tuple[bytes, str]:
     row = with_retries(lambda: utxo_info(txin))
+    require_canonical_lock(row)
     datum_hex = get_inline_datum_hex_from_utxo_info_row(row)
     raw = bytes.fromhex(datum_hex)
 
@@ -278,15 +307,30 @@ def _parse_chain_manifest(datum_hex: str) -> Dict[str, Any]:
 def reconstruct_chain_from_txin(txin: str) -> Tuple[bytes, Dict[str, Any]]:
     """Reconstruct an LS-CHAIN v2 scroll. Returns (decoded bytes, manifest)."""
     row = with_retries(lambda: utxo_info(txin))
+    require_canonical_lock(row)
     manifest = _parse_chain_manifest(get_inline_datum_hex_from_utxo_info_row(row))
 
     page_hashes = list(manifest["pageTxHashes"])
     next_txin = manifest["next"]
+    seen_manifests = {txin}
+    parts = 1
     while next_txin:
+        if next_txin in seen_manifests:
+            raise RegistryError("Manifest continuation cycle")
+        parts += 1
+        if parts > 64:
+            raise RegistryError("Manifest chain exceeds safe limit (64 parts)")
+        seen_manifests.add(next_txin)
         nrow = with_retries(lambda t=next_txin: utxo_info(t))
+        require_canonical_lock(nrow)
         nman = _parse_chain_manifest(get_inline_datum_hex_from_utxo_info_row(nrow))
+        for field in ("version", "contentType", "codec", "sizeDecoded", "sha256Decoded", "sha256Encoded"):
+            if nman[field] != manifest[field]:
+                raise RegistryError(f"Continuation manifest {field} mismatch")
         page_hashes.extend(nman["pageTxHashes"])
         next_txin = nman["next"]
+    if len(page_hashes) > 25000:
+        raise RegistryError("Page count exceeds safe limit (25000)")
 
     meta_by_tx: Dict[str, Any] = {}
     for i in range(0, len(page_hashes), 25):
@@ -306,6 +350,8 @@ def reconstruct_chain_from_txin(txin: str) -> Tuple[bytes, Dict[str, Any]]:
                     break
         if not isinstance(page, dict):
             raise RegistryError(f"Page {idx} metadata missing for tx {tx_hash}")
+        if int(page.get("i", -1)) != idx or int(page.get("n", -1)) != len(page_hashes):
+            raise RegistryError(f"Page {idx} index/count mismatch (tx {tx_hash})")
         payload = b"".join(_meta_value_to_bytes(seg) for seg in page.get("p") or [])
         sha = page.get("sha")
         if sha is not None and sha256_hex(payload) != _meta_value_to_bytes(sha).hex():
@@ -315,7 +361,9 @@ def reconstruct_chain_from_txin(txin: str) -> Tuple[bytes, Dict[str, Any]]:
     encoded = bytes(encoded)
     if sha256_hex(encoded) != manifest["sha256Encoded"]:
         raise RegistryError("Encoded stream hash mismatch")
-    decoded = gzip.decompress(encoded) if manifest["codec"] == "gzip" else encoded
+    decoded = gunzip_bounded(encoded, manifest["sizeDecoded"]) if manifest["codec"] == "gzip" else encoded
+    if len(decoded) != manifest["sizeDecoded"]:
+        raise RegistryError("Decoded size mismatch")
     if sha256_hex(decoded) != manifest["sha256Decoded"]:
         raise RegistryError("Decoded file hash mismatch")
     return decoded, manifest

@@ -396,7 +396,7 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
    <li><span class="ti">&#127760;</span><div><b>Hosts nothing</b><span>The page is a lens. Your browser does the querying.</span></div></li>
    <li><span class="ti">&#9889;</span><div><b>Zero dependencies</b><span>One self-contained file. No build, no CDN, no servers of record.</span></div></li>
    <li><span class="ti">&#128184;</span><div><b>One fee, forever</b><span>No renewals, no pinning, no month two. <a href="media.html">What can live forever &rarr;</a></span></div></li>
-   <li><span class="ti">&#128374;&#65039;</span><div><b>Dark to the crawlers</b><span>A scroll has no URL &mdash; it lives fragmented across transactions. Bots can&rsquo;t index what must be reassembled; the pointer is the only map.</span></div></li>
+   <li><span class="ti">&#128374;&#65039;</span><div><b>Off the conventional web</b><span>A scroll has no ordinary content URL and must be reassembled from transactions. Search engines do not do that work; blockchain indexers can. This is not privacy.</span></div></li>
   </ul>
  </div>
 </section>
@@ -512,6 +512,7 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
 // hash-verified locally regardless of endpoint.
 const DEFAULT_SOURCES = ['https://api.koios.rest/api/v1','https://koios.beacn.workers.dev/api/v1'];
 const DEFAULT_HEAD = 'af5ee28d770a1f4bf6c252d79944a5fa2a7446fa2e6ef558707e238d881ec483#0';
+const CANONICAL_LOCK = 'addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn';
 const LS = window.localStorage;
 const sources = () => { const c = LS.getItem('ls.source'); return c ? [c, ...DEFAULT_SOURCES.filter(s=>s!==c)] : [...DEFAULT_SOURCES]; };
 const registryHead = () => LS.getItem('ls.head') || DEFAULT_HEAD;
@@ -540,9 +541,16 @@ const b2hex = b => Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('')
 const sha256 = async b => b2hex(new Uint8Array(await crypto.subtle.digest('SHA-256',b)));
 const segHex = s => { if(s&&typeof s==='object') s=s.bytes??s.seg??''; s=String(s).trim(); return s.toLowerCase().startsWith('0x')?s.slice(2):s; };
 const td = new TextDecoder();
-async function gunzip(bytes){
-  const ds = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-  return new Uint8Array(await new Response(ds).arrayBuffer());
+async function gunzip(bytes,maxBytes=128*1024*1024){
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  const reader=stream.getReader(), chunks=[]; let total=0;
+  for(;;){
+    const {value,done}=await reader.read(); if(done)break;
+    total+=value.length;
+    if(total>maxBytes){ await reader.cancel(); throw new Error(`decoded stream exceeds safe limit (${maxBytes} bytes)`); }
+    chunks.push(value);
+  }
+  return concatBytes(chunks);
 }
 const concatBytes = arrs => { const n=arrs.reduce((a,b)=>a+b.length,0); const o=new Uint8Array(n); let p=0; for(const a of arrs){o.set(a,p);p+=a.length;} return o; };
 
@@ -581,7 +589,10 @@ function datumBytes(datumHex){
 /* ════════════════════════ chain queries ════════════════════════ */
 async function utxoDatumHex(txin, quiet){
   const rows = await api('/utxo_info',{_utxo_refs:[txin],_extended:true}, quiet);
-  const hexd = rows?.[0]?.inline_datum?.bytes;
+  const row=rows?.[0];
+  const addr=row?.address||row?.payment_addr?.bech32;
+  if(addr&&addr!==CANONICAL_LOCK)throw new Error(`scroll output is not at the canonical always-fail address (${addr})`);
+  const hexd = row?.inline_datum?.bytes;
   if(!hexd) throw new Error(`no inline datum at ${txin}`);
   return hexd;
 }
@@ -628,8 +639,17 @@ async function resolveChain(e){
   step(1,'on'); log('h',`── chain scroll · manifest ${e.txin}`);
   let man = parseManifest(await utxoDatumHex(e.txin));
   if(!man) throw new Error('datum is not a scroll manifest');
-  const pages=[...man.pages]; let next=man.next;
-  while(next){ const m2=parseManifest(await utxoDatumHex(next)); if(!m2)throw new Error('bad continuation manifest'); pages.push(...m2.pages); next=m2.next; }
+  const pages=[...man.pages], seenMan=new Set([e.txin]); let next=man.next, parts=1;
+  while(next){
+    if(seenMan.has(next))throw new Error('manifest continuation cycle');
+    if(++parts>64)throw new Error('manifest chain exceeds safe limit (64 parts)');
+    seenMan.add(next);
+    const m2=parseManifest(await utxoDatumHex(next)); if(!m2)throw new Error('bad continuation manifest');
+    if(m2.contentType!==man.contentType||m2.codec!==man.codec||m2.size!==man.size||m2.shaDec!==man.shaDec||m2.shaEnc!==man.shaEnc)
+      throw new Error('continuation manifest file fields mismatch');
+    pages.push(...m2.pages); next=m2.next;
+  }
+  if(pages.length>25000)throw new Error('page count exceeds safe limit (25000)');
   log('ok',`  manifest: ${man.contentType} · ${man.codec} · ${man.size} bytes · ${pages.length} page tx(s)`);
   step(1,'done'); step(2,'on');
   const metas = await txMetadataMap(pages); step(2,'done'); step(3,'on');
@@ -637,6 +657,7 @@ async function resolveChain(e){
   for(let i=0;i<pages.length;i++){
     const pg = metas[pages[i]]?.['22025'] ?? metas[pages[i]]?.[22025];
     if(!pg?.p) throw new Error(`page ${i+1} metadata missing (tx ${pages[i]})`);
+    if(Number(pg.i)!==i+1||Number(pg.n)!==pages.length)throw new Error(`page ${i+1} index/count mismatch`);
     const ph = pg.p.map(segHex).join('');
     if(pg.sha && await sha256(hex2b(ph)) !== segHex(pg.sha).toLowerCase()) throw new Error(`page ${i+1} hash mismatch`);
     log('ok',`  page ${i+1}/${pages.length}: ${ph.length/2} bytes ✓`);
@@ -646,7 +667,8 @@ async function resolveChain(e){
   const encGot = await sha256(bytes);
   if(encGot!==man.shaEnc) throw new Error('encoded stream hash mismatch');
   log('ok',`  encoded sha256 ✓ ${encGot}`);
-  if(man.codec==='gzip'){ bytes=await gunzip(bytes); log('ok',`  gunzip → ${bytes.length} bytes`); }
+  if(man.codec==='gzip'){ bytes=await gunzip(bytes,man.size); log('ok',`  gunzip → ${bytes.length} bytes`); }
+  else if(bytes.length!==man.size)throw new Error(`decoded size mismatch: expected ${man.size}, got ${bytes.length}`);
   step(3,'done');
   const e2 = {...e, contentType: e.contentType||man.contentType, sha256: man.shaDec};
   return finish(bytes, e2, 'Chain Scroll', { pointer:`manifest-chain-v2 · ${e.txin}` }, pages.length);

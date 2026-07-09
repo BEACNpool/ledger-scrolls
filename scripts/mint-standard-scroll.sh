@@ -8,7 +8,7 @@
 # The content is locked forever in an unspendable UTxO.
 #
 # Usage:
-#   ./mint-standard-scroll.sh <content-file> <payment.skey> <payment.addr> [--compress]
+#   ./mint-standard-scroll.sh <content-file> <payment.skey> <payment.addr> [--compress] [--preview|--mainnet]
 #
 # Options:
 #   --compress    Gzip compress the content before minting (recommended for >4KB)
@@ -40,6 +40,7 @@ print_banner() {
     echo -e "${NC}"
 }
 
+set -euo pipefail
 print_banner
 
 # Parse arguments
@@ -47,11 +48,20 @@ CONTENT_FILE=""
 PAYMENT_SKEY=""
 PAYMENT_ADDR=""
 COMPRESS=false
+NETWORK="--mainnet"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --compress)
             COMPRESS=true
+            shift
+            ;;
+        --preview)
+            NETWORK="--testnet-magic 2"
+            shift
+            ;;
+        --mainnet)
+            NETWORK="--mainnet"
             shift
             ;;
         *)
@@ -69,7 +79,7 @@ done
 
 # Validate arguments
 if [ -z "$CONTENT_FILE" ] || [ -z "$PAYMENT_SKEY" ] || [ -z "$PAYMENT_ADDR" ]; then
-    echo -e "${RED}Usage: $0 <content-file> <payment.skey> <payment.addr> [--compress]${NC}"
+    echo -e "${RED}Usage: $0 <content-file> <payment.skey> <payment.addr> [--compress] [--preview|--mainnet]${NC}"
     echo ""
     echo "  content-file  - The file to inscribe permanently"
     echo "  payment.skey  - Path to payment signing key"
@@ -97,7 +107,7 @@ if ! command -v cardano-cli &> /dev/null; then
 fi
 
 # Check for socket
-if [ -z "$CARDANO_NODE_SOCKET_PATH" ]; then
+if [ -z "${CARDANO_NODE_SOCKET_PATH:-}" ]; then
     echo -e "${YELLOW}CARDANO_NODE_SOCKET_PATH not set, trying common locations...${NC}"
     for path in "/opt/cardano/cnode/sockets/node.socket" "$HOME/.cardano/node.socket" "/var/run/cardano/node.socket"; do
         if [ -S "$path" ]; then
@@ -108,13 +118,12 @@ if [ -z "$CARDANO_NODE_SOCKET_PATH" ]; then
     done
 fi
 
-if [ ! -S "$CARDANO_NODE_SOCKET_PATH" ]; then
-    echo -e "${RED}Error: Node socket not found at $CARDANO_NODE_SOCKET_PATH${NC}"
+if [ ! -S "${CARDANO_NODE_SOCKET_PATH:-}" ]; then
+    echo -e "${RED}Error: Node socket not found at ${CARDANO_NODE_SOCKET_PATH:-<unset>}${NC}"
     echo "Set CARDANO_NODE_SOCKET_PATH to your node socket location"
     exit 1
 fi
 
-NETWORK="--mainnet"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK_DIR=$(mktemp -d)
 trap "rm -rf $WORK_DIR" EXIT
@@ -122,17 +131,11 @@ trap "rm -rf $WORK_DIR" EXIT
 echo -e "${CYAN}Work directory: $WORK_DIR${NC}"
 
 #═══════════════════════════════════════════════════════════════════════════════
-# STEP 1: Create Always-Fail Script
+# STEP 1: Use the canonical Always-Fail Script
 #═══════════════════════════════════════════════════════════════════════════════
 echo -e "\n${BLUE}[1/8] Creating always-fail lock script...${NC}"
 
-cat > "$WORK_DIR/always-fail.plutus" << 'EOF'
-{
-    "type": "PlutusScriptV2",
-    "description": "Always fails - Ledger Scrolls permanent lock",
-    "cborHex": "4e4d010000332222200510"
-}
-EOF
+cp "$SCRIPT_DIR/../templates/standard-scroll/always-fail.plutus" "$WORK_DIR/always-fail.plutus"
 
 LOCK_ADDR=$(cardano-cli address build \
     --payment-script-file "$WORK_DIR/always-fail.plutus" \
@@ -212,9 +215,12 @@ echo -e "${GREEN}  ✓ Datum created${NC}"
 #═══════════════════════════════════════════════════════════════════════════════
 echo -e "\n${BLUE}[4/8] Estimating minimum ADA...${NC}"
 
-# Rough estimation: ~5.5 ADA per 1KB of hex content
-CONTENT_KB=$(( (HEX_LENGTH / 2) / 1024 + 1 ))
-MIN_ADA=$(( CONTENT_KB * 5500000 + 2000000 ))
+# Ask the current ledger rules; a rough formula can become stale after a hard fork.
+cardano-cli query protocol-parameters $NETWORK --out-file "$WORK_DIR/protocol.json"
+MIN_ADA=$(cardano-cli transaction calculate-min-required-utxo \
+    --protocol-params-file "$WORK_DIR/protocol.json" \
+    --tx-out "$LOCK_ADDR+2000000" \
+    --tx-out-inline-datum-file "$WORK_DIR/datum.json" | awk '{print $2}')
 MIN_ADA_DISPLAY=$(echo "scale=2; $MIN_ADA / 1000000" | bc)
 
 echo -e "${GREEN}  Estimated minimum: ~${MIN_ADA_DISPLAY} ADA${NC}"
@@ -283,6 +289,21 @@ cardano-cli transaction submit \
     $NETWORK \
     --tx-file "$WORK_DIR/tx.signed"
 
+echo -e "${CYAN}Waiting for confirmation and reading the datum back...${NC}"
+CONFIRMED=false
+for attempt in $(seq 1 60); do
+    cardano-cli query utxo --tx-in "${TX_HASH}#0" $NETWORK --out-file "$WORK_DIR/readback.json"
+    if jq -e --arg k "${TX_HASH}#0" 'has($k)' "$WORK_DIR/readback.json" >/dev/null; then CONFIRMED=true; break; fi
+    sleep 5
+done
+[ "$CONFIRMED" = true ] || { echo -e "${RED}Transaction submitted but not confirmed; do not announce it yet${NC}"; exit 1; }
+READBACK_HEX=$(jq -r --arg k "${TX_HASH}#0" '.[$k].inlineDatum.fields[0].bytes // empty' "$WORK_DIR/readback.json")
+[ -n "$READBACK_HEX" ] || { echo -e "${RED}Confirmed output has no readable standard datum${NC}"; exit 1; }
+printf '%s' "$READBACK_HEX" | xxd -r -p > "$WORK_DIR/readback.bin"
+if [ "$COMPRESS" = true ]; then gzip -dc "$WORK_DIR/readback.bin" > "$WORK_DIR/readback.decoded"; else cp "$WORK_DIR/readback.bin" "$WORK_DIR/readback.decoded"; fi
+READBACK_HASH=$(sha256sum "$WORK_DIR/readback.decoded" | awk '{print $1}')
+[ "$READBACK_HASH" = "$ORIGINAL_HASH" ] || { echo -e "${RED}Read-back hash mismatch${NC}"; exit 1; }
+
 echo -e "${GREEN}  ✓ Transaction submitted!${NC}"
 
 #═══════════════════════════════════════════════════════════════════════════════
@@ -290,7 +311,7 @@ echo -e "${GREEN}  ✓ Transaction submitted!${NC}"
 #═══════════════════════════════════════════════════════════════════════════════
 echo ""
 echo -e "${PURPLE}═══════════════════════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}              📜 YOUR SCROLL IS NOW ETERNAL! 📜${NC}"
+echo -e "${GREEN}              📜 YOUR SCROLL IS CONFIRMED AND VERIFIED 📜${NC}"
 echo -e "${PURPLE}═══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "${YELLOW}Scroll Details:${NC}"
@@ -306,28 +327,15 @@ echo ""
 echo -e "${YELLOW}Cardanoscan:${NC}"
 echo "  https://cardanoscan.io/transaction/${TX_HASH}"
 echo ""
-echo -e "${YELLOW}Add to js/scrolls.js:${NC}"
+echo -e "${YELLOW}Registry entry template:${NC}"
 echo ""
 cat << EOF
 {
-    id: '$(basename "$CONTENT_FILE" | tr '.' '-' | tr ' ' '-' | tr '[:upper:]' '[:lower:]')',
-    title: '$(basename "$CONTENT_FILE")',
-    description: 'Your description here',
-    icon: '📜',
-    category: 'documents',
-    type: SCROLL_TYPES.STANDARD,
-    pointer: {
-        lock_address: '$LOCK_ADDR',
-        lock_txin: '${TX_HASH}#0',
-        content_type: '$CONTENT_TYPE',
-        codec: '$CODEC',
-        sha256: '$ORIGINAL_HASH'
-    },
-    metadata: {
-        size: '~$ORIGINAL_SIZE bytes',
-        minted: '$(date +%Y-%m-%d)',
-        locked_ada: '$(echo "scale=2; $MIN_ADA / 1000000" | bc) ADA'
-    }
+  "name": "$(basename "$CONTENT_FILE" | tr '.' '-' | tr ' ' '-' | tr '[:upper:]' '[:lower:]')",
+  "pointer": { "kind": "utxo-inline-datum-bytes-v1", "txHash": "$TX_HASH", "txIx": 0 },
+  "contentType": "$CONTENT_TYPE",
+  "codec": "$CODEC",
+  "sha256": "$ORIGINAL_HASH"
 }
 EOF
 echo ""

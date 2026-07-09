@@ -2,6 +2,10 @@
 
 Status: ACTIVE (first book: `$beacn`, July 2026) · License: MIT
 
+New books use [Ledger Book v2](ledger-book-v2.md), which adds a permanently
+expiring mint policy, raw asset-byte identity, and explicit completeness
+semantics. This document remains normative for existing v1 books and entries.
+
 A **Ledger Book is an NFT**: whoever holds it, holds the book. A **signature**
 is a transaction that pays a minimal anchor output to the wallet currently
 holding the book NFT, carrying the entry in transaction metadata tagged with the

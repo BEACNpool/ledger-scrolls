@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional
 
-KOIOS = "https://api.koios.rest/api/v1"
+KOIOS = os.environ.get("LS_KOIOS", "https://api.koios.rest/api/v1").rstrip("/")
 
 
 class KoiosError(RuntimeError):

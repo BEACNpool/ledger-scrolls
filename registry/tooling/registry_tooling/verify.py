@@ -5,6 +5,8 @@ import os
 from typing import Any, Dict, Optional, Tuple
 
 import requests
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 from .hashutil import canonical_json_bytes
 
@@ -18,6 +20,44 @@ class RegistryError(RuntimeError):
 
 def sha256_hex(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def verify_head_signature(head: Dict[str, Any], trusted_key: Optional[str] = None) -> str:
+    """Verify a registry-v1 Ed25519 envelope; return the authenticated key id.
+
+    v0 heads remain readable when no trust key is requested. Supplying a trust
+    key is fail-closed: an unsigned head is then rejected.
+    """
+    signature = head.get("signature")
+    signer = head.get("signer")
+    if not signature or not isinstance(signer, dict) or not signer.get("keyId"):
+        if trusted_key:
+            raise RegistryError("Trusted-key mode requires a signed registry-v1 head")
+        return "unsigned-v0"
+    key_id = str(signer["keyId"]).lower()
+    if trusted_key and key_id != trusted_key.lower():
+        raise RegistryError("Registry head signer does not match the pinned key")
+    try:
+        pub = bytes.fromhex(key_id)
+        sig = bytes.fromhex(str(signature))
+        if len(pub) != 32 or len(sig) != 64:
+            raise ValueError("wrong Ed25519 key/signature length")
+        unsigned = dict(head)
+        del unsigned["signature"]
+        Ed25519PublicKey.from_public_bytes(pub).verify(sig, canonical_json_bytes(unsigned))
+    except (ValueError, InvalidSignature) as exc:
+        raise RegistryError("Invalid registry head signature") from exc
+    return key_id
+
+
+def rotation_allows(previous_head: Dict[str, Any], next_head: Dict[str, Any]) -> bool:
+    """Return whether a signed successor uses the same or an authorized next key."""
+    prev = previous_head.get("signer") or {}
+    nxt = next_head.get("signer") or {}
+    current = str(prev.get("keyId") or "").lower()
+    candidate = str(nxt.get("keyId") or "").lower()
+    allowed = {current, *(str(k).lower() for k in (prev.get("nextKeys") or []))}
+    return bool(candidate and candidate in allowed)
 
 
 def load_json(path: str) -> Any:
@@ -179,8 +219,9 @@ def find_entry(registry_list: Dict[str, Any], name: str) -> Dict[str, Any]:
     raise RegistryError(f"name not found: {name}")
 
 
-def verify_name(head_path: str, name: str) -> None:
+def verify_name(head_path: str, name: str, trusted_key: Optional[str] = None) -> None:
     head = load_json(head_path)
+    signer_status = verify_head_signature(head, trusted_key)
 
     # Optional: show deterministic head hash (canonical JSON)
     head_hash = sha256_hex(canonical_json_bytes(head))
@@ -204,6 +245,7 @@ def verify_name(head_path: str, name: str) -> None:
 
     print(json.dumps({
         "headHash": head_hash,
+        "headSigner": signer_status,
         "name": name,
         "contentType": entry.get("contentType"),
         "bytesSha256": got,
@@ -216,12 +258,13 @@ def verify_name(head_path: str, name: str) -> None:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Verify Ledger Scrolls Registry resolution (v0)")
+    ap = argparse.ArgumentParser(description="Verify Ledger Scrolls Registry resolution (v0/v1)")
     ap.add_argument("--head", required=True, help="Path to registry head JSON")
     ap.add_argument("--name", required=True, help="Entry name to resolve")
+    ap.add_argument("--trusted-key", help="Pinned 32-byte Ed25519 public key hex; rejects unsigned/other signers")
     args = ap.parse_args()
 
-    verify_name(args.head, args.name)
+    verify_name(args.head, args.name, args.trusted_key)
 
 
 if __name__ == "__main__":

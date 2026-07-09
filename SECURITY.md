@@ -4,10 +4,12 @@
 
 Ledger Scrolls operates on a **trustless security model**:
 
-- **No server** — Everything runs client-side in your browser
+- **No application server** — The site runs client-side, but public chain APIs
+  are convenience data sources and can fail, censor results, or observe queries
 - **No accounts** — No registration, no passwords, no data collection
 - **No custody** — Your keys never leave your machine
-- **Verification** — All content can be verified via SHA256 hashes
+- **Verification** — Canonical entries carry SHA-256 commitments. Legacy entries
+  without a commitment are displayed as unverified, never silently trusted.
 
 ## ⚠️ Important Considerations
 
@@ -27,14 +29,11 @@ Ledger Scrolls operates on a **trustless security model**:
 - Once locked, ADA cannot be recovered
 - Verify content thoroughly before minting
 
-### API Keys
+### Local settings
 
-If you use Blockfrost:
-
-- API keys are stored in `localStorage`
-- Keys are only sent to Blockfrost's servers
-- Clear browser data to remove stored keys
-- Consider using read-only project IDs
+The Library stores an optional custom data-source URL and registry pointer in
+`localStorage`. The minted minimal reader can accept a user-supplied Blockfrost
+project ID; treat that ID as a credential and clear site data after shared use.
 
 ## 🛡️ Viewer Security
 
@@ -43,17 +42,18 @@ If you use Blockfrost:
 HTML scrolls render in sandboxed iframes:
 
 ```javascript
-sandbox="allow-scripts"
+sandbox=""
 ```
 
 This configuration:
-- **Allows** script execution (needed for interactive HTML scrolls)
-- **Prevents** same-origin access (scripts cannot access localStorage, cookies, or parent page)
+- **Disables** script execution, forms, popups and top-level navigation
+- **Prevents** same-origin access (content cannot access localStorage, cookies, or the parent page)
 - **Prevents** form submissions to external URLs
 - **Prevents** popup windows
 - **Prevents** navigation that could escape the sandbox
 
-> **Important:** Never use `allow-same-origin` with `allow-scripts` — that combination allows sandboxed scripts to escape the sandbox and access the parent page's data (including stored API keys). The `allow-scripts` *without* `allow-same-origin` creates a unique opaque origin for the iframe, fully isolating it.
+Interactive HTML is intentionally treated as a document, not an application.
+Never add `allow-scripts` or `allow-same-origin` to the canonical renderer.
 
 ### Hash Verification
 
@@ -112,12 +112,9 @@ Contact: Open a private security advisory on GitHub
 
 The viewer uses minimal dependencies:
 
-| Library | Purpose | Risk |
-|---------|---------|------|
-| pako.min.js | Gzip decompression | Low (pure JS, well-audited) |
-| cbor.min.js | CBOR decoding | Low (pure JS) |
-
-No npm, no build system, no supply chain complexity.
+The production readers use browser primitives and small in-tree CBOR routines;
+there are no runtime npm/CDN dependencies. CI runs the dependency-free
+conformance corpus in both Python and JavaScript.
 
 ## 🔗 External Services
 
