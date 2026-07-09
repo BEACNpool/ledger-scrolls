@@ -222,8 +222,8 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
       <input id="mname" placeholder="e.g. BEACN Guestbook" maxlength="28">
       <div class="bytec" id="mnameb">0 / 28 characters (A–Z a–z 0–9 space _ -)</div>
       <div class="pricerow"><span>Travels with the NFT into your wallet (min-UTxO — still yours)</span><span class="mono">~1.2 ADA</span></div>
-      <div class="pricerow noline"><span>Network fee (approx.)</span><span class="mono">~0.19 ADA</span></div>
-      <div class="pricerow noline"><span><b>True cost of a book that outlives you</b></span><span class="mono"><b>~0.19 ADA</b></span></div>
+      <div class="pricerow noline"><span>Network fee (approx. — includes the on-chain cover art)</span><span class="mono">~0.21 ADA</span></div>
+      <div class="pricerow noline"><span><b>True cost of a book that outlives you</b></span><span class="mono"><b>~0.21 ADA</b></span></div>
       <button id="mintbtn">📖 Mint my Ledger Book</button>
       <div id="mintnote"></div>
       <div id="mintresult">
@@ -860,6 +860,43 @@ async function loadBook(){
 document.getElementById("bookrefresh").addEventListener("click", loadBook);
 
 /* ═══ mint a Ledger Book (CIP-25 NFT, sig-script policy of the minter's key) ═══ */
+function bookCoverSvg(name){
+  var fs = name.length > 20 ? 20 : name.length > 14 ? 25 : 30;
+  var safe = name.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">'
+  +'<defs>'
+  +'<linearGradient id="c" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#332614"/><stop offset=".45" stop-color="#54401f"/><stop offset="1" stop-color="#241a0e"/></linearGradient>'
+  +'<linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4dd94"/><stop offset=".5" stop-color="#c9a44e"/><stop offset="1" stop-color="#eec969"/></linearGradient>'
+  +'</defs>'
+  +'<rect width="512" height="512" fill="#0e1116"/>'
+  +'<rect x="76" y="36" width="360" height="440" rx="14" fill="url(#c)"/>'
+  +'<rect x="76" y="36" width="360" height="440" rx="14" fill="none" stroke="url(#g)" stroke-width="3"/>'
+  +'<rect x="92" y="52" width="328" height="408" rx="9" fill="none" stroke="#c9a44e" stroke-width="1.2" opacity=".65"/>'
+  +'<rect x="100" y="36" width="5" height="440" fill="#160f08" opacity=".55"/>'
+  +'<g transform="translate(256,148)">'
+  +'<path d="M0 -50 C 30 -20, 25 16, 0 52 C -25 16, -30 -20, 0 -50 Z" fill="url(#g)"/>'
+  +'<circle cx="0" cy="4" r="7.5" fill="#241a0e"/>'
+  +'<path d="M0 12 L0 50" stroke="#241a0e" stroke-width="4.5"/>'
+  +'</g>'
+  +'<text x="256" y="258" text-anchor="middle" font-family="Georgia,serif" font-size="37" letter-spacing="7" fill="url(#g)">LEDGER BOOK</text>'
+  +'<text x="256" y="318" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="'+fs+'" fill="#f4e8c8">'+safe+'</text>'
+  +'<path d="M140 338 H372" stroke="#c9a44e" stroke-width="1.4" opacity=".8"/>'
+  +'<g stroke="#e8c35a" stroke-width="2.2" fill="none" opacity=".8" stroke-linecap="round">'
+  +'<path d="M150 382 c 14 -12, 22 8, 34 -2 s 26 6, 44 -4"/>'
+  +'<path d="M262 384 c 12 -10, 26 6, 40 -4 s 20 8, 34 -2"/>'
+  +'<path d="M176 412 c 16 -10, 30 8, 48 -4 s 30 8, 52 -4"/>'
+  +'<path d="M288 414 c 10 -8, 22 6, 34 -3"/>'
+  +'</g>'
+  +'<text x="256" y="452" text-anchor="middle" font-family="Georgia,serif" font-size="13" letter-spacing="4" fill="#c9a44e">SIGNED FOREVER · ON CARDANO</text>'
+  +'</svg>';
+}
+function imageChunks(svg){
+  var bytes = ENC.encode(svg), bin = "";
+  for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  var b64 = btoa(bin), out = ["data:image/svg+xml;base64,"];
+  for (var j = 0; j < b64.length; j += 64) out.push(b64.slice(j, j + 64));
+  return out;
+}
 var mnameEl = document.getElementById("mname");
 mnameEl.addEventListener("input", function(){
   mnameEl.value = mnameEl.value.replace(/[^A-Za-z0-9 _-]/g, "").slice(0, 28);
@@ -922,8 +959,11 @@ document.getElementById("mintbtn").addEventListener("click", async function(){
 
     // CIP-25 metadata (label 721)
     var link = READER_URL + "?book=" + policyHex + "." + assetName;
-    var m721 = catB([cMp(1), cS(policyHex), cMp(1), cS(assetName), cMp(4),
+    var chunks = imageChunks(bookCoverSvg(display));
+    var m721 = catB([cMp(1), cS(policyHex), cMp(1), cS(assetName), cMp(6),
       cS("name"), cS(clampBytes(display + " — Ledger Book", 64)),
+      cS("image"), catB([cAr(chunks.length)].concat(chunks.map(cS))),
+      cS("mediaType"), cS("image/svg+xml"),
       cS("Type"), cS("Ledger Book"),
       cS("protocol"), cS(BOOK_ID),
       cS("description"), (function(){
