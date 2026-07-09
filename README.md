@@ -309,7 +309,10 @@ power more than a library:
   share the link; every signature is a real transaction — a name, a message,
   and the signer's own wallet keys — bound to the book NFT forever and
   traveling with it to any wallet (label `22031`). Books are found by
-  **$handle**, address, or `policy.Name` pointer. Open protocol, MIT:
+  **$handle**, address, or `policy.Name` pointer. The ~1 ADA isn't a fee to a
+  platform — the anchor goes to the **book's keeper**, and the price is a
+  filter: dozens of signatures that meant something, not thousands of posts
+  that didn't. Open protocol, MIT:
   [registry/spec/ledger-book-v1.md](registry/spec/ledger-book-v1.md).
 - **♟️ [Ledger Chess](https://beacnpool.github.io/ledger-scrolls/ledger-chess.html)** —
   a chess arcade whose deterministic referee engine is itself minted on-chain;
