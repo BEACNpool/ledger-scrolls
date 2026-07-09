@@ -41,8 +41,11 @@ header.site a.home{color:var(--ink);text-decoration:none;font-family:var(--serif
 header.site .links a{font-size:14px;text-decoration:none;margin-left:16px;color:var(--ink-2)}
 
 /* ── landing: just the search ── */
-#landing{min-height:calc(100dvh - 60px);display:flex;align-items:center;justify-content:center;
+/* display only via .view/.on toggle — a bare #landing{display:flex} outranks
+   .view{display:none} and pins the landing on screen forever (day-one bug) */
+#landing{min-height:calc(100dvh - 60px);align-items:center;justify-content:center;
   background:radial-gradient(1200px 500px at 50% -100px, var(--amber-soft), transparent 70%)}
+#landing.on{display:flex}
 #landing .inner{text-align:center;padding:40px 20px;max-width:720px;width:100%}
 #landing .kicker{font:12px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--amber)}
 #landing h1{font-family:var(--serif);font-size:clamp(38px,7vw,64px);line-height:1.08;margin:14px 0 8px}
