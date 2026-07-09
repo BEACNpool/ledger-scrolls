@@ -653,28 +653,70 @@ async function connectWallet(){
   W.params={ a:+p.min_fee_a||44, b:+p.min_fee_b||155381, cpb:+p.coins_per_utxo_size||4310 };
   return W;
 }
+var MA_SPAN=null;
+/* Token-aware UTxO selection: spend token-bearing UTxOs when pure-ADA won't
+   cover, passing every token through to change as a RAW CBOR span (no
+   decode/re-encode → no BigInt hazards, byte-identical on-chain form).
+   Strategy: pure-ADA first; if short, include exactly ONE token bundle
+   (the largest); >1 bundle needed → ask the user to consolidate. */
+function cborSpanEnd(raw,pos){ return cborD(raw,pos)[1]; }
+function maSpanOf(raw,outStart){
+  var b=raw[outStart],mt=b>>5,pos,n,i;
+  if(mt===5){                                    // babbage map {0:addr,1:value,…}
+    n=b&31; pos=outStart+1;
+    if(n===24){ n=raw[outStart+1]; pos=outStart+2; }
+    for(i=0;i<n;i++){
+      var k=cborD(raw,pos); var vs=k[1]; var ve=cborSpanEnd(raw,vs);
+      if(k[0]===1) return valueMaSpan(raw,vs);
+      pos=ve;
+    }
+    return null;
+  }
+  if(mt===4){                                    // legacy array [addr, value, …]
+    pos=outStart+1;
+    if((b&31)===24) pos=outStart+2;
+    var e0=cborSpanEnd(raw,pos);                 // skip addr
+    return valueMaSpan(raw,e0);
+  }
+  return null;
+}
+function valueMaSpan(raw,vs){
+  if((raw[vs]>>5)!==4 || (raw[vs]&31)!==2) return null;   // plain coin → no ma
+  var eCoin=cborSpanEnd(raw,vs+1);
+  var eMa=cborSpanEnd(raw,eCoin);
+  return raw.subarray(eCoin,eMa);
+}
 function parseWalletUtxos(hexList){
   var out=[],i;
   for(i=0;i<(hexList||[]).length;i++){
     try{
-      var pair=cborD(hexB(hexList[i]))[0];
-      var inp=pair[0],o=pair[1],addr,val,extra=false;
+      var raw=hexB(hexList[i]);
+      if((raw[0]>>5)!==4) continue;
+      var p=(raw[0]&31)===24?2:1;
+      var inp=cborD(raw,p); var inVal=inp[0]; var outStart=inp[1];
+      var o=cborD(raw,outStart)[0];
+      var addr,val,extra=false;
       if(o instanceof Map){ addr=o.get(0); val=o.get(1); if(o.has(2)||o.has(3))extra=true; }
-      else{ addr=o[0]; val=o[1]; if(o.length>2&&o[2]!=null)extra=true; }
-      var coin=null;
+      else { addr=o[0]; val=o[1]; if(o.length>2&&o[2]!=null)extra=true; }
+      if(extra) continue;                        // datum/script UTxOs: never touch
+      var coin=null, maSpan=null;
       if(typeof val==="number") coin=val;
       else if(Array.isArray(val)&&typeof val[0]==="number"){
-        var ma=val[1];
-        var hasTokens=ma instanceof Map?ma.size>0:ma&&Object.keys(ma).length>0;
-        if(hasTokens) continue;                     // never touch token-bearing UTxOs
         coin=val[0];
+        var ma=val[1];
+        var nAssets=ma instanceof Map?ma.size:(ma&&Object.keys(ma).length)||0;
+        if(nAssets>0){ maSpan=maSpanOf(raw,outStart); if(!maSpan) continue; }
       }
-      if(extra||coin==null||!(coin>0)||coin>Math.pow(2,52)) continue;
-      if(!(inp[0] instanceof Uint8Array)||inp[0].length!==32) continue;
-      out.push({ txh:inp[0], ix:inp[1], coin:coin, addrHex:bHex(addr) });
+      if(coin==null||!(coin>0)||coin>Math.pow(2,52)) continue;
+      if(!(inVal[0] instanceof Uint8Array)||inVal[0].length!==32) continue;
+      out.push({ txh:inVal[0], ix:inVal[1], coin:coin, addrHex:bHex(addr), maSpan:maSpan });
     }catch(e){ void e; }
   }
   return out;
+}
+function encChangeOutMA(addrB,coin,maSpan){
+  if(!maSpan) return encPlainOut(addrB,coin);
+  return catB([cMp(2),cU(0),cBy(addrB),cU(1),cAr(2),cU(coin),maSpan]);
 }
 
 /* ═══ claim tx: inputs → [2 ADA to always-fail + change], metadata 22030 ═══ */
@@ -699,7 +741,7 @@ function encPlainOut(addrB,coin){ return catB([cMp(2),cU(0),cBy(addrB),cU(1),cU(
 function encClaimBody(net,ins,changeB,changeCoin,fee,auxHash){
   return catB([cMp(4),
     cU(0),cAr(ins.length)].concat(ins.map(encInput)).concat([
-    cU(1),cAr(2),encPlainOut(NETS[net].lockBytes,CLAIM_LOVELACE),encPlainOut(changeB,changeCoin),
+    cU(1),cAr(2),encPlainOut(NETS[net].lockBytes,CLAIM_LOVELACE),encChangeOutMA(changeB,changeCoin,MA_SPAN),
     cU(2),cU(fee),
     cU(7),cBy(auxHash)]));
 }
@@ -719,14 +761,23 @@ async function submitClaim(claim){
   var auxHash=blake2b256(aux);
   var utxos=parseWalletUtxos(await W.api.getUtxos());
   var changeB=hexB(await W.api.getChangeAddress());
-  var minChange=minChangeCoin(changeB,W.params);
-  var pool=utxos.slice().sort(function(a,b){return b.coin-a.coin;});
+  var pure=utxos.filter(function(u){return !u.maSpan;}).sort(function(a,b){return b.coin-a.coin;});
+  var toks=utxos.filter(function(u){return u.maSpan;}).sort(function(a,b){return b.coin-a.coin;});
+  MA_SPAN=null;
+  var pool=pure.slice();
+  var totalPure=pure.reduce(function(s,x){return s+x.coin;},0);
+  if(totalPure<CLAIM_LOVELACE+400000+minChangeCoin(changeB,W.params)&&toks.length){
+    MA_SPAN=toks[0].maSpan;                       // bring in ONE token bundle; tokens ride back in change
+    pool=[toks[0]].concat(pure);
+  }
+  var minChange=(function(){ var c=1000000,i;
+    for(i=0;i<4;i++) c=(160+encChangeOutMA(changeB,c,MA_SPAN).length)*W.params.cpb; return c; })();
   var ins=[],sum=0,fee=250000,round,body,size,newFee;
   for(round=0;round<40;round++){
     while(sum<CLAIM_LOVELACE+fee+minChange&&pool.length){ var x=pool.shift(); ins.push(x); sum+=x.coin; }
     if(sum<CLAIM_LOVELACE+fee+minChange)
       throw new Error("not enough spendable ADA (needs ~"+((CLAIM_LOVELACE+fee+minChange)/1e6).toFixed(2)+
-        " ADA in plain-ADA UTxOs; token UTxOs are never touched)");
+        " ADA; one token bundle can be included and its tokens return to you — if this persists, consolidate UTxOs in your wallet)");
     var nWit=1+new Set(ins.map(function(i){return i.addrHex;})).size;
     body=encClaimBody(W.net,ins,changeB,sum-CLAIM_LOVELACE-fee,fee,auxHash);
     size=3+body.length+dummyWitLen(nWit)+aux.length;
