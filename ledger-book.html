@@ -65,10 +65,6 @@ section h2{font-family:var(--serif);font-size:28px;margin-bottom:14px}
   padding:11px 13px;font:16px var(--serif);background:var(--surface-2);color:var(--ink);resize:none}
 #signcard input:focus,#signcard textarea:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
 .bytec{font:11.5px var(--mono);color:var(--faint);text-align:right;margin-top:3px}
-#moods{display:flex;gap:8px;flex-wrap:wrap}
-#moods button{font-size:22px;background:var(--surface-2);border:1px solid var(--line-2);
-  border-radius:var(--radius-sm);padding:7px 11px;cursor:pointer;min-height:44px}
-#moods button.on{border-color:var(--amber);background:var(--amber-soft)}
 #signbtn{width:100%;margin-top:18px;background:var(--ink);color:#fff;border:none;border-radius:var(--pill);
   padding:14px;font:600 16px var(--sans);cursor:pointer;min-height:50px}
 #signbtn:hover{background:var(--accent-ink)}
@@ -85,8 +81,7 @@ section h2{font-family:var(--serif);font-size:28px;margin-bottom:14px}
 .sig{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);
   padding:18px 18px 14px;box-shadow:var(--sh);position:relative;
   background-image:repeating-linear-gradient(transparent,transparent 27px,var(--line) 28px)}
-.sig .mood{position:absolute;top:12px;right:14px;font-size:22px}
-.sig .name{font-family:var(--serif);font-size:21px;font-style:italic;margin-bottom:6px;padding-right:30px}
+.sig .name{font-family:var(--serif);font-size:21px;font-style:italic;margin-bottom:6px}
 .sig .msg{font-family:var(--serif);font-size:15.5px;color:var(--ink-2);min-height:28px;white-space:pre-wrap;word-break:break-word}
 .sig .meta{margin-top:12px;font:11px var(--mono);color:var(--faint);display:flex;justify-content:space-between;gap:8px}
 .sig .meta a{color:var(--faint)}
@@ -134,7 +129,7 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
     for anyone, ever</b>. The pages below are read live out of the blockchain.</p>
     <div class="badges">
       <span class="badge"><b>✓</b> signatures stored in transactions, forever</span>
-      <span class="badge"><b>✓</b> ~1 ADA, locked in an unspendable vault</span>
+      <span class="badge"><b>✓</b> ~1 ADA all-in — the protocol minimum, nobody profits</span>
       <span class="badge"><b>✓</b> signed by your own wallet keys</span>
     </div>
     <a class="cta" href="#sign">Sign the book</a>
@@ -161,10 +156,9 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
       <label for="smsg">Your message</label>
       <textarea id="smsg" rows="3" placeholder="what do you want to say to everyone who ever opens this book?"></textarea>
       <div class="bytec" id="msgb">0 / 192 bytes</div>
-      <label>Mood (optional)</label>
-      <div id="moods"></div>
-      <div class="pricerow"><span>Locked with your signature (forever)</span><span class="mono">1.00 ADA</span></div>
-      <div class="pricerow" style="border:none;margin-top:2px;padding-top:2px"><span>Network fee (approx.)</span><span class="mono">~0.18 ADA</span></div>
+      <div class="pricerow"><span>Anchored with your signature (protocol minimum, locked forever)</span><span class="mono">~0.86 ADA</span></div>
+      <div class="pricerow" style="border:none;margin-top:2px;padding-top:2px"><span>Network fee (approx.)</span><span class="mono">~0.17 ADA</span></div>
+      <div class="pricerow" style="border:none;margin-top:2px;padding-top:2px"><span><b>Total — the cheapest a permanent signature can be</b></span><span class="mono"><b>~1.03 ADA</b></span></div>
       <button id="signbtn">✒️ Sign the Ledger Book</button>
       <div id="signnote"></div>
       <p style="font-size:12.5px;color:var(--faint);margin-top:12px;text-align:center">
@@ -180,9 +174,12 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
     <h2>How it works</h2>
     <div class="cols">
       <div class="card"><h3>Your signature is a transaction</h3>
-        <p>Signing sends ~1 ADA to Cardano's well-known <b>always-fail script address</b> — an
-        address with no spending key. The coin is locked forever; your name and message travel
-        in the transaction's metadata (label <span style="font-family:var(--mono)">22031</span>).</p></div>
+        <p>Signing sends the <b>smallest output Cardano allows</b> (~0.86 ADA, the protocol's
+        min-UTxO) to the well-known <b>always-fail script address</b> — an address with no
+        spending key. That anchor is what lets this page find your signature with no server;
+        your name and message travel in the transaction's metadata
+        (label <span style="font-family:var(--mono)">22031</span>). A transaction can never be
+        free — the ~0.17 network fee goes to the protocol, and nobody else gets anything.</p></div>
       <div class="card"><h3>The book is the blockchain</h3>
         <p>This page holds no database. Every time it opens, it asks the chain for the
         signature transactions and lays out the pages fresh. Mirror this file anywhere —
@@ -210,7 +207,7 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
    (proven on mainnet); label 22031, 1 ADA to the always-fail vault. ═══ */
 var BOOK_ID = "ledger-book-v1";
 var CLAIM_LABEL = "22031";
-var CLAIM_LOVELACE = 1000000;
+var CLAIM_LOVELACE = 1000000;   // replaced at signing with the live protocol minimum
 
 /* ═══ tiny helpers (from ledger-scrolls calculator.html, MIT) ═══ */
 var u8 = function(a){ return Uint8Array.from(a); };
@@ -428,8 +425,14 @@ function minChangeCoin(changeB,params){
   for(i=0;i<4;i++) coin=(160+encPlainOut(changeB,coin).length)*params.cpb;
   return coin;
 }
+function minAnchorCoin(params){
+  var coin=1000000,i;
+  for(i=0;i<4;i++) coin=(160+encPlainOut(NETS[1].lockBytes,coin).length)*params.cpb;
+  return coin;
+}
 async function submitClaim(claim){
   await connectWallet();
+  CLAIM_LOVELACE=minAnchorCoin(W.params);   // charge exactly the protocol minimum, nothing more
   var aux=buildAux(claim);
   var auxHash=blake2b256(aux);
   var utxos=parseWalletUtxos(await W.api.getUtxos());
@@ -481,18 +484,6 @@ function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
 
 /* ═══ sign panel ═══ */
-var MOODS = ["✒️","🦾","📜","♟","🔥","🌊","🌱","⭐","🫡","💙"];
-var mood = "";
-var moodsEl = document.getElementById("moods");
-MOODS.forEach(function(m){
-  var b = document.createElement("button");
-  b.textContent = m;
-  b.addEventListener("click", function(){
-    mood = mood === m ? "" : m;
-    moodsEl.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.textContent === mood); });
-  });
-  moodsEl.appendChild(b);
-});
 
 var snameEl = document.getElementById("sname"), smsgEl = document.getElementById("smsg");
 snameEl.addEventListener("input", function(){
@@ -511,7 +502,6 @@ document.getElementById("signbtn").addEventListener("click", async function(){
   if (!name) { note('<span class="bad">the book needs a name</span>'); return; }
   var entry = { b: BOOK_ID, n: name };
   if (msg) entry.m = splitBytes(msg, 64);
-  if (mood) entry.e = mood;
   var btn = this;
   btn.disabled = true;
   try {
@@ -535,7 +525,6 @@ function sigCard(s){
   d.className = "sig";
   d.style.transform = "rotate(" + tilt + "deg)";
   d.innerHTML =
-    (s.e ? '<span class="mood">' + esc(s.e) + "</span>" : "") +
     '<div class="name" style="color:' + ink + '">' + esc(s.n) + "</div>" +
     '<div class="msg">' + esc(s.m || "") + "</div>" +
     '<div class="meta"><span>' + (s.time ? new Date(s.time * 1000).toLocaleDateString(undefined,
@@ -561,7 +550,7 @@ async function loadBook(){
         if (!c || c.b !== BOOK_ID || !c.n) return;
         var t = slice.filter(function(x){ return x.tx_hash === r.tx_hash; })[0];
         sigs.push({ tx: r.tx_hash, time: t && t.block_time, n: String(c.n),
-                    m: Array.isArray(c.m) ? c.m.join("") : (c.m || ""), e: c.e ? String(c.e) : "" });
+                    m: Array.isArray(c.m) ? c.m.join("") : (c.m || "") });
       });
     }
     bookEl.innerHTML = "";
