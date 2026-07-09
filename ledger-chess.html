@@ -95,14 +95,74 @@ footer.site{border-top:1px solid var(--line);padding:26px 0 40px;margin-top:30px
   font-size:13px;color:var(--muted)}
 footer.site .mono{font-size:11.5px;word-break:break-all}
 
+/* loading progress (compact, mobile-friendly) */
+#loadui{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:28px 22px;text-align:center;background:#0e1116;color:#8494ab;z-index:2}
+#loadui .ring{width:52px;height:52px;border-radius:50%;border:3px solid #232b38;border-top-color:#e8c35a;
+  animation:spin 0.9s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loadui h2{font:600 18px var(--sans);color:#dbe4f0;margin:0 0 8px}
+#loadui #loadstage{font:14px var(--sans);color:#8494ab;min-height:1.4em}
+#loadui #loadpct{font:12px var(--mono);color:#5a6b85;margin-top:6px}
+#loadui.done{display:none}
+#loadui.err .ring{animation:none;border-color:#e07a7a;border-top-color:#e07a7a}
+#trust{display:none} /* detailed log behind "Show proof" */
+#trust.showlog{display:block;position:absolute;inset:0;z-index:3;background:#0e1116}
+#prooftoggle{margin-top:14px;background:transparent;border:1px solid #232b38;color:#8494ab;
+  border-radius:999px;padding:8px 14px;font:13px var(--sans);cursor:pointer}
+#prooftoggle:hover{border-color:#e8c35a;color:#dbe4f0}
+
+/* play mode top bar */
+#playbar{display:none;position:fixed;top:0;left:0;right:0;z-index:60;
+  align-items:center;justify-content:space-between;gap:10px;
+  padding:8px 12px calc(8px + env(safe-area-inset-top,0));
+  padding-top:calc(8px + env(safe-area-inset-top,0));
+  background:rgba(14,17,22,.92);backdrop-filter:blur(10px);border-bottom:1px solid #232b38;color:#dbe4f0}
+#playbar .ptitle{font:600 14px var(--sans);letter-spacing:.04em}
+#playbar button{min-height:40px;min-width:40px;padding:8px 14px;border-radius:999px;
+  border:1px solid #232b38;background:#161b24;color:#dbe4f0;font:600 14px var(--sans);cursor:pointer}
+#playbar button.exit{border-color:#e8c35a;color:#e8c35a}
+#playbar .pstatus{font:12px var(--mono);color:#8494ab}
+
+/* immersive play mode (CSS — always exit via ✕, no stuck fullscreen) */
+body.playmode{overflow:hidden;background:#0e1116}
+body.playmode header.site,
+body.playmode .hero,
+body.playmode .trustline,
+body.playmode #mobilenote,
+body.playmode section,
+body.playmode footer.site{display:none !important}
+body.playmode .cabinet{margin:0;padding:0;max-width:none}
+body.playmode #gamewrap{border-radius:0;aspect-ratio:auto;height:100dvh;min-height:100dvh;
+  padding-top:calc(48px + env(safe-area-inset-top,0)); box-sizing:border-box}
+body.playmode #playbar{display:flex}
+body.playmode #gameframe{height:100%}
+
 @media (max-width:720px){
   body{display:flex;flex-direction:column}
   header.site{order:-3}
-  .cabinet{order:-2;margin:0;padding:0;max-width:none}
-  #gamewrap{border-radius:0;aspect-ratio:auto;height:calc(100dvh - 52px);min-height:480px}
+  .hero{order:-2;padding:28px 0 16px}
+  .hero h1{font-size:clamp(28px,8vw,40px)}
+  .hero p.sub{font-size:15.5px}
+  .hero .badges{display:none} /* quieter landing — badges still true, play first */
+  .cabinet{order:-1;margin:0;padding:0;max-width:none}
+  #gamewrap{border-radius:0;aspect-ratio:auto;height:calc(100dvh - 56px);min-height:420px}
   .trustline{display:none}
+  /* auto-enter play-ish density: collapse hero after ready via JS */
+  body.mobile-ready .hero{display:none}
+  body.mobile-ready header.site{display:none}
+  body.mobile-ready .cabinet{order:0}
+  body.mobile-ready #gamewrap{height:100dvh;min-height:100dvh}
+  body.mobile-ready #playbar{display:flex}
+  body.mobile-ready section, body.mobile-ready footer.site{display:none}
+  body.mobile-ready.show-more section, body.mobile-ready.show-more footer.site{display:block}
+  body.mobile-ready.show-more .hero{display:block;padding-top:64px}
 }
 </style>
+<link rel="manifest" href="./chess-manifest.webmanifest">
+<meta name="theme-color" content="#0e1116">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ledger Chess">
 </head>
 <body>
 
@@ -139,19 +199,36 @@ footer.site .mono{font-size:11.5px;word-break:break-all}
   </div>
 </div>
 
+<div id="playbar" role="banner" aria-label="Play mode">
+  <button type="button" class="exit" id="playexit" title="Leave full play mode">✕ Done</button>
+  <div>
+    <div class="ptitle">♟ Ledger Chess</div>
+    <div class="pstatus" id="playstatus">loading…</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button type="button" id="prooftoggle" title="Show on-chain proof log">Proof</button>
+    <button type="button" id="playmore" title="Library & leaderboard">More</button>
+  </div>
+</div>
+
 <div class="cabinet" id="play">
   <div id="mobilenote" style="display:none;background:var(--amber-soft);border:1px solid var(--line-2);
-       border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:12px;font-size:14px;color:var(--ink-2)">
-    📱 <b>Playing on a phone?</b> You're good — this build is mobile-optimized. One tip: to
-    <b>etch a victory</b> from mobile, open this page inside the <b>Eternl</b> or <b>VESPR</b>
-    dapp browser (a plain mobile browser can play, but can't sign the transaction).
+       border-radius:var(--radius-sm);padding:12px 16px;margin:12px 12px 0;font-size:14px;color:var(--ink-2)">
+    📱 <b>Playing on a phone?</b> Play freely in any browser. To <b>etch a victory</b>, open this page inside
+    the <b>Eternl</b> or <b>VESPR</b> dapp browser (plain Safari/Chrome can play, but can't sign).
   </div>
   <div id="gamewrap">
+    <div id="loadui">
+      <div class="ring" aria-hidden="true"></div>
+      <h2>Pulling the game from Cardano</h2>
+      <div id="loadstage">Connecting…</div>
+      <div id="loadpct"></div>
+    </div>
     <div id="trust"></div>
     <iframe id="gameframe" sandbox="allow-scripts" title="Ledger Chess (verified on-chain scroll)"></iframe>
   </div>
-  <div class="trustline">the log above is your browser pulling the game out of Cardano and proving it, live ·
-    scroll pointer <span id="ptrline"></span></div>
+  <div class="trustline">live chain verify · scroll pointer <span id="ptrline"></span>
+    · <button type="button" class="small" id="enterplay" style="margin-left:8px">Full play mode</button></div>
 </div>
 
 <section>
@@ -387,8 +464,27 @@ async function sha256hex(bytes){
 
 /* ═══ scroll reconstruction (manifest-chain-v2, per registry/spec) ═══ */
 var trustEl=document.getElementById("trust");
-function tlog(cls,msg){ var d=document.createElement("div"); if(cls)d.className=cls;
-  d.textContent=msg; trustEl.appendChild(d); trustEl.scrollTop=trustEl.scrollHeight; }
+var loadStage=document.getElementById("loadstage");
+var loadPct=document.getElementById("loadpct");
+var loadUi=document.getElementById("loadui");
+var playStatus=document.getElementById("playstatus");
+function setLoad(stage,pct){
+  if(loadStage) loadStage.textContent=stage||"";
+  if(loadPct) loadPct.textContent=(pct!=null&&pct!=="")?pct:"";
+  if(playStatus) playStatus.textContent=stage||"loading…";
+}
+function tlog(cls,msg){
+  var d=document.createElement("div"); if(cls)d.className=cls;
+  d.textContent=msg; trustEl.appendChild(d); trustEl.scrollTop=trustEl.scrollHeight;
+  // drive compact mobile loader from the same messages (no second code path)
+  if(cls==="h"&&/DEV|executing|Ledger Chess/.test(msg)) setLoad(msg.replace(/^──\s*/,"").slice(0,80),"");
+  else if(cls==="ok"&&/manifest/.test(msg)) setLoad("Manifest verified","proof ok");
+  else if(/pages \d/.test(msg)){
+    var pm=msg.match(/pages\s+([^—]+)/); setLoad("Fetching game pages…", pm?pm[1].trim():"");
+  }
+  else if(cls==="ok"&&/file ✓|encoded stream/.test(msg)) setLoad("Hash verified — starting game","");
+  else if(cls==="bad"){ setLoad(msg,""); if(loadUi) loadUi.classList.add("err"); }
+}
 
 function segBytes(x){                       // segment may arrive as 0x…, bare hex, or {bytes}
   if(x instanceof Uint8Array) return x;
@@ -475,11 +571,32 @@ var NET=Q.get("net")==="preview"?0:1;
 var frame=document.getElementById("gameframe");
 var GAME_ORIGIN_READY=false;
 
+function isMobileShell(){
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||"") ||
+    ((navigator.maxTouchPoints||0)>1 && Math.min(screen.width,screen.height)<900);
+}
+function enterPlayMode(){
+  document.body.classList.add("playmode");
+  document.body.classList.remove("show-more");
+  if(isMobileShell()) document.body.classList.add("mobile-ready");
+  if(playStatus) playStatus.textContent = GAME_ORIGIN_READY ? "verified · play" : "loading…";
+  try{ history.replaceState(null,"",location.pathname+location.search+"#play"); }catch(e){}
+}
+function exitPlayMode(){
+  document.body.classList.remove("playmode");
+  document.body.classList.remove("mobile-ready");
+  document.body.classList.add("show-more");
+  // scroll to essay / leaderboard after exit
+  var lb=document.getElementById("lb");
+  if(lb) setTimeout(function(){ lb.scrollIntoView({behavior:"smooth",block:"start"}); },50);
+}
 async function boot(){
   try{
+    setLoad("Connecting to Cardano…","");
     var bytes;
     if(Q.get("src")){                               // dev mode: load from a local URL, no chain
       tlog("h","── DEV MODE — loading game from "+Q.get("src")+" (no chain verify) ──");
+      setLoad("Dev load (unverified)…","");
       var r=await fetch(Q.get("src"));
       bytes=new Uint8Array(await r.arrayBuffer());
       tlog("ok","loaded "+bytes.length+" bytes (unverified dev build)");
@@ -487,16 +604,27 @@ async function boot(){
       var ptr=Q.get("ptr")||GAME_POINTER[NET];
       if(!ptr){ tlog("bad","no game pointer configured for "+NETS[NET].name+
         " — pass ?ptr=<manifestTx>#<ix> (or ?src=<url> for dev)"); return; }
+      setLoad("Fetching on-chain scroll…","");
       var out=await reconstructChain(NET,ptr);
       bytes=out.bytes;
     }
     tlog("h","executing verified bytes in a sandboxed frame (allow-scripts, opaque origin, no network)…");
+    setLoad("Starting game…","");
     var blob=new Blob([bytes],{type:"text/html"});
     frame.src=URL.createObjectURL(blob);
     frame.style.display="block";
-    setTimeout(function(){ document.getElementById("trust").style.display="none"; },1500);
+    // hide loader; keep proof log available via toggle (do NOT break iframe / wallet bridge)
+    if(loadUi) loadUi.classList.add("done");
+    trustEl.classList.remove("showlog");
     GAME_ORIGIN_READY=true;
-  }catch(e){ tlog("bad","✗ "+(e.message||e)); }
+    if(playStatus) playStatus.textContent="verified · play";
+    // Mobile: enter immersive play shell automatically (exit via ✕ Done — never stuck)
+    if(isMobileShell() || location.hash==="#play") enterPlayMode();
+  }catch(e){
+    tlog("bad","✗ "+(e.message||e));
+    setLoad("Could not load game: "+(e.message||e),"");
+    if(loadUi) loadUi.classList.add("err");
+  }
 }
 
 /* ═══ CIP-30 wallet (parent side only — Eternl, as proven by calculator.html) ═══ */
@@ -707,10 +835,9 @@ document.getElementById("lbrefresh").addEventListener("click",loadLeaderboard);
 
 boot();
 
-/* ═══ site-page extras ═══ */
+/* ═══ site-page extras (shell only — claim bridge above is untouched) ═══ */
 document.getElementById("ptrline").textContent = GAME_POINTER[1];
-if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
-    (navigator.maxTouchPoints > 1 && Math.min(screen.width, screen.height) < 900))
+if (isMobileShell())
   document.getElementById("mobilenote").style.display = "block";
 document.getElementById("copylink").addEventListener("click", function(){
   navigator.clipboard.writeText("https://beacnpool.github.io/ledger-scrolls/ledger-chess.html").then(function(){
@@ -718,6 +845,32 @@ document.getElementById("copylink").addEventListener("click", function(){
     setTimeout(function(){ c.style.display="none"; }, 1800);
   });
 });
+document.getElementById("playexit").addEventListener("click", exitPlayMode);
+document.getElementById("playmore").addEventListener("click", function(){
+  exitPlayMode();
+});
+document.getElementById("enterplay").addEventListener("click", enterPlayMode);
+document.getElementById("prooftoggle").addEventListener("click", function(){
+  var on = trustEl.classList.toggle("showlog");
+  this.textContent = on ? "Hide" : "Proof";
+  // When proof is open, temporarily leave pure play so the log is readable
+  if(on){ document.body.classList.add("show-more"); }
+});
+// hardware back: leave play mode before leaving the page
+window.addEventListener("popstate", function(){
+  if(document.body.classList.contains("playmode")){
+    exitPlayMode();
+  }
+});
+// optional: listen for game-ready pings without altering claim protocol
+window.addEventListener("message", function(ev){
+  if(ev.source!==frame.contentWindow) return;
+  var d=ev.data;
+  if(d&&d.lc===1&&d.type==="ui-ready"&&playStatus) playStatus.textContent="verified · play";
+});
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw-chess.js",{scope:"./"}).catch(function(){});
+}
 (function autoLb(){ if(window.GAME_ORIGIN_READY) loadLeaderboard(); else setTimeout(autoLb,1200); })();
 </script>
 </body>
