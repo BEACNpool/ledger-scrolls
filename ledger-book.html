@@ -628,20 +628,29 @@ function show(view){
 }
 
 /* ═══ resolve a book reference: $handle | addr1… | policy.Name | bare policy ═══ */
-var BOOK = { ref: "", addr: "", addrBytes: null };
+var BOOK = { ref: "", addr: "", addrBytes: null, key: null, history: null };
+
+async function nftBook(policy, nameHex, nameAscii, viaHandle){
+  var addr = await assetHolder(policy, nameHex);
+  if (!addr) throw new Error("could not locate the book NFT's wallet");
+  var key = policy + "." + nameAscii;
+  var history = await bookAddressHistory(policy, nameHex, addr);
+  return { ref: "📖 " + nameAscii + (viaHandle ? " (" + viaHandle + ")" : ""),
+           addr: addr, key: key, history: history };
+}
 
 async function assetHolder(policy, nameHex){
   var rows = await kapi(1, "/asset_addresses", { _asset_policy: policy, _asset_name: nameHex });
   return (rows && rows[0] && rows[0].payment_address) || null;
 }
 
-// scan a stake account for a Ledger Book NFT (CIP-25 Type:"Ledger Book")
-async function findBookNft(stakeAddr){
+// scan a stake account for ALL Ledger Book NFTs (CIP-25 Type:"Ledger Book")
+async function findBookNfts(stakeAddr){
   var assets = await kapi(1, "/account_assets", { _stake_addresses: [stakeAddr] });
   var cands = (assets || []).filter(function(a){
     return a.policy_id !== HANDLE_POLICY;
   }).slice(0, 80).map(function(a){ return [a.policy_id, a.asset_name || ""]; });
-  if (!cands.length) return null;
+  if (!cands.length) return [];
   var infos = await kapi(1, "/asset_info", { _asset_list: cands });
   var books = [];
   (infos || []).forEach(function(a){
@@ -652,10 +661,30 @@ async function findBookNft(stakeAddr){
       books.push({ policy: a.policy_id, nameHex: a.asset_name || "",
                    name: a.asset_name_ascii || "book" });
   });
-  if (!books.length) return null;
   books.sort(function(a, b){ return (a.policy + a.nameHex) < (b.policy + b.nameHex) ? -1 : 1; });
-  var addr = await assetHolder(books[0].policy, books[0].nameHex);
-  return addr ? { name: books[0].name, addr: addr } : null;
+  return books;
+}
+
+// every address that ever held this NFT (so signatures FOLLOW the book)
+async function bookAddressHistory(policy, nameHex, currentAddr){
+  var addrs = {};
+  addrs[currentAddr] = 1;
+  try {
+    var txs = await kapi(1, "/asset_txs", { _asset_policy: policy, _asset_name: nameHex, _history: true });
+    var hashes = (txs || []).map(function(t){ return t.tx_hash; }).slice(0, 40);
+    for (var off = 0; off < hashes.length; off += 20) {
+      var rows = await kapi(1, "/tx_info", { _tx_hashes: hashes.slice(off, off + 20), _assets: true });
+      (rows || []).forEach(function(r){
+        (r.outputs || []).forEach(function(o){
+          if ((o.asset_list || []).some(function(a){
+                return a.policy_id === policy && (a.asset_name || "") === nameHex; }) &&
+              o.payment_addr && o.payment_addr.bech32)
+            addrs[o.payment_addr.bech32] = 1;
+        });
+      });
+    }
+  } catch (e) { void e; }                    // history is best-effort; current holder always included
+  return Object.keys(addrs);
 }
 
 async function resolveBook(ref){
@@ -671,12 +700,15 @@ async function resolveBook(ref){
       if (rows && rows[0] && rows[0].payment_address) { holder = rows[0]; break; }
     }
     if (!holder) throw new Error("handle " + ref + " not found on-chain");
-    // the wallet holds a Ledger Book NFT? then THAT is the front door (same
-    // pattern as the Library's $handle → registry-head lookup)
+    // the wallet holds Ledger Book NFTs? they are the front door — one opens
+    // directly, several become a guest choice
     try {
       if (holder.stake_address) {
-        var book = await findBookNft(holder.stake_address);
-        if (book) return { ref: "📖 " + book.name + " ($" + name + ")", addr: book.addr };
+        var books = await findBookNfts(holder.stake_address);
+        if (books.length === 1)
+          return await nftBook(books[0].policy, books[0].nameHex, books[0].name, "$" + name);
+        if (books.length > 1)
+          return { choice: books, via: "$" + name };
       }
     } catch (e) { void e; }                                  // discovery is best-effort
     return { ref: "$" + name, addr: holder.payment_address };
@@ -688,7 +720,11 @@ async function resolveBook(ref){
       ? [hexEnc(an), an.toLowerCase()] : [hexEnc(an)];
     for (var j = 0; j < tries.length; j++) {
       var h = await assetHolder(pol, tries[j]);
-      if (h) return { ref: "📖 " + an, addr: h };
+      if (h) {
+        var ascii = /^[0-9a-f]+$/i.test(an) && an.length % 2 === 0 && tries[j] === an.toLowerCase()
+          ? (function(){ try { return new TextDecoder().decode(hexB(an)); } catch(e){ return an; } })() : an;
+        return await nftBook(pol, tries[j], ascii, null);
+      }
     }
     throw new Error("book NFT not found under that policy");
   }
@@ -697,9 +733,8 @@ async function resolveBook(ref){
     if (!assets || !assets.length) throw new Error("no assets under that policy");
     if (assets.length > 1) throw new Error("that policy has " + assets.length +
       " assets — use policy.Name to pick the book");
-    var holder = await assetHolder(ref.toLowerCase(), assets[0].asset_name || "");
-    if (!holder) throw new Error("could not locate the NFT's wallet");
-    return { ref: "📖 " + (assets[0].asset_name_ascii || "book"), addr: holder };
+    return await nftBook(ref.toLowerCase(), assets[0].asset_name || "",
+                         assets[0].asset_name_ascii || "book", null);
   }
   var dec = b32decode(ref);                                  // throws on bad bech32
   if (dec.hrp !== "addr") throw new Error("not a mainnet address");
@@ -712,13 +747,34 @@ function setBookUi(){
   document.getElementById("bookaddr").textContent = BOOK.addr;
 }
 
+function showChooser(books, via){
+  var err = document.getElementById("searcherr");
+  err.innerHTML = "";
+  var box = document.createElement("div");
+  box.style.cssText = "margin-top:16px;display:flex;flex-direction:column;gap:8px;align-items:center";
+  var head = document.createElement("div");
+  head.style.cssText = "color:var(--ink-2);font-size:15px";
+  head.textContent = via + " keeps " + books.length + " books — which one do you want to open?";
+  box.appendChild(head);
+  books.forEach(function(bk){
+    var btn = document.createElement("button");
+    btn.style.cssText = "background:var(--surface);border:1px solid var(--line-2);border-radius:999px;padding:12px 26px;font:16px var(--serif);font-style:italic;cursor:pointer;min-height:48px";
+    btn.textContent = "📖 " + bk.name;
+    btn.addEventListener("click", function(){ openBook(bk.policy + "." + bk.name); });
+    box.appendChild(btn);
+  });
+  err.appendChild(box);
+}
+
 async function openBook(refRaw){
   var err = document.getElementById("searcherr");
   err.textContent = "";
   try {
     document.getElementById("searchgo").disabled = true;
     var r = await resolveBook(refRaw);
+    if (r.choice) { showChooser(r.choice, r.via); show("landing"); return; }
     BOOK.ref = r.ref; BOOK.addr = r.addr;
+    BOOK.key = r.key || null; BOOK.history = r.history || null;
     BOOK.addrBytes = b32decode(r.addr).bytes;
     BOOK.linkRef = refRaw.trim();
     setBookUi();
@@ -784,6 +840,7 @@ document.getElementById("signbtn").addEventListener("click", async function(){
   if (!name) { note('<span class="bad">the book needs a name</span>'); return; }
   if (!BOOK.addrBytes) { note('<span class="bad">no book open</span>'); return; }
   var entry = { b: BOOK_ID, n: name };
+  if (BOOK.key) entry.k = clampBytes(BOOK.key, 64);   // signatures follow the book NFT
   if (msg) entry.m = splitBytes(msg, 64);
   var btn = this;
   btn.disabled = true;
@@ -823,20 +880,25 @@ async function loadBook(){
   st.textContent = "reading signatures out of the chain…";
   bookEl.innerHTML = ""; emptyEl.style.display = "none";
   try {
-    var txs = await kapi(1, "/address_txs", { _addresses: [BOOK.addr] });
+    var scanAddrs = (BOOK.key && BOOK.history && BOOK.history.length) ? BOOK.history : [BOOK.addr];
+    var txs = await kapi(1, "/address_txs", { _addresses: scanAddrs });
     txs.sort(function(a, b){ return b.block_height - a.block_height; });
-    var recent = txs.slice(0, 800), sigs = [];
+    var recent = txs.slice(0, 800), sigs = [], seen = {};
     for (var off = 0; off < recent.length; off += 40) {
       var slice = recent.slice(off, off + 40);
       var rows = await kapi(1, "/tx_metadata", { _tx_hashes: slice.map(function(t){ return t.tx_hash; }) });
       rows.forEach(function(r){
         var c = r.metadata && (r.metadata[CLAIM_LABEL] || r.metadata[parseInt(CLAIM_LABEL, 10)]);
         if (!c || c.b !== BOOK_ID || !c.n) return;
+        if (BOOK.key && String(c.k || "") !== BOOK.key) return;   // NFT book: only its own entries
+        if (seen[r.tx_hash]) return;
+        seen[r.tx_hash] = 1;
         var t = slice.filter(function(x){ return x.tx_hash === r.tx_hash; })[0];
         sigs.push({ tx: r.tx_hash, time: t && t.block_time, n: String(c.n),
                     m: Array.isArray(c.m) ? c.m.join("") : (c.m || "") });
       });
     }
+    sigs.sort(function(a, b){ return (b.time || 0) - (a.time || 0); });
     if (!sigs.length) {
       emptyEl.style.display = "";
       st.textContent = "0 signatures — the book of " + BOOK.ref + " is waiting for its first.";

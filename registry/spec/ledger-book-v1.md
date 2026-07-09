@@ -31,6 +31,9 @@ A conforming signature transaction:
 - `m` — OPTIONAL message as an array of strings, each ≤64 bytes (UTF-8 split on
   codepoint boundaries). Readers join the array with no separator.
   RECOMMENDED total ≤192 bytes; readers MUST tolerate more.
+- `k` — REQUIRED when signing a book NFT: the book key `"<policyId>.<AssetName>"`
+  (≤64 bytes). This is what lets signatures FOLLOW the NFT across wallets.
+  Omit for plain address books.
 - Unknown extra fields MUST be ignored by readers (forward compatibility).
 
 ## Reading a book
@@ -72,10 +75,13 @@ A book MAY be represented by an NFT so it can be owned, displayed, and moved:
 - CIP-25 (label 721) metadata SHOULD include `Type: "Ledger Book"` and
   `protocol: "ledger-book-v1"`, plus a human name and a reader deep link in
   `description`.
-- The book's address is **wherever the NFT currently lives**: readers resolve
-  `policy.AssetName` via the asset's holding address (same mechanics as $handle
-  books). Moving the NFT moves the book; old signatures stay with the old
-  address, new ones follow the NFT.
+- The book's address is **wherever the NFT currently lives**: signatures pay
+  the current holder. Because entries carry `k`, readers reconstruct the whole
+  book by walking the NFT's ownership history (asset txs → every address that
+  ever held it) and collecting `k`-matching entries — **signatures follow the
+  book forever**, across any number of owners.
+- A wallet holding SEVERAL book NFTs: `$handle` readers SHOULD offer the guest
+  a choice between them (by minted name); exactly one opens directly.
 - **$handle front door**: when resolving a `$handle`, readers SHOULD check the
   holder's stake account for a Ledger Book NFT (CIP-25 `Type: "Ledger Book"`);
   if present, open THAT NFT's book (canonical, follows the NFT) and fall back
