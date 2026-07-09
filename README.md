@@ -311,8 +311,9 @@ power more than a library:
   traveling with it to any wallet (label `22031`). Books are found by
   **$handle**, address, or `policy.Name` pointer. The ~1 ADA isn't a fee to a
   platform — the anchor goes to the **book's keeper**, and the price is a
-  filter: dozens of signatures that meant something, not thousands of posts
-  that didn't. Open protocol, MIT:
+  filter: spam costs the spammer real money, pays their victim, and leaves the
+  spammer's own wallet address on the page forever. Product home:
+  [ledger-book/](ledger-book/README.md) · spec:
   [registry/spec/ledger-book-v1.md](registry/spec/ledger-book-v1.md).
 - **♟️ [Ledger Chess](https://beacnpool.github.io/ledger-scrolls/ledger-chess.html)** —
   a chess arcade whose deterministic referee engine is itself minted on-chain;
@@ -328,7 +329,8 @@ ledger-scrolls/
 ├── reader.html             # retired stub → build-a-reader/ (the minted reader lives in examples/the-reader/)
 ├── build-a-reader/         # BUILD YOUR OWN READER — the one-stop guide page
 ├── calculator.html / leaks.html / media.html   # site pages (Pages serves repo root)
-├── ledger-book.html        # LEDGER BOOK — guestbooks as NFTs (spec: registry/spec/ledger-book-v1.md)
+├── ledger-book.html        # LEDGER BOOK — the app (must stay at root: minted NFT metadata links it)
+├── ledger-book/            # Ledger Book product home — ethos, costs, spec pointers
 ├── ledger-chess.html       # LEDGER CHESS — the on-chain arcade + victory leaderboard
 ├── docs/                   # All guides — start at docs/README.md
 │   └── history/            # Past audits & design reviews
