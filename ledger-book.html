@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ledger Book — the eternal yearbook</title>
-<meta name="description" content="A yearbook that lives inside Cardano. Sign it once — your name and message become part of the blockchain itself, readable forever, deletable by no one.">
-<meta property="og:title" content="Ledger Book — the eternal yearbook">
-<meta property="og:description" content="Sign a book that cannot burn. One small transaction etches your name and message into Cardano forever — no account, no server, no delete button.">
+<title>Ledger Book — every wallet is a yearbook</title>
+<meta name="description" content="An open protocol for guestbooks that live inside Cardano. Every wallet is a book. Sign someone's book with one small transaction — your words become part of the chain, forever.">
+<meta property="og:title" content="Ledger Book — every wallet is a yearbook">
+<meta property="og:description" content="Sign a book that cannot burn. One ~1 ADA transaction writes your name and message into Cardano forever — anchored to the book owner's wallet. Open protocol: anyone can host a book, anyone can read one.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://beacnpool.github.io/ledger-scrolls/ledger-book.html">
 <meta property="og:image" content="https://beacnpool.github.io/ledger-scrolls/media/ledger-book-card.png">
@@ -40,11 +40,11 @@ header.site .wrap{display:flex;align-items:center;justify-content:space-between;
 header.site a.home{color:var(--ink);text-decoration:none;font-family:var(--serif);font-size:18px}
 header.site .links a{font-size:14px;text-decoration:none;margin-left:16px;color:var(--ink-2)}
 
-.hero{padding:52px 0 26px;text-align:center;background:
+.hero{padding:48px 0 24px;text-align:center;background:
   radial-gradient(1200px 400px at 50% -100px, var(--amber-soft), transparent 70%)}
 .hero .kicker{font:12px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--amber)}
 .hero h1{font-family:var(--serif);font-size:clamp(34px,6vw,56px);line-height:1.1;margin:12px 0}
-.hero p.sub{max-width:620px;margin:0 auto;color:var(--ink-2);font-size:18px}
+.hero p.sub{max-width:640px;margin:0 auto;color:var(--ink-2);font-size:18px}
 .hero .badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:20px 0 6px}
 .badge{font:12.5px var(--mono);background:var(--surface);border:1px solid var(--line-2);
        border-radius:var(--pill);padding:6px 14px;color:var(--ink-2)}
@@ -53,10 +53,22 @@ header.site .links a{font-size:14px;text-decoration:none;margin-left:16px;color:
      font-weight:600;padding:13px 30px;border-radius:var(--pill);box-shadow:var(--sh)}
 .cta:hover{background:var(--accent-ink)}
 
-section{padding:38px 0}
+section{padding:36px 0}
 section h2{font-family:var(--serif);font-size:28px;margin-bottom:14px}
 
-/* ── the sign panel ── */
+/* whose book */
+#bookid{max-width:640px;margin:0 auto 20px;text-align:center}
+#bookid .whose{font-family:var(--serif);font-size:24px}
+#bookid .whose b{color:var(--amber)}
+#bookid .addr{font:12px var(--mono);color:var(--faint);word-break:break-all;margin-top:4px}
+#switch{display:flex;gap:8px;max-width:520px;margin:14px auto 0}
+#switch input{flex:1;border:1px solid var(--line-2);border-radius:var(--pill);padding:10px 16px;
+  font:14px var(--mono);background:var(--surface);color:var(--ink);min-width:0}
+#switch button{border:1px solid var(--line-2);background:var(--surface);border-radius:var(--pill);
+  padding:10px 18px;font:14px var(--sans);cursor:pointer;min-height:44px}
+#switch button:hover{border-color:var(--accent)}
+
+/* sign panel */
 #signcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   padding:26px;box-shadow:var(--sh-lg);max-width:560px;margin:0 auto}
 #signcard label{display:block;font:12.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;
@@ -72,10 +84,11 @@ section h2{font-family:var(--serif);font-size:28px;margin-bottom:14px}
 #signnote{font-size:13.5px;color:var(--muted);margin-top:10px;min-height:1.4em;text-align:center}
 #signnote .ok{color:var(--ok);font-weight:600} #signnote .bad{color:var(--bad)}
 .pricerow{display:flex;justify-content:space-between;font-size:14px;color:var(--ink-2);
-  border-top:1px dashed var(--line-2);margin-top:16px;padding-top:12px}
-.pricerow .mono{font-family:var(--mono)}
+  border-top:1px dashed var(--line-2);margin-top:16px;padding-top:12px;gap:12px}
+.pricerow.noline{border:none;margin-top:2px;padding-top:2px}
+.pricerow .mono{font-family:var(--mono);white-space:nowrap}
 
-/* ── the book ── */
+/* the book */
 #bookstatus{color:var(--muted);font-size:14px;margin-bottom:16px;text-align:center;font-family:var(--mono)}
 #book{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
 .sig{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);
@@ -101,9 +114,9 @@ footer.site{border-top:1px solid var(--line);padding:26px 0 40px;margin-top:30px
 footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
 
 @media (max-width:720px){
-  .hero{padding:36px 0 20px}
+  .hero{padding:34px 0 18px}
   #signcard{padding:20px}
-  section{padding:28px 0}
+  section{padding:26px 0}
 }
 </style>
 </head>
@@ -122,23 +135,31 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
 
 <div class="hero">
   <div class="wrap">
-    <div class="kicker">A Ledger Scrolls demonstration · a yearbook on the blockchain</div>
+    <div class="kicker">An open protocol · every wallet is a yearbook</div>
     <h1>✒️ Ledger Book</h1>
-    <p class="sub">A yearbook that lives <b>inside Cardano</b>. Sign it once and your name and
-    message become part of the chain itself — no account, no server, and <b>no delete button,
-    for anyone, ever</b>. The pages below are read live out of the blockchain.</p>
+    <p class="sub">A guestbook that lives <b>inside Cardano</b>. Every wallet is a book:
+    signing sends one small transaction to the book owner's address, and your name and
+    message become part of the chain — <b>no account, no server, no delete button, ever</b>.
+    Anyone can host a book. Anyone can read one. This page is just a reader.</p>
     <div class="badges">
-      <span class="badge"><b>✓</b> signatures stored in transactions, forever</span>
-      <span class="badge"><b>✓</b> ~1 ADA all-in — the protocol minimum, nobody profits</span>
-      <span class="badge"><b>✓</b> signed by your own wallet keys</span>
+      <span class="badge"><b>✓</b> signatures live in transactions, forever</span>
+      <span class="badge"><b>✓</b> ~1 ADA anchor goes to the book's owner</span>
+      <span class="badge"><b>✓</b> open protocol — host your own with any wallet</span>
     </div>
-    <a class="cta" href="#sign">Sign the book</a>
+    <a class="cta" href="#sign">Sign this book</a>
   </div>
 </div>
 
 <section id="bookview">
   <div class="wrap">
-    <h2 style="text-align:center">The Book</h2>
+    <div id="bookid">
+      <div class="whose">You are reading the book of <b id="bookref">…</b></div>
+      <div class="addr" id="bookaddr"></div>
+      <div id="switch">
+        <input id="bookinput" placeholder="open another book: $handle or addr1…">
+        <button id="bookgo">Open</button>
+      </div>
+    </div>
     <div id="bookstatus">opening the book…</div>
     <div id="bookempty" style="display:none">This page is blank.<br>Someone has to be first — and first is forever.</div>
     <div id="book"></div>
@@ -148,46 +169,47 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
 
 <section id="sign" style="background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
   <div class="wrap">
-    <h2 style="text-align:center">Sign it</h2>
+    <h2 style="text-align:center">Sign the book of <span id="bookref2">…</span></h2>
     <div id="signcard">
-      <label for="sname">Your name <span id="namec" style="text-transform:none"></span></label>
+      <label for="sname">Your name</label>
       <input id="sname" placeholder="how the future should know you" maxlength="64">
       <div class="bytec" id="nameb">0 / 64 bytes</div>
       <label for="smsg">Your message</label>
       <textarea id="smsg" rows="3" placeholder="what do you want to say to everyone who ever opens this book?"></textarea>
       <div class="bytec" id="msgb">0 / 192 bytes</div>
-      <div class="pricerow"><span>Anchored with your signature (protocol minimum, locked forever)</span><span class="mono">~0.86 ADA</span></div>
-      <div class="pricerow" style="border:none;margin-top:2px;padding-top:2px"><span>Network fee (approx.)</span><span class="mono">~0.17 ADA</span></div>
-      <div class="pricerow" style="border:none;margin-top:2px;padding-top:2px"><span><b>Total — the cheapest a permanent signature can be</b></span><span class="mono"><b>~1.03 ADA</b></span></div>
-      <button id="signbtn">✒️ Sign the Ledger Book</button>
+      <div class="pricerow"><span>Anchor — goes to the book's owner (protocol minimum)</span><span class="mono">~0.98 ADA</span></div>
+      <div class="pricerow noline"><span>Network fee (approx.)</span><span class="mono">~0.17 ADA</span></div>
+      <div class="pricerow noline"><span><b>Total — the cheapest a permanent signature can be</b></span><span class="mono"><b>~1.15 ADA</b></span></div>
+      <button id="signbtn">✒️ Sign this Ledger Book</button>
       <div id="signnote"></div>
       <p style="font-size:12.5px;color:var(--faint);margin-top:12px;text-align:center">
-        Wallet: Eternl (desktop extension or mobile dapp browser) officially supported ·
-        VESPR dapp browser works (experimental) · Think before you sign — this is <b>permanent and public</b>.
-        The ADA goes to an unspendable script address; nobody receives it.</p>
+        Wallet: Eternl (desktop or mobile dapp browser) officially supported · VESPR dapp browser
+        works (experimental) · Think before you sign — this is <b>permanent and public</b>.
+        The anchor is a small gift to whoever hosts the book; the fee goes to the protocol.</p>
     </div>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <h2>How it works</h2>
+    <h2>How it works — the whole protocol</h2>
     <div class="cols">
-      <div class="card"><h3>Your signature is a transaction</h3>
-        <p>Signing sends the <b>smallest output Cardano allows</b> (~0.86 ADA, the protocol's
-        min-UTxO) to the well-known <b>always-fail script address</b> — an address with no
-        spending key. That anchor is what lets this page find your signature with no server;
-        your name and message travel in the transaction's metadata
-        (label <span style="font-family:var(--mono)">22031</span>). A transaction can never be
-        free — the ~0.17 network fee goes to the protocol, and nobody else gets anything.</p></div>
-      <div class="card"><h3>The book is the blockchain</h3>
-        <p>This page holds no database. Every time it opens, it asks the chain for the
-        signature transactions and lays out the pages fresh. Mirror this file anywhere —
-        the book follows, because the book <i>is</i> the chain.</p></div>
-      <div class="card"><h3>Proof of authorship</h3>
-        <p>Every entry was signed by its author's own wallet keys — attribution is
-        cryptographic, not claimed. The small print under each signature links straight
-        to the transaction.</p></div>
+      <div class="card"><h3>A book is just an address</h3>
+        <p>Any Cardano wallet is a Ledger Book. A signature is a transaction paying the
+        protocol-minimum anchor (~1 ADA) <b>to the book owner's address</b>, carrying the
+        entry in metadata label <span style="font-family:var(--mono)">22031</span>.
+        Books can be addressed by <b>$handle</b> — this one lives with <b>$beacn</b>.</p></div>
+      <div class="card"><h3>Any reader can read any book</h3>
+        <p>This page holds no database — it asks the chain for transactions to the book's
+        address and lays out the pages fresh. Open any book with
+        <span style="font-family:var(--mono)">?book=$handle</span> or
+        <span style="font-family:var(--mono)">?book=addr1…</span>. Mirror this file anywhere;
+        the books follow, because the books <i>are</i> the chain.</p></div>
+      <div class="card"><h3>Open source, open protocol</h3>
+        <p>The format is <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/ledger-book-v1.md">specified and MIT-licensed</a>
+        — build your own reader, skin it, embed it, host your book anywhere. Attribution is
+        cryptographic: every entry is signed by its author's own wallet keys, and each card
+        links to its transaction.</p></div>
     </div>
   </div>
 </section>
@@ -195,7 +217,9 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
 <footer class="site">
   <div class="wrap">
     <p><b>Receipts:</b></p>
-    <p class="mono">signatures: metadata label 22031 → addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn (always-fail vault)</p>
+    <p class="mono">protocol: metadata label 22031 · anchor = min-UTxO paid to the book address ·
+    spec: registry/spec/ledger-book-v1.md<br>
+    this book: <span id="bookaddr2"></span></p>
     <p style="margin-top:10px">Part of <a href="index.html">Ledger Scrolls</a>: the library that cannot burn ·
     sibling of <a href="ledger-chess.html">Ledger Chess</a> · MIT</p>
   </div>
@@ -203,11 +227,17 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
 
 <script>
 "use strict";
-/* ═══ Ledger Book — sign + read. Chain/tx machinery shared with Ledger Chess
-   (proven on mainnet); label 22031, 1 ADA to the always-fail vault. ═══ */
+/* ═══ Ledger Book v1 — open protocol reader + writer.
+   A book = any Cardano address. A signature = a tx paying the min-UTxO anchor
+   to that address, carrying metadata label 22031:
+     { b:"ledger-book-v1", n:<name ≤64B>, m:[<message lines ≤64B>] }
+   Spec: registry/spec/ledger-book-v1.md (MIT).
+   Chain/tx machinery shared with Ledger Chess (proven on mainnet). ═══ */
 var BOOK_ID = "ledger-book-v1";
 var CLAIM_LABEL = "22031";
 var CLAIM_LOVELACE = 1000000;   // replaced at signing with the live protocol minimum
+var DEFAULT_BOOK = "$beacn";
+var HANDLE_POLICY = "f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a";
 
 /* ═══ tiny helpers (from ledger-scrolls calculator.html, MIT) ═══ */
 var u8 = function(a){ return Uint8Array.from(a); };
@@ -411,7 +441,7 @@ function encPlainOut(addrB,coin){ return catB([cMp(2),cU(0),cBy(addrB),cU(1),cU(
 function encClaimBody(net,ins,changeB,changeCoin,fee,auxHash){
   return catB([cMp(4),
     cU(0),cAr(ins.length)].concat(ins.map(encInput)).concat([
-    cU(1),cAr(2),encPlainOut(NETS[net].lockBytes,CLAIM_LOVELACE),encPlainOut(changeB,changeCoin),
+    cU(1),cAr(2),encPlainOut(BOOK.addrBytes,CLAIM_LOVELACE),encPlainOut(changeB,changeCoin),
     cU(2),cU(fee),
     cU(7),cBy(auxHash)]));
 }
@@ -427,12 +457,12 @@ function minChangeCoin(changeB,params){
 }
 function minAnchorCoin(params){
   var coin=1000000,i;
-  for(i=0;i<4;i++) coin=(160+encPlainOut(NETS[1].lockBytes,coin).length)*params.cpb;
+  for(i=0;i<4;i++) coin=(160+encPlainOut(BOOK.addrBytes,coin).length)*params.cpb;
   return coin;
 }
 async function submitClaim(claim){
   await connectWallet();
-  CLAIM_LOVELACE=minAnchorCoin(W.params);   // charge exactly the protocol minimum, nothing more
+  CLAIM_LOVELACE=minAnchorCoin(W.params);   // exact protocol minimum to the book owner
   var aux=buildAux(claim);
   var auxHash=blake2b256(aux);
   var utxos=parseWalletUtxos(await W.api.getUtxos());
@@ -467,11 +497,8 @@ async function submitClaim(claim){
 /* ═══ byte-safe helpers ═══ */
 var ENC = new TextEncoder();
 function bytesOf(s){ return ENC.encode(s).length; }
-function clampBytes(s, max){          // trim to max UTF-8 bytes without splitting a codepoint
-  while (bytesOf(s) > max) s = s.slice(0, -1);
-  return s;
-}
-function splitBytes(s, chunk){        // split into ≤chunk-byte strings on codepoint boundaries
+function clampBytes(s, max){ while (bytesOf(s) > max) s = s.slice(0, -1); return s; }
+function splitBytes(s, chunk){
   var out = [], cur = "";
   for (var ch of s) {
     if (bytesOf(cur + ch) > chunk) { out.push(cur); cur = ch; }
@@ -482,9 +509,63 @@ function splitBytes(s, chunk){        // split into ≤chunk-byte strings on cod
 }
 function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function hexEnc(s){ return Array.prototype.map.call(ENC.encode(s),
+  function(b){ return b.toString(16).padStart(2, "0"); }).join(""); }
+
+/* ═══ the book: resolve ?book= ($handle or addr1…) ═══ */
+var BOOK = { ref: "", addr: "", addrBytes: null };
+
+async function resolveBook(ref){
+  ref = (ref || "").trim();
+  if (!ref) throw new Error("empty book reference");
+  if (ref[0] === "$") {
+    var name = ref.slice(1).toLowerCase();
+    if (!/^[a-z0-9._-]{1,63}$/.test(name)) throw new Error("bad handle");
+    var names = ["000de140" + hexEnc(name), hexEnc(name)];   // CIP-68 first, legacy fallback
+    for (var i = 0; i < names.length; i++) {
+      var rows = await kapi(1, "/asset_addresses",
+        { _asset_policy: HANDLE_POLICY, _asset_name: names[i] });
+      if (rows && rows[0] && rows[0].payment_address)
+        return { ref: "$" + name, addr: rows[0].payment_address };
+    }
+    throw new Error("handle " + ref + " not found on-chain");
+  }
+  var dec = b32decode(ref);                                  // throws on bad bech32
+  if (dec.hrp !== "addr") throw new Error("not a mainnet address");
+  return { ref: ref.slice(0, 14) + "…" + ref.slice(-6), addr: ref };
+}
+
+function setBookUi(){
+  document.getElementById("bookref").textContent = BOOK.ref;
+  document.getElementById("bookref2").textContent = BOOK.ref;
+  document.getElementById("bookaddr").textContent = BOOK.addr;
+  document.getElementById("bookaddr2").textContent = BOOK.ref + " → " + BOOK.addr;
+}
+
+async function openBook(ref){
+  var st = document.getElementById("bookstatus");
+  try {
+    st.textContent = "resolving " + ref + "…";
+    var r = await resolveBook(ref);
+    BOOK.ref = r.ref; BOOK.addr = r.addr;
+    BOOK.addrBytes = b32decode(r.addr).bytes;
+    setBookUi();
+    var url = new URL(location.href);
+    url.searchParams.set("book", ref);
+    history.replaceState(null, "", url.pathname + "?" + url.searchParams.toString());
+    await loadBook();
+  } catch (e) { st.textContent = String(e.message || e); }
+}
+
+document.getElementById("bookgo").addEventListener("click", function(){
+  var v = document.getElementById("bookinput").value.trim();
+  if (v) openBook(v);
+});
+document.getElementById("bookinput").addEventListener("keydown", function(e){
+  if (e.key === "Enter") document.getElementById("bookgo").click();
+});
 
 /* ═══ sign panel ═══ */
-
 var snameEl = document.getElementById("sname"), smsgEl = document.getElementById("smsg");
 snameEl.addEventListener("input", function(){
   snameEl.value = clampBytes(snameEl.value, 64);
@@ -494,19 +575,19 @@ smsgEl.addEventListener("input", function(){
   smsgEl.value = clampBytes(smsgEl.value, 192);
   document.getElementById("msgb").textContent = bytesOf(smsgEl.value) + " / 192 bytes";
 });
-
 function note(html){ document.getElementById("signnote").innerHTML = html; }
 
 document.getElementById("signbtn").addEventListener("click", async function(){
   var name = snameEl.value.trim(), msg = smsgEl.value.trim();
   if (!name) { note('<span class="bad">the book needs a name</span>'); return; }
+  if (!BOOK.addrBytes) { note('<span class="bad">no book open</span>'); return; }
   var entry = { b: BOOK_ID, n: name };
   if (msg) entry.m = splitBytes(msg, 64);
   var btn = this;
   btn.disabled = true;
   try {
     note("connecting wallet…");
-    var txHash = await submitClaim(entry);   // shared builder: label 22031, 1 ADA → vault
+    var txHash = await submitClaim(entry);
     note('<span class="ok">Signed forever.</span> tx <a target="_blank" rel="noopener" href="https://cardanoscan.io/transaction/' +
          txHash + '">' + txHash.slice(0, 16) + '…</a> — it will appear in the book once the chain confirms (1–2 min).');
   } catch (e) {
@@ -519,7 +600,7 @@ document.getElementById("signbtn").addEventListener("click", async function(){
 var INKS = ["#14161b", "#0d228f", "#5b2a86", "#7a3c1e", "#1e5a3a", "#8a1e2d"];
 function sigCard(s){
   var h = parseInt(s.tx.slice(0, 8), 16);
-  var tilt = ((h % 5) - 2) * 0.6;                       // −1.2° … +1.2°, deterministic from tx
+  var tilt = ((h % 5) - 2) * 0.6;
   var ink = INKS[h % INKS.length];
   var d = document.createElement("div");
   d.className = "sig";
@@ -539,7 +620,7 @@ async function loadBook(){
   var bookEl = document.getElementById("book"), emptyEl = document.getElementById("bookempty");
   st.textContent = "reading signatures out of the chain…";
   try {
-    var txs = await kapi(1, "/address_txs", { _addresses: [NETS[1].lockBech] });
+    var txs = await kapi(1, "/address_txs", { _addresses: [BOOK.addr] });
     txs.sort(function(a, b){ return b.block_height - a.block_height; });
     var recent = txs.slice(0, 800), sigs = [];
     for (var off = 0; off < recent.length; off += 40) {
@@ -556,27 +637,28 @@ async function loadBook(){
     bookEl.innerHTML = "";
     if (!sigs.length) {
       emptyEl.style.display = "";
-      st.textContent = "0 signatures — the book is waiting for its first.";
+      st.textContent = "0 signatures — the book of " + BOOK.ref + " is waiting for its first.";
       return;
     }
     emptyEl.style.display = "none";
     sigs.forEach(function(s){ bookEl.appendChild(sigCard(s)); });
     st.textContent = sigs.length + " signature" + (sigs.length > 1 ? "s" : "") +
-      ", every one etched into Cardano forever";
-    // attribution (best effort): first-input address per signature
+      " in the book of " + BOOK.ref + " — every one etched into Cardano forever";
     kapi(1, "/tx_info", { _tx_hashes: sigs.map(function(s){ return s.tx; }), _inputs: true })
       .then(function(rows){
         rows.forEach(function(r){
           var s = sigs.filter(function(x){ return x.tx === r.tx_hash; })[0];
           var a = r.inputs && r.inputs[0] && r.inputs[0].payment_addr && r.inputs[0].payment_addr.bech32;
-          if (s && a) { s.who = a.slice(0, 10) + "…" + a.slice(-4);
-            bookEl.innerHTML = ""; sigs.forEach(function(x){ bookEl.appendChild(sigCard(x)); }); }
+          if (s && a) s.who = a.slice(0, 10) + "…" + a.slice(-4);
         });
+        bookEl.innerHTML = "";
+        sigs.forEach(function(x){ bookEl.appendChild(sigCard(x)); });
       }).catch(function(){});
   } catch (e) { st.textContent = "couldn't open the book: " + (e.message || e); }
 }
 document.getElementById("bookrefresh").addEventListener("click", loadBook);
-loadBook();
+
+openBook(new URLSearchParams(location.search).get("book") || DEFAULT_BOOK);
 </script>
 </body>
 </html>
