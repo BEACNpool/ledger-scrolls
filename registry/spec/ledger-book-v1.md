@@ -76,6 +76,11 @@ A book MAY be represented by an NFT so it can be owned, displayed, and moved:
   `policy.AssetName` via the asset's holding address (same mechanics as $handle
   books). Moving the NFT moves the book; old signatures stay with the old
   address, new ones follow the NFT.
+- **$handle front door**: when resolving a `$handle`, readers SHOULD check the
+  holder's stake account for a Ledger Book NFT (CIP-25 `Type: "Ledger Book"`);
+  if present, open THAT NFT's book (canonical, follows the NFT) and fall back
+  to the handle wallet's address book otherwise. Multiple book NFTs: pick
+  deterministically (lowest policy+name) or offer a choice.
 - Reference minter: `ledger-book.html` → "Mint a Ledger Book" (in-browser,
   CIP-30; the only cost is the network fee — the min-UTxO travels with the NFT
   into the minter's own wallet).

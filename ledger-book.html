@@ -635,18 +635,51 @@ async function assetHolder(policy, nameHex){
   return (rows && rows[0] && rows[0].payment_address) || null;
 }
 
+// scan a stake account for a Ledger Book NFT (CIP-25 Type:"Ledger Book")
+async function findBookNft(stakeAddr){
+  var assets = await kapi(1, "/account_assets", { _stake_addresses: [stakeAddr] });
+  var cands = (assets || []).filter(function(a){
+    return a.policy_id !== HANDLE_POLICY;
+  }).slice(0, 80).map(function(a){ return [a.policy_id, a.asset_name || ""]; });
+  if (!cands.length) return null;
+  var infos = await kapi(1, "/asset_info", { _asset_list: cands });
+  var books = [];
+  (infos || []).forEach(function(a){
+    var g = a.minting_tx_metadata && a.minting_tx_metadata["721"] &&
+            a.minting_tx_metadata["721"][a.policy_id];
+    var md = g && (g[a.asset_name_ascii] || Object.values(g)[0]);
+    if (md && md.Type === "Ledger Book")
+      books.push({ policy: a.policy_id, nameHex: a.asset_name || "",
+                   name: a.asset_name_ascii || "book" });
+  });
+  if (!books.length) return null;
+  books.sort(function(a, b){ return (a.policy + a.nameHex) < (b.policy + b.nameHex) ? -1 : 1; });
+  var addr = await assetHolder(books[0].policy, books[0].nameHex);
+  return addr ? { name: books[0].name, addr: addr } : null;
+}
+
 async function resolveBook(ref){
   ref = (ref || "").trim();
   if (!ref) throw new Error("type a book reference first");
   if (ref[0] === "$") {
     var name = ref.slice(1).toLowerCase();
     if (!/^[a-z0-9._-]{1,63}$/.test(name)) throw new Error("that doesn't look like a valid $handle");
+    var holder = null;
     var names = ["000de140" + hexEnc(name), hexEnc(name)];   // CIP-68 first, legacy fallback
     for (var i = 0; i < names.length; i++) {
-      var a = await assetHolder(HANDLE_POLICY, names[i]);
-      if (a) return { ref: "$" + name, addr: a };
+      var rows = await kapi(1, "/asset_addresses", { _asset_policy: HANDLE_POLICY, _asset_name: names[i] });
+      if (rows && rows[0] && rows[0].payment_address) { holder = rows[0]; break; }
     }
-    throw new Error("handle " + ref + " not found on-chain");
+    if (!holder) throw new Error("handle " + ref + " not found on-chain");
+    // the wallet holds a Ledger Book NFT? then THAT is the front door (same
+    // pattern as the Library's $handle → registry-head lookup)
+    try {
+      if (holder.stake_address) {
+        var book = await findBookNft(holder.stake_address);
+        if (book) return { ref: "📖 " + book.name + " ($" + name + ")", addr: book.addr };
+      }
+    } catch (e) { void e; }                                  // discovery is best-effort
+    return { ref: "$" + name, addr: holder.payment_address };
   }
   var mAsset = ref.match(/^([0-9a-f]{56})\.(.+)$/i);
   if (mAsset) {                                              // book NFT: policy.Name
