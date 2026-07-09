@@ -2,11 +2,14 @@
 
 Status: ACTIVE (first book: `$beacn`, July 2026) · License: MIT
 
-Every Cardano wallet is a guestbook. A **book** is identified by an address (or an
-ADA Handle that resolves to one). A **signature** is a transaction that pays a
-minimal anchor output to the book's address and carries the entry in transaction
-metadata. No server, no database, no registry: the book *is* the chain, and any
-conforming reader can display any book.
+A **Ledger Book is an NFT**: whoever holds it, holds the book. A **signature**
+is a transaction that pays a minimal anchor output to the wallet currently
+holding the book NFT, carrying the entry in transaction metadata tagged with the
+book's identity (`k`) — so the collected signatures follow the NFT across
+wallets, sales, and generations. Books are found by `$handle`, by holder
+address, or directly by `policy.AssetName`. No server, no database, no
+registry: the book *is* the chain, and any conforming reader can display any
+book.
 
 ## Signature transaction
 
@@ -31,9 +34,9 @@ A conforming signature transaction:
 - `m` — OPTIONAL message as an array of strings, each ≤64 bytes (UTF-8 split on
   codepoint boundaries). Readers join the array with no separator.
   RECOMMENDED total ≤192 bytes; readers MUST tolerate more.
-- `k` — REQUIRED when signing a book NFT: the book key `"<policyId>.<AssetName>"`
-  (≤64 bytes). This is what lets signatures FOLLOW the NFT across wallets.
-  Omit for plain address books.
+- `k` — REQUIRED: the book key `"<policyId>.<AssetName>"` (≤64 bytes). This is
+  what binds the entry to the book and lets signatures FOLLOW the NFT across
+  wallets. Readers MUST filter by `k`.
 - Unknown extra fields MUST be ignored by readers (forward compatibility).
 
 ## Reading a book

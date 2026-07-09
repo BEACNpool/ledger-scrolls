@@ -152,10 +152,10 @@ footer.site .mono{font-size:11.5px;word-break:break-all;font-family:var(--mono)}
 <!-- ═══ LANDING: just the search ═══ -->
 <div id="landing" class="view on">
   <div class="inner">
-    <div class="kicker">An open protocol · every wallet is a yearbook</div>
+    <div class="kicker">An open protocol · your guestbook is an NFT</div>
     <h1>✒️ Ledger Book</h1>
-    <p class="sub">Guestbooks that live inside Cardano. Find one, read it, sign it —
-    your words become part of the chain, forever.</p>
+    <p class="sub">Guestbooks that live inside Cardano as NFTs. Find one, read it, sign it —
+    your words are bound to the book forever, and travel with it wherever it goes.</p>
     <div id="searchbar">
       <input id="searchinput" placeholder="$handle · addr1… · policy.BookName" autofocus>
       <button id="searchgo">Open book</button>
@@ -648,19 +648,20 @@ async function assetHolder(policy, nameHex){
 async function findBookNfts(stakeAddr){
   var assets = await kapi(1, "/account_assets", { _stake_addresses: [stakeAddr] });
   var cands = (assets || []).filter(function(a){
-    return a.policy_id !== HANDLE_POLICY;
-  }).slice(0, 80).map(function(a){ return [a.policy_id, a.asset_name || ""]; });
-  if (!cands.length) return [];
-  var infos = await kapi(1, "/asset_info", { _asset_list: cands });
+    return a.policy_id !== HANDLE_POLICY && String(a.quantity || "1") === "1";
+  }).slice(0, 200).map(function(a){ return [a.policy_id, a.asset_name || ""]; });
   var books = [];
-  (infos || []).forEach(function(a){
-    var g = a.minting_tx_metadata && a.minting_tx_metadata["721"] &&
-            a.minting_tx_metadata["721"][a.policy_id];
-    var md = g && (g[a.asset_name_ascii] || Object.values(g)[0]);
-    if (md && md.Type === "Ledger Book")
-      books.push({ policy: a.policy_id, nameHex: a.asset_name || "",
-                   name: a.asset_name_ascii || "book" });
-  });
+  for (var off = 0; off < cands.length; off += 20) {         // small batches: Koios 413s big ones
+    var infos = await kapi(1, "/asset_info", { _asset_list: cands.slice(off, off + 20) });
+    (infos || []).forEach(function(a){
+      var g = a.minting_tx_metadata && a.minting_tx_metadata["721"] &&
+              a.minting_tx_metadata["721"][a.policy_id];
+      var md = g && (g[a.asset_name_ascii] || Object.values(g)[0]);
+      if (md && md.Type === "Ledger Book")
+        books.push({ policy: a.policy_id, nameHex: a.asset_name || "",
+                     name: a.asset_name_ascii || "book" });
+    });
+  }
   books.sort(function(a, b){ return (a.policy + a.nameHex) < (b.policy + b.nameHex) ? -1 : 1; });
   return books;
 }
@@ -701,16 +702,15 @@ async function resolveBook(ref){
     }
     if (!holder) throw new Error("handle " + ref + " not found on-chain");
     // the wallet holds Ledger Book NFTs? they are the front door — one opens
-    // directly, several become a guest choice
-    try {
-      if (holder.stake_address) {
-        var books = await findBookNfts(holder.stake_address);
-        if (books.length === 1)
-          return await nftBook(books[0].policy, books[0].nameHex, books[0].name, "$" + name);
-        if (books.length > 1)
-          return { choice: books, via: "$" + name };
-      }
-    } catch (e) { void e; }                                  // discovery is best-effort
+    // directly, several become a guest choice. Discovery errors surface: a
+    // failed scan must never masquerade as "no books".
+    if (holder.stake_address) {
+      var books = await findBookNfts(holder.stake_address);
+      if (books.length === 1)
+        return await nftBook(books[0].policy, books[0].nameHex, books[0].name, "$" + name);
+      if (books.length > 1)
+        return { choice: books, via: "$" + name };
+    }
     return { none: true, via: "$" + name, addr: holder.payment_address };
   }
   var mAsset = ref.match(/^([0-9a-f]{56})\.(.+)$/i);
@@ -738,7 +738,16 @@ async function resolveBook(ref){
   }
   var dec = b32decode(ref);                                  // throws on bad bech32
   if (dec.hrp !== "addr") throw new Error("not a mainnet address");
-  return { ref: ref.slice(0, 14) + "…" + ref.slice(-6), addr: ref };
+  var short = ref.slice(0, 14) + "…" + ref.slice(-6);
+  var info = await kapi(1, "/address_info", { _addresses: [ref] });
+  var stake = info && info[0] && info[0].stake_address;
+  if (stake) {
+    var books2 = await findBookNfts(stake);
+    if (books2.length === 1)
+      return await nftBook(books2[0].policy, books2[0].nameHex, books2[0].name, short);
+    if (books2.length > 1) return { choice: books2, via: short };
+  }
+  return { none: true, via: short, addr: ref };
 }
 
 function setBookUi(){
@@ -761,12 +770,6 @@ function showNoBooks(via, addr){
   mint.textContent = "📖 Mint a Ledger Book (~0.21 ADA)";
   mint.addEventListener("click", function(){ err.innerHTML = ""; show("mintpage"); });
   box.appendChild(mint);
-  var alt = document.createElement("a");
-  alt.href = "#";
-  alt.style.cssText = "font-size:13px;color:var(--muted)";
-  alt.textContent = "or open this wallet's plain address book anyway";
-  alt.addEventListener("click", function(e){ e.preventDefault(); err.innerHTML = ""; openBook(addr); });
-  box.appendChild(alt);
   err.appendChild(box);
 }
 
@@ -891,7 +894,8 @@ function sigCard(s){
   d.innerHTML =
     '<div class="name" style="color:' + ink + '">' + esc(s.n) + "</div>" +
     '<div class="msg">' + esc(s.m || "") + "</div>" +
-    '<div class="meta"><span>' + (s.time ? new Date(s.time * 1000).toLocaleDateString(undefined,
+    '<div class="meta"><span' + (s.whoFull ? ' title="signed from ' + esc(s.whoFull) + '"' : "") + '>' +
+    (s.time ? new Date(s.time * 1000).toLocaleDateString(undefined,
         { year: "numeric", month: "short", day: "numeric" }) : "") +
     (s.who ? " · " + esc(s.who) : "") + "</span>" +
     '<a target="_blank" rel="noopener" href="https://cardanoscan.io/transaction/' + s.tx + '">tx↗</a></div>';
@@ -936,7 +940,7 @@ async function loadBook(){
         rows.forEach(function(r){
           var s = sigs.filter(function(x){ return x.tx === r.tx_hash; })[0];
           var a = r.inputs && r.inputs[0] && r.inputs[0].payment_addr && r.inputs[0].payment_addr.bech32;
-          if (s && a) s.who = a.slice(0, 10) + "…" + a.slice(-4);
+          if (s && a) { s.who = a.slice(0, 10) + "…" + a.slice(-4); s.whoFull = a; }
         });
         bookEl.innerHTML = "";
         sigs.forEach(function(x){ bookEl.appendChild(sigCard(x)); });
