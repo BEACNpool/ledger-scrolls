@@ -331,7 +331,7 @@ var CLAIM_LABEL = "22030";
 var CLAIM_LOVELACE = 2000000;
 var GAME_POINTER = { 1: "322a7cf4e6c4eb66e33480c957d426682904711e7a9ea166640b5c272d5a09e3#0", 0: "" };
 
-/*ARCADE_CORE_START*/
+/*ARCADE_CORE_DIVERGED — site parent has its own loader/playmode glue; do NOT re-splice from reader/arcade.html*/
 /* ═══ tiny helpers (from ledger-scrolls calculator.html, MIT) ═══ */
 var u8 = function(a){ return Uint8Array.from(a); };
 var hexB = function(h){ var o=new Uint8Array(h.length/2); for(var i=0;i<o.length;i++)o[i]=parseInt(h.substr(i*2,2),16); return o; };
@@ -464,8 +464,27 @@ async function sha256hex(bytes){
 
 /* ═══ scroll reconstruction (manifest-chain-v2, per registry/spec) ═══ */
 var trustEl=document.getElementById("trust");
-function tlog(cls,msg){ var d=document.createElement("div"); if(cls)d.className=cls;
-  d.textContent=msg; trustEl.appendChild(d); trustEl.scrollTop=trustEl.scrollHeight; }
+var loadStage=document.getElementById("loadstage");
+var loadPct=document.getElementById("loadpct");
+var loadUi=document.getElementById("loadui");
+var playStatus=document.getElementById("playstatus");
+function setLoad(stage,pct){
+  if(loadStage) loadStage.textContent=stage||"";
+  if(loadPct) loadPct.textContent=(pct!=null&&pct!=="")?pct:"";
+  if(playStatus) playStatus.textContent=stage||"loading…";
+}
+function tlog(cls,msg){
+  var d=document.createElement("div"); if(cls)d.className=cls;
+  d.textContent=msg; trustEl.appendChild(d); trustEl.scrollTop=trustEl.scrollHeight;
+  // drive compact mobile loader from the same messages (no second code path)
+  if(cls==="h"&&/DEV|executing|Ledger Chess/.test(msg)) setLoad(msg.replace(/^──\s*/,"").slice(0,80),"");
+  else if(cls==="ok"&&/manifest/.test(msg)) setLoad("Manifest verified","proof ok");
+  else if(/pages \d/.test(msg)){
+    var pm=msg.match(/pages\s+([^—]+)/); setLoad("Fetching game pages…", pm?pm[1].trim():"");
+  }
+  else if(cls==="ok"&&/file ✓|encoded stream/.test(msg)) setLoad("Hash verified — starting game","");
+  else if(cls==="bad"){ setLoad(msg,""); if(loadUi) loadUi.classList.add("err"); }
+}
 
 function segBytes(x){                       // segment may arrive as 0x…, bare hex, or {bytes}
   if(x instanceof Uint8Array) return x;
@@ -552,11 +571,32 @@ var NET=Q.get("net")==="preview"?0:1;
 var frame=document.getElementById("gameframe");
 var GAME_ORIGIN_READY=false;
 
+function isMobileShell(){
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||"") ||
+    ((navigator.maxTouchPoints||0)>1 && Math.min(screen.width,screen.height)<900);
+}
+function enterPlayMode(){
+  document.body.classList.add("playmode");
+  document.body.classList.remove("show-more");
+  if(isMobileShell()) document.body.classList.add("mobile-ready");
+  if(playStatus) playStatus.textContent = GAME_ORIGIN_READY ? "verified · play" : "loading…";
+  try{ history.replaceState(null,"",location.pathname+location.search+"#play"); }catch(e){}
+}
+function exitPlayMode(){
+  document.body.classList.remove("playmode");
+  document.body.classList.remove("mobile-ready");
+  document.body.classList.add("show-more");
+  // scroll to essay / leaderboard after exit
+  var lb=document.getElementById("lb");
+  if(lb) setTimeout(function(){ lb.scrollIntoView({behavior:"smooth",block:"start"}); },50);
+}
 async function boot(){
   try{
+    setLoad("Connecting to Cardano…","");
     var bytes;
     if(Q.get("src")){                               // dev mode: load from a local URL, no chain
       tlog("h","── DEV MODE — loading game from "+Q.get("src")+" (no chain verify) ──");
+      setLoad("Dev load (unverified)…","");
       var r=await fetch(Q.get("src"));
       bytes=new Uint8Array(await r.arrayBuffer());
       tlog("ok","loaded "+bytes.length+" bytes (unverified dev build)");
@@ -564,16 +604,27 @@ async function boot(){
       var ptr=Q.get("ptr")||GAME_POINTER[NET];
       if(!ptr){ tlog("bad","no game pointer configured for "+NETS[NET].name+
         " — pass ?ptr=<manifestTx>#<ix> (or ?src=<url> for dev)"); return; }
+      setLoad("Fetching on-chain scroll…","");
       var out=await reconstructChain(NET,ptr);
       bytes=out.bytes;
     }
     tlog("h","executing verified bytes in a sandboxed frame (allow-scripts, opaque origin, no network)…");
+    setLoad("Starting game…","");
     var blob=new Blob([bytes],{type:"text/html"});
     frame.src=URL.createObjectURL(blob);
     frame.style.display="block";
-    setTimeout(function(){ document.getElementById("trust").style.display="none"; },1500);
+    // hide loader; keep proof log available via toggle (do NOT break iframe / wallet bridge)
+    if(loadUi) loadUi.classList.add("done");
+    trustEl.classList.remove("showlog");
     GAME_ORIGIN_READY=true;
-  }catch(e){ tlog("bad","✗ "+(e.message||e)); }
+    if(playStatus) playStatus.textContent="verified · play";
+    // Mobile: enter immersive play shell automatically (exit via ✕ Done — never stuck)
+    if(isMobileShell() || location.hash==="#play") enterPlayMode();
+  }catch(e){
+    tlog("bad","✗ "+(e.message||e));
+    setLoad("Could not load game: "+(e.message||e),"");
+    if(loadUi) loadUi.classList.add("err");
+  }
 }
 
 /* ═══ CIP-30 wallet (parent side only — Eternl, as proven by calculator.html) ═══ */
