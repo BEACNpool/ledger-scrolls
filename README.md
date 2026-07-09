@@ -34,6 +34,86 @@ must outlive the platforms — this is for you.
 
 ---
 
+## Why on-chain? — the economics of forever
+
+The first reaction is always the price: *"dollars for kilobytes? My cloud
+drive stores a terabyte for that."* That's comparing a headstone engraving
+to a Post-it note. Nobody engraves their vacation photos in granite — you
+engrave the few kilobytes you want read after you're gone.
+
+**Per gigabyte, on-chain is absurd. Per *guarantee*, it's the cheapest
+notary, archive, and courier-to-the-future ever built.** The honest
+comparison isn't object storage — it's the notary (~$15 to witness a
+signature, proves nothing about content), the provisional patent (~$300),
+the safe-deposit box ($50 *a year, forever*), the archival service (alive
+only as long as the archivist). Against those, a few dollars **once** is a
+bargain — and none of them can prove *what*, *when*, and *who* the way a
+chain can.
+
+What the money actually buys:
+
+- **Zero counterparty.** Every cloud file has a landlord. Eleven nines of
+  durability measure disk failure — they are *zero* nines against a lapsed
+  credit card, a policy change, an acquisition, a subpoena, or your own
+  death. A scroll has no account, no invoice, no admin key, and no one to
+  comply.
+- **Forever, immutable.** Cloud durability is a promise from a company.
+  Chain durability is a property of the system. Promises have expiration
+  dates; companies just don't publish them.
+- **A timestamp that is proof, not metadata.** "Last modified" is a database
+  field an admin can edit. A block height is a fact thousands of independent
+  machines will swear to. The cloud can *assert* when — only a chain can
+  *prove* it.
+- **Cryptographic authorship.** Scrolls arrive signed by their author's own
+  keys — an unforgeable byline. In the deepfake era, *"I provably published
+  exactly these words, on exactly this date, from this key"* is not a
+  gimmick; it's a defense.
+- **A complement, not a replacement.** Cloud storage answers *"where do I
+  put 10 terabytes?"* Ledger Scrolls answers *"how do I make 10 kilobytes
+  unkillable?"* Different questions. Mocking one for failing at the other
+  cuts both ways — try hosting something on a cloud drive that its
+  trust-and-safety team dislikes.
+
+## What belongs in a scroll
+
+The value is highest where the adversary is **time, power, or your own
+counterparty — never volume.** That's the test. Some things that pass it:
+
+**Truth vs. power**
+- Whistleblowing and source material no host or ISP can take down
+  (see [BEACN Leaks](leaks.html))
+- The *last copy* — preserving what was already published before it gets
+  stealth-edited, retracted, or memory-holed
+- Witness testimony and evidence fingerprints, timestamped before anyone
+  can question the chain of custody
+- Warrant canaries — signed, dated, unforgeable, and their *absence* is
+  detectable
+
+**Priority & authorship**
+- Prior-art / defensive publication — timestamp an invention for a few
+  dollars, strong enough to invalidate a later patent claim
+- Scientific pre-registration — you can't p-hack a hypothesis you can't edit
+- Art provenance — the artist signs the work and a statement at creation;
+  settles authenticity fights decades later
+
+**Outliving institutions**
+- Credentials that survive their issuer — schools close, registries burn,
+  the chain doesn't
+- Estate letters and time capsules — readable in forty years with no
+  company, subscription, or executor surviving the trip
+- Memorials and guestbooks that don't die with a funeral home's website
+  (see [Ledger Book](https://beacnpool.github.io/ledger-scrolls/ledger-book.html))
+
+**Integrity anchors**
+- Software release hashes and signing keys, published where a compromised
+  website can't rewrite them
+- Public promises — platforms, pledges, terms-of-service — quotable back
+  *verbatim*, with date, when someone claims they never said it
+- Two-party agreements with both signatures cryptographic and the document
+  impossible to "lose" (countersigned scrolls, label `22026`)
+
+---
+
 ## 📚 The full catalog
 
 Every scroll BEACNpool has written, with all its keys (pointer, policy,
@@ -275,9 +355,12 @@ HTML file — save it to a USB stick and it still works. How the layers fit
 - **Non-indexed** — deterministic pointers, not search
 - **Local-first** — viewer and verifier run offline from disk
 - **Permanently locked** — the strongest scrolls sit where no one can ever spend them
+- **Complement, not replacement** — clouds hold your terabytes; the chain
+  holds your testimony
 
-BEACN is a librarian, not a landlord. If BEACN disappears tomorrow, every
-scroll survives: the data is on a public chain, the spec is public, and the
+BEACN is a librarian, not a landlord — and unlike your cloud drive, this
+library *has* no landlord. If BEACN disappears tomorrow, every scroll
+survives: the data is on a public chain, the spec is public, and the
 protocol can be rebuilt from the spec alone.
 
 *Mint deliberately. The library cannot burn — and it cannot forget.*
