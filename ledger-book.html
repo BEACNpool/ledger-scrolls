@@ -711,7 +711,7 @@ async function resolveBook(ref){
           return { choice: books, via: "$" + name };
       }
     } catch (e) { void e; }                                  // discovery is best-effort
-    return { ref: "$" + name, addr: holder.payment_address };
+    return { none: true, via: "$" + name, addr: holder.payment_address };
   }
   var mAsset = ref.match(/^([0-9a-f]{56})\.(.+)$/i);
   if (mAsset) {                                              // book NFT: policy.Name
@@ -747,6 +747,29 @@ function setBookUi(){
   document.getElementById("bookaddr").textContent = BOOK.addr;
 }
 
+function showNoBooks(via, addr){
+  var err = document.getElementById("searcherr");
+  err.innerHTML = "";
+  var box = document.createElement("div");
+  box.style.cssText = "margin-top:16px;display:flex;flex-direction:column;gap:10px;align-items:center";
+  var head = document.createElement("div");
+  head.style.cssText = "color:var(--ink-2);font-size:15.5px";
+  head.textContent = via + " keeps no Ledger Books yet.";
+  box.appendChild(head);
+  var mint = document.createElement("button");
+  mint.style.cssText = "background:var(--ink);color:#fff;border:none;border-radius:999px;padding:13px 28px;font:600 15px var(--sans);cursor:pointer;min-height:48px";
+  mint.textContent = "📖 Mint a Ledger Book (~0.21 ADA)";
+  mint.addEventListener("click", function(){ err.innerHTML = ""; show("mintpage"); });
+  box.appendChild(mint);
+  var alt = document.createElement("a");
+  alt.href = "#";
+  alt.style.cssText = "font-size:13px;color:var(--muted)";
+  alt.textContent = "or open this wallet's plain address book anyway";
+  alt.addEventListener("click", function(e){ e.preventDefault(); err.innerHTML = ""; openBook(addr); });
+  box.appendChild(alt);
+  err.appendChild(box);
+}
+
 function showChooser(books, via){
   var err = document.getElementById("searcherr");
   err.innerHTML = "";
@@ -773,6 +796,7 @@ async function openBook(refRaw){
     document.getElementById("searchgo").disabled = true;
     var r = await resolveBook(refRaw);
     if (r.choice) { showChooser(r.choice, r.via); show("landing"); return; }
+    if (r.none) { showNoBooks(r.via, r.addr); show("landing"); return; }
     BOOK.ref = r.ref; BOOK.addr = r.addr;
     BOOK.key = r.key || null; BOOK.history = r.history || null;
     BOOK.addrBytes = b32decode(r.addr).bytes;
