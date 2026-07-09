@@ -219,6 +219,24 @@ node. The mint page emits the acceptance JSON pre-filled. Spec:
 
 ---
 
+## The family — apps built on the scrolls
+
+The same primitives (bytes in transactions, metadata labels, wallet signatures)
+power more than a library:
+
+- **✒️ [Ledger Book](https://beacnpool.github.io/ledger-scrolls/ledger-book.html)** —
+  guestbooks that live inside Cardano **as NFTs**. Mint your book (~0.21 ADA),
+  share the link; every signature is a real transaction — a name, a message,
+  and the signer's own wallet keys — bound to the book NFT forever and
+  traveling with it to any wallet (label `22031`). Books are found by
+  **$handle**, address, or `policy.Name` pointer. Open protocol, MIT:
+  [registry/spec/ledger-book-v1.md](registry/spec/ledger-book-v1.md).
+- **♟️ [Ledger Chess](https://beacnpool.github.io/ledger-scrolls/ledger-chess.html)** —
+  a chess arcade whose deterministic referee engine is itself minted on-chain;
+  beat it and etch your victory into Cardano forever (label `22030`).
+
+---
+
 ## Repository map
 
 ```
@@ -227,6 +245,8 @@ ledger-scrolls/
 ├── reader.html             # retired stub → build-a-reader/ (the minted reader lives in examples/the-reader/)
 ├── build-a-reader/         # BUILD YOUR OWN READER — the one-stop guide page
 ├── calculator.html / leaks.html / media.html   # site pages (Pages serves repo root)
+├── ledger-book.html        # LEDGER BOOK — guestbooks as NFTs (spec: registry/spec/ledger-book-v1.md)
+├── ledger-chess.html       # LEDGER CHESS — the on-chain arcade + victory leaderboard
 ├── docs/                   # All guides — start at docs/README.md
 │   └── history/            # Past audits & design reviews
 ├── registry/               # Registry + protocol specs, JSON schemas, examples, tooling
