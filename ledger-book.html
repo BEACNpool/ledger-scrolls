@@ -651,24 +651,41 @@ async function assetHolder(policy, nameHex){
   return (rows && rows[0] && rows[0].payment_address) || null;
 }
 
-// scan a stake account for ALL Ledger Book NFTs (CIP-25 Type:"Ledger Book")
+// scan a stake account for ALL Ledger Book NFTs (CIP-25 Type:"Ledger Book").
+// Big wallets are real (David's holds 450+ assets): scan up to 1000 candidates,
+// 20 per asset_info call (Koios 413s big ones), 6 calls in flight, progress shown.
 async function findBookNfts(stakeAddr){
   var assets = await kapi(1, "/account_assets", { _stake_addresses: [stakeAddr] });
-  var cands = (assets || []).filter(function(a){
+  var all = (assets || []).filter(function(a){
     return a.policy_id !== HANDLE_POLICY && String(a.quantity || "1") === "1";
-  }).slice(0, 200).map(function(a){ return [a.policy_id, a.asset_name || ""]; });
-  var books = [];
-  for (var off = 0; off < cands.length; off += 20) {         // small batches: Koios 413s big ones
-    var infos = await kapi(1, "/asset_info", { _asset_list: cands.slice(off, off + 20) });
-    (infos || []).forEach(function(a){
-      var g = a.minting_tx_metadata && a.minting_tx_metadata["721"] &&
-              a.minting_tx_metadata["721"][a.policy_id];
-      var md = g && (g[a.asset_name_ascii] || Object.values(g)[0]);
-      if (md && md.Type === "Ledger Book")
-        books.push({ policy: a.policy_id, nameHex: a.asset_name || "",
-                     name: a.asset_name_ascii || "book" });
-    });
+  });
+  if (all.length > 1000)
+    throw new Error("this wallet holds " + all.length + " assets — too many to scan; open the book by its policy.Name pointer instead");
+  var cands = all.map(function(a){ return [a.policy_id, a.asset_name || ""]; });
+  var batches = [];
+  for (var off = 0; off < cands.length; off += 20) batches.push(cands.slice(off, off + 20));
+  var books = [], done = 0;
+  var prog = document.getElementById("searcherr");
+  async function worker(){
+    while (batches.length) {
+      var b = batches.shift();
+      var infos = await kapi(1, "/asset_info", { _asset_list: b });
+      (infos || []).forEach(function(a){
+        var g = a.minting_tx_metadata && a.minting_tx_metadata["721"] &&
+                a.minting_tx_metadata["721"][a.policy_id];
+        var md = g && (g[a.asset_name_ascii] || Object.values(g)[0]);
+        if (md && md.Type === "Ledger Book")
+          books.push({ policy: a.policy_id, nameHex: a.asset_name || "",
+                       name: a.asset_name_ascii || "book" });
+      });
+      done += b.length;
+      if (prog && cands.length > 60)
+        prog.textContent = "looking through the wallet's " + cands.length + " assets… " + done + " / " + cands.length;
+    }
   }
+  var lanes = []; for (var w = 0; w < 6; w++) lanes.push(worker());
+  await Promise.all(lanes);
+  if (prog && cands.length > 60) prog.textContent = "";
   books.sort(function(a, b){ return (a.policy + a.nameHex) < (b.policy + b.nameHex) ? -1 : 1; });
   return books;
 }
