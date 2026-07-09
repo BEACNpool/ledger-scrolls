@@ -34,9 +34,15 @@ A conforming signature transaction:
 - `m` — OPTIONAL message as an array of strings, each ≤64 bytes (UTF-8 split on
   codepoint boundaries). Readers join the array with no separator.
   RECOMMENDED total ≤192 bytes; readers MUST tolerate more.
-- `k` — REQUIRED: the book key `"<policyId>.<AssetName>"` (≤64 bytes). This is
-  what binds the entry to the book and lets signatures FOLLOW the NFT across
-  wallets. Readers MUST filter by `k`.
+- `k` — REQUIRED: the book key as a two-element array `["<policyId>", "<AssetName>"]`.
+  This is what binds the entry to the book and lets signatures FOLLOW the NFT
+  across wallets. Readers MUST filter by `k` (compare against the joined
+  `"<policyId>.<AssetName>"`). The array form exists because the joined string
+  exceeds the ledger's 64-byte metadata string limit whenever the asset name is
+  over 7 characters. Readers SHOULD also accept two legacy string forms from
+  early clients: the exact joined string (possible only for short names), and a
+  64-byte prefix truncation of it (a day-one client bug; at least one such
+  signature is on-chain).
 - Unknown extra fields MUST be ignored by readers (forward compatibility).
 
 ## Reading a book

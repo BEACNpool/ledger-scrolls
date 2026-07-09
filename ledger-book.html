@@ -894,7 +894,12 @@ document.getElementById("signbtn").addEventListener("click", async function(){
   if (!name) { note('<span class="bad">the book needs a name</span>'); return; }
   if (!BOOK.addrBytes) { note('<span class="bad">no book open</span>'); return; }
   var entry = { b: BOOK_ID, n: name };
-  if (BOOK.key) entry.k = clampBytes(BOOK.key, 64);   // signatures follow the book NFT
+  if (BOOK.key) {                                  // signatures follow the book NFT
+    // [policy, assetName]: the joined "policy.Name" form breaks the 64-byte
+    // metadata string cap for names over 7 chars (day-one sig got truncated)
+    var kdot = BOOK.key.indexOf(".");
+    entry.k = [BOOK.key.slice(0, kdot), BOOK.key.slice(kdot + 1)];
+  }
   if (msg) entry.m = splitBytes(msg, 64);
   var btn = this;
   btn.disabled = true;
@@ -929,6 +934,16 @@ function sigCard(s){
   return d;
 }
 
+// k forms a signature may carry: [policy, assetName] (current) · exact
+// "policy.Name" string (early clients, names ≤7 chars) · 64-byte truncation
+// of that string (day-one clamp bug — one signature lives on-chain with it)
+function kMatches(k){
+  if (Array.isArray(k)) return k.join(".") === BOOK.key;
+  k = String(k || "");
+  if (k === BOOK.key) return true;
+  return bytesOf(k) === 64 && BOOK.key.indexOf(k) === 0;
+}
+
 async function loadBook(){
   var st = document.getElementById("bookstatus");
   var bookEl = document.getElementById("book"), emptyEl = document.getElementById("bookempty");
@@ -945,7 +960,7 @@ async function loadBook(){
       rows.forEach(function(r){
         var c = r.metadata && (r.metadata[CLAIM_LABEL] || r.metadata[parseInt(CLAIM_LABEL, 10)]);
         if (!c || c.b !== BOOK_ID || !c.n) return;
-        if (BOOK.key && String(c.k || "") !== BOOK.key) return;   // NFT book: only its own entries
+        if (BOOK.key && !kMatches(c.k)) return;   // NFT book: only its own entries
         if (seen[r.tx_hash]) return;
         seen[r.tx_hash] = 1;
         var t = slice.filter(function(x){ return x.tx_hash === r.tx_hash; })[0];
