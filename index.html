@@ -895,6 +895,22 @@ async function resolveRegistry(input){
     const nameHex=(/^[0-9a-f]+$/.test(nm)&&nm.length%2===0&&nm.length<=64)?nm:hexEnc(nm);
     const inf=await api('/asset_info',{_asset_list:[[policy,nameHex]]},true);
     meta=inf&&inf[0]&&inf[0].minting_tx_metadata;
+    /* not a registry head? an NFT can still be a front door: if its 721 carries an
+       app pointer (tx + ix), follow it and open that scroll — any NFT minted with
+       an "app" field becomes a paste-able address for an on-chain page. */
+    if(meta && !meta['22027']){
+      const g=meta['721']&&meta['721'][policy];
+      const md=g&&(g[inf[0].asset_name_ascii]||Object.values(g)[0]);
+      const app=md&&md.app;
+      if(app && typeof app.tx==='string' && /^[0-9a-f]{64}$/i.test(app.tx)){
+        const ix=parseInt(app.ix||'0',10)||0;
+        if($('anchorinfo')) $('anchorinfo').textContent=(md.name||nm)+' → app scroll '+app.tx.slice(0,12)+'…';
+        await openScroll({ name:String(md.name||nm).toLowerCase().replace(/[^a-z0-9-]+/g,'-'),
+          title:String((app.name&&String(app.name))||md.name||nm),
+          form:'chain', txin:app.tx.toLowerCase()+'#'+ix });
+        return;
+      }
+    }
   } else if(/^[0-9a-f]{64}$/i.test(raw)){
     const rows=await api('/tx_metadata',{_tx_hashes:[raw.toLowerCase()]},true);
     meta=rows&&rows[0]&&rows[0].metadata;
