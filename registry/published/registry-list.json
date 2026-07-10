@@ -1,0 +1,184 @@
+{
+ "format": "ledger-scrolls-registry-list",
+ "version": 6,
+ "generatedAt": "2026-07-10T22:05:00Z",
+ "generator": "mirror of on-chain LS_REGISTRY_V6 (tx 955c6d2aa84b1d1d09a8228cb13616cfc4f6e08454d26671fff4eab163341500)",
+ "entries": [
+  {
+   "name": "ledger-scrolls-000",
+   "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "d8875be1a21dffca56252ddd22e701ae088645518e48c49f873449b87802e96d",
+    "txIx": 0
+   }
+  },
+  {
+   "name": "beacn-leaks-000",
+   "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "f3ee01c1e742c27c205867de4cfa8836e4ab541b9da0d5652aa4d269c73255c7",
+    "txIx": 0
+   }
+  },
+  {
+   "name": "beacn-leaks-001",
+   "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "08c707b3ab7880f983be7f78bd56c4de38461d514c6597d95cd5da1abc307565",
+    "txIx": 0
+   }
+  },
+  {
+   "name": "beacn-leaks-002",
+   "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "1b465d3f9368cf6e1a36ae536631ffed9ca12b35c3bd2843bc423398140174fc",
+    "txIx": 0
+   }
+  },
+  {
+   "name": "the-spec",
+   "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "e4845deed98471b29b35689cfdb76f18add189c8d8f5c61b2ef32ea7ce6d5cf9",
+    "txIx": 0
+   }
+  },
+  {
+   "name": "the-reader",
+   "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "9a564165ebdc4e0c4a2e1163b5cf9355604ecb8e163b425d834570e5b9007de2",
+    "txIx": 0
+   }
+  },
+  {
+   "name": "legal-0001",
+   "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "ceced54b2bd462b1ed41864f2583309666010ce1fb96b9f3dc9968174d958bc9",
+    "txIx": 0
+   }
+  },
+  {
+   "name": "eternal-scroll",
+   "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "ef8dce1c6359c7ae6cc44f04d60b32e6bc26987ebf30a78259c65b2063ba3b18",
+    "txIx": 0
+   }
+  },
+  {
+   "name": "genesis-scroll",
+   "pointer": {
+    "kind": "utxo-inline-datum-bytes-v1",
+    "policy": null,
+    "asset": null
+   }
+  },
+  {
+   "name": "architects-scroll",
+   "pointer": {
+    "kind": "utxo-inline-datum-bytes-v1",
+    "policy": null,
+    "asset": null
+   }
+  },
+  {
+   "name": "hosky-png",
+   "pointer": {
+    "kind": "utxo-inline-datum-bytes-v1",
+    "policy": null,
+    "asset": null
+   }
+  },
+  {
+   "name": "first-words",
+   "pointer": {
+    "kind": "cip25-pages-v1",
+    "policy": "beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba",
+    "asset": "FIRST_WORDS_MANIFEST"
+   }
+  },
+  {
+   "name": "first-video",
+   "pointer": {
+    "kind": "cip25-pages-v1",
+    "policy": "38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2",
+    "asset": "CM_MANIFEST"
+   }
+  },
+  {
+   "name": "bible",
+   "pointer": {
+    "kind": "cip25-pages-v1",
+    "policy": "2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0",
+    "asset": "BIBLE_MANIFEST"
+   }
+  },
+  {
+   "name": "bitcoin-whitepaper",
+   "pointer": {
+    "kind": "cip25-pages-v1",
+    "policy": "8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1",
+    "asset": "BTCWP_MANIFEST"
+   }
+  },
+  {
+   "name": "constitution-e608",
+   "pointer": {
+    "kind": "cip25-pages-v1",
+    "policy": "ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750",
+    "asset": "CONSTITUTION_E608_MANIFEST"
+   }
+  },
+  {
+   "name": "constitution-e541",
+   "pointer": {
+    "kind": "cip25-pages-v1",
+    "policy": "d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d",
+    "asset": "CONSTITUTION_E541_MANIFEST"
+   }
+  },
+  {
+   "name": "ledger-scrolls-theme",
+   "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "b6d9e70a751398fae0dc86580ce256802e6aea9ae0978b8c92b88b50a536962b",
+    "txIx": 0
+   }
+  },
+  {
+   "name": "minted-forever",
+   "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "e1c5ab582c2bda08d442848d42a7d01ed2197e234962b1ebe686af2c906af046",
+    "txIx": 0
+   }
+  },
+  {
+   "name": "protocol-one-pager",
+   "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "5fdadf5158f78afb70a74693b595889406652f3eeddb9a76f44e6f0d481a797e",
+    "txIx": 0
+   }
+  },
+  {
+   "name": "card-catalog",
+   "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "358060520666d99793a9d68ccc85c68207d8c5032ea33d3a550d1461a6e8ee7e",
+    "txIx": 0
+   }
+  },
+  {
+   "name": "neon-door",
+   "pointer": {
+    "kind": "manifest-chain-v2",
+    "txHash": "ddaf75da406f8ffe6e8702f9821c1c3b883c390e785cd8acb973e73397234da8",
+    "txIx": 0
+   }
+  }
+ ]
+}
