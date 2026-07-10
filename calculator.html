@@ -1207,6 +1207,20 @@ async function kapi(net,path,body,method){
   }
   throw lastErr || new Error("chain API unreachable");
 }
+/* ── chain tip → transaction upper validity bound (same discipline as Ledger
+   Book v2): every tx we build carries ttl = tip + 1h, and we REFUSE to build
+   an open-ended transaction when the tip cannot be obtained. ── */
+const TTL_HORIZON=3600;                     // one hour to sign/submit
+const TIP_CACHE={};                         // per-net {slot, ts}; pages/seals refetch every 2 min
+async function fetchTipSlot(net){
+  const hit=TIP_CACHE[net];
+  if(hit && Date.now()-hit.ts < 120e3) return hit.slot;
+  let slot=null;
+  try{ const tip=await kapi(net,"/tip"); slot=+(tip?.[0]?.abs_slot)||null; }catch(e){ void e; }
+  if(!slot) throw new Error("could not obtain the current chain tip — refusing to build an open-ended transaction; try again in a moment");
+  TIP_CACHE[net]={ slot, ts:Date.now() };
+  return slot;
+}
 const NETP_CACHE={};  // epoch_params change ~once per 5-day epoch; don't refetch per step
 async function fetchNetParams(net){
   const hit=NETP_CACHE[net];
@@ -1368,11 +1382,12 @@ function encLockOut(net,coin,datum){
   return catB([u8([0xa3]), cU(0), cBy(NETS[net].lockBytes), cU(1), cU(coin),
                cU(2), u8([0x82]), cU(1), cTg(24), cBy(datum)]); }
 function encChangeOut(addrB,coin){ return catB([u8([0xa2]), cU(0), cBy(addrB), cU(1), cU(coin)]); }
-function encBody(net,ins,datum,lockCoin,changeB,changeCoin,fee){
-  return catB([u8([0xa3]),
+function encBody(net,ins,datum,lockCoin,changeB,changeCoin,fee,ttl){
+  return catB([u8([0xa4]),
     cU(0), cAr(ins.length), ...ins.map(encInput),
     cU(1), u8([0x82]), encLockOut(net,lockCoin,datum), encChangeOut(changeB,changeCoin),
-    cU(2), cU(fee)]); }
+    cU(2), cU(fee),
+    cU(3), cU(ttl)]); }
 function dummyWitLen(n){
   return catB([u8([0xa1]), cU(0), cAr(n),
     ...Array.from({length:n},()=>catB([u8([0x82]), cBy(new Uint8Array(32)), cBy(new Uint8Array(64))]))]).length; }
@@ -1386,7 +1401,7 @@ function minChangeCoin(changeB,params){
   for(let i=0;i<4;i++) coin=(160+encChangeOut(changeB,coin).length)*params.cpb;
   return coin;
 }
-function planTx(net,utxos,datum,changeB,params){
+function planTx(net,utxos,datum,changeB,params,ttl){
   const lockCoin=minLockCoin(net,datum,params);
   const minChange=minChangeCoin(changeB,params);
   const pool=[...utxos].sort((a,b)=>b.coin-a.coin);
@@ -1400,14 +1415,14 @@ function planTx(net,utxos,datum,changeB,params){
         `${(totalAvail/1e6).toFixed(2)} ADA in plain-ADA UTxOs. Token-holding UTxOs are never touched.`);
     const nWit = new Set(ins.map(i=>i.addrHex)).size + 1;   // +1 witness of margin
     const change = sum-lockCoin-fee;
-    const body = encBody(net,ins,datum,lockCoin,changeB,change,fee);
+    const body = encBody(net,ins,datum,lockCoin,changeB,change,fee,ttl);
     const size = 3 + body.length + dummyWitLen(nWit);
     const newFee = Math.ceil(params.a*size + params.b) + 220;  // tiny pad for width jitter
     if(newFee<=fee && change>=minChange){ fee=newFee; break; }
     fee=Math.max(fee,newFee);
   }
   const change=sum-lockCoin-fee;
-  const body=encBody(net,ins,datum,lockCoin,changeB,change,fee);
+  const body=encBody(net,ins,datum,lockCoin,changeB,change,fee,ttl);
   if(3+body.length+dummyWitLen(ins.length+1) > 16200)
     throw new Error("Transaction would exceed Cardano's 16 KB limit — split into a Chain Scroll (page mint) or use a smaller file chunk.");
   return { ins, lockCoin, fee, change, body };
@@ -2152,14 +2167,15 @@ function pageAux(p){
   const meta = catB([cMp(1), cU(22025), md]);
   return catB([cTg(259), cMp(1), cU(0), meta]);
 }
-function encPageBody(ins, selfB, out, fee, auxHash){
-  return catB([u8([0xa4]),
+function encPageBody(ins, selfB, out, fee, auxHash, ttl){
+  return catB([u8([0xa5]),
     cU(0), cAr(ins.length), ...ins.map(encInput),
     cU(1), cAr(1), encChangeOut(selfB, out),
     cU(2), cU(fee),
+    cU(3), cU(ttl),
     cU(7), cBy(auxHash)]);
 }
-function planPage(ins0, auxBytes, auxHash, selfB, params){
+function planPage(ins0, auxBytes, auxHash, selfB, params, ttl){
   const pool=[...ins0].sort((a,b)=>b.coin-a.coin);
   const ins=[]; let sum=0, fee=300000;
   const MINOUT=1000000;
@@ -2167,14 +2183,14 @@ function planPage(ins0, auxBytes, auxHash, selfB, params){
     while(sum < MINOUT+fee && pool.length){ const x=pool.shift(); ins.push(x); sum+=x.coin; }
     if(sum < MINOUT+fee) throw new Error(`Not enough spendable ADA for page — need ≈ ${((MINOUT+fee)/1e6).toFixed(2)} ADA in one or more plain-ADA UTxOs.`);
     const out=sum-fee;
-    const body=encPageBody(ins,selfB,out,fee,auxHash);
+    const body=encPageBody(ins,selfB,out,fee,auxHash,ttl);
     const nWit=new Set(ins.map(i=>i.addrHex)).size+1;
     const size=3+body.length+dummyWitLen(nWit)+auxBytes.length;
     const nf=Math.ceil(params.a*size+params.b)+220;
     if(nf<=fee){ fee=nf; break; } fee=Math.max(fee,nf);
   }
   const out=sum-fee;
-  const body=encPageBody(ins,selfB,out,fee,auxHash);
+  const body=encPageBody(ins,selfB,out,fee,auxHash,ttl);
   // Dense packing leaves only a few hundred bytes of slack: a fragmented
   // wallet that needs several inputs/witnesses can push the tx over the
   // network limit. Retrying cannot help (same UTxO set → same tx), so fail
@@ -2286,7 +2302,7 @@ async function signAllPages(){
         await new Promise(r=>setTimeout(r,5000)); waited+=5; utxos=await freshSpendable();
       }
       if(!utxos.length) throw new Error("wallet shows no spendable ADA yet — give Eternl ~30s after the last transaction, then Resume.");
-      const plan=planPage(utxos, aux, auxHash, selfB, M.params);
+      const plan=planPage(utxos, aux, auxHash, selfB, M.params, await fetchTipSlot(M.net)+TTL_HORIZON);
       SGN.lastFee=plan.fee;
       const unsigned=catB([u8([0x84]), plan.body, u8([0xa0]), u8([0xf5]), aux]);
       sgnStatus(k+1,"sign","→ approve page "+(k+1)+" of "+n+" in Eternl…"+eta);
@@ -2389,7 +2405,7 @@ async function sealChainManifests(){
         await new Promise(r=>setTimeout(r,5000)); waited+=5; utxos=await freshSpendable();
       }
       if(!utxos.length) throw new Error("wallet shows no spendable ADA yet — give it ~30s, then click Retry seal (already-landed seals are skipped).");
-      const plan=planTx(M.net, utxos, datum, M.changeB, M.params);
+      const plan=planTx(M.net, utxos, datum, M.changeB, M.params, await fetchTipSlot(M.net)+TTL_HORIZON);
       mlog("",`manifest ${chunks.length-c}/${chunks.length}: ${chunks[c].length} pages · lock ${(plan.lockCoin/1e6).toFixed(2)} ADA · fee ${(plan.fee/1e6).toFixed(3)} ADA${nextPtr?" · next→"+nextPtr.txHash.slice(0,12)+"…":""}`);
       mlog("",`approve seal ${chunks.length-c} of ${chunks.length} in ${M.wname}…`);
       const unsigned=catB([u8([0x84]), plan.body, u8([0xa0]), u8([0xf5,0xf6])]);
@@ -2427,11 +2443,12 @@ async function sealChainManifests(){
 
 /* ── CIP-103 bulk signing: build the whole chain up front, sign it all in
       ONE wallet approval (Eternl api.experimental.signTxs / Typhon signTxs). ── */
-function encManifestBody(net, input, datum, lockCoin, selfB, changeCoin, fee){
-  return catB([u8([0xa3]),
+function encManifestBody(net, input, datum, lockCoin, selfB, changeCoin, fee, ttl){
+  return catB([u8([0xa4]),
     cU(0), cAr(1), encInput(input),
     cU(1), cAr(2), encLockOut(net,lockCoin,datum), encChangeOut(selfB,changeCoin),
-    cU(2), cU(fee)]);
+    cU(2), cU(fee),
+    cU(3), cU(ttl)]);
 }
 function bulkSignApi(api){
   const c=api.cip103, x=api.experimental;
@@ -2442,7 +2459,7 @@ function bulkSignApi(api){
 }
 /* returns the full ordered chain: N page txs (self-send + metadata) then the manifest
    (lock output + change), each spending the previous change output. Deterministic. */
-function buildChainedTxs(net, funding, selfB, params){
+function buildChainedTxs(net, funding, selfB, params, ttl){
   const pages=buildSignPages(S.encBytes), txs=[], pageTxids=[];
   let cur={...funding};
   const feeFor=(bodyLen,auxLen)=>Math.ceil(params.a*(3+bodyLen+dummyWitLen(2)+auxLen)+params.b)+220;
@@ -2450,11 +2467,11 @@ function buildChainedTxs(net, funding, selfB, params){
     const aux=pageAux(p), auxHash=blake2b256(aux);
     let fee=300000;
     for(let r=0;r<8;r++){ const out=cur.coin-fee;
-      const nf=feeFor(encPageBody([cur],selfB,out,fee,auxHash).length, aux.length);
+      const nf=feeFor(encPageBody([cur],selfB,out,fee,auxHash,ttl).length, aux.length);
       if(nf<=fee) break; fee=nf; }
     const out=cur.coin-fee;
     if(out<1000000) throw new Error("The wallet's UTxO isn't big enough to chain every page — send a bit more ADA (one combined UTxO works best).");
-    const body=encPageBody([cur],selfB,out,fee,auxHash), txid=bHex(blake2b256(body));
+    const body=encPageBody([cur],selfB,out,fee,auxHash,ttl), txid=bHex(blake2b256(body));
     txs.push({body,aux,txid}); pageTxids.push(txid);
     cur={txh:hexB(txid),ix:0,coin:out,addrHex:cur.addrHex};
   }
@@ -2464,11 +2481,11 @@ function buildChainedTxs(net, funding, selfB, params){
   const datum=buildManifestDatum(), lockCoin=minLockCoin(net,datum,params);
   let mfee=300000;
   for(let r=0;r<8;r++){ const ch=cur.coin-lockCoin-mfee;
-    const nf=feeFor(encManifestBody(net,cur,datum,lockCoin,selfB,ch,mfee).length,0);
+    const nf=feeFor(encManifestBody(net,cur,datum,lockCoin,selfB,ch,mfee,ttl).length,0);
     if(nf<=mfee) break; mfee=nf; }
   const change=cur.coin-lockCoin-mfee;
   if(change<1000000) throw new Error("The wallet's UTxO isn't big enough for the seal — send a bit more ADA.");
-  const body=encManifestBody(net,cur,datum,lockCoin,selfB,change,mfee);
+  const body=encManifestBody(net,cur,datum,lockCoin,selfB,change,mfee,ttl);
   txs.push({body,manifest:true,txid:bHex(blake2b256(body)),lockCoin,fee:mfee});
   return txs;
 }
@@ -2476,7 +2493,7 @@ async function signAllBulk(bulk){
   const utxos=parseWalletUtxos(await M.wapi.getUtxos());
   const funding=[...utxos].sort((a,b)=>b.coin-a.coin)[0];
   if(!funding) throw new Error("No plain-ADA UTxO in the wallet to fund the mint.");
-  const txs=buildChainedTxs(M.net, funding, M.changeB, M.params);
+  const txs=buildChainedTxs(M.net, funding, M.changeB, M.params, await fetchTipSlot(M.net)+TTL_HORIZON);
   /* partialSign MUST be true: pages 2..N spend the previous page's not-yet-on-chain output,
      so the wallet can't resolve those inputs to fully witness — it just adds our key. */
   const reqs=txs.map(t=>({ cbor: bHex(catB([u8([0x84]), t.body, u8([0xa0]), u8([0xf5]), t.aux||u8([0xf6])])), partialSign:true }));
@@ -2829,7 +2846,7 @@ async function connectAndQuote(key, mode="std"){
     M.datum = mode==="chain" ? buildManifestDatum() : buildDatum(S.encBytes);
     const utxos = parseWalletUtxos(await M.wapi.getUtxos());
     const changeB = hexB(await M.wapi.getChangeAddress());
-    M.plan = planTx(M.net, utxos, M.datum, changeB, M.params);
+    M.plan = planTx(M.net, utxos, M.datum, changeB, M.params, await fetchTipSlot(M.net)+TTL_HORIZON);
     M.changeB = changeB;
     const n=NETS[M.net], pl=M.plan;
     const A=x=>(x/1e6).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -3276,12 +3293,13 @@ async function assessUtxoReadiness(){
   }
 }
 
-/* plain self-send body (no metadata, no datum): {0: ins, 1: [change], 2: fee} */
-function encPlainBody(ins, selfB, out, fee){
-  return catB([u8([0xa3]),
+/* plain self-send body (no metadata, no datum): {0: ins, 1: [change], 2: fee, 3: ttl} */
+function encPlainBody(ins, selfB, out, fee, ttl){
+  return catB([u8([0xa4]),
     cU(0), cAr(ins.length), ...ins.map(encInput),
     cU(1), cAr(1), encChangeOut(selfB, out),
-    cU(2), cU(fee)]);
+    cU(2), cU(fee),
+    cU(3), cU(ttl)]);
 }
 /* Merge the wallet's plain-ADA UTxOs into one — fragmented wallets need
    several inputs per page tx, which can push a dense page over max_tx_size. */
@@ -3298,9 +3316,10 @@ async function consolidateUtxos(){
     if(utxos.length<2){ say("already a single UTxO — nothing to merge."); return; }
     const ins=[...utxos].sort((a,b)=>b.coin-a.coin).slice(0,40);  // 40 inputs stays far under tx-size limits
     const sum=ins.reduce((s,u)=>s+u.coin,0);
+    const ttl=await fetchTipSlot(M.net)+TTL_HORIZON;
     let fee=200000;
     for(let r=0;r<10;r++){
-      const body=encPlainBody(ins, M.changeB, sum-fee, fee);
+      const body=encPlainBody(ins, M.changeB, sum-fee, fee, ttl);
       const nWit=new Set(ins.map(i=>i.addrHex)).size+1;
       const nf=Math.ceil(M.params.a*(3+body.length+dummyWitLen(nWit))+M.params.b)+220;
       if(nf<=fee) break; fee=nf;
@@ -3308,7 +3327,7 @@ async function consolidateUtxos(){
     const out=sum-fee;
     if(out<1000000) throw new Error("balance too small to be worth merging");
     say(`merging ${ins.length} UTxOs (fee ~${(fee/1e6).toFixed(3)} ADA) — approve in ${M.wname}…`);
-    const body=encPlainBody(ins, M.changeB, out, fee);
+    const body=encPlainBody(ins, M.changeB, out, fee, ttl);
     const unsigned=catB([u8([0x84]), body, u8([0xa0]), u8([0xf5,0xf6])]);
     const witHex=await M.wapi.signTx(bHex(unsigned), false);
     const wit=hexB(witHex);
@@ -3392,7 +3411,7 @@ async function doCountersign(){
     M.changeB=hexB(await M.wapi.getChangeAddress());
     const aux=csAux(rec), auxHash=blake2b256(aux);
     const utxos=parseWalletUtxos(await M.wapi.getUtxos());
-    const plan=planPage(utxos, aux, auxHash, M.changeB, M.params);
+    const plan=planPage(utxos, aux, auxHash, M.changeB, M.params, await fetchTipSlot(M.net)+TTL_HORIZON);
     out.innerHTML=`<div class="cmp">Approve a small self-send (~${fmtA(plan.fee/1e6)} ADA fee) carrying acceptance metadata…</div>`;
     const unsigned=catB([u8([0x84]), plan.body, u8([0xa0]), u8([0xf5]), aux]);
     const witHex=await M.wapi.signTx(bHex(unsigned), false);
