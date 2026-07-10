@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Neon Door — delegate to BEACN</title>
+<style>
+:root{--bg:#050608;--panel:#0c0f13;--edge:#1d232a;--txt:#c8d1d9;--dim:#6f7881;--yel:#ffe94f;--cyn:#2ee6e2;--pnk:#ff9de2;--bad:#ff5a4a;--ok:#37d67a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.5 ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;padding:20px 12px 60px}
+main{width:100%;max-width:760px}
+#sign{width:100%;height:auto;display:block;cursor:pointer;filter:drop-shadow(0 0 24px rgba(46,230,226,.08))}
+.chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:18px 0 6px}
+.chip{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:10px 16px;text-align:center;min-width:128px}
+.chip b{display:block;font-size:20px;color:var(--yel);letter-spacing:1px}
+.chip.c b{color:var(--cyn)}
+.chip span{font-size:11px;color:var(--dim);letter-spacing:2px}
+.box{background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:18px;margin-top:16px}
+h2{font-size:13px;letter-spacing:4px;color:var(--dim);margin:0 0 12px;font-weight:600}
+.wals{display:flex;flex-wrap:wrap;gap:10px}
+.wals button,#go,.lnk{background:#12161b;border:1.5px solid var(--cyn);color:var(--cyn);border-radius:10px;padding:10px 18px;font:inherit;letter-spacing:2px;cursor:pointer}
+.wals button:hover,#go:hover{background:#16202a}
+.wals button:focus-visible,#go:focus-visible{outline:2px solid var(--yel);outline-offset:2px}
+#go{border-color:var(--yel);color:var(--yel);font-size:19px;padding:14px 34px;width:100%;margin-top:12px;text-shadow:0 0 12px rgba(255,233,79,.5)}
+#go:disabled{opacity:.35;cursor:not-allowed}
+.stat{margin-top:10px;font-size:14px;color:var(--dim);word-break:break-all}
+.stat b{color:var(--txt)}
+#log{margin-top:10px;font-size:13.5px}
+#log div{padding:3px 0;border-left:3px solid var(--edge);padding-left:10px;margin:4px 0}
+#log .ok{border-color:var(--ok);color:var(--ok)}
+#log .bad{border-color:var(--bad);color:var(--bad)}
+#log .info{border-color:var(--cyn)}
+#home{display:none;text-align:center;font-size:26px;letter-spacing:6px;color:var(--ok);text-shadow:0 0 18px rgba(55,214,122,.7);padding:18px 0 4px}
+a{color:var(--cyn)}
+.foot{margin-top:26px;font-size:12px;color:var(--dim);text-align:center;letter-spacing:1px}
+.warn{font-size:12.5px;color:var(--dim);margin-top:10px}
+@media (prefers-reduced-motion: reduce){ #sign :is(animate,animateTransform){display:none} }
+</style>
+</head>
+<body>
+<main>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 76 1024 800" id="sign" role="button" aria-label="Delegate to BEACN">
+<defs>
+<radialGradient id="bg" cx="50%" cy="40%" r="75%">
+<stop offset="0" stop-color="#101216"/><stop offset="1" stop-color="#030405"/>
+</radialGradient>
+<filter id="f1" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="5"/></filter>
+<filter id="f2" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="9"/></filter>
+</defs>
+<rect width="1024" height="1024" fill="url(#bg)"/>
+<rect x="76" y="150" width="872" height="640" rx="22" fill="#0c0f13" stroke="#1d232a" stroke-width="4"/>
+<circle cx="108" cy="182" r="5" fill="#3a424b"/><circle cx="916" cy="182" r="5" fill="#3a424b"/>
+<circle cx="108" cy="758" r="5" fill="#3a424b"/><circle cx="916" cy="758" r="5" fill="#3a424b"/>
+<text x="392" y="300" font-size="112" font-family="system-ui,sans-serif" font-weight="800" fill="none" stroke="#2ee6e2" stroke-width="4.5">B
+<animate attributeName="opacity" values="0;0;1;.3;1;1;.93;1" keyTimes="0;0.00;0.02;0.04;0.06;.5;.7;1" dur="8s" repeatCount="indefinite"/></text>
+<text x="392" y="300" font-size="112" font-family="system-ui,sans-serif" font-weight="800" fill="none" stroke="#2ee6e2" stroke-width="13" opacity=".28" filter="url(#f2)">B</text><text x="494" y="300" font-size="112" font-family="system-ui,sans-serif" font-weight="800" fill="none" stroke="#2ee6e2" stroke-width="4.5">E
+<animate attributeName="opacity" values="0;0;1;.3;1;1;.93;1" keyTimes="0;0.03;0.05;0.07;0.09;.5;.7;1" dur="8s" repeatCount="indefinite"/></text>
+<text x="494" y="300" font-size="112" font-family="system-ui,sans-serif" font-weight="800" fill="none" stroke="#2ee6e2" stroke-width="13" opacity=".28" filter="url(#f2)">E</text><text x="596" y="300" font-size="112" font-family="system-ui,sans-serif" font-weight="800" fill="none" stroke="#2ee6e2" stroke-width="4.5">A
+<animate attributeName="opacity" values="0;0;1;.3;1;1;.93;1" keyTimes="0;0.06;0.08;0.10;0.12;.5;.7;1" dur="8s" repeatCount="indefinite"/></text>
+<text x="596" y="300" font-size="112" font-family="system-ui,sans-serif" font-weight="800" fill="none" stroke="#2ee6e2" stroke-width="13" opacity=".28" filter="url(#f2)">A</text><text x="698" y="300" font-size="112" font-family="system-ui,sans-serif" font-weight="800" fill="none" stroke="#2ee6e2" stroke-width="4.5">C
+<animate attributeName="opacity" values="0;0;1;.3;1;1;.93;1" keyTimes="0;0.09;0.11;0.13;0.15;.5;.7;1" dur="8s" repeatCount="indefinite"/></text>
+<text x="698" y="300" font-size="112" font-family="system-ui,sans-serif" font-weight="800" fill="none" stroke="#2ee6e2" stroke-width="13" opacity=".28" filter="url(#f2)">C</text><text x="800" y="300" font-size="112" font-family="system-ui,sans-serif" font-weight="800" fill="none" stroke="#2ee6e2" stroke-width="4.5">N
+<animate attributeName="opacity" values="0;0;1;.3;1;1;.93;1" keyTimes="0;0.12;0.14;0.16;0.18;.5;.7;1" dur="8s" repeatCount="indefinite"/></text>
+<text x="800" y="300" font-size="112" font-family="system-ui,sans-serif" font-weight="800" fill="none" stroke="#2ee6e2" stroke-width="13" opacity=".28" filter="url(#f2)">N</text><g fill="none" stroke="#e8eef4" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" opacity=".18" filter="url(#f2)">
+<path d="M236 475 L213 645 L331 645 L308 475Z"/>
+<circle cx="272" cy="319" r="9"/></g>
+<g fill="none" stroke="#e8eef4" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="272" cy="319" r="9"/>
+<path d="M224 380 L272 330 L320 380Z"/>
+<path d="M217 384 L327 384"/>
+<path d="M230 388 L230 447 L314 447 L314 388"/>
+<path d="M258 388 L258 447 M286 388 L286 447"/>
+<path d="M211 454 L333 454"/>
+<path d="M236 475 L213 645 L331 645 L308 475 Z"/>
+<path d="M198 649 L346 649"/>
+<path d="M259 645 L259 611 Q272 596 285 611 L285 645"/>
+<animate attributeName="opacity" values="1;1;.65;1;1;.9;1" keyTimes="0;.28;.3;.32;.72;.76;1" dur="8s" repeatCount="indefinite"/>
+</g>
+<path d="M229 530 L315 530" stroke="#ffe94f" stroke-width="6.3" fill="none" stroke-linecap="round"/>
+<path d="M223 578 L321 578" stroke="#2ee6e2" stroke-width="6.3" fill="none" stroke-linecap="round"/>
+<circle cx="272" cy="418" r="20" fill="#ffe94f" filter="url(#f1)">
+<animate attributeName="fill" values="#ffe94f;#ffe94f;#2ee6e2;#2ee6e2;#ffe94f" keyTimes="0;.48;.5;.98;1" dur="8s" repeatCount="indefinite"/>
+</circle>
+<path d="M223 385 L136 335 118 381 217 402Z" fill="none" stroke="#ffe94f" stroke-width="5.2" stroke-linejoin="round" opacity="0">
+<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.070;0.100;0.420;0.480;1" dur="8s" repeatCount="indefinite"/>
+</path>
+<path d="M216 406 L85 387 86 447 216 424Z" fill="none" stroke="#ffe94f" stroke-width="5.2" stroke-linejoin="round" opacity="0">
+<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.180;0.210;0.420;0.480;1" dur="8s" repeatCount="indefinite"/>
+</path>
+<path d="M217 427 L89 459 112 514 224 444Z" fill="none" stroke="#ffe94f" stroke-width="5.2" stroke-linejoin="round" opacity="0">
+<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.290;0.320;0.420;0.480;1" dur="8s" repeatCount="indefinite"/>
+</path>
+<path d="M321 385 L408 335 426 381 327 402Z" fill="none" stroke="#2ee6e2" stroke-width="5.2" stroke-linejoin="round" opacity="0">
+<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.570;0.600;0.920;0.980;1" dur="8s" repeatCount="indefinite"/>
+</path>
+<path d="M328 406 L428 392 427 441 328 424Z" fill="none" stroke="#2ee6e2" stroke-width="5.2" stroke-linejoin="round" opacity="0">
+<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.680;0.710;0.920;0.980;1" dur="8s" repeatCount="indefinite"/>
+</path>
+<path d="M327 427 L425 452 406 497 320 444Z" fill="none" stroke="#2ee6e2" stroke-width="5.2" stroke-linejoin="round" opacity="0">
+<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.790;0.820;0.920;0.980;1" dur="8s" repeatCount="indefinite"/>
+</path><g fill="none" stroke="#2ee6e2" stroke-width="4" stroke-linecap="round">
+<path d="M114 660 q 40 -16 80 0 q 40 -16 80 0 q 40 -16 80 0 q 40 -16 80 0"><animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;.45;.5;.95;1" begin="-0s" dur="4s" repeatCount="indefinite"/></path>
+<path d="M114 660 q 40 16 80 0 q 40 16 80 0 q 40 16 80 0 q 40 16 80 0" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.45;.5;.95;1" begin="-0s" dur="4s" repeatCount="indefinite"/></path>
+</g><g fill="none" stroke="#e8eef4" stroke-width="4" stroke-linecap="round">
+<path d="M144 686 q 40 -16 80 0 q 40 -16 80 0 q 40 -16 80 0"><animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;.45;.5;.95;1" begin="-2s" dur="4s" repeatCount="indefinite"/></path>
+<path d="M144 686 q 40 16 80 0 q 40 16 80 0 q 40 16 80 0" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.45;.5;.95;1" begin="-2s" dur="4s" repeatCount="indefinite"/></path>
+</g><path d="M482.8 382.0 H900 V478.0 H482.8 L430 430 Z" fill="#12161b" stroke="#ff9de2" stroke-width="4" stroke-linejoin="round"/>
+<circle cx="483" cy="382" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-0.00s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="539" cy="382" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-0.53s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="595" cy="382" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-1.07s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="651" cy="382" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-0.00s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="707" cy="382" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-0.53s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="763" cy="382" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-1.07s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="819" cy="382" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-0.00s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="875" cy="382" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-0.53s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="900" cy="414" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-1.07s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="900" cy="446" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-0.00s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="875" cy="478" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-0.53s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="819" cy="478" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-1.07s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="763" cy="478" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-0.00s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="707" cy="478" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-0.53s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="651" cy="478" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-1.07s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="595" cy="478" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-0.00s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="539" cy="478" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-0.53s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="483" cy="478" r="7" fill="#ffd428">
+<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.33;.66;1" begin="-1.07s" dur="1.6s" repeatCount="indefinite"/>
+</circle>
+<text x="691" y="440" font-size="34" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-weight="bold" fill="none" stroke="#ff9de2" stroke-width="2.2" letter-spacing="3">DELEGATE HERE</text><text x="660" y="580" font-size="48" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="600" fill="none" stroke="#ff9de2" stroke-width="3">beacnpool.org
+<animate attributeName="opacity" values="1;1;.4;1;1" keyTimes="0;.6;.62;.64;1" dur="8s" repeatCount="indefinite"/></text>
+<text x="660" y="580" font-size="48" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="600" fill="none" stroke="#ff9de2" stroke-width="11" opacity=".26" filter="url(#f2)">beacnpool.org</text>
+<g>
+<rect x="452" y="622" width="416" height="76" rx="14" fill="#12161b" stroke="#ffe94f" stroke-width="3.5"/>
+<rect x="452" y="622" width="416" height="76" rx="14" fill="none" stroke="#ffe94f" stroke-width="10" opacity=".22" filter="url(#f2)"/>
+<text x="492" y="676" font-size="46" font-family="system-ui,sans-serif" font-weight="800" fill="none" stroke="#ffe94f" stroke-width="2.6">&#8371;</text>
+<text x="536" y="672" font-size="32" font-family="ui-monospace,Menlo,monospace" font-weight="bold" fill="none" stroke="#e8eef4" stroke-width="1.8" letter-spacing="4">ACCEPTED HERE</text>
+<animate attributeName="opacity" values="1;1;.45;1;1" keyTimes="0;.47;.5;.53;1" dur="4s" repeatCount="indefinite"/>
+</g>
+</svg>
+<div class="chips" id="chips" aria-live="polite">
+<div class="chip"><b id="stStake">…</b><span>LIVE STAKE</span></div>
+<div class="chip c"><b id="stDel">…</b><span>DELEGATORS</span></div>
+<div class="chip"><b id="stBlk">…</b><span>BLOCKS FORGED</span></div>
+<div class="chip c"><b id="stSat">…</b><span>SATURATION</span></div>
+<div class="chip"><b id="stFee">…</b><span>MARGIN + FIXED</span></div>
+</div>
+
+<div class="box">
+<h2>STEP INSIDE — CONNECT A WALLET</h2>
+<div class="wals" id="wals">scanning for CIP-30 wallets…</div>
+<div class="stat" id="wstat"></div>
+<div id="home">★ YOU'RE ALREADY HOME ★</div>
+<button id="go" disabled>DELEGATE TO BEACN</button>
+<div id="log" aria-live="polite"></div>
+<div class="warn">Your wallet shows you exactly what you sign: one delegation certificate to pool
+<b>BEACN</b> (<span id="poolShort"></span>…) plus the network fee (~0.18 ₳). First-time staking also
+places the protocol's standard 2 ₳ key deposit — it is refundable if you ever deregister. Your ADA
+never leaves your wallet; staking on Cardano is non-custodial.</div>
+</div>
+
+<div class="foot">
+THE NEON DOOR · a Ledger Scroll that delegates · pool18pnja3z8vfkw3sj578xetj3ujhyp2vmljezjg5es290awqmzq7g<br>
+stored forever in Cardano transaction metadata · reader: beacnpool.github.io/ledger-scrolls · door: $beacn
+</div>
+</main>
+<script>
+"use strict";
+/* ═══ BEACN constants ═══ */
+const POOL_HASH_HEX="38672ec447626ce8c254f1cd95ca3c95c815337f9645245330515fd7";
+const POOL_BECH="pool18pnja3z8vfkw3sj578xetj3ujhyp2vmljezjg5es290awqmzq7g";
+const KOIOS=["https://koios.beacn.workers.dev/api/v1"];
+const SCAN="https://cardanoscan.io/transaction/";
+const TTL_HORIZON=3600;
+
+/* ═══ bytes / bech32 / blake2b / cbor — proven verbatim from the BEACN mint page ═══ */
+const u8=a=>new Uint8Array(a);
+const hexB=h=>{const o=new Uint8Array(h.length/2);for(let i=0;i<o.length;i++)o[i]=parseInt(h.substr(i*2,2),16);return o;};
+const bHex=b=>[...b].map(x=>x.toString(16).padStart(2,"0")).join("");
+const catB=parts=>{let n=0;for(const p of parts)n+=p.length;const o=new Uint8Array(n);let i=0;for(const p of parts){o.set(p,i);i+=p.length;}return o;};
+const B32C="qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+function b32polymod(vals){const G=[0x3b6a57b2,0x26508e6d,0x1ea119fa,0x3d4233dd,0x2a1462b3];let chk=1;
+for(const v of vals){const b=chk>>>25;chk=((chk&0x1ffffff)<<5)^v;for(let i=0;i<5;i++)if((b>>>i)&1)chk^=G[i];}return chk;}
+function b32hrpx(hrp){const r=[];for(const c of hrp)r.push(c.charCodeAt(0)>>>5);r.push(0);for(const c of hrp)r.push(c.charCodeAt(0)&31);return r;}
+function b32encode(hrp,bytes){let acc=0,bits=0;const d5=[];
+for(const b of bytes){acc=(acc<<8)|b;bits+=8;while(bits>=5){bits-=5;d5.push((acc>>>bits)&31);}}
+if(bits>0)d5.push((acc<<(5-bits))&31);
+const chkv=b32hrpx(hrp).concat(d5).concat([0,0,0,0,0,0]);const mod=b32polymod(chkv)^1;const chk=[];
+for(let p=0;p<6;p++)chk.push((mod>>>(5*(5-p)))&31);
+return hrp+"1"+d5.concat(chk).map(i=>B32C[i]).join("");}
+const B2IV=new Uint32Array([0xf3bcc908,0x6a09e667,0x84caa73b,0xbb67ae85,0xfe94f82b,0x3c6ef372,0x5f1d36f1,0xa54ff53a,0xade682d1,0x510e527f,0x2b3e6c1f,0x9b05688c,0xfb41bd6b,0x1f83d9ab,0x137e2179,0x5be0cd19]);
+const B2S=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,10,4,8,9,15,13,6,1,12,0,2,11,7,5,3,11,8,12,0,5,2,15,13,10,14,3,6,7,1,9,4,7,9,3,1,13,12,11,14,2,6,5,10,4,0,15,8,9,0,5,7,2,4,10,15,14,1,11,12,6,8,3,13,2,12,6,10,0,11,8,3,4,13,7,5,15,14,1,9,12,5,1,15,14,13,4,10,0,7,6,3,9,2,8,11,13,11,7,14,12,1,3,9,5,0,15,4,8,6,2,10,6,15,14,9,11,3,0,8,12,2,13,7,1,4,10,5,10,2,8,4,7,6,1,5,15,11,9,14,3,12,13,0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,10,4,8,9,15,13,6,1,12,0,2,11,7,5,3].map(x=>x*2);
+function blake2b256(input){
+const v=new Uint32Array(32),m=new Uint32Array(32);
+const A=(a,b)=>{let o0=v[a]+v[b],o1=v[a+1]+v[b+1];if(o0>=0x100000000)o1++;v[a]=o0>>>0;v[a+1]=o1>>>0;};
+const AC=(a,b0,b1)=>{let o0=v[a]+b0;if(b0<0)o0+=0x100000000;let o1=v[a+1]+b1;if(o0>=0x100000000)o1++;v[a]=o0>>>0;v[a+1]=o1>>>0;};
+const G=(a,b,c,d,ix,iy)=>{
+const x0=m[ix],x1=m[ix+1],y0=m[iy],y1=m[iy+1];let x;
+A(a,b);AC(a,x0,x1);x=v[d]^v[a];const x2=v[d+1]^v[a+1];v[d]=x2;v[d+1]=x;
+A(c,d);x=v[b]^v[c];const x3=v[b+1]^v[c+1];v[b]=((x>>>24)^(x3<<8))>>>0;v[b+1]=((x3>>>24)^(x<<8))>>>0;
+A(a,b);AC(a,y0,y1);x=v[d]^v[a];const x4=v[d+1]^v[a+1];v[d]=((x>>>16)^(x4<<16))>>>0;v[d+1]=((x4>>>16)^(x<<16))>>>0;
+A(c,d);x=v[b]^v[c];const x5=v[b+1]^v[c+1];v[b]=((x5>>>31)^(x<<1))>>>0;v[b+1]=((x>>>31)^(x5<<1))>>>0;};
+const h=new Uint32Array(16);for(let i=0;i<16;i++)h[i]=B2IV[i];h[0]^=0x01010000^32;
+const blk=new Uint8Array(128);let t=0,c=0;
+const compress=last=>{
+for(let i=0;i<16;i++){v[i]=h[i];v[i+16]=B2IV[i];}
+v[24]=(v[24]^t)>>>0;v[25]=(v[25]^(t/0x100000000))>>>0;
+if(last){v[28]=~v[28]>>>0;v[29]=~v[29]>>>0;}
+for(let i=0;i<32;i++)m[i]=(blk[4*i]^(blk[4*i+1]<<8)^(blk[4*i+2]<<16)^(blk[4*i+3]<<24))>>>0;
+for(let i=0;i<12;i++){
+G(0,8,16,24,B2S[i*16+0],B2S[i*16+1]);G(2,10,18,26,B2S[i*16+2],B2S[i*16+3]);
+G(4,12,20,28,B2S[i*16+4],B2S[i*16+5]);G(6,14,22,30,B2S[i*16+6],B2S[i*16+7]);
+G(0,10,20,30,B2S[i*16+8],B2S[i*16+9]);G(2,12,22,24,B2S[i*16+10],B2S[i*16+11]);
+G(4,14,16,26,B2S[i*16+12],B2S[i*16+13]);G(6,8,18,28,B2S[i*16+14],B2S[i*16+15]);}
+for(let i=0;i<16;i++)h[i]=(h[i]^v[i]^v[i+16])>>>0;};
+for(let i=0;i<input.length;i++){if(c===128){t+=c;compress(false);c=0;}blk[c++]=input[i];}
+t+=c;while(c<128)blk[c++]=0;compress(true);
+const out=new Uint8Array(32);for(let i=0;i<32;i++)out[i]=(h[i>>2]>>>(8*(i&3)))&255;
+return out;}
+function cH(n,mt){const t=mt<<5;
+if(n<24)return u8([t|n]);
+if(n<256)return u8([t|24,n]);
+if(n<65536)return u8([t|25,n>>>8,n&255]);
+if(n<4294967296)return u8([t|26,(n/16777216)&255,(n>>>16)&255,(n>>>8)&255,n&255]);
+const hi=Math.floor(n/4294967296),lo=n%4294967296;
+return u8([t|27,(hi/16777216)&255,(hi>>>16)&255,(hi>>>8)&255,hi&255,(lo/16777216)&255,(lo>>>16)&255,(lo>>>8)&255,lo&255]);}
+const cU=n=>cH(n,0);
+const cBy=b=>catB([cH(b.length,2),b]);
+const cAr=n=>cH(n,4);
+function cborD(raw,pos=0){
+const len=(ai,p)=>{if(ai<24)return[ai,p];const w={24:1,25:2,26:4,27:8}[ai];if(!w)throw new Error("cbor len");
+let n=0;for(let i=0;i<w;i++)n=n*256+raw[p+i];return[n,p+w];};
+const mt=raw[pos]>>>5,ai=raw[pos]&31;
+if(mt===0)return len(ai,pos+1);
+if(mt===1){const[n,p]=len(ai,pos+1);return[-1-n,p];}
+if(mt===2||mt===3){
+if(ai===31){let p=pos+1;const parts=[];
+while(raw[p]!==0xff){const cai=raw[p]&31;const[n,q]=len(cai,p+1);parts.push(raw.subarray(q,q+n));p=q+n;}
+const v=catB(parts);return[mt===2?v:new TextDecoder().decode(v),p+1];}
+const[n,p]=len(ai,pos+1);const v=raw.subarray(p,p+n);return[mt===2?v:new TextDecoder().decode(v),p+n];}
+if(mt===4){
+if(ai===31){let p=pos+1;const o=[];while(raw[p]!==0xff){const[v,q]=cborD(raw,p);o.push(v);p=q;}return[o,p+1];}
+let[n,p]=len(ai,pos+1);const o=[];for(let i=0;i<n;i++){const[v,q]=cborD(raw,p);o.push(v);p=q;}return[o,p];}
+if(mt===5){
+const m=new Map();let n,p;
+if(ai===31){p=pos+1;while(raw[p]!==0xff){const[k,q]=cborD(raw,p);const[v,r]=cborD(raw,q);m.set(k,v);p=r;}return[m,p+1];}
+[n,p]=len(ai,pos+1);for(let i=0;i<n;i++){const[k,q]=cborD(raw,p);const[v,r]=cborD(raw,q);m.set(k,v);p=r;}return[m,p];}
+if(mt===6){const[n,p]=len(ai,pos+1);const[v,q]=cborD(raw,p);return[{tag:n,value:v},q];}
+if(mt===7){if(ai===20)return[false,pos+1];if(ai===21)return[true,pos+1];if(ai===22)return[null,pos+1];
+const[n,p]=len(ai,pos+1);return[n,p];}
+throw new Error("cbor major "+mt);}
+
+/* ═══ chain API (CORS mirror only — direct Koios never answers browsers) ═══ */
+async function kapi(path,body,method){
+let lastErr;
+for(const base of KOIOS){
+try{
+const r=await fetch(base+path,{method:method||(body?"POST":"GET"),
+headers:body?{"Content-Type":"application/json"}:{},
+body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(15000)});
+if(r.ok)return await r.json();
+lastErr=new Error("HTTP "+r.status+" from "+base);
+}catch(e){lastErr=e;}
+}
+throw lastErr||new Error("chain API unreachable");}
+let TIP_CACHE=null;
+async function fetchTipSlot(){
+if(TIP_CACHE&&Date.now()-TIP_CACHE.ts<120e3)return TIP_CACHE.slot;
+const tip=await kapi("/tip");const slot=+(tip?.[0]?.abs_slot)||null;
+if(!slot)throw new Error("could not obtain the chain tip — refusing to build an open-ended transaction");
+TIP_CACHE={slot,ts:Date.now()};return slot;}
+let PARAMS=null;
+async function netParams(){
+if(PARAMS)return PARAMS;
+try{
+const rows=await kapi("/epoch_params?order=epoch_no.desc&limit=1");const p=rows?.[0]||{};
+PARAMS={a:+p.min_fee_a||44,b:+p.min_fee_b||155381,cpb:+p.coins_per_utxo_size||4310,dep:+p.key_deposit||2000000};
+}catch(e){PARAMS={a:44,b:155381,cpb:4310,dep:2000000};}
+return PARAMS;}
+
+/* ═══ wallet UTxOs (plain-ADA only; token UTxOs are never touched) ═══ */
+function parseWalletUtxos(hexList){
+const out=[];
+for(const h of hexList||[]){
+try{
+const[pair]=cborD(hexB(h));
+const inp=pair[0],o=pair[1];
+let addr,val,extra=false;
+if(o instanceof Map){addr=o.get(0);val=o.get(1);if(o.has(2)||o.has(3))extra=true;}
+else{addr=o[0];val=o[1];if(o.length>2&&o[2]!=null)extra=true;}
+let coin=null;
+if(typeof val==="number")coin=val;
+else if(Array.isArray(val)&&typeof val[0]==="number"){
+const ma=val[1];
+const hasTokens=ma instanceof Map?ma.size>0:ma&&Object.keys(ma).length>0;
+if(hasTokens)continue;
+coin=val[0];}
+if(extra||coin==null||!(coin>0)||coin>2**52)continue;
+if(!(inp[0] instanceof Uint8Array)||inp[0].length!==32)continue;
+out.push({txh:inp[0],ix:inp[1],coin,addrHex:bHex(addr)});
+}catch(e){void e;}}
+return out;}
+
+/* ═══ delegation tx (Conway; certificates, no scripts, no metadata) ═══ */
+function encInput(i){return catB([u8([0x82]),cBy(i.txh),cU(i.ix)]);}
+function encChangeOut(addrB,coin){return catB([u8([0xa2]),cU(0),cBy(addrB),cU(1),cU(coin)]);}
+function encCerts(stakeKH,needReg){
+const cred=catB([u8([0x82,0x00]),cBy(stakeKH)]);           /* [0, keyhash] */
+const certs=[];
+if(needReg)certs.push(catB([u8([0x82,0x00]),cred]));       /* [0, cred] stake registration */
+certs.push(catB([u8([0x83,0x02]),cred,cBy(hexB(POOL_HASH_HEX))])); /* [2, cred, pool] */
+return catB([cAr(certs.length),...certs]);}
+function encDelegBody(ins,changeB,changeCoin,fee,ttl,certsB){
+return catB([u8([0xa5]),
+cU(0),cAr(ins.length),...ins.map(encInput),
+cU(1),u8([0x81]),encChangeOut(changeB,changeCoin),
+cU(2),cU(fee),
+cU(3),cU(ttl),
+cU(4),certsB]);}
+function dummyWitLen(n){
+return catB([u8([0xa1]),cU(0),cAr(n),
+...Array.from({length:n},()=>catB([u8([0x82]),cBy(new Uint8Array(32)),cBy(new Uint8Array(64))]))]).length;}
+function minChangeCoin(changeB,params){
+let coin=1000000;
+for(let i=0;i<4;i++)coin=(160+encChangeOut(changeB,coin).length)*params.cpb;
+return coin;}
+function planDeleg(utxos,changeB,params,ttl,stakeKH,needReg){
+const deposit=needReg?params.dep:0;
+const certsB=encCerts(stakeKH,needReg);
+const minChange=minChangeCoin(changeB,params);
+const pool=[...utxos].sort((a,b)=>b.coin-a.coin);
+const ins=[];let sum=0,fee=250000;
+const totalAvail=pool.reduce((s,x)=>s+x.coin,0);
+for(let round=0;round<40;round++){
+while(sum<deposit+fee+minChange&&pool.length){const x=pool.shift();ins.push(x);sum+=x.coin;}
+if(sum<deposit+fee+minChange)
+throw new Error("Not enough spendable ADA: delegating needs ≈ "+((deposit+fee+minChange)/1e6).toFixed(2)+
+" ADA available ("+(deposit?"2 ADA refundable deposit + ":"")+"fee + min change) but the wallet has "+
+(totalAvail/1e6).toFixed(2)+" ADA in plain-ADA UTxOs. Token-holding UTxOs are never touched.");
+const nWit=new Set(ins.map(i=>i.addrHex)).size+2;   /* payment key(s) + stake key + margin */
+const change=sum-deposit-fee;
+const body=encDelegBody(ins,changeB,change,fee,ttl,certsB);
+const size=3+body.length+dummyWitLen(nWit);
+const newFee=Math.ceil(params.a*size+params.b)+220;
+if(newFee<=fee&&change>=minChange){fee=newFee;break;}
+fee=Math.max(fee,newFee);}
+const change=sum-deposit-fee;
+const body=encDelegBody(ins,changeB,change,fee,ttl,certsB);
+return{ins,fee,change,deposit,body};}
+
+/* ═══ UI plumbing ═══ */
+const $=id=>document.getElementById(id);
+const W={api:null,name:"",stakeKH:null,stakeBech:"",registered:false,delegated:"",changeB:null};
+function log(cls,msg){const d=document.createElement("div");d.className=cls;d.textContent=msg;$("log").appendChild(d);d.scrollIntoView({block:"nearest"});}
+function fmtAda(l){const a=l/1e6;return a>=1e6?(a/1e6).toFixed(2)+"M ₳":a>=1e3?(a/1e3).toFixed(1)+"k ₳":a.toFixed(0)+" ₳";}
+
+async function loadStats(){
+try{
+const rows=await kapi("/pool_info",{_pool_bech32_ids:[POOL_BECH]});const p=rows?.[0]||{};
+$("stStake").textContent=p.live_stake?fmtAda(+p.live_stake):"—";
+$("stDel").textContent=p.live_delegators??"—";
+$("stBlk").textContent=p.block_count??"—";
+$("stSat").textContent=p.live_saturation!=null?(+p.live_saturation).toFixed(2)+"%":"—";
+$("stFee").textContent=(p.margin!=null?(p.margin*100).toFixed(0)+"%":"—")+" + "+(p.fixed_cost?(+p.fixed_cost/1e6).toFixed(0)+"₳":"—");
+}catch(e){["stStake","stDel","stBlk","stSat","stFee"].forEach(i=>$(i).textContent="—");}}
+
+function listWallets(){
+const host=$("wals");host.textContent="";
+const cw=window.cardano||{};
+const keys=Object.keys(cw).filter(k=>cw[k]&&typeof cw[k].enable==="function");
+if(!keys.length){host.textContent="no CIP-30 wallet found — install Eternl, Lace, VESPR, Typhon… then reload";return;}
+for(const k of keys){
+const b=document.createElement("button");
+b.textContent=(cw[k].name||k).toUpperCase();
+b.onclick=()=>connect(k);
+host.appendChild(b);}}
+
+async function connect(key){
+try{
+log("info","connecting "+key+"…");
+const api=await window.cardano[key].enable();
+const net=await api.getNetworkId();
+if(net!==1){log("bad","this wallet is on a TEST network — the Neon Door is mainnet only");return;}
+W.api=api;W.name=key;
+const rw=await api.getRewardAddresses();
+if(!rw||!rw.length)throw new Error("wallet exposed no reward (stake) address");
+const raddr=hexB(rw[0]);
+if(raddr.length!==29)throw new Error("unexpected reward address length");
+if((raddr[0]&0xf0)!==0xe0)throw new Error("script-staked wallet — this page handles key-staked wallets only");
+W.stakeKH=raddr.subarray(1);
+W.stakeBech=b32encode("stake",raddr);
+W.changeB=hexB(await api.getChangeAddress());
+let status="unregistered",pool="";
+try{
+const acct=await kapi("/account_info",{_stake_addresses:[W.stakeBech]});const a=acct?.[0];
+if(a){status=a.status==="registered"?"registered":"unregistered";pool=a.delegated_pool||"";}
+}catch(e){log("info","could not read account status — will include a registration certificate just in case");}
+W.registered=status==="registered";W.delegated=pool;
+$("wstat").innerHTML="connected: <b>"+(window.cardano[key].name||key)+"</b> · stake: <b>"+W.stakeBech.slice(0,16)+"…"+W.stakeBech.slice(-6)+"</b> · "+status+(pool?" · delegated to <b>"+(pool===POOL_BECH?"BEACN":pool.slice(0,14)+"…")+"</b>":"");
+if(pool===POOL_BECH){$("home").style.display="block";$("go").disabled=true;$("go").textContent="DELEGATED ✓";log("ok","this wallet already stakes with BEACN — welcome home");}
+else{$("home").style.display="none";$("go").disabled=false;$("go").textContent="DELEGATE TO BEACN";log("ok","wallet ready — the door is open");}
+}catch(e){log("bad",String(e?.info||e?.message||e));}}
+
+async function delegate(){
+if(!W.api){log("info","connect a wallet first — the buttons are right above");return;}
+if($("go").disabled)return;
+$("go").disabled=true;
+try{
+log("info","reading spendable ADA…");
+const utxos=parseWalletUtxos(await W.api.getUtxos());
+if(!utxos.length)throw new Error("no plain-ADA UTxOs available to pay the fee");
+const params=await netParams();
+const ttl=await fetchTipSlot()+TTL_HORIZON;
+const needReg=!W.registered;
+const plan=planDeleg(utxos,W.changeB,params,ttl,W.stakeKH,needReg);
+log("info","built: fee "+(plan.fee/1e6).toFixed(3)+" ₳"+(plan.deposit?" + 2 ₳ refundable deposit":"")+" · ttl tip+1h");
+const unsigned=catB([u8([0x84]),plan.body,u8([0xa0]),u8([0xf5]),u8([0xf6])]);
+log("info","→ approve in "+W.name+" — you are signing ONE delegation certificate to BEACN");
+const witHex=await W.api.signTx(bHex(unsigned),false);
+const wit=hexB(witHex);
+const signed=wit[0]===0x84?wit:catB([u8([0x84]),plan.body,wit,u8([0xf5]),u8([0xf6])]);
+const localTxid=bHex(blake2b256(plan.body));
+const wid=await W.api.submitTx(bHex(signed));
+const txid=(typeof wid==="string"&&/^[0-9a-f]{64}$/i.test(wid))?wid.toLowerCase():localTxid;
+log("ok","ON CHAIN ✓ "+txid);
+const a=document.createElement("div");a.className="ok";
+a.innerHTML="view: <a target='_blank' rel='noopener' href='"+SCAN+txid+"'>"+txid.slice(0,20)+"…</a> · takes effect in 2 epochs (~10 days), rewards follow ~5 days later";
+$("log").appendChild(a);
+$("home").style.display="block";$("go").textContent="DELEGATED ✓";
+}catch(e){
+const m=String(e?.info||e?.message||e);
+log("bad",/decline|refus|cancel|denied/i.test(m)?"you declined in the wallet — nothing was sent":m);
+$("go").disabled=false;}}
+
+$("poolShort").textContent=POOL_HASH_HEX.slice(0,12);
+$("go").onclick=delegate;
+document.getElementById("sign").addEventListener("click",delegate);
+listWallets();loadStats();
+</script>
+</body>
+</html>
