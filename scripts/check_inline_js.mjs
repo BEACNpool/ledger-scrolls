@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs";
 
-const files = ["index.html", "calculator.html", "ledger-book.html", "leaks.html"];
+const files = ["index.html", "calculator.html", "ledger-book.html", "ledger-chess.html", "leaks.html"];
 let failed = false;
 for (const file of files) {
   const html = readFileSync(file, "utf8");

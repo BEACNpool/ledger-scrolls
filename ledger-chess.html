@@ -628,7 +628,7 @@ async function boot(){
 }
 
 /* ═══ CIP-30 wallet (parent side only — Eternl, as proven by calculator.html) ═══ */
-var W={ api:null, net:null, params:null };
+var W={ api:null, net:null, params:null, tipSlot:null };
 function pickWallet(){
   var c=window.cardano||{};
   if(c.eternl) return c.eternl;
@@ -651,6 +651,8 @@ async function connectWallet(){
   var rows=await kapi(W.net,"/epoch_params?order=epoch_no.desc&limit=1").catch(function(){return null;});
   var p=(rows&&rows[0])||{};
   W.params={ a:+p.min_fee_a||44, b:+p.min_fee_b||155381, cpb:+p.coins_per_utxo_size||4310 };
+  var tip=await kapi(W.net,"/tip").catch(function(){return null;});
+  W.tipSlot=+(tip&&tip[0]&&tip[0].abs_slot)||null;
   return W;
 }
 var MA_SPAN=null;
@@ -738,11 +740,12 @@ function buildAux(claim){
 }
 function encInput(i){ return catB([u8([0x82]),cBy(i.txh),cU(i.ix)]); }
 function encPlainOut(addrB,coin){ return catB([cMp(2),cU(0),cBy(addrB),cU(1),cU(coin)]); }
-function encClaimBody(net,ins,changeB,changeCoin,fee,auxHash){
-  return catB([cMp(4),
+function encClaimBody(net,ins,changeB,changeCoin,fee,auxHash,ttl){
+  return catB([cMp(5),
     cU(0),cAr(ins.length)].concat(ins.map(encInput)).concat([
     cU(1),cAr(2),encPlainOut(NETS[net].lockBytes,CLAIM_LOVELACE),encChangeOutMA(changeB,changeCoin,MA_SPAN),
     cU(2),cU(fee),
+    cU(3),cU(ttl),
     cU(7),cBy(auxHash)]));
 }
 function dummyWitLen(n){
@@ -757,6 +760,8 @@ function minChangeCoin(changeB,params){
 }
 async function submitClaim(claim){
   await connectWallet();
+  if(!W.tipSlot) throw new Error("could not obtain the current slot — refusing to build an open-ended claim transaction");
+  var ttl=W.tipSlot+3600;                        // one hour to sign/submit
   var aux=buildAux(claim);
   var auxHash=blake2b256(aux);
   var utxos=parseWalletUtxos(await W.api.getUtxos());
@@ -779,13 +784,13 @@ async function submitClaim(claim){
       throw new Error("not enough spendable ADA (needs ~"+((CLAIM_LOVELACE+fee+minChange)/1e6).toFixed(2)+
         " ADA; one token bundle can be included and its tokens return to you — if this persists, consolidate UTxOs in your wallet)");
     var nWit=1+new Set(ins.map(function(i){return i.addrHex;})).size;
-    body=encClaimBody(W.net,ins,changeB,sum-CLAIM_LOVELACE-fee,fee,auxHash);
+    body=encClaimBody(W.net,ins,changeB,sum-CLAIM_LOVELACE-fee,fee,auxHash,ttl);
     size=3+body.length+dummyWitLen(nWit)+aux.length;
     newFee=Math.ceil(W.params.a*size+W.params.b)+220;
     if(newFee<=fee){ fee=newFee; break; }
     fee=Math.max(fee,newFee);
   }
-  body=encClaimBody(W.net,ins,changeB,sum-CLAIM_LOVELACE-fee,fee,auxHash);
+  body=encClaimBody(W.net,ins,changeB,sum-CLAIM_LOVELACE-fee,fee,auxHash,ttl);
   var unsigned=catB([u8([0x84]),body,cMp(0),u8([0xf5]),aux]);
   var witHex=await W.api.signTx(bHex(unsigned),false);
   var wit=hexB(witHex);
