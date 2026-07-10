@@ -541,8 +541,10 @@ async function api(path, body, quiet){
   let last;
   for (const base of sources()){
     try{
-      if(!quiet) log('q', `POST ${base}${path}`);
-      const r = await fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(!quiet) log('q', `${body==null?'GET':'POST'} ${base}${path}`);
+      const r = body==null
+        ? await fetch(base+path)
+        : await fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       if(!r.ok) throw new Error('HTTP '+r.status);
       $('srcname').textContent = new URL(base).host;
       return await r.json();
@@ -1107,7 +1109,18 @@ async function openPointer(raw){
     }
     return;
   }
-  alert('pointer not recognized — expected txHash#ix or a 56-hex policy id');
+  if(/^asset1[a-z0-9]{30,58}$/.test(p)){
+    // a CIP-14 asset fingerprint (what pool.pm shows) → look up policy+name, then
+    // resolve like any pasted asset: registry head OR an NFT with an app pointer
+    try{
+      const rows=await api('/asset_list?fingerprint=eq.'+p+'&limit=1',null,true);
+      const a=rows&&rows[0];
+      if(!a||!a.policy_id) { alert('fingerprint '+p.slice(0,20)+'… not found on-chain'); return; }
+      await resolveRegistry(a.policy_id+'.'+a.asset_name);
+    }catch(e){ alert('fingerprint lookup failed — '+(e.message||e)); }
+    return;
+  }
+  alert('pointer not recognized — expected txHash#ix, a 56-hex policy id, policy.ASSET, an asset1… fingerprint, or a $handle');
 }
 
 /* ════════════════════════ router & wiring ════════════════════════ */
