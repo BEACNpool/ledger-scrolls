@@ -477,7 +477,7 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
    <div class="col">
     <h3><span class="dot"></span>Your trust anchors</h3>
     <p class="setlabel">Data source (Koios-compatible base URL; first that answers wins)</p>
-    <div class="setrow"><input id="setsrc" placeholder="https://api.koios.rest/api/v1"><button class="ghost" id="savesrc">Set</button></div>
+    <div class="setrow"><input id="setsrc" placeholder="https://koios.beacn.workers.dev/api/v1"><button class="ghost" id="savesrc">Set</button></div>
     <p class="setlabel">Registry (a registry NFT <code>policyId.ASSET</code> or a tx hash carrying a label-22027 list)</p>
     <div class="setrow"><input id="sethead" placeholder="8d6d38b3….LS_REGISTRY_V2"><button class="ghost" id="savehead">Load</button></div>
     <p id="anchorinfo"></p>
@@ -507,14 +507,20 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
 "use strict";
 /* ════════════════════════ providers ════════════════════════ */
 // api.koios.rest does not send CORS headers to browsers (direct fetches
-// fail); the fallback is a transparent Koios mirror running the open recipe
-// in tools/cors-mirror/ — deploy your own and set it in settings. Bytes are
-// hash-verified locally regardless of endpoint.
-const DEFAULT_SOURCES = ['https://api.koios.rest/api/v1','https://koios.beacn.workers.dev/api/v1'];
+// fail), so the CORS-adding mirror goes FIRST — it runs the open recipe in
+// tools/cors-mirror/; deploy your own and set it in settings. api.koios.rest
+// stays as a fallback for non-browser contexts. Bytes are hash-verified
+// locally regardless of endpoint.
+const DEFAULT_SOURCES = ['https://koios.beacn.workers.dev/api/v1','https://api.koios.rest/api/v1'];
 const DEFAULT_HEAD = 'af5ee28d770a1f4bf6c252d79944a5fa2a7446fa2e6ef558707e238d881ec483#0';
 const CANONICAL_LOCK = 'addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn';
 const LS = window.localStorage;
-const sources = () => { const c = LS.getItem('ls.source'); return c ? [c, ...DEFAULT_SOURCES.filter(s=>s!==c)] : [...DEFAULT_SOURCES]; };
+const sources = () => {
+  let c = LS.getItem('ls.source');
+  // migrate away a stored api.koios.rest source — it never answers browsers (CORS)
+  if (c === 'https://api.koios.rest/api/v1'){ LS.removeItem('ls.source'); c = null; }
+  return c ? [c, ...DEFAULT_SOURCES.filter(s=>s!==c)] : [...DEFAULT_SOURCES];
+};
 const registryHead = () => LS.getItem('ls.head') || DEFAULT_HEAD;
 
 const $ = id => document.getElementById(id);

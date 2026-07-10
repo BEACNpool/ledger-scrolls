@@ -48,7 +48,8 @@ reader's user makes* — never something hard-wired by us:
 5. **Blockfrost with your own free key** — different API, honest CORS;
    `reader.html` speaks it natively.
 
-Site pages default to `[api.koios.rest, BEACN's mirror instance]` and show
+Site pages default to `[BEACN's mirror instance, api.koios.rest]` — the
+CORS-capable mirror first, since api.koios.rest never answers browsers — and show
 which source answered in their trust logs. The BEACN mirror is a courtesy
 deployment of the public recipe — the site works out of the box, and nobody
 who forks the reader inherits a landlord. The **minted** reader contains no
