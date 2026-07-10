@@ -13,6 +13,7 @@ deploy their own in about two minutes, free.
 1. Free Cloudflare account → **Workers & Pages → Create Worker**
 2. Paste [`worker.js`](worker.js), deploy
 3. Your endpoint: `https://<name>.<account>.workers.dev/api/v1`
+   (the same worker serves the Preview testnet at `…workers.dev/preview/api/v1`)
 4. Paste it into any Ledger Scrolls reader as a custom source
 
 Or with the CLI: `npx wrangler deploy worker.js --name koios-mirror`
