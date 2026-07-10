@@ -6,20 +6,22 @@
 <title>Vault Tool — seal & unseal a Ledger Scrolls treasure</title>
 <meta name="description" content="Encrypt a seed phrase behind a puzzle answer and generate a self-contained Vault Scroll — or, as a winner, decrypt one. Everything runs locally; nothing is uploaded.">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<meta name="theme-color" content="#04070f">
 <style>
 :root{
-  --bg:#0c0e13;--panel:#161a23;--panel2:#1b202b;--ink:#ece7db;--ink2:#b7b2a4;--faint:#7d818c;
-  --gold:#d9a441;--gold2:#f2c96b;--blue:#6f8bff;--ok:#3fd08b;--bad:#ff7d82;--warn:#e0b155;--line:#2a2f3a;
+  color-scheme:dark;
+  --bg:#04070f;--panel:#0c1526;--panel2:#101b33;--ink:#eef4ff;--ink2:#c6d4ef;--faint:#67789c;
+  --gold:#f6b45a;--gold2:#ffd9a0;--blue:#9ec3ff;--ok:#3fd68f;--bad:#ff6b70;--warn:#f0b35c;--line:#1a2745;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --mono:ui-monospace,Menlo,Consolas,monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:radial-gradient(1100px 700px at 75% -10%,rgba(111,139,255,.12),transparent 60%),
-  radial-gradient(900px 600px at 5% 5%,rgba(217,164,65,.10),transparent 60%),var(--bg);
+body{background:radial-gradient(1100px 700px at 75% -10%,rgba(47,107,255,.14),transparent 60%),
+  radial-gradient(900px 600px at 5% 5%,rgba(246,180,90,.06),transparent 60%),var(--bg);
   color:var(--ink);font:400 16px/1.6 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
 .wrap{max-width:760px;margin:0 auto;padding:5vw 20px 12vw}
 h1{font:800 clamp(26px,5vw,38px)/1.1 var(--sans);letter-spacing:-.02em;
-  background:linear-gradient(92deg,var(--gold2),var(--gold) 60%,#c98b2c);-webkit-background-clip:text;background-clip:text;color:transparent}
+  background:linear-gradient(92deg,var(--gold2),var(--gold) 60%,#d18a2f);-webkit-background-clip:text;background-clip:text;color:transparent}
 .sub{color:var(--ink2);margin:8px 0 22px;font-size:15.5px}
 .tabs{display:flex;gap:8px;margin-bottom:18px}
 .tab{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink2);
@@ -27,24 +29,24 @@ h1{font:800 clamp(26px,5vw,38px)/1.1 var(--sans);letter-spacing:-.02em;
 .tab.on{background:linear-gradient(145deg,var(--panel2),var(--panel));color:var(--gold2);border-color:color-mix(in srgb,var(--gold) 40%,transparent)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px}
 label{display:block;font:600 13px/1.4 var(--sans);color:var(--ink2);margin:14px 0 5px}
-textarea,input{width:100%;background:#0e1118;color:var(--ink);border:1px solid var(--line);border-radius:10px;
+textarea,input{width:100%;background:#0a1224;color:var(--ink);border:1px solid var(--line);border-radius:10px;
   padding:11px 13px;font:14px/1.5 var(--mono);resize:vertical}
 input[type=text]{font-family:var(--mono)}
 textarea{min-height:90px}
 .btn{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:13px 20px;border-radius:12px;border:0;cursor:pointer;
-  font:700 15px/1 var(--sans);color:#0c0e13;background:linear-gradient(96deg,var(--gold2),var(--gold))}
+  font:700 15px/1 var(--sans);color:#04070f;background:linear-gradient(96deg,var(--gold2),var(--gold))}
 .btn.sub{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
-.out{margin-top:16px;background:#0e1118;border:1px solid var(--line);border-radius:10px;padding:13px;
+.out{margin-top:16px;background:#0a1224;border:1px solid var(--line);border-radius:10px;padding:13px;
   font:12.5px/1.5 var(--mono);color:var(--ink2);word-break:break-all;white-space:pre-wrap;display:none}
 .out.show{display:block}
 .words{color:var(--gold2);font-size:15px;line-height:1.9}
 .note{margin:14px 0;padding:12px 15px;border-radius:10px;font-size:13.5px}
-.note.warn{background:rgba(224,177,85,.12);border:1px solid rgba(224,177,85,.4);color:#e6c477}
-.note.bad{background:rgba(255,125,130,.12);border:1px solid rgba(255,125,130,.4);color:#ff9ea2}
-.note.ok{background:rgba(63,208,139,.1);border:1px solid rgba(63,208,139,.35);color:#6fe0ac}
+.note.warn{background:rgba(240,179,92,.11);border:1px solid rgba(240,179,92,.4);color:#ffd9a0}
+.note.bad{background:rgba(255,107,112,.12);border:1px solid rgba(255,107,112,.4);color:#ff8f93}
+.note.ok{background:rgba(63,214,143,.11);border:1px solid rgba(63,214,143,.35);color:#7fe6b4}
 .strength{font-size:12.5px;margin-top:5px}
 .hide{display:none}
-code{font-family:var(--mono);background:#0e1118;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:.9em}
+code{font-family:var(--mono);background:#0a1224;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:.9em}
 a{color:var(--blue)}
 .copy{margin-left:10px;font:600 12px/1 var(--sans);border:1px solid var(--line);background:var(--panel2);color:var(--ink2);border-radius:999px;padding:6px 12px;cursor:pointer}
 </style>
@@ -133,19 +135,19 @@ function vaultScrollHTML(cipher, clue, prize){
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The Vault Scroll — you found it</title>
 <style>
-:root{--bg:#0c0e13;--ink:#ece7db;--ink2:#b7b2a4;--gold:#f2c96b;--blue:#9db0ff;--line:#2a2f3a;--mono:ui-monospace,Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+:root{color-scheme:dark;--bg:#04070f;--ink:#eef4ff;--ink2:#c6d4ef;--gold:#f6b45a;--blue:#9ec3ff;--line:#1a2745;--mono:ui-monospace,Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:radial-gradient(1000px 640px at 72% -10%,rgba(111,139,255,.13),transparent 60%),radial-gradient(800px 520px at 6% 4%,rgba(217,164,65,.11),transparent 60%),var(--bg);color:var(--ink);font:400 17px/1.7 Georgia,serif;padding:7vw 6vw 12vw}
+body{background:radial-gradient(1000px 640px at 72% -10%,rgba(47,107,255,.14),transparent 60%),radial-gradient(800px 520px at 6% 4%,rgba(246,180,90,.06),transparent 60%),var(--bg);color:var(--ink);font:400 17px/1.7 Georgia,serif;padding:7vw 6vw 12vw}
 main{max-width:680px;margin:0 auto}
 .eyebrow{font:700 12px/1 var(--sans);letter-spacing:.3em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:16px}
-h1{font:800 clamp(30px,7vw,52px)/1.05 var(--sans);letter-spacing:-.02em;background:linear-gradient(92deg,var(--gold),#c98b2c);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:14px}
+h1{font:800 clamp(30px,7vw,52px)/1.05 var(--sans);letter-spacing:-.02em;background:linear-gradient(92deg,var(--gold),#d18a2f);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:14px}
 p{color:var(--ink2);margin:0 0 16px}
 .prize{font:700 20px/1.4 var(--sans);color:var(--ink);margin:6px 0 22px}
-.sealed{background:#0e1118;border:1px solid var(--line);border-radius:12px;padding:16px;font:12.5px/1.55 var(--mono);color:var(--gold);word-break:break-all;margin:8px 0 20px}
+.sealed{background:#0a1224;border:1px solid var(--line);border-radius:12px;padding:16px;font:12.5px/1.55 var(--mono);color:var(--gold);word-break:break-all;margin:8px 0 20px}
 .step{border-left:3px solid var(--gold);padding:4px 0 4px 18px;margin:18px 0;color:var(--ink)}
 .rule{height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);margin:28px 0}
 a{color:var(--blue)}
-.foot{color:#7d818c;font:400 14px/1.7 var(--sans);text-align:center;border-top:1px solid var(--line);padding-top:22px;margin-top:36px}
+.foot{color:#67789c;font:400 14px/1.7 var(--sans);text-align:center;border-top:1px solid var(--line);padding-top:22px;margin-top:36px}
 </style></head><body><main>
   <span class="eyebrow">You cracked the first seal</span>
   <h1>You found the Vault Scroll.</h1>

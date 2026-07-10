@@ -15,19 +15,21 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="favicon.svg">
 <style>
-/* Ledger Scrolls site language: warm paper + blueprint. Serif = archive,
-   sans = interface, mono = chain. The game itself renders dark inside its
-   frame — an arcade cabinet standing in the library. */
+/* NIGHT LEDGER — deep-space navy chrome, same class map as the warm-paper
+   theme. Serif = archive, sans = interface, mono = chain. The game itself
+   renders inside its frame — an arcade cabinet standing in the night library. */
 :root{
-  --bg:#f6f5f1; --bg-2:#efece4; --surface:#ffffff; --surface-2:#fbfaf6;
-  --ink:#14161b; --ink-2:#3a4049; --muted:#6b7280; --faint:#9aa1ab;
-  --line:#e6e3da; --line-2:#dbd6ca;
-  --accent:#2f53ff; --accent-ink:#0d228f; --accent-soft:#ebefff;
-  --amber:#b27a1e; --amber-soft:#f6eedd;
-  --ok:#0a8f5b; --ok-soft:#e7f6ef; --bad:#d8383d;
+  color-scheme:dark;
+  --bg:#04070f; --bg-2:#0a1122; --surface:#0c1526; --surface-2:#101b33;
+  --ink:#eef4ff; --ink-2:#c6d4ef; --muted:#8ba3cf; --faint:#67789c;
+  --line:#1a2745; --line-2:#263760;
+  --accent:#2f6bff; --accent-ink:#9ec3ff; --accent-soft:rgba(47,107,255,.13);
+  --amber:#f6b45a; --amber-soft:rgba(246,180,90,.12);
+  --ok:#3fd68f; --ok-soft:rgba(63,214,143,.11); --bad:#ff6b70;
+  --dim:#8ba3cf;
   --radius:16px; --radius-sm:10px; --pill:999px;
-  --sh:0 6px 20px -6px rgba(20,22,27,.12),0 2px 6px rgba(20,22,27,.05);
-  --sh-lg:0 28px 60px -18px rgba(13,34,143,.20),0 8px 24px -10px rgba(20,22,27,.12);
+  --sh:0 6px 20px -6px rgba(2,6,18,.6),0 2px 6px rgba(2,6,18,.4);
+  --sh-lg:0 28px 60px -18px rgba(47,107,255,.25),0 8px 24px -10px rgba(2,6,18,.65);
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,system-ui,sans-serif;
   --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
@@ -35,7 +37,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--sans)}
-a{color:var(--accent)}
+a{color:var(--accent-ink)}
 .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
 
 header.site{padding:14px 0;border-bottom:1px solid var(--line);background:var(--surface)}
@@ -52,16 +54,16 @@ header.site .links a{font-size:14px;text-decoration:none;margin-left:16px;color:
 .badge{font:12.5px var(--mono);background:var(--surface);border:1px solid var(--line-2);
        border-radius:var(--pill);padding:6px 14px;color:var(--ink-2)}
 .badge b{color:var(--ok)}
-.cta{display:inline-block;margin-top:18px;background:var(--accent);color:#fff;text-decoration:none;
-     font-weight:600;padding:13px 30px;border-radius:var(--pill);box-shadow:var(--sh)}
-.cta:hover{background:var(--accent-ink)}
+.cta{display:inline-block;margin-top:18px;background:linear-gradient(180deg,#3d76ff,#2456e0);color:#fff;text-decoration:none;
+     font-weight:600;padding:13px 30px;border-radius:var(--pill);box-shadow:0 2px 12px -2px rgba(47,107,255,.5),var(--sh)}
+.cta:hover{background:linear-gradient(180deg,#4a83ff,#2f63f0)}
 
 .cabinet{margin:34px auto 10px;max-width:1080px;padding:0 20px}
-#gamewrap{background:#0e1116;border-radius:var(--radius);box-shadow:var(--sh-lg);
+#gamewrap{background:#050b1a;border-radius:var(--radius);box-shadow:var(--sh-lg);
           overflow:hidden;position:relative;aspect-ratio:16/11;min-height:420px}
 #gameframe{width:100%;height:100%;border:0;display:none}
-#trust{position:absolute;inset:0;padding:26px;font:13px/1.8 var(--mono);color:#8494ab;overflow:auto}
-#trust .ok{color:#79d29a} #trust .bad{color:#e07a7a} #trust .h{color:#dbe4f0}
+#trust{position:absolute;inset:0;padding:26px;font:13px/1.8 var(--mono);color:#8ba3cf;overflow:auto}
+#trust .ok{color:#5ad196} #trust .bad{color:#ff8f93} #trust .h{color:#d6e1f7}
 .trustline{font:12px var(--mono);color:var(--muted);text-align:center;margin-top:10px}
 
 section{padding:44px 0}
@@ -87,9 +89,9 @@ button.small:hover{border-color:var(--accent)}
 #lbstatus{color:var(--muted);font-size:13.5px;margin:8px 0}
 
 .share{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.share a,.share button{background:var(--ink);color:#fff;border:none;text-decoration:none;
-  font:14.5px var(--sans);padding:10px 20px;border-radius:var(--pill);cursor:pointer}
-.share a:hover,.share button:hover{background:var(--accent-ink)}
+.share a,.share button{background:linear-gradient(180deg,#3d76ff,#2456e0);color:#fff;border:none;text-decoration:none;
+  font:14.5px var(--sans);padding:10px 20px;border-radius:var(--pill);cursor:pointer;box-shadow:0 2px 12px -2px rgba(47,107,255,.45)}
+.share a:hover,.share button:hover{background:linear-gradient(180deg,#4a83ff,#2f63f0)}
 
 footer.site{border-top:1px solid var(--line);padding:26px 0 40px;margin-top:30px;
   font-size:13px;color:var(--muted)}
@@ -97,35 +99,35 @@ footer.site .mono{font-size:11.5px;word-break:break-all}
 
 /* loading progress (compact, mobile-friendly) */
 #loadui{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:28px 22px;text-align:center;background:#0e1116;color:#8494ab;z-index:2}
-#loadui .ring{width:52px;height:52px;border-radius:50%;border:3px solid #232b38;border-top-color:#e8c35a;
+  padding:28px 22px;text-align:center;background:#050b1a;color:#8ba3cf;z-index:2}
+#loadui .ring{width:52px;height:52px;border-radius:50%;border:3px solid #1a2745;border-top-color:#f6b45a;
   animation:spin 0.9s linear infinite;margin-bottom:16px}
 @keyframes spin{to{transform:rotate(360deg)}}
-#loadui h2{font:600 18px var(--sans);color:#dbe4f0;margin:0 0 8px}
-#loadui #loadstage{font:14px var(--sans);color:#8494ab;min-height:1.4em}
-#loadui #loadpct{font:12px var(--mono);color:#5a6b85;margin-top:6px}
+#loadui h2{font:600 18px var(--sans);color:#eef4ff;margin:0 0 8px}
+#loadui #loadstage{font:14px var(--sans);color:#8ba3cf;min-height:1.4em}
+#loadui #loadpct{font:12px var(--mono);color:#67789c;margin-top:6px}
 #loadui.done{display:none}
-#loadui.err .ring{animation:none;border-color:#e07a7a;border-top-color:#e07a7a}
+#loadui.err .ring{animation:none;border-color:#ff6b70;border-top-color:#ff6b70}
 #trust{display:none} /* detailed log behind "Show proof" */
-#trust.showlog{display:block;position:absolute;inset:0;z-index:3;background:#0e1116}
-#prooftoggle{margin-top:14px;background:transparent;border:1px solid #232b38;color:#8494ab;
+#trust.showlog{display:block;position:absolute;inset:0;z-index:3;background:#050b1a}
+#prooftoggle{margin-top:14px;background:transparent;border:1px solid #263760;color:#8ba3cf;
   border-radius:999px;padding:8px 14px;font:13px var(--sans);cursor:pointer}
-#prooftoggle:hover{border-color:#e8c35a;color:#dbe4f0}
+#prooftoggle:hover{border-color:#f6b45a;color:#eef4ff}
 
 /* play mode top bar */
 #playbar{display:none;position:fixed;top:0;left:0;right:0;z-index:60;
   align-items:center;justify-content:space-between;gap:10px;
   padding:8px 12px calc(8px + env(safe-area-inset-top,0));
   padding-top:calc(8px + env(safe-area-inset-top,0));
-  background:rgba(14,17,22,.92);backdrop-filter:blur(10px);border-bottom:1px solid #232b38;color:#dbe4f0}
+  background:rgba(4,7,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid #1a2745;color:#eef4ff}
 #playbar .ptitle{font:600 14px var(--sans);letter-spacing:.04em}
 #playbar button{min-height:40px;min-width:40px;padding:8px 14px;border-radius:999px;
-  border:1px solid #232b38;background:#161b24;color:#dbe4f0;font:600 14px var(--sans);cursor:pointer}
-#playbar button.exit{border-color:#e8c35a;color:#e8c35a}
-#playbar .pstatus{font:12px var(--mono);color:#8494ab}
+  border:1px solid #263760;background:#101b33;color:#eef4ff;font:600 14px var(--sans);cursor:pointer}
+#playbar button.exit{border-color:#f6b45a;color:#f6b45a}
+#playbar .pstatus{font:12px var(--mono);color:#8ba3cf}
 
 /* immersive play mode (CSS — always exit via ✕, no stuck fullscreen) */
-body.playmode{overflow:hidden;background:#0e1116}
+body.playmode{overflow:hidden;background:#050b1a}
 body.playmode header.site,
 body.playmode .hero,
 body.playmode .trustline,
@@ -160,7 +162,7 @@ body.playmode #gameframe{height:100%}
 }
 </style>
 <link rel="manifest" href="./chess-manifest.webmanifest">
-<meta name="theme-color" content="#0e1116">
+<meta name="theme-color" content="#04070f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Ledger Chess">
 </head>
@@ -168,7 +170,7 @@ body.playmode #gameframe{height:100%}
 
 <header class="site">
   <div class="wrap">
-    <a class="home" href="index.html">📜 Ledger Scrolls</a>
+    <a class="home" href="index.html"><span class="brand-mark" style="display:inline-grid;place-items:center;vertical-align:-3px"><svg viewBox="-60 -60 120 120" width="18" height="18" aria-hidden="true"><g fill="#aecbff"><circle cx="38" cy="0" r="9"/><circle cx="19" cy="32.9" r="9"/><circle cx="-19" cy="32.9" r="9"/><circle cx="-19" cy="-32.9" r="9"/><circle cx="19" cy="-32.9" r="9"/></g><circle cx="-38" cy="0" r="9" fill="#f6b45a"/><circle r="16" fill="#2f6bff" stroke="#cfe0ff" stroke-width="2"/></svg></span> Ledger Scrolls</a>
     <div class="links">
       <a href="index.html">The Library</a>
       <a href="calculator.html">Mint a Scroll</a>
