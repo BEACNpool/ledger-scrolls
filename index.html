@@ -506,19 +506,23 @@ button:disabled{background:#c5c9d6;color:#fff;cursor:wait;box-shadow:none;transf
 <script>
 "use strict";
 /* ════════════════════════ providers ════════════════════════ */
-// api.koios.rest does not send CORS headers to browsers (direct fetches
-// fail), so the CORS-adding mirror goes FIRST — it runs the open recipe in
-// tools/cors-mirror/; deploy your own and set it in settings. api.koios.rest
-// stays as a fallback for non-browser contexts. Bytes are hash-verified
-// locally regardless of endpoint.
-const DEFAULT_SOURCES = ['https://koios.beacn.workers.dev/api/v1','https://api.koios.rest/api/v1'];
+// Browsers can only use CORS-capable sources: api.koios.rest omits the
+// Access-Control-Allow-Origin header on real responses, so it is deliberately
+// NOT in this list (it still works for curl/CLI — see docs/ARCHITECTURE.md).
+// Each entry runs the open recipe in tools/cors-mirror/ — deploy your own and
+// set it in settings, or add it here. Bytes are hash-verified locally
+// regardless of endpoint, so a mirror can hide data but never forge it.
+const DEFAULT_SOURCES = ['https://koios.beacn.workers.dev/api/v1'];
 const DEFAULT_HEAD = 'af5ee28d770a1f4bf6c252d79944a5fa2a7446fa2e6ef558707e238d881ec483#0';
 const CANONICAL_LOCK = 'addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn';
 const LS = window.localStorage;
 const sources = () => {
   let c = LS.getItem('ls.source');
-  // migrate away a stored api.koios.rest source — it never answers browsers (CORS)
-  if (c === 'https://api.koios.rest/api/v1'){ LS.removeItem('ls.source'); c = null; }
+  if (c){
+    c = c.trim().replace(/\/+$/,'');
+    // migrate away stored direct-Koios sources in any form — they never answer browsers (CORS)
+    if (!c || /^https?:\/\/(api|preview)\.koios\.rest([/?#]|$)/i.test(c)){ LS.removeItem('ls.source'); c = null; }
+  }
   return c ? [c, ...DEFAULT_SOURCES.filter(s=>s!==c)] : [...DEFAULT_SOURCES];
 };
 const registryHead = () => LS.getItem('ls.head') || DEFAULT_HEAD;

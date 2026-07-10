@@ -1181,16 +1181,16 @@ const buildDatum = content => catB([u8([0xd8,0x79,0x9f]), chunkedBytes(content),
 const LOCK_MAINNET = "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn";
 const SCRIPT_HASH  = b32decode(LOCK_MAINNET).bytes.subarray(1);
 const NETS = {
-  /* browser CORS: api.koios.rest only answers its own site — the mirror
-     (tools/cors-mirror/, deploy your own!) goes first for web use */
+  /* browser CORS: api.koios.rest/preview.koios.rest never answer browsers,
+     so only CORS mirrors are listed (tools/cors-mirror/, deploy your own!) */
   1:{ name:"MAINNET", cls:"main", note:"real ADA — this is forever",
       lockBech:LOCK_MAINNET, lockBytes:b32decode(LOCK_MAINNET).bytes,
-      koios:["https://koios.beacn.workers.dev/api/v1","https://api.koios.rest/api/v1"],
+      koios:["https://koios.beacn.workers.dev/api/v1"],
       scan:"https://cardanoscan.io/transaction/" },
   0:{ name:"PREVIEW — rehearsal", cls:"test", note:"test ADA — free mistakes (get tADA from the faucet)",
       lockBech:b32encode("addr_test", catB([u8([0x70]),SCRIPT_HASH])),
       lockBytes:catB([u8([0x70]),SCRIPT_HASH]),
-      koios:["https://koios.beacn.workers.dev/preview/api/v1","https://preview.koios.rest/api/v1"],
+      koios:["https://koios.beacn.workers.dev/preview/api/v1"],
       scan:"https://preview.cardanoscan.io/transaction/" },
 };
 

@@ -437,11 +437,11 @@ var LOCK_MAINNET="addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn";
 var SCRIPT_HASH=b32decode(LOCK_MAINNET).bytes.subarray(1);
 var NETS={
   1:{ name:"MAINNET", lockBech:LOCK_MAINNET, lockBytes:b32decode(LOCK_MAINNET).bytes,
-      koios:["https://koios.beacn.workers.dev/api/v1","https://api.koios.rest/api/v1"],
+      koios:["https://koios.beacn.workers.dev/api/v1"],
       scan:"https://cardanoscan.io/transaction/" },
   0:{ name:"PREVIEW", lockBech:b32encode("addr_test",catB([u8([0x70]),SCRIPT_HASH])),
       lockBytes:catB([u8([0x70]),SCRIPT_HASH]),
-      koios:["https://koios.beacn.workers.dev/preview/api/v1","https://preview.koios.rest/api/v1"],
+      koios:["https://koios.beacn.workers.dev/preview/api/v1"],
       scan:"https://preview.cardanoscan.io/transaction/" }
 };
 async function kapi(net,path,body,method){
