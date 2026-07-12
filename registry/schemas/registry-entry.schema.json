@@ -4,7 +4,7 @@
   "title": "Ledger Scrolls Registry Entry",
   "type": "object",
   "additionalProperties": false,
-  "required": ["name", "pointer", "contentType", "sha256"],
+  "required": ["name", "pointer"],
   "properties": {
     "name": {
       "type": "string",
@@ -14,11 +14,12 @@
       "$ref": "pointer.schema.json"
     },
     "contentType": {
-      "type": "string"
+      "type": "string",
+      "description": "Optional: the on-chain 22027 list omits it (readers take it from each scroll's manifest)"
     },
     "sha256": {
       "type": "string",
-      "description": "SHA-256 of resolved bytes (hex/base16 recommended)",
+      "description": "Optional SHA-256 of resolved bytes (hex/base16 recommended); the on-chain 22027 list omits it (manifests carry the hashes)",
       "minLength": 32
     },
     "sizeBytes": {

@@ -7,25 +7,37 @@
   "oneOf": [
     {
       "title": "UTxO Inline Datum Bytes (v1)",
-      "description": "Bytes stored in a Cardano UTxO inline datum (Standard Scroll / LS-LOCK). See registry/spec/cardano-utxo-datum.md for the datum encoding.",
+      "description": "Bytes stored in a Cardano UTxO inline datum (Standard Scroll / LS-LOCK). See registry/spec/cardano-utxo-datum.md for the datum encoding. Canonical documents carry txHash/txIx; the on-chain 22027 list also emits placeholder policy/asset fields (null) for entries resolved out-of-band.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "txHash", "txIx"],
+      "required": ["kind"],
+      "anyOf": [
+        { "required": ["txHash", "txIx"] },
+        { "required": ["policy", "asset"] }
+      ],
       "properties": {
         "kind": { "const": "utxo-inline-datum-bytes-v1" },
         "txHash": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
-        "txIx": { "type": "integer", "minimum": 0 }
+        "txIx": { "type": "integer", "minimum": 0 },
+        "policy": { "type": ["string", "null"], "pattern": "^[0-9a-fA-F]{56}$" },
+        "asset": { "type": ["string", "null"] }
       }
     },
     {
       "title": "CIP-25 Pages (v1)",
-      "description": "Bytes stored as CIP-25 (label 721) page NFTs plus manifest (Legacy Scroll / LS-PAGES).",
+      "description": "Bytes stored as CIP-25 (label 721) page NFTs plus manifest (Legacy Scroll / LS-PAGES). Canonical documents carry policyId/manifestAsset; the on-chain 22027 list emits policy/asset.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "policyId"],
+      "required": ["kind"],
+      "anyOf": [
+        { "required": ["policyId"] },
+        { "required": ["policy"] }
+      ],
       "properties": {
         "kind": { "const": "cip25-pages-v1" },
         "policyId": { "type": "string", "pattern": "^[0-9a-fA-F]{56}$" },
+        "policy": { "type": "string", "pattern": "^[0-9a-fA-F]{56}$" },
+        "asset": { "type": "string" },
         "manifestAsset": { "type": "string" },
         "manifestTx": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
         "manifestSlot": { "type": "integer", "minimum": 0 },

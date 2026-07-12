@@ -142,32 +142,34 @@ function reconstructChain(manifestHex, pagesByTx, manifestsByPtr = {}) {
     const hashes = [];
     let cur = manifestHex;
     let parts = 0;
+    const seen = new Set();
     for (;;) {
         const [m] = decodeCbor(Buffer.from(cur, 'hex'));
         if (m.tag !== 121) throw new Error('manifest must be Constr 0');
         const f = m.value;
         parts++;
+        const fields = {
+            version: f[0],
+            contentType: Buffer.from(f[1]).toString('utf8'),
+            codec: Buffer.from(f[2]).toString('utf8'),
+            sizeDecoded: f[3],
+            sha256Decoded: Buffer.from(f[4]).toString('hex'),
+            sha256Encoded: Buffer.from(f[5]).toString('hex'),
+        };
         if (!info) {
-            info = {
-                version: f[0],
-                contentType: Buffer.from(f[1]).toString('utf8'),
-                codec: Buffer.from(f[2]).toString('utf8'),
-                sizeDecoded: f[3],
-                sha256Decoded: Buffer.from(f[4]).toString('hex'),
-                sha256Encoded: Buffer.from(f[5]).toString('hex'),
-            };
-        } else if (f[0] !== info.version
-            || Buffer.from(f[1]).toString('utf8') !== info.contentType
-            || Buffer.from(f[4]).toString('hex') !== info.sha256Decoded) {
+            info = fields;
+        } else if (Object.keys(fields).some(k => fields[k] !== info[k])) {
             throw new Error('continuation file fields mismatch');
         }
         for (const h of f[6]) hashes.push(Buffer.from(h).toString('hex'));
         const nxt = f.length > 7 ? f[7] : null;
         if (nxt && nxt.tag === 122 && Array.isArray(nxt.value) && nxt.value.length) {
             const key = `${Buffer.from(nxt.value[0]).toString('hex')}#${nxt.value[1]}`;
+            if (seen.has(key)) throw new Error('manifest continuation cycle');
+            seen.add(key);
+            if (parts >= 64) throw new Error('manifest chain exceeds safe limit (64 parts)');
             if (!manifestsByPtr[key]) throw new Error('continuation manifest missing: ' + key);
             cur = manifestsByPtr[key];
-            if (parts > 32) throw new Error('manifest chain too long');
         } else break;
     }
     info.pageTxHashes = hashes;
@@ -187,6 +189,7 @@ function reconstructChain(manifestHex, pagesByTx, manifestsByPtr = {}) {
 const POINTER_RULES = {
     'utxo-inline-datum-bytes-v1': { txHash: /^[0-9a-fA-F]{64}$/, txIx: 'number' },
     'cip25-pages-v1': { policyId: /^[0-9a-fA-F]{56}$/ },
+    'manifest-chain-v2': { txHash: /^[0-9a-fA-F]{64}$/, txIx: 'number' },
     'url': { url: 'string' },
     // Deprecated aliases readers may still accept
     'utxo-locked-bytes': { txin: /^[0-9a-fA-F]{64}#[0-9]+$/ },
@@ -214,60 +217,88 @@ const vectors = manifest.vectors;
 
 console.log('== payload vectors ==');
 for (const v of vectors.payloads) {
-    const data = readFileSync(join(ROOT, v.file));
-    check(`${v.file} sha256`, sha256Hex(data) === v.sha256);
-    if (v.codec === 'gzip') {
-        check(`${v.file} gunzip sha256`, sha256Hex(gunzipSync(data)) === v.decodedSha256);
+    try {
+        const data = readFileSync(join(ROOT, v.file));
+        check(`${v.file} sha256`, sha256Hex(data) === v.sha256);
+        if (v.codec === 'gzip') {
+            check(`${v.file} gunzip sha256`, sha256Hex(gunzipSync(data)) === v.decodedSha256);
+        }
+    } catch (e) {
+        check(`${v.file} vector`, false, String(e.message ?? e));
     }
 }
 
 console.log('== standard scroll datums ==');
 for (const v of vectors.datums) {
-    const raw = Buffer.from(readFileSync(join(ROOT, v.file), 'utf8').trim(), 'hex');
-    check(`${v.file} decoded sha256`, sha256Hex(decodeStandardDatumBytes(raw)) === v.decodedSha256);
+    try {
+        const raw = Buffer.from(readFileSync(join(ROOT, v.file), 'utf8').trim(), 'hex');
+        check(`${v.file} decoded sha256`, sha256Hex(decodeStandardDatumBytes(raw)) === v.decodedSha256);
+    } catch (e) {
+        check(`${v.file} vector`, false, String(e.message ?? e));
+    }
 }
 
 console.log('== cip25 page reconstruction ==');
 for (const v of vectors.cip25) {
-    const meta = JSON.parse(readFileSync(join(ROOT, v.file), 'utf8'));
-    const [decoded, gzRaw] = reconstructCip25Pages(meta, v.policyId);
-    check(`${v.file} reconstructed sha256`, sha256Hex(decoded) === v.reconstructedSha256);
-    check(`${v.file} gzip sha256`, sha256Hex(gzRaw) === v.gzipSha256);
+    try {
+        const meta = JSON.parse(readFileSync(join(ROOT, v.file), 'utf8'));
+        const [decoded, gzRaw] = reconstructCip25Pages(meta, v.policyId);
+        check(`${v.file} reconstructed sha256`, sha256Hex(decoded) === v.reconstructedSha256);
+        check(`${v.file} gzip sha256`, sha256Hex(gzRaw) === v.gzipSha256);
+    } catch (e) {
+        check(`${v.file} vector`, false, String(e.message ?? e));
+    }
 }
 
 console.log('== ls-chain v2 ==');
 for (const v of vectors.chain ?? []) {
-    const mhex = readFileSync(join(ROOT, v.manifest), 'utf8').trim();
-    const pages = JSON.parse(readFileSync(join(ROOT, v.pages), 'utf8'));
-    const conts = Object.fromEntries(Object.entries(v.manifests ?? {})
-        .map(([ptr, path]) => [ptr, readFileSync(join(ROOT, path), 'utf8').trim()]));
-    const [info, encoded, decoded] = reconstructChain(mhex, pages, conts);
-    check(`${v.manifest} fields`, info.contentType === v.contentType
-        && info.codec === v.codec && info.pageTxHashes.length === v.pageCount
-        && info.parts === (v.parts ?? 1));
-    check(`${v.manifest} encoded sha256`, sha256Hex(encoded) === v.encodedSha256
-        && info.sha256Encoded === v.encodedSha256);
-    check(`${v.manifest} decoded sha256`, sha256Hex(decoded) === v.reconstructedSha256
-        && info.sha256Decoded === v.reconstructedSha256
-        && decoded.length === info.sizeDecoded);
+    try {
+        const mhex = readFileSync(join(ROOT, v.manifest), 'utf8').trim();
+        const pages = JSON.parse(readFileSync(join(ROOT, v.pages), 'utf8'));
+        const conts = Object.fromEntries(Object.entries(v.manifests ?? {})
+            .map(([ptr, path]) => [ptr, readFileSync(join(ROOT, path), 'utf8').trim()]));
+        const [info, encoded, decoded] = reconstructChain(mhex, pages, conts);
+        check(`${v.manifest} fields`, info.contentType === v.contentType
+            && info.codec === v.codec && info.pageTxHashes.length === v.pageCount
+            && info.parts === (v.parts ?? 1));
+        check(`${v.manifest} encoded sha256`, sha256Hex(encoded) === v.encodedSha256
+            && info.sha256Encoded === v.encodedSha256);
+        check(`${v.manifest} decoded sha256`, sha256Hex(decoded) === v.reconstructedSha256
+            && info.sha256Decoded === v.reconstructedSha256
+            && decoded.length === info.sizeDecoded);
+    } catch (e) {
+        check(`${v.manifest} vector`, false, String(e.message ?? e));
+    }
 }
 
 console.log('== pointers ==');
 const validDir = join(ROOT, vectors.pointers.validDir);
 for (const f of readdirSync(validDir).sort()) {
-    const p = JSON.parse(readFileSync(join(validDir, f), 'utf8'));
-    check(`valid pointer accepted: ${f}`, pointerIsValid(p));
+    try {
+        const p = JSON.parse(readFileSync(join(validDir, f), 'utf8'));
+        check(`valid pointer accepted: ${f}`, pointerIsValid(p));
+    } catch (e) {
+        check(`valid pointer accepted: ${f}`, false, String(e.message ?? e));
+    }
 }
 const invalidDir = join(ROOT, vectors.pointers.invalidDir);
 for (const f of readdirSync(invalidDir).sort()) {
-    const p = JSON.parse(readFileSync(join(invalidDir, f), 'utf8'));
-    check(`invalid pointer rejected: ${f}`, !pointerIsValid(p));
+    try {
+        const p = JSON.parse(readFileSync(join(invalidDir, f), 'utf8'));
+        check(`invalid pointer rejected: ${f}`, !pointerIsValid(p));
+    } catch (e) {
+        check(`invalid pointer rejected: ${f}`, false, String(e.message ?? e));
+    }
 }
 
 console.log('== registry canonical hashing ==');
 for (const v of vectors.registry) {
-    const obj = JSON.parse(readFileSync(join(ROOT, v.file), 'utf8'));
-    check(`${v.file} canonical sha256`, sha256Hex(Buffer.from(canonicalJson(obj), 'utf8')) === v.canonicalSha256);
+    try {
+        const obj = JSON.parse(readFileSync(join(ROOT, v.file), 'utf8'));
+        check(`${v.file} canonical sha256`, sha256Hex(Buffer.from(canonicalJson(obj), 'utf8')) === v.canonicalSha256);
+    } catch (e) {
+        check(`${v.file} vector`, false, String(e.message ?? e));
+    }
 }
 
 console.log();

@@ -2,20 +2,65 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://beacnpool.github.io/ledger-scrolls/schemas/registry-head.schema.json",
   "title": "Ledger Scrolls Registry Head",
+  "description": "Two head formats: the datum-era v0 head (a UTxO inline-datum document) and the NFT-era head mirror (metadata of the LS_REGISTRY_Vn registry-head NFT; the 22027 list rides its mint tx).",
   "type": "object",
-  "additionalProperties": false,
-  "required": ["format", "version", "registryList"],
-  "properties": {
-    "format": { "const": "ledger-scrolls-registry-head" },
-    "version": { "type": "integer", "const": 0 },
-    "createdAt": { "type": "string", "format": "date-time" },
-    "author": { "type": "string" },
-    "prevHead": { "$ref": "pointer.schema.json" },
-    "registryList": { "$ref": "pointer.schema.json" },
-    "signature": {
+  "oneOf": [
+    {
+      "title": "Registry Head (datum era, v0)",
       "type": "object",
-      "additionalProperties": true,
-      "description": "Reserved for v1 signed heads"
+      "additionalProperties": false,
+      "required": ["format", "version", "registryList"],
+      "properties": {
+        "format": { "const": "ledger-scrolls-registry-head" },
+        "version": { "type": "integer", "const": 0 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "author": { "type": "string" },
+        "prevHead": { "$ref": "pointer.schema.json" },
+        "registryList": { "$ref": "pointer.schema.json" },
+        "signature": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Reserved for v1 signed heads"
+        }
+      }
+    },
+    {
+      "title": "Registry NFT Head mirror",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "policy", "asset", "type", "version", "mintTx"],
+      "properties": {
+        "format": { "const": "ledger-scrolls-registry-nft-head" },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "generator": { "type": "string" },
+        "policy": { "type": "string", "pattern": "^[0-9a-fA-F]{56}$" },
+        "asset": { "type": "string" },
+        "type": { "const": "Registry Head" },
+        "version": { "type": "integer", "minimum": 0 },
+        "mintTx": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
+        "listLabel": { "const": "22027" },
+        "entryCount": { "type": "integer", "minimum": 0 },
+        "previousVersion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["asset", "mintTx"],
+          "properties": {
+            "asset": { "type": "string" },
+            "mintTx": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" }
+          }
+        },
+        "legacyDatumHead": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "txHash", "txIx"],
+          "properties": {
+            "kind": { "const": "utxo-inline-datum-bytes-v1" },
+            "txHash": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
+            "txIx": { "type": "integer", "minimum": 0 },
+            "note": { "type": "string" }
+          }
+        }
+      }
     }
-  }
+  ]
 }

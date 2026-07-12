@@ -9,6 +9,8 @@ Page tx hashes and the tail manifest's "tx hash" are synthetic
 (sha256 of fixed labels) — the runner resolves the continuation from the
 vector's `manifests` map, not the network.
 """
+from __future__ import annotations
+
 import hashlib
 import json
 from pathlib import Path

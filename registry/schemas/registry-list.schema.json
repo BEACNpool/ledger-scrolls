@@ -7,7 +7,11 @@
   "required": ["format", "version", "entries"],
   "properties": {
     "format": { "const": "ledger-scrolls-registry-list" },
-    "version": { "type": "integer", "const": 0 },
+    "version": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "On-chain registry head version this list mirrors (LS_REGISTRY_Vn)"
+    },
     "generatedAt": { "type": "string", "format": "date-time" },
     "generator": { "type": "string" },
     "entries": {

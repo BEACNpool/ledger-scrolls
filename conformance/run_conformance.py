@@ -156,26 +156,33 @@ def reconstruct_chain(manifest_hex: str, pages_by_tx: dict, manifests_by_ptr: di
     hashes = []
     cur = manifest_hex
     parts = 0
+    seen = set()
     while True:
         m, _ = decode_cbor(bytes.fromhex(cur))
-        assert m[0] == "tag" and m[1] == 121, "manifest must be Constr 0"
+        if not (m[0] == "tag" and m[1] == 121):
+            raise ValueError("manifest must be Constr 0")
         f = m[2]
         parts += 1
+        fields = {
+            "version": f[0], "contentType": f[1].decode(), "codec": f[2].decode(),
+            "sizeDecoded": f[3], "sha256Decoded": f[4].hex(), "sha256Encoded": f[5].hex(),
+        }
         if info is None:
-            info = {
-                "version": f[0], "contentType": f[1].decode(), "codec": f[2].decode(),
-                "sizeDecoded": f[3], "sha256Decoded": f[4].hex(), "sha256Encoded": f[5].hex(),
-            }
-        else:
-            assert (f[0] == info["version"] and f[1].decode() == info["contentType"]
-                    and f[4].hex() == info["sha256Decoded"]), "continuation file fields mismatch"
+            info = fields
+        elif any(fields[k] != info[k] for k in fields):
+            raise ValueError("continuation file fields mismatch")
         hashes.extend(h.hex() for h in f[6])
         nxt = f[7] if len(f) > 7 else None
         if isinstance(nxt, tuple) and nxt[0] == "tag" and nxt[1] == 122 and nxt[2]:
             key = f"{nxt[2][0].hex()}#{nxt[2][1]}"
-            assert manifests_by_ptr and key in manifests_by_ptr, f"continuation manifest missing: {key}"
+            if key in seen:
+                raise ValueError("manifest continuation cycle")
+            seen.add(key)
+            if parts >= 64:
+                raise ValueError("manifest chain exceeds safe limit (64 parts)")
+            if not (manifests_by_ptr and key in manifests_by_ptr):
+                raise ValueError(f"continuation manifest missing: {key}")
             cur = manifests_by_ptr[key]
-            assert parts <= 32, "manifest chain too long"
         else:
             break
     info["pageTxHashes"] = hashes
@@ -184,7 +191,8 @@ def reconstruct_chain(manifest_hex: str, pages_by_tx: dict, manifests_by_ptr: di
     for tx in info["pageTxHashes"]:
         page = pages_by_tx[tx]["22025"]
         payload = b"".join(bytes.fromhex(clean_segment(s)) for s in page["p"])
-        assert sha256_hex(payload) == clean_segment(page["sha"]), "page sha mismatch"
+        if sha256_hex(payload) != clean_segment(page["sha"]):
+            raise ValueError("page sha mismatch")
         encoded.extend(payload)
     encoded = bytes(encoded)
     decoded = gzip.decompress(encoded) if info["codec"] == "gzip" else encoded
@@ -198,6 +206,10 @@ POINTER_RULES = {
     },
     "cip25-pages-v1": {
         "policyId": re.compile(r"^[0-9a-fA-F]{56}$"),
+    },
+    "manifest-chain-v2": {
+        "txHash": re.compile(r"^[0-9a-fA-F]{64}$"),
+        "txIx": int,
     },
     "url": {
         "url": str,
@@ -237,58 +249,90 @@ def main() -> int:
 
     print("== payload vectors ==")
     for v in vectors["payloads"]:
-        data = (ROOT / v["file"]).read_bytes()
-        check(f"{v['file']} sha256", sha256_hex(data) == v["sha256"])
-        if v.get("codec") == "gzip":
-            check(
-                f"{v['file']} gunzip sha256",
-                sha256_hex(gzip.decompress(data)) == v["decodedSha256"],
-            )
+        try:
+            data = (ROOT / v["file"]).read_bytes()
+            check(f"{v['file']} sha256", sha256_hex(data) == v["sha256"])
+            if v.get("codec") == "gzip":
+                check(
+                    f"{v['file']} gunzip sha256",
+                    sha256_hex(gzip.decompress(data)) == v["decodedSha256"],
+                )
+        except Exception as e:
+            check(f"{v['file']} vector", False, f"{type(e).__name__}: {e}")
 
     print("== standard scroll datums ==")
     for v in vectors["datums"]:
-        raw = bytes.fromhex((ROOT / v["file"]).read_text().strip())
-        decoded = decode_cbor_bytestring(raw)
-        check(f"{v['file']} decoded sha256", sha256_hex(decoded) == v["decodedSha256"])
+        try:
+            raw = bytes.fromhex((ROOT / v["file"]).read_text().strip())
+            decoded = decode_cbor_bytestring(raw)
+            check(f"{v['file']} decoded sha256", sha256_hex(decoded) == v["decodedSha256"])
+        except Exception as e:
+            check(f"{v['file']} vector", False, f"{type(e).__name__}: {e}")
 
     print("== cip25 page reconstruction ==")
     for v in vectors["cip25"]:
-        meta = json.loads((ROOT / v["file"]).read_text())
-        decoded, gz_raw = reconstruct_cip25_pages(meta, v["policyId"])
-        check(f"{v['file']} reconstructed sha256", sha256_hex(decoded) == v["reconstructedSha256"])
-        check(f"{v['file']} gzip sha256", sha256_hex(gz_raw) == v["gzipSha256"])
+        try:
+            meta = json.loads((ROOT / v["file"]).read_text())
+            decoded, gz_raw = reconstruct_cip25_pages(meta, v["policyId"])
+            check(f"{v['file']} reconstructed sha256", sha256_hex(decoded) == v["reconstructedSha256"])
+            check(f"{v['file']} gzip sha256", sha256_hex(gz_raw) == v["gzipSha256"])
+        except Exception as e:
+            check(f"{v['file']} vector", False, f"{type(e).__name__}: {e}")
 
     print("== ls-chain v2 ==")
     for v in vectors.get("chain", []):
-        mhex = (ROOT / v["manifest"]).read_text().strip()
-        pages = json.loads((ROOT / v["pages"]).read_text())
-        conts = {ptr: (ROOT / path).read_text().strip()
-                 for ptr, path in (v.get("manifests") or {}).items()}
-        info, encoded, decoded = reconstruct_chain(mhex, pages, conts)
-        check(f"{v['manifest']} fields", info["contentType"] == v["contentType"]
-              and info["codec"] == v["codec"] and len(info["pageTxHashes"]) == v["pageCount"]
-              and info["parts"] == v.get("parts", 1))
-        check(f"{v['manifest']} encoded sha256", sha256_hex(encoded) == v["encodedSha256"]
-              and info["sha256Encoded"] == v["encodedSha256"])
-        check(f"{v['manifest']} decoded sha256", sha256_hex(decoded) == v["reconstructedSha256"]
-              and info["sha256Decoded"] == v["reconstructedSha256"]
-              and len(decoded) == info["sizeDecoded"])
+        try:
+            mhex = (ROOT / v["manifest"]).read_text().strip()
+            pages = json.loads((ROOT / v["pages"]).read_text())
+            conts = {ptr: (ROOT / path).read_text().strip()
+                     for ptr, path in (v.get("manifests") or {}).items()}
+            info, encoded, decoded = reconstruct_chain(mhex, pages, conts)
+            check(f"{v['manifest']} fields", info["contentType"] == v["contentType"]
+                  and info["codec"] == v["codec"] and len(info["pageTxHashes"]) == v["pageCount"]
+                  and info["parts"] == v.get("parts", 1))
+            check(f"{v['manifest']} encoded sha256", sha256_hex(encoded) == v["encodedSha256"]
+                  and info["sha256Encoded"] == v["encodedSha256"])
+            check(f"{v['manifest']} decoded sha256", sha256_hex(decoded) == v["reconstructedSha256"]
+                  and info["sha256Decoded"] == v["reconstructedSha256"]
+                  and len(decoded) == info["sizeDecoded"])
+        except Exception as e:
+            check(f"{v['manifest']} vector", False, f"{type(e).__name__}: {e}")
 
     print("== pointers ==")
     valid_dir = ROOT / vectors["pointers"]["validDir"]
     for f in sorted(valid_dir.glob("*.json")):
-        check(f"valid pointer accepted: {f.name}", pointer_is_valid(json.loads(f.read_text())))
+        try:
+            check(f"valid pointer accepted: {f.name}", pointer_is_valid(json.loads(f.read_text())))
+        except Exception as e:
+            check(f"valid pointer accepted: {f.name}", False, f"{type(e).__name__}: {e}")
     invalid_dir = ROOT / vectors["pointers"]["invalidDir"]
     for f in sorted(invalid_dir.glob("*.json")):
-        check(f"invalid pointer rejected: {f.name}", not pointer_is_valid(json.loads(f.read_text())))
+        try:
+            check(f"invalid pointer rejected: {f.name}", not pointer_is_valid(json.loads(f.read_text())))
+        except Exception as e:
+            check(f"invalid pointer rejected: {f.name}", False, f"{type(e).__name__}: {e}")
 
     print("== registry canonical hashing ==")
     for v in vectors["registry"]:
-        obj = json.loads((ROOT / v["file"]).read_text())
-        check(
-            f"{v['file']} canonical sha256",
-            sha256_hex(canonical_json_bytes(obj)) == v["canonicalSha256"],
-        )
+        try:
+            obj = json.loads((ROOT / v["file"]).read_text())
+            check(
+                f"{v['file']} canonical sha256",
+                sha256_hex(canonical_json_bytes(obj)) == v["canonicalSha256"],
+            )
+        except Exception as e:
+            check(f"{v['file']} vector", False, f"{type(e).__name__}: {e}")
+
+    print("== fixture coverage ==")
+    referenced = {v["file"] for v in vectors["payloads"] + vectors["datums"]
+                  + vectors["cip25"] + vectors["registry"]}
+    for v in vectors.get("chain", []):
+        referenced.update([v["manifest"], v["pages"], *(v.get("manifests") or {}).values()])
+    pointer_dirs = (vectors["pointers"]["validDir"], vectors["pointers"]["invalidDir"])
+    on_disk = {str(p.relative_to(ROOT)) for p in (ROOT / "fixtures").rglob("*") if p.is_file()}
+    orphans = {p for p in on_disk - referenced
+               if not p.startswith(tuple(d + "/" for d in pointer_dirs))}
+    check("all fixtures referenced by manifest.json", not orphans, str(sorted(orphans)))
 
     print()
     print(f"{PASSES} passed, {len(FAILURES)} failed")

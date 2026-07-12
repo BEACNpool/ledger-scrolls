@@ -18,14 +18,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - run: python3 -m pip install -r koios-viewer/requirements.txt
+      - run: python3 -m pip install -r koios-viewer/requirements.txt "jsonschema>=4.10,<5"
       - run: python3 -m pip install ./registry/tooling
       - run: python3 conformance/run_conformance.py
       - run: node conformance/run_conformance.mjs
+      - run: python3 conformance/check_schemas.py
       - run: python3 -m compileall -q koios-viewer registry/tooling tools viewers conformance
       - run: PYTHONPATH=koios-viewer python3 -m unittest discover -s koios-viewer/tests -v
       - run: PYTHONPATH=registry/tooling python3 -m unittest discover -s registry/tooling/tests -v
       - run: bash -n scripts/*.sh tools/lschain/*.sh examples/architects-scroll/*.sh
       - run: node scripts/check_cost_model_sync.mjs
       - run: node scripts/check_inline_js.mjs
+      - run: python3 scripts/sync_nav.py --check
+      - run: node scripts/check_frozen_files.mjs
+      - run: node scripts/check_mirror_lists.mjs
       - run: git diff --check
