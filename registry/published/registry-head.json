@@ -1,0 +1,22 @@
+{
+  "format": "ledger-scrolls-registry-nft-head",
+  "generatedAt": "2026-07-11T00:00:00Z",
+  "generator": "mirror of on-chain LS_REGISTRY_V6 (asset_info via Koios)",
+  "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+  "asset": "LS_REGISTRY_V6",
+  "type": "Registry Head",
+  "version": 6,
+  "mintTx": "955c6d2aa84b1d1d09a8228cb13616cfc4f6e08454d26671fff4eab163341500",
+  "listLabel": "22027",
+  "entryCount": 22,
+  "previousVersion": {
+    "asset": "LS_REGISTRY_V5",
+    "mintTx": "9a70d337327191b48312de790ab2639ef7fe789d2869a04bb31406b47806c1ab"
+  },
+  "legacyDatumHead": {
+    "kind": "utxo-inline-datum-bytes-v1",
+    "txHash": "af5ee28d770a1f4bf6c252d79944a5fa2a7446fa2e6ef558707e238d881ec483",
+    "txIx": 0,
+    "note": "last datum-era head (spent); lineage crosses into the NFT line via LS_REGISTRY_V2's Supersedes trait"
+  }
+}

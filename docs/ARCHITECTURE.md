@@ -7,11 +7,11 @@ survive the death of the layers above it.
 ```
 ┌────────────────────────────────────────────────────────────────────┐
 │ 4. THE SITE (GitHub Pages serves this repo's root — a convenience) │
-│    index.html (The Library) · leaks.html · the Main Viewer              │
-│    calculator.html · calculator.html · media.html                     │
+│    index.html (the Main Viewer) · leaks.html · calculator.html     │
+│    media.html · ledger-book.html · ledger-chess.html · vault-tool  │
 ├────────────────────────────────────────────────────────────────────┤
 │ 3. READERS (each one stands alone)                                 │
-│    reader.html — one file, zero deps, MINTED ON-CHAIN              │
+│    examples/the-reader/reader.html — one file, MINTED ON-CHAIN     │
 │    viewers/koios-cli — stdlib Python · koios-viewer (lsview)       │
 ├────────────────────────────────────────────────────────────────────┤
 │ 2. WRITER TOOLS                                                    │
@@ -64,9 +64,10 @@ forms, channels, registries, deep links (`#s=<name>`, `#p=<policy>`),
 user-set data source and registry head persisted locally. The old
 per-scroll standalone viewers (bible, constitution, first-video, latest) and
 the testnet rehearsal viewer have been **removed** — the Library reads every
-scroll via `#s=<name>` deep links, so they were redundant. `leaks.html` and
-`the Main Viewer` remain separate products (channel player, docket terminal) on
-the same source discipline.
+scroll via `#s=<name>` deep links, so they were redundant. The standalone
+docket terminal (`legal.html`) is retired too — docket records open in the
+Main Viewer (`#s=legal-0001`, `#p=<policy>`). `leaks.html` remains a separate
+product (channel player) on the same source discipline.
 
 ## Invariants (change these and it stops being Ledger Scrolls)
 
@@ -74,6 +75,15 @@ the same source discipline.
 - Published URLs never break; paths cited inside minted scrolls
   (`koios-viewer/`, `tools/lschain/`, `viewers/koios-cli/`) never move.
 - Minted sources in `examples/` stay byte-exact, forever.
+- `neon-door.html` at the repo root is a **byte-frozen mirror** of an
+  on-chain scroll (sha256
+  `33d170ee9d7b35c707cb3631bfffbbea4f2ec57a3ba7e43c4c853dff7740341b`) —
+  any edit breaks the mirror.
+- The referee engine inside `ledger-chess.html` is **minted on-chain** and
+  pinned by golden vectors; on-chain victory claims replay against it, so
+  its behavior can never change.
+- `registry/published/*` mirrors on-chain state — regenerated from chain,
+  never hand-edited.
 - Wire identifiers live in specs; humans read "Ledger Scroll."
 - No secret, no key, no personal data ever enters the repo or a scroll.
 

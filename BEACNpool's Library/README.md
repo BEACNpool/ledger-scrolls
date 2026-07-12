@@ -1,7 +1,8 @@
 # BEACNpool's Library
 
-Every scroll BEACNpool has written into the Cardano blockchain — **20 live
-on mainnet**, permanently readable and verifiable by anyone, forever.
+Every scroll BEACNpool has written into the Cardano blockchain — **22 live
+on mainnet** (the on-chain `LS_REGISTRY_V6` list), permanently readable and
+verifiable by anyone, forever.
 
 This is the human-browsable catalog: one entry per scroll, with every key you
 need to find and verify it — the pointer, the channel policy and asset (where
@@ -140,7 +141,7 @@ The whole idea on a single printed page — the first PDF on the shelf, stored i
 
 ### 🗂️ The Card Catalog
 
-The library\
+The library's own index as a dataset: every scroll's pointer, hash, and vital facts in one CSV — itself a scroll.
 
 | Field | Value |
 |---|---|
@@ -153,7 +154,7 @@ The library\
 
 ### 🎧 Ledger Scrolls — The Theme
 
-The project\
+The project's own theme — a 1:47 electronic piece by the librarian, mastered for the chain from the lossless mix.
 
 | Field | Value |
 |---|---|
@@ -177,6 +178,32 @@ How to read & write immutable media on Cardano — a tutorial that is itself sto
 | Status | 🟢 LIVE on Cardano mainnet |
 | Open it | [Main Viewer → #s=eternal-scroll](https://beacnpool.github.io/ledger-scrolls/#s=eternal-scroll) |
 
+### 🖨️ Minted Forever
+
+The first scroll minted end-to-end from a browser wallet — no node, no CLI. The proof page of the no-node path, kept by the method it proves.
+
+| Field | Value |
+|---|---|
+| Scroll pointer | manifest-chain-v2 · `e1c5ab582c2bda08d442848d42a7d01ed2197e234962b1ebe686af2c906af046#0` |
+| Content | text/html, gzip, 63,683 bytes, 4 pages |
+| SHA-256 (decoded) | `291a8b42bc7e09cc3d61c7eaa79061c95ab8b09c72fbe8faacd76190ff65ead6` |
+| Minted | 2026-07 |
+| Status | 🟢 LIVE on Cardano mainnet |
+| Open it | [Main Viewer → #s=minted-forever](https://beacnpool.github.io/ledger-scrolls/#s=minted-forever) |
+
+### 🚪 The Neon Door
+
+A working stake-delegation dApp stored as a scroll: live pool stats and a CIP-30 delegation builder, reconstructed and verified before it runs. The repo's `neon-door.html` is a byte-frozen mirror of these bytes.
+
+| Field | Value |
+|---|---|
+| Scroll pointer | manifest-chain-v2 · `ddaf75da406f8ffe6e8702f9821c1c3b883c390e785cd8acb973e73397234da8#0` |
+| Content | text/html, gzip, 31,613 bytes, 1 page |
+| SHA-256 (decoded) | `33d170ee9d7b35c707cb3631bfffbbea4f2ec57a3ba7e43c4c853dff7740341b` |
+| Minted | 2026-07 |
+| Status | 🟢 LIVE on Cardano mainnet |
+| Open it | [Main Viewer → #s=neon-door](https://beacnpool.github.io/ledger-scrolls/#s=neon-door) |
+
 
 ## Standard Scrolls (one locked UTxO)
 
@@ -193,7 +220,7 @@ The legendary meme, preserved forever in a single locked datum. The minimal on-c
 | Status | 🟢 LIVE on Cardano mainnet |
 | Open it | [Main Viewer → #s=hosky-png](https://beacnpool.github.io/ledger-scrolls/#s=hosky-png) |
 
-### 🔮 
+### 🔮 The Architect's Scroll
 
 A message from Claude, the AI who helped build Ledger Scrolls — on knowledge, permanence, and building eternal things.
 

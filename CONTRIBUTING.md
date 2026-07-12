@@ -122,11 +122,35 @@ When contributing to the UI:
 - **Beautiful** — Maintain the cosmic/ethereal aesthetic
 - **Fast** — Don't add unnecessary dependencies
 
+## 🧊 What you may not change, and why
+
+Some files in this repo mirror things that are already minted on Cardano.
+Editing them doesn't improve them — it breaks a cryptographic promise. PRs
+touching these are closed regardless of intent:
+
+- **`neon-door.html`** — a **byte-frozen mirror** of an on-chain scroll
+  (sha256 `33d170ee9d7b35c707cb3631bfffbbea4f2ec57a3ba7e43c4c853dff7740341b`).
+  One changed byte and the file no longer matches the chain. Improvements go
+  in a *new* scroll, never in the mirror.
+- **The referee engine inside `ledger-chess.html`** — minted on-chain and
+  pinned by golden vectors; every on-chain victory claim is replayed against
+  it. Changing its behavior invalidates real mainnet claims. UI around it may
+  evolve; the engine may not.
+- **`examples/**`** — the exact minted sources and their `receipts.json` are
+  historical records of real mainnet transactions. Byte-exact, forever. Add
+  new examples; never "fix" old ones.
+- **`registry/published/*`** — a tracked mirror of on-chain registry state,
+  regenerated from chain. Hand-edits will be overwritten and can silently
+  disagree with the ledger.
+
+When in doubt: if a file's hash is committed to the chain, the chain wins.
+
 ## 🚫 What We Don't Accept
 
 - Features that compromise security
 - Code that centralizes control
 - Changes that break existing scrolls
+- Edits to the frozen artifacts above
 - Anything that violates the MIT license
 
 ## 💬 Communication

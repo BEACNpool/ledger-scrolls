@@ -246,6 +246,7 @@ record.
 | **Content-Type** | `text/html` |
 | **Codec** | `gzip` |
 | **Segments per Page** | 32 |
+| **SHA-256 (Original)** | `b226867233fbaf06495b1fe6974c37f4547b19f57e49d7f64701cf40f86c5dc5` |
 | **Status** | 🟢 LIVE — DO NOT MOVE NFTs |
 
 > Largest demo scroll. Reconstruction: `concat_pages` + `gunzip`. CIP-25
@@ -265,6 +266,7 @@ record.
 | **Pages** | 3 |
 | **Content-Type** | `text/plain` (auto-detected as HTML) |
 | **Codec** | `auto` (gzip magic bytes detected) |
+| **SHA-256 (Original)** | `6693c86312b7125666760d316572c9db984c6e2bae9fca344dafde77efc9253a` (recorded 2026-06-11; manifest declares no hash) |
 | **Status** | 🟢 LIVE — DO NOT MOVE NFTs |
 
 ---
@@ -322,7 +324,7 @@ Seven meditations on existence.
 
 A recorded legal instrument: executed by the signature on its minting tx,
 dated by block time, sealed by hash. Pull it by number in the Main Viewer
-Main Viewer (`#s=legal-0001`).
+(`#s=legal-0001`).
 
 | Field | Value |
 |-------|-------|
@@ -340,6 +342,30 @@ Main Viewer (`#s=legal-0001`).
 
 ---
 
+## 11) 🖨️ Minted Forever — the first browser-minted scroll
+
+The proof that the no-node path works: minted end-to-end from a browser
+wallet on the [Mint a Scroll](https://beacnpool.github.io/ledger-scrolls/calculator.html)
+page, then reconstructed byte-identical. Pointer
+`e1c5ab582c2bda08d442848d42a7d01ed2197e234962b1ebe686af2c906af046#0` ·
+`text/html` · gzip · sha256
+`291a8b42bc7e09cc3d61c7eaa79061c95ab8b09c72fbe8faacd76190ff65ead6` ·
+63,683 bytes · 4 pages · 🟢 LIVE.
+
+---
+
+## 12) 🚪 The Neon Door — a working dApp stored as a scroll
+
+A stake-delegation page (live pool stats + CIP-30 delegation builder) stored
+entirely on-chain. The repo-root `neon-door.html` is a **byte-frozen mirror**
+of these exact bytes. Pointer
+`ddaf75da406f8ffe6e8702f9821c1c3b883c390e785cd8acb973e73397234da8#0` ·
+`text/html` · gzip · sha256
+`33d170ee9d7b35c707cb3631bfffbbea4f2ec57a3ba7e43c4c853dff7740341b` ·
+31,613 bytes · 1 page · 🟢 LIVE.
+
+---
+
 ## Quick Reference Tables
 
 ### Policy IDs
@@ -349,7 +375,8 @@ Main Viewer (`#s=legal-0001`).
 | BEACN Leaks (channel) | `5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415` | Publisher channel — unforgeable byline | Open (sig-only; key holder publishes) |
 | LEDGER_SCROLLS (channel) | `8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80` | Publisher channel — project releases | Open (sig-only; key holder publishes) |
 | Ledger Docket (LEGAL) | `97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4` | Legal-record docket — numbered instruments | Active (sig-only) |
-| LS_REGISTRY | `895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062` | Registry NFT (DNS for scrolls) | Active (spend-and-recreate) |
+| Registry Head NFTs | `8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80` | On-chain catalog (`LS_REGISTRY_Vn`, label 22027) — same policy as the LEDGER_SCROLLS channel | Active (mint a higher Version to update) |
+| LS_REGISTRY (legacy) | `895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062` | Retired datum registry (superseded 2026-07-07) | Retired |
 | First Video | `38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2` | 175-page MP4 video (Legacy) | Policy likely locked |
 | FIRST WORDS | `beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba` | 4-page text meditations (Legacy) | Policy likely locked |
 | Bible | `2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0` | 237-page HTML Bible (Legacy) | Policy likely locked |
@@ -363,7 +390,7 @@ Main Viewer (`#s=legal-0001`).
 
 | Purpose | Address |
 |---------|---------|
-| **Registry Address** | `addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy` |
+| **Legacy Registry Address** (retired datum registry) | `addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy` |
 | **Hosky PNG Lock Address** (always-fail script) | `addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn` |
 | **Architect's Scroll Lock Address** (always-fail script) | `addr1w9fdc02rkmfyvh5kzzwwwk4kr2l9a8qa3g7feehl3ga022qz2249g` |
 
@@ -382,19 +409,30 @@ Main Viewer (`#s=legal-0001`).
 
 ## The Registry (the "DNS" for Scrolls)
 
-The Registry is a single on-chain directory that tells viewers what exists:
-a **registry NFT** (`LS_REGISTRY`) locked at a known address, whose UTxO
-carries an inline datum of gzipped JSON listing scrolls and their pointers.
-Spend-and-recreate to update. It is **forkable by design** — anyone can run
-their own registry head.
+The Registry is an on-chain directory that tells viewers what exists: a
+**Registry Head NFT** minted under the library policy, whose mint transaction
+carries the full scroll list in metadata label **22027**. Updating the
+catalog = minting a new head with a higher `Version`; readers auto-select the
+highest. It is **forkable by design** — anyone can mint their own head under
+their own policy. Spec:
+[`registry/spec/registry-nft-v2.md`](../registry/spec/registry-nft-v2.md).
 
-### Current Live Registry Pointer
+### Current Live Registry Head
 
 | Field | Value |
 |-------|-------|
-| **Policy ID** | `895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062` |
-| **Asset Name (hex)** | `4c535f5245474953545259` (ASCII: `LS_REGISTRY`) |
-| **Registry Address** | `addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy` |
+| **Library Policy ID** | `8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80` |
+| **Current Head** | `LS_REGISTRY_V6` (22 scrolls) |
+| **Mint TX** | `955c6d2aa84b1d1d09a8228cb13616cfc4f6e08454d26671fff4eab163341500` |
+| **Front door** | `$beacn` (handle + head in the same wallet) |
+| **Pin this version** | `8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80.LS_REGISTRY_V6` |
+
+> **Legacy registry (superseded 2026-07-07):** the original datum registry —
+> `LS_REGISTRY` under policy
+> `895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062`, locked at
+> `addr1q9x84f458uyf3k23sr7qfalg3mw2hl0nvv4navps2r7vq69esnxrheg9tfpr8sdyfzpr8jch5p538xjynz78lql9wm6qpl6qxy`,
+> updated by spend-and-recreate — is retired. Its heads are spent; the NFT
+> lineage links back to the last datum head, so history is unbroken.
 
 Registry schema, pointer kinds, and JSON Schemas: [`registry/`](../registry/).
 

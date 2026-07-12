@@ -3,6 +3,10 @@
   <url><loc>https://beacnpool.github.io/ledger-scrolls/</loc><priority>1.0</priority></url>
   <url><loc>https://beacnpool.github.io/ledger-scrolls/media.html</loc><priority>0.9</priority></url>
   <url><loc>https://beacnpool.github.io/ledger-scrolls/calculator.html</loc><priority>0.9</priority></url>
+  <url><loc>https://beacnpool.github.io/ledger-scrolls/ledger-book.html</loc><priority>0.9</priority></url>
+  <url><loc>https://beacnpool.github.io/ledger-scrolls/ledger-chess.html</loc><priority>0.9</priority></url>
   <url><loc>https://beacnpool.github.io/ledger-scrolls/build-a-reader/</loc><priority>0.8</priority></url>
   <url><loc>https://beacnpool.github.io/ledger-scrolls/leaks.html</loc><priority>0.7</priority></url>
+  <url><loc>https://beacnpool.github.io/ledger-scrolls/neon-door.html</loc><priority>0.6</priority></url>
+  <url><loc>https://beacnpool.github.io/ledger-scrolls/vault-tool.html</loc><priority>0.5</priority></url>
 </urlset>

@@ -31,6 +31,13 @@ node_modules/
 # Logs
 *.log
 lschain-work/
+cli-build/
 
 # Local scratch
 tmp/
+
+# Editing backups (convention: file.ext.bak-<topic>-<date>) and their archive.
+# Git history already keeps every tracked version; park stray .bak files in
+# archive/ (mv, not rm) rather than the Pages-served repo root.
+*.bak-*
+archive/

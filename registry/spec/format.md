@@ -1,5 +1,11 @@
 # Registry Data Format (v0)
 
+> **Catalog discovery has moved on-chain:** the live registry is an NFT whose
+> scroll list rides in mint-tx metadata label `22027` — see
+> [`registry-nft-v2.md`](registry-nft-v2.md). The **entry** and **pointer**
+> objects below remain normative (the NFT list expands to them); the datum
+> head/list containers are the retired v0 lineage.
+
 This document specifies the **Ledger Scrolls Registry** data structures.
 
 The registry is designed to be:
@@ -99,8 +105,9 @@ documents; readers MAY accept them and treat them as the canonical kind:
 | `utxo-locked-bytes` (`txin`: `HASH#IX`) | `utxo-inline-datum-bytes-v1` | split `txin` into `txHash` + `txIx` |
 | `asset-manifest` (`policyId`, `assetName`) | `cip25-pages-v1` | `assetName` → `manifestAsset` |
 
-The live on-chain registry (head `a9c56fb3…bad9#0`) already uses the
-canonical kinds.
+The live on-chain registry (the `LS_REGISTRY_V6` NFT's label-`22027` list)
+uses only the canonical kinds, in compact form — see
+[`registry-nft-v2.md`](registry-nft-v2.md).
 
 ### 3) Registry List
 

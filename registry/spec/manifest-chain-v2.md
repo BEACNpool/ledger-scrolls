@@ -2,6 +2,22 @@
 
 Status: ACTIVE (first mainnet scroll June 2026) · Supersedes LS-PAGES for writing
 
+> **Provenance — this document has been amended since it was etched.**
+> On 2026-07-02 this spec was minted as a scroll in its own format:
+> pointer `e4845deed98471b29b35689cfdb76f18add189c8d8f5c61b2ef32ea7ce6d5cf9#0`,
+> `sha256 = 4793c38349cca60d552c52d68dfd950f3dd945db55c8a6a87f05ca6d98e3b242`
+> (`examples/the-spec/receipts.json`). That scroll is immutable and still reads
+> exactly as it did then — it is the snapshot, and it is reproducible from the
+> chain by anyone.
+>
+> The file you are reading is the **living** spec. It was amended after the mint
+> (dense page packing; multi-part conformance parity), so it no longer hashes to
+> the etched copy — the receipt's note that the source "must stay byte-identical"
+> was overtaken by those edits and is true only of the snapshot. Nothing on-chain
+> changed or could change. To read the etched version, resolve the pointer above;
+> to see what moved, `git log registry/spec/manifest-chain-v2.md`. The next mint of
+> this spec re-anchors the two.
+
 LS-CHAIN stores media of any size as **bare metadata transactions** (no NFTs,
 nothing locked per page) anchored by a **manifest inline datum** locked at an
 always-fail script address (Class A: in the UTxO set, readable from any node,

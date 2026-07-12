@@ -1,5 +1,11 @@
 # Resolution & Verification
 
+> **Superseded for catalog discovery (2026-07-07):** live readers resolve the
+> registry NFT — bare policy id / `policy.ASSET` / `$handle` / mint tx hash →
+> label-`22027` list — per [`registry-nft-v2.md`](registry-nft-v2.md). The
+> name→pointer→verified-bytes flow below is unchanged once a list is in hand;
+> only step 1 (obtaining the list from a datum head) is the retired v0 path.
+
 Goal: **Name → Pointer → Verified Bytes**
 
 ## Resolution algorithm (v0)

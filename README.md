@@ -135,7 +135,7 @@ technology it teaches. Full list with hashes and receipts:
 
 | Site | What it is |
 |---|---|
-| [Main Viewer](https://beacnpool.github.io/ledger-scrolls/) | Read & verify any scroll — browse and verify any scroll, channel, or registry |
+| [Main Viewer](https://beacnpool.github.io/ledger-scrolls/) | Browse and verify any scroll, channel, or registry |
 | [Build a Reader](https://beacnpool.github.io/ledger-scrolls/build-a-reader/) | Everything to build your own reader in an afternoon — the minimal reference reader itself is minted on-chain |
 | [Mint a Scroll](https://beacnpool.github.io/ledger-scrolls/calculator.html) | The one-stop shop: drop any file → what forever costs — and small files mint right there from your browser wallet, no node, no CLI |
 | [Media Types](https://beacnpool.github.io/ledger-scrolls/media.html) | What can live forever — every media type that works, prep tips, live proof scrolls, prices |
@@ -286,8 +286,13 @@ manifesto is [live on mainnet](examples/beacn-leaks-000/). Spec:
 [registry/spec/publisher-channel-v1.md](registry/spec/publisher-channel-v1.md).
 
 Discovery is handled by the **registry** — an on-chain directory (a "DNS
-for scrolls") that is forkable by design: run your own, or PR an entry into
-BEACN's public one. Spec and schemas: [registry/](registry/).
+for scrolls") that is itself an NFT: a Registry Head whose mint transaction
+carries the scroll list in metadata label `22027`. Readers open it by
+**$handle** (BEACN's library answers to `$beacn`), bare policy id, or a
+pinned `policy.ASSET`. Forkable by design: mint your own head, or PR an
+entry into BEACN's public one. Spec:
+[registry/spec/registry-nft-v2.md](registry/spec/registry-nft-v2.md) ·
+schemas: [registry/](registry/).
 
 ## Agree on it, on-chain (countersigned scrolls)
 
@@ -333,7 +338,9 @@ ledger-scrolls/
 ├── calculator.html / leaks.html / media.html   # site pages (Pages serves repo root)
 ├── ledger-book.html        # LEDGER BOOK — the app (must stay at root: minted NFT metadata links it)
 ├── ledger-book/            # Ledger Book product home — ethos, costs, spec pointers
-├── ledger-chess.html       # LEDGER CHESS — the on-chain arcade + victory leaderboard
+├── ledger-chess.html       # LEDGER CHESS — the on-chain arcade + victory leaderboard (engine minted on-chain; frozen)
+├── neon-door.html          # BYTE-FROZEN mirror of the on-chain delegation dApp scroll — never edit
+├── vault-tool.html         # Vault Tool — seal & unseal a scroll treasure
 ├── docs/                   # All guides — start at docs/README.md
 │   └── history/            # Past audits & design reviews
 ├── registry/               # Registry + protocol specs, JSON schemas, examples, tooling

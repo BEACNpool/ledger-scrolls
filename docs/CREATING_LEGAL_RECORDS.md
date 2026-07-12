@@ -1,8 +1,11 @@
 # Create a Transaction-Backed Legal Record
 
 This guide creates a numbered legal docket that the
-[Ledger Scrolls Legal reader](https://beacnpool.github.io/ledger-scrolls/the Main Viewer (#s=legal-0001))
-can discover from a policy ID.
+[Main Viewer](https://beacnpool.github.io/ledger-scrolls/) can discover from a
+policy ID — paste the docket policy into the reader bar, or open
+`https://beacnpool.github.io/ledger-scrolls/#p=<POLICY_ID>` directly. The live
+example record opens at
+[`#s=legal-0001`](https://beacnpool.github.io/ledger-scrolls/#s=legal-0001).
 
 The design has two layers:
 
@@ -25,10 +28,10 @@ legal effect in every jurisdiction.
 - Enough ADA for every page transaction, the manifest UTxO, and the docket
   token transaction
 
-Run the entire process on Preview testnet first. The included
-`tools/lschain/mint.sh` currently targets mainnet; copy it and change
-`NETWORK="--mainnet"` to the appropriate testnet network argument for a
-rehearsal.
+Run the entire process on Preview testnet first:
+`LSCHAIN_NETWORK=preview tools/lschain/mint.sh …` runs the same pipeline
+against Preview (see [YOUR_FIRST_SCROLL.md](YOUR_FIRST_SCROLL.md)); repeat
+with `LSCHAIN_NETWORK=mainnet` only after the Preview read-back verifies.
 
 Never publish confidential agreements, personal data, private keys, passwords,
 or material that may require deletion. On-chain bytes are public and permanent.
@@ -249,7 +252,7 @@ printf '%s  expected\n' "$DECODED_SHA"
 Then open the docket policy in the public reader:
 
 ```text
-https://beacnpool.github.io/ledger-scrolls/the Main Viewer (#s=legal-0001)#policy=<POLICY_ID>
+https://beacnpool.github.io/ledger-scrolls/#p=<POLICY_ID>
 ```
 
 Confirm that it reports the expected:
