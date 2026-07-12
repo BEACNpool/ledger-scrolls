@@ -5,15 +5,23 @@
    transactions, so a deploy must reach users on their next load. The cache is
    only an offline fallback. Static assets (svg/webmanifest/txt) are
    cache-first with background revalidation. Bump CACHE on every deploy that
-   changes SHELL semantics. */
-const CACHE = "ls-shell-v2";
+   changes SHELL semantics.
+
+   ONE worker for the whole origin. A scope holds a single registration, so a
+   second worker (chess used to ship its own) does not coexist with this one —
+   it replaces it, and every page inherits whatever caching policy that other
+   worker happened to have. Every page registers this file. */
+const CACHE = "ls-shell-v3";
 const SHELL = [
   "./",
   "./index.html",
   "./calculator.html",
+  "./ledger-book.html",
+  "./ledger-chess.html",
+  "./media.html",
   "./favicon.svg",
   "./manifest.webmanifest",
-  "./media.html",
+  "./chess-manifest.webmanifest",
   "./robots.txt",
 ];
 
@@ -42,6 +50,8 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   // Never intercept API / chain queries
   if (/koios|blockfrost|coingecko|cardanoscan/i.test(url.hostname)) return;
+  // Never touch the blob: frames the chess arcade executes from
+  if (url.protocol === "blob:") return;
   // Same-origin shell only
   if (url.origin !== self.location.origin) return;
 
