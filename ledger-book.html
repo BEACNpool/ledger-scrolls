@@ -246,7 +246,8 @@ input:focus,textarea:focus{outline:3px solid var(--cyan-soft);border-color:var(-
 .wizsteps li.done{color:var(--ok)}
 .wizh{font-family:var(--serif);font-size:21px;margin-bottom:10px}
 .coverwrap{text-align:center;margin-top:16px}
-#coverprev{width:180px;height:180px;border-radius:14px;border:1px solid var(--line-2);box-shadow:var(--sh);background:#0e1116}
+#coverprev{width:180px;height:180px;border-radius:14px;border:1px solid var(--line-2);box-shadow:var(--sh);background:#04070f;overflow:hidden;display:inline-block}
+#coverprev svg{width:100%;height:100%;display:block}
 .ownlist{list-style:none;display:flex;flex-direction:column;gap:12px;font-size:14.5px;color:var(--ink-2);margin-top:6px}
 .ownlist li{display:flex;gap:10px;align-items:flex-start}
 .ownlist .ic{stroke:var(--ok);margin-top:3px}
@@ -472,7 +473,7 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
           <label for="mname">Name your book</label>
           <input id="mname" maxlength="28" placeholder="e.g. BEACN Guestbook" autocomplete="off">
           <div class="bytec" id="mnameb">0 / 28 characters (A–Z a–z 0–9 space _ -)</div>
-          <div class="coverwrap"><img id="coverprev" alt="Live preview of your book's on-chain cover" width="180" height="180"></div>
+          <div class="coverwrap"><div id="coverprev" role="img" aria-label="Live animated preview of your book's on-chain cover"></div></div>
           <p class="finehelp">This exact cover is generated in your browser and minted on-chain with the NFT — what you see is what the chain keeps.</p>
           <button class="btn primary wide" id="mw1next" type="button">Continue</button>
           <div id="mw1err" class="fielderr" role="status" aria-live="polite"></div>
@@ -1834,36 +1835,51 @@ async function loadBook(){
 document.getElementById("bookrefresh").addEventListener("click", loadBook);
 
 /* ═══ mint a Ledger Book (CIP-25 NFT, signature + expiring-slot policy) ═══ */
+// The cover minted with every book: a fully on-chain ANIMATED Night-Ledger cover
+// carrying the BEACN constellation mark, the same style as a Ledger Scroll. The
+// signatures glow in turn and the seal breathes — SMIL only, seamless, and the
+// t=0 frame is a clean static cover for image viewers. The name is user input, so
+// it is escaped before it reaches the SVG. Pulse timing is shared via <animate>
+// keyTimes that all end at 1 (a spline animate whose keyTimes stop short is
+// silently dropped by some renderers).
 function bookCoverSvg(name){
-  var fs = name.length > 20 ? 20 : name.length > 14 ? 25 : 30;
-  var safe = name.replace(/&/g,"&amp;").replace(/</g,"&lt;");
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">'
+  var fs = name.length > 24 ? 18 : name.length > 18 ? 21 : name.length > 12 ? 24 : 27;
+  var safe = String(name).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  var dot = function(cx,cy,fill,begin){
+    return '<circle cx="'+cx+'" cy="'+cy+'" r="7.2" fill="'+fill+'"><animate attributeName="opacity" values="1;.55;1" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1" calcMode="spline" dur="5s" begin="'+begin+'" repeatCount="indefinite"/></circle>';
+  };
+  var sig = function(d,begin){
+    return '<path d="'+d+'" opacity=".4"><animate attributeName="opacity" values=".4;1;.4;.4" keyTimes="0;.05;.28;1" keySplines=".3 0 .4 1;.4 0 .7 1;0 0 1 1" calcMode="spline" dur="8s" begin="'+begin+'" repeatCount="indefinite"/></path>';
+  };
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" font-family="Georgia,\'Times New Roman\',serif">'
   +'<defs>'
-  +'<linearGradient id="c" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a1130"/><stop offset=".45" stop-color="#2c1a52"/><stop offset="1" stop-color="#140d26"/></linearGradient>'
-  +'<linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#47bfff"/><stop offset=".5" stop-color="#7e14ff"/><stop offset="1" stop-color="#47bfff"/></linearGradient>'
-  +'<radialGradient id="m" cx=".35" cy=".3" r="1"><stop offset="0" stop-color="#863bff"/><stop offset=".55" stop-color="#4a1a9e"/><stop offset="1" stop-color="#1a1130"/></radialGradient>'
+  +'<linearGradient id="cov" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f1a34"/><stop offset=".5" stop-color="#0a1224"/><stop offset="1" stop-color="#070d1c"/></linearGradient>'
+  +'<linearGradient id="edge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ec3ff"/><stop offset=".5" stop-color="#2f6bff"/><stop offset="1" stop-color="#f6b45a"/></linearGradient>'
+  +'<radialGradient id="core" cx=".4" cy=".36" r=".7"><stop offset="0" stop-color="#bcd8ff"/><stop offset=".45" stop-color="#3f78ff"/><stop offset="1" stop-color="#0b2160"/></radialGradient>'
+  +'<radialGradient id="hl" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#3f74ff" stop-opacity=".5"/><stop offset="1" stop-color="#2f6bff" stop-opacity="0"/></radialGradient>'
   +'</defs>'
-  +'<rect width="512" height="512" fill="#0e1116"/>'
-  +'<rect x="76" y="36" width="360" height="440" rx="14" fill="url(#c)"/>'
-  +'<rect x="76" y="36" width="360" height="440" rx="14" fill="none" stroke="url(#g)" stroke-width="3"/>'
-  +'<rect x="92" y="52" width="328" height="408" rx="9" fill="none" stroke="#aecbff" stroke-width="1.2" opacity=".55"/>'
-  +'<rect x="100" y="36" width="5" height="440" fill="#0a0618" opacity=".6"/>'
-  +'<g transform="translate(256,150)">'
-  +'<circle r="52" fill="url(#m)"/>'
-  +'<circle r="52" fill="none" stroke="#cfe0ff" stroke-width="3"/>'
-  +'<circle r="59" fill="none" stroke="#47bfff" stroke-width="1.3" opacity=".65"/>'
-  +'<text y="13" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="38" fill="#eef4ff">LS</text>'
+  +'<rect width="512" height="512" fill="#04070f"/>'
+  +'<rect x="74" y="34" width="364" height="444" rx="15" fill="url(#cov)"/>'
+  +'<rect x="74" y="34" width="364" height="444" rx="15" fill="none" stroke="url(#edge)" stroke-width="3"/>'
+  +'<rect x="90" y="50" width="332" height="412" rx="9" fill="none" stroke="#2f6bff" stroke-width="1.1" opacity=".4"/>'
+  +'<rect x="99" y="34" width="5" height="444" fill="#04070f" opacity=".55"/>'
+  +'<g transform="translate(256,146)">'
+  +'<circle r="60" fill="url(#hl)"><animate attributeName="opacity" values=".7;1;.7" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1" calcMode="spline" dur="6s" repeatCount="indefinite"/></circle>'
+  +'<g fill="#aecbff">'+dot(42,0,'#aecbff','0s')+dot(21,36.4,'#aecbff','.8s')+dot(-21,36.4,'#aecbff','1.6s')+dot(21,-36.4,'#aecbff','3.2s')+dot(-21,-36.4,'#aecbff','4s')+'</g>'
+  +dot(-42,0,'#f6b45a','2.4s')
+  +'<circle r="30" fill="url(#core)"/><circle r="30" fill="none" stroke="#cfe0ff" stroke-width="2.4"/>'
+  +'<text y="9" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="24" fill="#f2f7ff">LS</text>'
   +'</g>'
-  +'<text x="259" y="262" text-anchor="middle" font-family="Georgia,serif" font-size="34" letter-spacing="6" fill="#eef4ff">LEDGER BOOK</text>'
-  +'<text x="256" y="320" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="'+fs+'" fill="#cfe0ff">'+safe+'</text>'
-  +'<path d="M140 340 H372" stroke="#47bfff" stroke-width="1.4" opacity=".75"/>'
-  +'<g stroke="#47bfff" stroke-width="2.2" fill="none" opacity=".85" stroke-linecap="round">'
-  +'<path d="M150 384 c 14 -12, 22 8, 34 -2 s 26 6, 44 -4"/>'
-  +'<path d="M262 386 c 12 -10, 26 6, 40 -4 s 20 8, 34 -2"/>'
-  +'<path d="M176 414 c 16 -10, 30 8, 48 -4 s 30 8, 52 -4"/>'
-  +'<path d="M288 416 c 10 -8, 22 6, 34 -3"/>'
+  +'<text x="256" y="256" text-anchor="middle" font-size="33" letter-spacing="6" fill="#eef4ff">LEDGER BOOK</text>'
+  +'<text x="256" y="312" text-anchor="middle" font-style="italic" font-size="'+fs+'" fill="#9ec3ff">'+safe+'</text>'
+  +'<path d="M150 338 H362" stroke="#2f6bff" stroke-width="1.3" opacity=".6"/>'
+  +'<g stroke="#9ec3ff" stroke-width="2.4" fill="none" stroke-linecap="round">'
+  +sig('M150 378 c 14 -11, 22 8, 34 -2 s 26 6, 44 -4','0s')
+  +sig('M262 380 c 12 -9, 26 6, 40 -4 s 20 8, 34 -2','2s')
+  +sig('M172 410 c 16 -9, 30 8, 48 -4 s 30 8, 52 -4','4s')
+  +sig('M288 412 c 10 -8, 22 6, 34 -3','6s')
   +'</g>'
-  +'<text x="256" y="452" text-anchor="middle" font-family="Georgia,serif" font-size="13" letter-spacing="4" fill="#7fa8ff">SIGNED FOREVER · ON CARDANO</text>'
+  +'<text x="256" y="452" text-anchor="middle" font-size="12.5" letter-spacing="4" fill="#7fa8ff">SIGNED FOREVER · ON CARDANO</text>'
   +'</svg>';
 }
 function imageChunks(svg){
@@ -1929,7 +1945,10 @@ function mwGo(n){
 }
 function updateCover(){
   var name = mnameEl.value.trim() || "Your Book";
-  document.getElementById("coverprev").src = coverDataUri(name);
+  // inline the SVG (not <img src>) so the preview ANIMATES — it is generated
+  // locally from the user's own name, which bookCoverSvg escapes, so this is our
+  // own trusted markup, not chain-derived content.
+  document.getElementById("coverprev").innerHTML = bookCoverSvg(name);
 }
 mnameEl.addEventListener("input", updateCover);
 document.getElementById("mw1next").addEventListener("click", function(){
