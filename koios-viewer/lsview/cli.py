@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 import argparse
-import gzip
 import zlib
 import hashlib
 import json
 import os
+import sys
 from typing import Any, Dict, List, Optional, Tuple
 
 import cbor2
 
-from .catalog import load_catalog
+from .catalog import CatalogError, load_catalog
 from .koios import (
+    KoiosError,
     asset_info_batch,
     get_inline_datum_hex_from_utxo_info_row,
     policy_asset_list,
@@ -21,7 +22,9 @@ from .koios import (
 )
 
 
-PUBLIC_REGISTRY_HEAD_TXIN = "a9c56fb3d4d8b526fe7a0aa7c2416615154af30c2c09ce747a899a886ba8bad9#0"
+LIBRARY_POLICY_ID = "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80"
+# Pre-NFT datum head, long spent. Kept only for --legacy-head archaeology.
+LEGACY_REGISTRY_HEAD_TXIN = "a9c56fb3d4d8b526fe7a0aa7c2416615154af30c2c09ce747a899a886ba8bad9#0"
 CANONICAL_SCROLL_LOCK = "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn"
 
 
@@ -55,6 +58,18 @@ def gunzip_bounded(data: bytes, expected_size: int, hard_limit: int = 128 * 1024
     out += dec.flush(limit + 1 - len(out))
     if len(out) != expected_size:
         raise RegistryError(f"Decoded size mismatch: got {len(out)} expected {expected_size}")
+    return out
+
+
+def gunzip_capped(data: bytes, hard_limit: int = 128 * 1024 * 1024) -> bytes:
+    """Like gunzip_bounded, for streams with no declared size (CIP-25 scrolls)."""
+    dec = zlib.decompressobj(16 + zlib.MAX_WBITS)
+    out = dec.decompress(data, hard_limit + 1)
+    if len(out) > hard_limit or dec.unconsumed_tail:
+        raise RegistryError(f"Decoded stream exceeds safe limit ({hard_limit} bytes)")
+    out += dec.flush()
+    if len(out) > hard_limit:
+        raise RegistryError(f"Decoded stream exceeds safe limit ({hard_limit} bytes)")
     return out
 
 
@@ -110,7 +125,14 @@ def read_utxo_inline_datum_json(txin: str) -> Dict[str, Any]:
 
 
 def read_registry_head(txin: str) -> Dict[str, Any]:
-    head = read_utxo_inline_datum_json(txin)
+    row = with_retries(lambda: utxo_info(txin))
+    if row.get("is_spent"):
+        print(
+            f"WARNING: registry head {txin} is spent — its catalog has been superseded "
+            f"(the live library is the registry NFT under policy {LIBRARY_POLICY_ID})",
+            file=sys.stderr,
+        )
+    head = _decode_registry_datum_to_json(get_inline_datum_hex_from_utxo_info_row(row))
     if head.get("format") != "ledger-scrolls-registry-head":
         raise RegistryError("Not a registry head datum")
     return head
@@ -123,13 +145,6 @@ def read_registry_list(txin: str) -> Dict[str, Any]:
     return lst
 
 
-def _parse_txin(txin: str) -> Tuple[str, int]:
-    if "#" not in txin:
-        raise RegistryError("txin must be <txHash>#<txIx>")
-    h, ix = txin.split("#", 1)
-    return h, int(ix)
-
-
 def reconstruct_standard_from_txin(txin: str, expected_sha256: Optional[str] = None) -> Tuple[bytes, str]:
     row = with_retries(lambda: utxo_info(txin))
     require_canonical_lock(row)
@@ -137,9 +152,15 @@ def reconstruct_standard_from_txin(txin: str, expected_sha256: Optional[str] = N
     raw = bytes.fromhex(datum_hex)
 
     # For standard scrolls, the datum bytes are typically the file bytes. No extra CBOR wrapper.
-    # If CBOR-decodes to bytes, accept that too.
+    # If CBOR-decodes to bytes, accept that too. A Plutus constructor-0 datum with a single
+    # bytes field (tag 121 — what cardano-cli emits for {"constructor":0,"fields":[bytes]})
+    # unwraps to that field.
     try:
         decoded = cbor2.loads(raw)
+        if isinstance(decoded, cbor2.CBORTag) and decoded.tag == 121:
+            fields = decoded.value
+            if isinstance(fields, (list, tuple)) and len(fields) == 1 and isinstance(fields[0], (bytes, bytearray)):
+                decoded = fields[0]
         if isinstance(decoded, (bytes, bytearray)):
             raw = bytes(decoded)
     except Exception:
@@ -254,9 +275,12 @@ def reconstruct_legacy_cip25(policy_id: str, manifest_asset: str | None = None, 
 
     pages.sort(key=lambda x: x[0])
     hex_blob = "".join("".join(_clean_seg(seg) for seg in payload) for _, payload in pages)
-    raw = bytes.fromhex(hex_blob)
+    try:
+        raw = bytes.fromhex(hex_blob)
+    except ValueError as exc:
+        raise RegistryError(f"Malformed hex in page segments: {exc}") from exc
     if raw.startswith(b"\x1f\x8b"):
-        raw = gzip.decompress(raw)
+        raw = gunzip_capped(raw)
 
     sha = sha256_hex(raw)
     if expected_sha256 and sha.lower() != expected_sha256.lower():
@@ -276,7 +300,10 @@ def _meta_value_to_bytes(v: Any) -> bytes:
     s = str(v).strip()
     if s.lower().startswith("0x"):
         s = s[2:]
-    return bytes.fromhex(s)
+    try:
+        return bytes.fromhex(s)
+    except ValueError as exc:
+        raise RegistryError(f"Malformed hex in metadata value: {s[:32]!r}") from exc
 
 
 def _parse_chain_manifest(datum_hex: str) -> Dict[str, Any]:
@@ -350,7 +377,11 @@ def reconstruct_chain_from_txin(txin: str) -> Tuple[bytes, Dict[str, Any]]:
                     break
         if not isinstance(page, dict):
             raise RegistryError(f"Page {idx} metadata missing for tx {tx_hash}")
-        if int(page.get("i", -1)) != idx or int(page.get("n", -1)) != len(page_hashes):
+        try:
+            page_i, page_n = int(page.get("i", -1)), int(page.get("n", -1))
+        except (TypeError, ValueError) as exc:
+            raise RegistryError(f"Page {idx} has malformed i/n metadata (tx {tx_hash})") from exc
+        if page_i != idx or page_n != len(page_hashes):
             raise RegistryError(f"Page {idx} index/count mismatch (tx {tx_hash})")
         payload = b"".join(_meta_value_to_bytes(seg) for seg in page.get("p") or [])
         sha = page.get("sha")
@@ -370,6 +401,22 @@ def reconstruct_chain_from_txin(txin: str) -> Tuple[bytes, Dict[str, Any]]:
 
 
 def cmd_reconstruct_chain(args) -> None:
+    if not args.txin and args.scroll:
+        catalog = load_catalog(args.catalog)
+        entry = catalog.get(args.scroll)
+        if not entry:
+            raise RegistryError(f"Unknown scroll id: {args.scroll}")
+        if entry.data.get("type") != "manifest_chain_v2":
+            raise RegistryError("Selected scroll is not a Chain Scroll")
+        tx_hash = entry.data.get("tx_hash")
+        tx_ix = entry.data.get("tx_ix")
+        if tx_hash is None or tx_ix is None:
+            raise RegistryError("Catalog entry missing tx_hash/tx_ix")
+        args.txin = f"{tx_hash}#{int(tx_ix)}"
+
+    if not args.txin:
+        raise RegistryError("Provide --txin <txHash#txIx> or --scroll")
+
     data, manifest = reconstruct_chain_from_txin(args.txin)
     if args.out:
         with open(args.out, "wb") as f:
@@ -431,16 +478,107 @@ def _registry_list_from_head_txin(head_txin: str) -> Tuple[str, Dict[str, Any]]:
     if not txhash or txix is None:
         raise RegistryError("Invalid registryList pointer")
 
-    list_txin = f"{txhash}#{int(txix)}"
+    try:
+        list_txin = f"{txhash}#{int(txix)}"
+    except (TypeError, ValueError) as exc:
+        raise RegistryError(f"Invalid registryList pointer txIx: {txix!r}") from exc
     lst = read_registry_list(list_txin)
     return list_txin, lst
 
 
-def cmd_registry_dump(args) -> None:
-    # public default
-    head_txin = args.head or PUBLIC_REGISTRY_HEAD_TXIN
+REGISTRY_LIST_LABEL = "22027"
 
-    list_txin, lst = _registry_list_from_head_txin(head_txin)
+
+def _asset_721_fields(info: Dict[str, Any], policy_id: str) -> Optional[Dict[str, Any]]:
+    cip721 = _extract_cip721(info.get("minting_tx_metadata"))
+    if not isinstance(cip721, dict):
+        return None
+    policy_meta = cip721.get(policy_id)
+    if not isinstance(policy_meta, dict):
+        return None
+    ascii_name = info.get("asset_name_ascii") or _hex_to_ascii(info.get("asset_name") or "")
+    md = policy_meta.get(ascii_name)
+    if not isinstance(md, dict):
+        md = next((v for v in policy_meta.values() if isinstance(v, dict)), None)
+    return md
+
+
+def _expand_registry_nft_entries(lst: Dict[str, Any]) -> Dict[str, Any]:
+    """Expand the compact on-chain label-22027 entries (n/k/t/i/p/a) to the
+    name/pointer shape the datum-era lists use, so merging and consumers see
+    one format."""
+    entries: List[Dict[str, Any]] = []
+    for e in lst.get("entries") or []:
+        if not isinstance(e, dict) or not e.get("n"):
+            continue
+        kind = e.get("k")
+        pointer: Dict[str, Any] = {"kind": kind}
+        if kind == "cip25-pages-v1":
+            pointer["policyId"] = e.get("p")
+            pointer["manifestAsset"] = e.get("a")
+        else:
+            pointer["txHash"] = e.get("t")
+            pointer["txIx"] = int(e.get("i") or 0)
+        entries.append({"name": str(e["n"]), "pointer": pointer})
+    out = dict(lst)
+    out["format"] = "ledger-scrolls-registry-list"
+    out["entries"] = entries
+    return out
+
+
+def resolve_registry_nft(policy_id: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """Bare policy id -> latest 'Registry Head' NFT -> its label-22027 list.
+
+    Mirrors the reader (index.html): fetch the policy's assets, keep those
+    whose 721 metadata says Type == "Registry Head" and whose mint tx carries
+    a label-22027 list, take the highest numeric Version.
+    Returns ({policy, asset, version, mint_tx}, expanded list)."""
+    assets = with_retries(lambda: policy_asset_list(policy_id))
+    name_hexes = [a.get("asset_name") for a in assets if a.get("asset_name")]
+    cand = [h for h in name_hexes if "REGISTRY" in _hex_to_ascii(h).upper()] or name_hexes
+    if not cand:
+        raise RegistryError(f"No assets under registry policy {policy_id}")
+    rows = with_retries(lambda: asset_info_batch(policy_id, cand))
+
+    best: Optional[Dict[str, Any]] = None
+    best_v = -1
+    for info in rows:
+        md = _asset_721_fields(info, policy_id)
+        if not isinstance(md, dict) or md.get("Type") != "Registry Head":
+            continue
+        meta = info.get("minting_tx_metadata") or {}
+        lst = meta.get(REGISTRY_LIST_LABEL) or meta.get(int(REGISTRY_LIST_LABEL))
+        if not isinstance(lst, dict):
+            continue
+        try:
+            v = int(md.get("Version") or 0)
+        except (TypeError, ValueError):
+            v = 0
+        if v > best_v:
+            best_v = v
+            best = info
+    if best is None:
+        raise RegistryError(f"No registry head NFT under policy {policy_id}")
+
+    meta = best.get("minting_tx_metadata") or {}
+    lst = meta.get(REGISTRY_LIST_LABEL) or meta.get(int(REGISTRY_LIST_LABEL))
+    head = {
+        "policy": policy_id,
+        "asset": best.get("asset_name_ascii") or _hex_to_ascii(best.get("asset_name") or ""),
+        "version": best_v,
+        "mint_tx": best.get("minting_tx_hash"),
+    }
+    return head, _expand_registry_nft_entries(lst)
+
+
+def cmd_registry_dump(args) -> None:
+    if args.legacy_head:
+        head_info: Dict[str, Any] = {"txin": args.legacy_head}
+        list_txin, lst = _registry_list_from_head_txin(args.legacy_head)
+        head_info["list_txin"] = list_txin
+    else:
+        # default: live registry NFT (latest Registry Head under the library policy)
+        head_info, lst = resolve_registry_nft(args.policy)
 
     # merge in private heads (optional)
     merged = lst
@@ -451,8 +589,7 @@ def cmd_registry_dump(args) -> None:
         merged = _merge_registry_lists(merged, p_list, extra_label=f"private[{i}]")
 
     out = {
-        "head": {"txin": head_txin},
-        "list": {"txin": list_txin},
+        "head": head_info,
         "private": private_lists,
         "merged": merged,
     }
@@ -536,9 +673,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = p.add_subparsers(dest="cmd", required=True)
 
-    rg = sp.add_parser("registry-dump", help="Fetch registry head + list from on-chain inline datums")
-    rg.add_argument("--head", default=PUBLIC_REGISTRY_HEAD_TXIN, help="Head txin (default: public BEACN head)")
-    rg.add_argument("--private-head", action="append", default=[], help="Optional additional head txin(s) to merge (private overrides public)")
+    rg = sp.add_parser("registry-dump", help="Resolve the on-chain registry NFT (latest Registry Head) and dump its scroll list")
+    rg.add_argument("--policy", default=LIBRARY_POLICY_ID, help="Registry policy id (default: BEACN library policy)")
+    rg.add_argument("--legacy-head", help="Read a retired datum-era head txin instead of the registry NFT")
+    rg.add_argument("--private-head", action="append", default=[], help="Optional additional datum head txin(s) to merge (private overrides public)")
     rg.add_argument("--out", help="Write JSON output")
     rg.set_defaults(func=cmd_registry_dump)
 
@@ -558,7 +696,9 @@ def build_parser() -> argparse.ArgumentParser:
     ru.set_defaults(func=cmd_reconstruct_utxo)
 
     rch = sp.add_parser("reconstruct-chain", help="Reconstruct an LS-CHAIN v2 scroll from its manifest txin")
-    rch.add_argument("--txin", required=True, help="Manifest TxIn as <txHash#txIx>")
+    rch.add_argument("--scroll", help="Scroll id from catalog")
+    rch.add_argument("--catalog", help="Path to catalog JSON (defaults to examples/scrolls.json)")
+    rch.add_argument("--txin", help="Manifest TxIn as <txHash#txIx>")
     rch.add_argument("--out", help="Output filename")
     rch.set_defaults(func=cmd_reconstruct_chain)
 
@@ -572,7 +712,17 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
-    args.func(args)
+    try:
+        args.func(args)
+    except (RegistryError, CatalogError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        raise SystemExit(1)
+    except KoiosError as exc:
+        print(f"koios error: {exc}", file=sys.stderr)
+        raise SystemExit(2)
+    except OSError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        raise SystemExit(2)
 
 
 if __name__ == "__main__":

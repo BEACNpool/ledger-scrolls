@@ -69,8 +69,10 @@ def _decode_cbor_bytestring(raw: bytes) -> bytes:
     """Minimal CBOR decoder for byte strings (definite or indefinite length).
 
     Standard Scroll / registry datums are CBOR byte strings whose chunks are
-    each <= 64 bytes (see registry/spec/cardano-utxo-datum.md). Returns the
-    input unchanged when it is not a CBOR byte string.
+    each <= 64 bytes (see registry/spec/cardano-utxo-datum.md). Also unwraps
+    a Plutus constructor-0 datum (tag 121, d8 79) with a single bytes field,
+    which is what cardano-cli emits for {"constructor":0,"fields":[bytes]}.
+    Returns the input unchanged when it is neither shape.
     """
 
     def read_len(buf: bytes, pos: int, ai: int) -> Tuple[int, int]:
@@ -82,25 +84,37 @@ def _decode_cbor_bytestring(raw: bytes) -> bytes:
             raise ValueError("unsupported CBOR length")
         return int.from_bytes(buf[pos : pos + w], "big"), pos + w
 
-    if not raw:
-        return raw
-    mt, ai = raw[0] >> 5, raw[0] & 0x1F
-    if mt != 2:
-        return raw
-    try:
+    def bytestring_at(buf: bytes, pos: int) -> Tuple[bytes, int]:
+        mt, ai = buf[pos] >> 5, buf[pos] & 0x1F
+        pos += 1
+        if mt != 2:
+            raise ValueError("not a CBOR byte string")
         if ai == 31:  # indefinite-length byte string
             out = bytearray()
-            pos = 1
-            while pos < len(raw) and raw[pos] != 0xFF:
-                cmt, cai = raw[pos] >> 5, raw[pos] & 0x1F
+            while pos < len(buf) and buf[pos] != 0xFF:
+                cmt, cai = buf[pos] >> 5, buf[pos] & 0x1F
                 if cmt != 2 or cai == 31:
                     raise ValueError("invalid chunk in indefinite byte string")
-                clen, pos = read_len(raw, pos + 1, cai)
-                out.extend(raw[pos : pos + clen])
+                clen, pos = read_len(buf, pos + 1, cai)
+                out.extend(buf[pos : pos + clen])
                 pos += clen
-            return bytes(out)
-        blen, pos = read_len(raw, 1, ai)
-        return raw[pos : pos + blen]
+            return bytes(out), pos + 1
+        blen, pos = read_len(buf, pos, ai)
+        return buf[pos : pos + blen], pos + blen
+
+    if not raw:
+        return raw
+    try:
+        if raw[:2] == b"\xd8\x79":
+            if len(raw) < 4 or raw[2] != 0x9F:
+                raise ValueError("expected indefinite constructor field array")
+            decoded, pos = bytestring_at(raw, 3)
+            if pos >= len(raw) or raw[pos] != 0xFF:
+                raise ValueError("expected constructor array break")
+            return decoded
+        if raw[0] >> 5 != 2:
+            return raw
+        return bytestring_at(raw, 0)[0]
     except ValueError:
         return raw
 

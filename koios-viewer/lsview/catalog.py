@@ -11,6 +11,10 @@ from .blockfrost import resolve_point_from_tx
 DEFAULT_CATALOG = Path(__file__).resolve().parent.parent / "examples" / "scrolls.json"
 
 
+class CatalogError(RuntimeError):
+    pass
+
+
 @dataclass
 class CatalogEntry:
     id: str
@@ -19,8 +23,13 @@ class CatalogEntry:
 
 def load_catalog(path: Optional[str] = None) -> Dict[str, CatalogEntry]:
     src = Path(path) if path else DEFAULT_CATALOG
-    with open(src, "r", encoding="utf-8") as f:
-        raw = json.load(f)
+    if not src.is_file():
+        raise CatalogError(f"Catalog not found: {src} (pass --catalog <path>)")
+    try:
+        with open(src, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+    except ValueError as exc:
+        raise CatalogError(f"Catalog is not valid JSON: {src} ({exc})") from exc
 
     entries: Dict[str, CatalogEntry] = {}
     for item in raw.get("scrolls", []):

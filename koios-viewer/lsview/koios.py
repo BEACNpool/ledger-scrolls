@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional
@@ -138,14 +139,27 @@ def tx_metadata(tx_hashes: List[str]) -> Dict[str, Any]:
     return out
 
 
+_TRANSIENT_HTTP = {429, 500, 502, 503, 504}
+
+
+def _is_transient(exc: Exception) -> bool:
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in _TRANSIENT_HTTP
+    return isinstance(exc, (urllib.error.URLError, TimeoutError, ConnectionError))
+
+
 def with_retries(fn, *, retries: int = 5, backoff: float = 0.6):
+    """Retry transient network failures only; deterministic errors (4xx,
+    KoiosError, decode errors) propagate immediately with their real type."""
     last: Exception | None = None
     for i in range(retries):
         try:
             return fn()
         except Exception as exc:
+            if not _is_transient(exc):
+                raise
             last = exc
             if i >= retries - 1:
                 break
             time.sleep(backoff * (2**i))
-    raise KoiosError(str(last))
+    raise KoiosError(f"Koios request failed after {retries} attempts: {last}") from last

@@ -15,15 +15,23 @@ The goal is that the open-source viewer **just works** for normal users.
 ## What this can do
 
 - Read **Standard Scrolls** stored as **UTxO inline datum bytes** (via Koios `utxo_info`)
+- Read **Chain Scrolls (LS-CHAIN v2)** from a manifest txin + label-22025 page metadata
 - Read **Legacy CIP-25 pages + manifest** scrolls by aggregating **CIP-721 (label 721)** metadata via Koios
-- Read the **on-chain Registry Head** and **Registry List** (inline datum) to discover public libraries
+- Resolve the **on-chain registry NFT** (latest Registry Head → label-22027 list) to discover public libraries
 
 ## Public default registry
 
-The open-source default trust anchor is the BEACN public head:
+The catalog is an on-chain NFT. The stable trust anchor is the library **policy id**:
 
-- `ce86a174e1b35c37dea6898ef16352d447d11833549b1f382db22c5bb6358cab#0`
+- `8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80`
 
+Resolution (same as the web reader): list the policy's assets, keep those whose
+CIP-721 metadata says `Type == "Registry Head"`, take the highest numeric
+`Version`, and read the scroll list from that NFT's mint-tx metadata **label
+22027**. `lsview registry-dump` does this by default.
+
+Legacy datum-era heads (pre-NFT, all spent) remain readable via
+`--legacy-head <TXHASH#IX>`; the tool warns when a head UTxO is spent.
 Viewers may allow users to add private heads for private libraries.
 
 ## Quick start
@@ -31,20 +39,28 @@ Viewers may allow users to add private heads for private libraries.
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -e .
 
-# Dump the public registry (head + merged list)
-python -m lsview registry-dump
+# Dump the live registry (registry NFT -> label-22027 scroll list)
+lsview registry-dump
 
-# Merge a private registry head on top (private overrides public)
-python -m lsview registry-dump --private-head <TXHASH#IX>
+# Merge a private datum head on top (private overrides public)
+lsview registry-dump --private-head <TXHASH#IX>
+
+# List the bundled catalog (mirrors the on-chain registry list)
+lsview list-scrolls
 
 # Reconstruct a Standard Scroll (by catalog id)
-python -m lsview reconstruct-utxo --scroll hosky-png --out hosky.png
+lsview reconstruct-utxo --scroll hosky-png --out hosky.png
+
+# Reconstruct a Chain Scroll (LS-CHAIN v2)
+lsview reconstruct-chain --scroll the-spec --out spec.html
 
 # Reconstruct a CIP-25 pages scroll
-python -m lsview reconstruct-cip25 --scroll constitution-e608 --out constitution.txt
+lsview reconstruct-cip25 --scroll constitution-e608 --out constitution.txt
 ```
+
+`python -m lsview` works too if you prefer not to install.
 
 ## Notes
 

@@ -1,0 +1,139 @@
+{
+  "format": "lsview-catalog",
+  "source": "LS_REGISTRY_V6 label-22027 list (mint tx 955c6d2aa84b1d1d09a8228cb13616cfc4f6e08454d26671fff4eab163341500)",
+  "registryPolicy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+  "scrolls": [
+    {
+      "id": "ledger-scrolls-000",
+      "type": "manifest_chain_v2",
+      "tx_hash": "d8875be1a21dffca56252ddd22e701ae088645518e48c49f873449b87802e96d",
+      "tx_ix": 0
+    },
+    {
+      "id": "beacn-leaks-000",
+      "type": "manifest_chain_v2",
+      "tx_hash": "f3ee01c1e742c27c205867de4cfa8836e4ab541b9da0d5652aa4d269c73255c7",
+      "tx_ix": 0
+    },
+    {
+      "id": "beacn-leaks-001",
+      "type": "manifest_chain_v2",
+      "tx_hash": "08c707b3ab7880f983be7f78bd56c4de38461d514c6597d95cd5da1abc307565",
+      "tx_ix": 0
+    },
+    {
+      "id": "beacn-leaks-002",
+      "type": "manifest_chain_v2",
+      "tx_hash": "1b465d3f9368cf6e1a36ae536631ffed9ca12b35c3bd2843bc423398140174fc",
+      "tx_ix": 0
+    },
+    {
+      "id": "the-spec",
+      "type": "manifest_chain_v2",
+      "tx_hash": "e4845deed98471b29b35689cfdb76f18add189c8d8f5c61b2ef32ea7ce6d5cf9",
+      "tx_ix": 0
+    },
+    {
+      "id": "the-reader",
+      "type": "manifest_chain_v2",
+      "tx_hash": "9a564165ebdc4e0c4a2e1163b5cf9355604ecb8e163b425d834570e5b9007de2",
+      "tx_ix": 0
+    },
+    {
+      "id": "legal-0001",
+      "type": "manifest_chain_v2",
+      "tx_hash": "ceced54b2bd462b1ed41864f2583309666010ce1fb96b9f3dc9968174d958bc9",
+      "tx_ix": 0
+    },
+    {
+      "id": "eternal-scroll",
+      "type": "manifest_chain_v2",
+      "tx_hash": "ef8dce1c6359c7ae6cc44f04d60b32e6bc26987ebf30a78259c65b2063ba3b18",
+      "tx_ix": 0
+    },
+    {
+      "id": "genesis-scroll",
+      "type": "utxo_datum_bytes_v1",
+      "tx_hash": "a19f64fba94abdc37b50012d5d602c75a1ca73c82520ae030fc6b4e82274ceb2",
+      "tx_ix": 0
+    },
+    {
+      "id": "architects-scroll",
+      "type": "utxo_datum_bytes_v1",
+      "tx_hash": "076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747",
+      "tx_ix": 0
+    },
+    {
+      "id": "hosky-png",
+      "type": "utxo_datum_bytes_v1",
+      "tx_hash": "728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be",
+      "tx_ix": 0
+    },
+    {
+      "id": "first-words",
+      "type": "cip25_pages_v1",
+      "policy_id": "beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba",
+      "manifest_asset": "FIRST_WORDS_MANIFEST"
+    },
+    {
+      "id": "first-video",
+      "type": "cip25_pages_v1",
+      "policy_id": "38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2",
+      "manifest_asset": "CM_MANIFEST"
+    },
+    {
+      "id": "bible",
+      "type": "cip25_pages_v1",
+      "policy_id": "2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0",
+      "manifest_asset": "BIBLE_MANIFEST"
+    },
+    {
+      "id": "bitcoin-whitepaper",
+      "type": "cip25_pages_v1",
+      "policy_id": "8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1",
+      "manifest_asset": "BTCWP_MANIFEST"
+    },
+    {
+      "id": "constitution-e608",
+      "type": "cip25_pages_v1",
+      "policy_id": "ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750",
+      "manifest_asset": "CONSTITUTION_E608_MANIFEST"
+    },
+    {
+      "id": "constitution-e541",
+      "type": "cip25_pages_v1",
+      "policy_id": "d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d",
+      "manifest_asset": "CONSTITUTION_E541_MANIFEST"
+    },
+    {
+      "id": "ledger-scrolls-theme",
+      "type": "manifest_chain_v2",
+      "tx_hash": "b6d9e70a751398fae0dc86580ce256802e6aea9ae0978b8c92b88b50a536962b",
+      "tx_ix": 0
+    },
+    {
+      "id": "minted-forever",
+      "type": "manifest_chain_v2",
+      "tx_hash": "e1c5ab582c2bda08d442848d42a7d01ed2197e234962b1ebe686af2c906af046",
+      "tx_ix": 0
+    },
+    {
+      "id": "protocol-one-pager",
+      "type": "manifest_chain_v2",
+      "tx_hash": "5fdadf5158f78afb70a74693b595889406652f3eeddb9a76f44e6f0d481a797e",
+      "tx_ix": 0
+    },
+    {
+      "id": "card-catalog",
+      "type": "manifest_chain_v2",
+      "tx_hash": "358060520666d99793a9d68ccc85c68207d8c5032ea33d3a550d1461a6e8ee7e",
+      "tx_ix": 0
+    },
+    {
+      "id": "neon-door",
+      "type": "manifest_chain_v2",
+      "tx_hash": "ddaf75da406f8ffe6e8702f9821c1c3b883c390e785cd8acb973e73397234da8",
+      "tx_ix": 0
+    }
+  ]
+}
