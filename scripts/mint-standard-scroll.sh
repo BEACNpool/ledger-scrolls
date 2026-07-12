@@ -8,10 +8,11 @@
 # The content is locked forever in an unspendable UTxO.
 #
 # Usage:
-#   ./mint-standard-scroll.sh <content-file> <payment.skey> <payment.addr> [--compress] [--preview|--mainnet]
+#   ./mint-standard-scroll.sh <content-file> <payment.skey> <payment.addr> [--compress] [--preview|--mainnet] [--yes]
 #
 # Options:
 #   --compress    Gzip compress the content before minting (recommended for >4KB)
+#   --yes         Skip the pre-submit confirmation prompt (for automation)
 #
 # Prerequisites:
 #   - cardano-cli installed
@@ -21,7 +22,7 @@
 #
 #═══════════════════════════════════════════════════════════════════════════════
 
-set -e
+set -euo pipefail
 
 # Colors
 RED='\033[0;31m'
@@ -40,7 +41,6 @@ print_banner() {
     echo -e "${NC}"
 }
 
-set -euo pipefail
 print_banner
 
 # Parse arguments
@@ -49,11 +49,16 @@ PAYMENT_SKEY=""
 PAYMENT_ADDR=""
 COMPRESS=false
 NETWORK="--mainnet"
+ASSUME_YES=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --compress)
             COMPRESS=true
+            shift
+            ;;
+        --yes)
+            ASSUME_YES=true
             shift
             ;;
         --preview)
@@ -79,12 +84,13 @@ done
 
 # Validate arguments
 if [ -z "$CONTENT_FILE" ] || [ -z "$PAYMENT_SKEY" ] || [ -z "$PAYMENT_ADDR" ]; then
-    echo -e "${RED}Usage: $0 <content-file> <payment.skey> <payment.addr> [--compress] [--preview|--mainnet]${NC}"
+    echo -e "${RED}Usage: $0 <content-file> <payment.skey> <payment.addr> [--compress] [--preview|--mainnet] [--yes]${NC}"
     echo ""
     echo "  content-file  - The file to inscribe permanently"
     echo "  payment.skey  - Path to payment signing key"
     echo "  payment.addr  - Path to payment address file (or address string)"
     echo "  --compress    - Optional: gzip compress before minting"
+    echo "  --yes         - Optional: skip the pre-submit confirmation prompt"
     exit 1
 fi
 
@@ -126,7 +132,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK_DIR=$(mktemp -d)
-trap "rm -rf $WORK_DIR" EXIT
+trap 'rm -rf "$WORK_DIR"' EXIT
 
 echo -e "${CYAN}Work directory: $WORK_DIR${NC}"
 
@@ -235,13 +241,22 @@ cardano-cli query utxo \
     $NETWORK \
     --out-file "$WORK_DIR/utxos.json"
 
-# Find suitable UTxO
+# Find suitable UTxO. Pure-lovelace only, carrying no datum and no reference
+# script — a hit on a registry-head NFT, a scroll NFT, or a parked inline-datum
+# UTxO would spend something load-bearing and irreversibly break pointers.
 REQUIRED_LOVELACE=$(( MIN_ADA + 500000 ))  # Add buffer for fees
-UTXO=$(jq -r --argjson req "$REQUIRED_LOVELACE" 'to_entries | map(select(.value.value.lovelace >= $req)) | .[0].key' "$WORK_DIR/utxos.json")
+UTXO=$(jq -r --argjson req "$REQUIRED_LOVELACE" 'to_entries
+    | map(select((.value.value | keys) == ["lovelace"]
+        and (.value.value.lovelace >= $req)
+        and (.value.inlineDatum == null)
+        and (.value.datum == null)
+        and (.value.datumhash == null)
+        and (.value.referenceScript == null)))
+    | .[0].key' "$WORK_DIR/utxos.json")
 
 if [ "$UTXO" == "null" ] || [ -z "$UTXO" ]; then
     AVAILABLE=$(jq -r 'to_entries | .[0].value.value.lovelace // 0' "$WORK_DIR/utxos.json")
-    echo -e "${RED}Error: No UTxO with >= $(echo "scale=2; $REQUIRED_LOVELACE / 1000000" | bc) ADA found${NC}"
+    echo -e "${RED}Error: No pure-ADA UTxO (no tokens, no datum, no reference script) with >= $(echo "scale=2; $REQUIRED_LOVELACE / 1000000" | bc) ADA found${NC}"
     echo -e "${RED}Available: $(echo "scale=2; $AVAILABLE / 1000000" | bc) ADA${NC}"
     exit 1
 fi
@@ -255,15 +270,43 @@ echo -e "${GREEN}  Balance: $(echo "scale=2; $UTXO_BALANCE / 1000000" | bc) ADA$
 #═══════════════════════════════════════════════════════════════════════════════
 echo -e "\n${BLUE}[6/8] Building transaction...${NC}"
 
+# Every tx carries an upper validity bound (ttl = tip+3600); refuse tip-less builds
+TIP_SLOT=$(cardano-cli query tip $NETWORK | jq -r '.slot // empty')
+if [ -z "$TIP_SLOT" ]; then
+    echo -e "${RED}Error: Could not read tip slot; refusing to build a tx with no validity bound${NC}"
+    exit 1
+fi
+TTL=$(( TIP_SLOT + 3600 ))
+
 cardano-cli transaction build \
     $NETWORK \
     --tx-in "$UTXO" \
     --tx-out "$LOCK_ADDR+$MIN_ADA" \
     --tx-out-inline-datum-file "$WORK_DIR/datum.json" \
+    --invalid-hereafter "$TTL" \
     --change-address "$PAYMENT_ADDR" \
     --out-file "$WORK_DIR/tx.raw"
 
-echo -e "${GREEN}  ✓ Transaction built${NC}"
+echo -e "${GREEN}  ✓ Transaction built (valid until slot $TTL)${NC}"
+
+echo ""
+echo -e "${YELLOW}About to sign and submit:${NC}"
+echo "  Network:      ${NETWORK#--}"
+echo "  File:         $(basename "$CONTENT_FILE") ($ORIGINAL_SIZE bytes, codec $CODEC)"
+echo "  SHA256:       $ORIGINAL_HASH"
+echo "  Funding UTxO: $UTXO ($(echo "scale=2; $UTXO_BALANCE / 1000000" | bc) ADA)"
+echo "  Lock output:  $(echo "scale=2; $MIN_ADA / 1000000" | bc) ADA at $LOCK_ADDR (locked forever)"
+if [ "$ASSUME_YES" != true ]; then
+    if [ ! -t 0 ]; then
+        echo -e "${RED}stdin is not a terminal; pass --yes to mint non-interactively${NC}"
+        exit 1
+    fi
+    read -r -p "Type MINT to proceed: " CONFIRM
+    if [ "$CONFIRM" != "MINT" ]; then
+        echo -e "${RED}Aborted; nothing was signed or submitted${NC}"
+        exit 1
+    fi
+fi
 
 #═══════════════════════════════════════════════════════════════════════════════
 # STEP 7: Sign Transaction

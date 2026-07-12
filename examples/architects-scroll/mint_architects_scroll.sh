@@ -14,11 +14,11 @@
 #   - CARDANO_NODE_SOCKET_PATH set
 #
 # Usage:
-#   ./mint_architects_scroll.sh <payment.skey> <payment.addr>
+#   ./mint_architects_scroll.sh <payment.skey> <payment.addr> [--yes]
 #
 #═══════════════════════════════════════════════════════════════════════════════
 
-set -e
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -36,15 +36,20 @@ echo -e "${NC}"
 
 # Check arguments
 if [ $# -lt 2 ]; then
-    echo -e "${RED}Usage: $0 <payment.skey> <payment.addr>${NC}"
+    echo -e "${RED}Usage: $0 <payment.skey> <payment.addr> [--yes]${NC}"
     echo ""
     echo "  payment.skey  - Path to payment signing key"
     echo "  payment.addr  - Path to payment address file (or address string)"
+    echo "  --yes         - Optional: skip the pre-submit confirmation prompt"
     exit 1
 fi
 
 PAYMENT_SKEY="$1"
 PAYMENT_ADDR="$2"
+ASSUME_YES=false
+if [ "${3:-}" = "--yes" ]; then
+    ASSUME_YES=true
+fi
 
 # If payment.addr is a file, read it
 if [ -f "$PAYMENT_ADDR" ]; then
@@ -58,7 +63,7 @@ if ! command -v cardano-cli &> /dev/null; then
 fi
 
 # Check for socket
-if [ -z "$CARDANO_NODE_SOCKET_PATH" ]; then
+if [ -z "${CARDANO_NODE_SOCKET_PATH:-}" ]; then
     echo -e "${YELLOW}Warning: CARDANO_NODE_SOCKET_PATH not set, trying default...${NC}"
     export CARDANO_NODE_SOCKET_PATH="/opt/cardano/cnode/sockets/node.socket"
 fi
@@ -70,22 +75,17 @@ fi
 
 NETWORK="--mainnet"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORK_DIR="$SCRIPT_DIR/work"
-mkdir -p "$WORK_DIR"
+WORK_DIR=$(mktemp -d)
+trap 'rm -rf "$WORK_DIR"' EXIT
 
 #═══════════════════════════════════════════════════════════════════════════════
 # STEP 1: Create Always-Fail Script (Locked Forever)
 #═══════════════════════════════════════════════════════════════════════════════
 echo -e "${BLUE}[1/7] Creating always-fail script...${NC}"
 
-# This script can never validate - the UTxO is locked forever
-cat > "$WORK_DIR/always-fail.plutus" << 'EOF'
-{
-    "type": "PlutusScriptV2",
-    "description": "Always fails - Ledger Scrolls permanent lock",
-    "cborHex": "4e4d010000332222200510"
-}
-EOF
+# This script can never validate - the UTxO is locked forever.
+# Use the canonical template so the lock address stays the library's.
+cp "$SCRIPT_DIR/../../templates/standard-scroll/always-fail.plutus" "$WORK_DIR/always-fail.plutus"
 
 # Get script address
 LOCK_ADDR=$(cardano-cli address build \
@@ -142,11 +142,19 @@ cardano-cli query utxo \
     $NETWORK \
     --out-file "$WORK_DIR/utxos.json"
 
-# Find a suitable UTxO (need at least 3 ADA)
-UTXO=$(jq -r 'to_entries | map(select(.value.value.lovelace >= 3000000)) | .[0].key' "$WORK_DIR/utxos.json")
+# Find a suitable UTxO (need at least 3 ADA). Pure-lovelace only, carrying no
+# datum and no reference script — never spend an NFT- or pointer-bearing UTxO.
+UTXO=$(jq -r 'to_entries
+    | map(select((.value.value | keys) == ["lovelace"]
+        and (.value.value.lovelace >= 3000000)
+        and (.value.inlineDatum == null)
+        and (.value.datum == null)
+        and (.value.datumhash == null)
+        and (.value.referenceScript == null)))
+    | .[0].key' "$WORK_DIR/utxos.json")
 
 if [ "$UTXO" == "null" ] || [ -z "$UTXO" ]; then
-    echo -e "${RED}Error: No UTxO with >= 3 ADA found${NC}"
+    echo -e "${RED}Error: No pure-ADA UTxO (no tokens, no datum, no reference script) with >= 3 ADA found${NC}"
     exit 1
 fi
 
@@ -162,15 +170,43 @@ echo -e "${BLUE}[5/7] Building transaction...${NC}"
 # Lock 2 ADA with the scroll (min UTxO for datum)
 LOCK_AMOUNT=2000000
 
+# Every tx carries an upper validity bound (ttl = tip+3600); refuse tip-less builds
+TIP_SLOT=$(cardano-cli query tip $NETWORK | jq -r '.slot // empty')
+if [ -z "$TIP_SLOT" ]; then
+    echo -e "${RED}Error: Could not read tip slot; refusing to build a tx with no validity bound${NC}"
+    exit 1
+fi
+TTL=$(( TIP_SLOT + 3600 ))
+
 cardano-cli transaction build \
     $NETWORK \
     --tx-in "$UTXO" \
     --tx-out "$LOCK_ADDR+$LOCK_AMOUNT" \
     --tx-out-inline-datum-file "$WORK_DIR/datum.json" \
+    --invalid-hereafter "$TTL" \
     --change-address "$PAYMENT_ADDR" \
     --out-file "$WORK_DIR/tx.raw"
 
-echo -e "${GREEN}  Transaction built${NC}"
+echo -e "${GREEN}  Transaction built (valid until slot $TTL)${NC}"
+
+echo ""
+echo -e "${YELLOW}About to sign and submit:${NC}"
+echo "  Network:      mainnet"
+echo "  Content:      architects_scroll.txt ($SCROLL_SIZE bytes)"
+echo "  SHA256:       $SCROLL_HASH"
+echo "  Funding UTxO: $UTXO ($UTXO_BALANCE lovelace)"
+echo "  Lock output:  2 ADA at $LOCK_ADDR (locked forever)"
+if [ "$ASSUME_YES" != true ]; then
+    if [ ! -t 0 ]; then
+        echo -e "${RED}stdin is not a terminal; pass --yes to mint non-interactively${NC}"
+        exit 1
+    fi
+    read -r -p "Type MINT to proceed: " CONFIRM
+    if [ "$CONFIRM" != "MINT" ]; then
+        echo -e "${RED}Aborted; nothing was signed or submitted${NC}"
+        exit 1
+    fi
+fi
 
 #═══════════════════════════════════════════════════════════════════════════════
 # STEP 6: Sign Transaction

@@ -16,6 +16,12 @@ Usage:
 
 Then mint with mint.sh.
 
+Gzip here is deterministic (mtime=0) but NOT byte-identical to a browser's
+CompressionStream (Chromium ships a patched zlib whose deflate stream stock
+zlib cannot reproduce). For codec none the output matches the calculator.html
+bundle byte-for-byte; to reproduce a browser gzip bundle exactly, pass the
+browser's encoded bytes via --encoded-file.
+
 Spec: registry/spec/manifest-chain-v2.md
 """
 from __future__ import annotations
@@ -159,6 +165,12 @@ def main() -> None:
     ap.add_argument("file", help="Source file")
     ap.add_argument("--content-type", required=True, help="MIME type, e.g. text/html")
     ap.add_argument("--codec", choices=["auto", "gzip", "none"], default="auto")
+    ap.add_argument(
+        "--encoded-file",
+        default=None,
+        help="Pre-encoded gzip bytes to page as-is (e.g. the exact bytes a "
+        "browser mint used). Forces codec gzip; must gunzip back to <file>.",
+    )
     ap.add_argument("--out", default="lschain-work", help="Output work directory")
     ap.add_argument(
         "--segments-per-page",
@@ -195,11 +207,22 @@ def main() -> None:
     with open(args.file, "rb") as f:
         decoded = f.read()
 
-    codec = args.codec
-    if codec == "auto":
-        gz = deterministic_gzip(decoded)
-        codec = "gzip" if len(gz) < len(decoded) else "none"
-    encoded = deterministic_gzip(decoded) if codec == "gzip" else decoded
+    if args.encoded_file:
+        with open(args.encoded_file, "rb") as f:
+            encoded = f.read()
+        try:
+            roundtrip = gzip.decompress(encoded)
+        except (OSError, EOFError):
+            sys.exit("--encoded-file is not valid gzip")
+        if roundtrip != decoded:
+            sys.exit("--encoded-file does not gunzip back to the source file")
+        codec = "gzip"
+    else:
+        codec = args.codec
+        if codec == "auto":
+            gz = deterministic_gzip(decoded)
+            codec = "gzip" if len(gz) < len(decoded) else "none"
+        encoded = deterministic_gzip(decoded) if codec == "gzip" else decoded
 
     page_size = SEGMENT_BYTES * segments_per_page
     pages = [encoded[i : i + page_size] for i in range(0, len(encoded), page_size)]

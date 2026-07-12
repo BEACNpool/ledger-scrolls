@@ -15,6 +15,9 @@
 #   waits). The manifest datum is built from the recorded tx hashes and
 #   locked at the always-fail script address. Emits receipts.json.
 #
+#   Prompts before the first signature; LSCHAIN_YES=1 skips the prompt
+#   (automation). LSCHAIN_NETWORK selects mainnet (default) or preview.
+#
 #   Requirements: cardano-cli (Conway), python3, jq, a synced node socket
 #   in CARDANO_NODE_SOCKET_PATH.
 #═══════════════════════════════════════════════════════════════════════════
@@ -56,23 +59,39 @@ else
 fi
 echo "Lock (always-fail) address: $LOCK_ADDR"
 
-PAGES=$(ls "$WORK"/page-*.json | sort)
-N=$(echo "$PAGES" | wc -l)
+PAGES=("$WORK"/page-*.json)
+[ -e "${PAGES[0]}" ] || { echo "No page-*.json in $WORK — run prepare.py first"; exit 1; }
+N=${#PAGES[@]}
 echo "Pages to mint: $N"
 
-# Chain-root UTxO: explicit argument, or the largest pure-ADA UTxO
+# Chain-root UTxO: explicit argument, or the largest pure-ADA UTxO that
+# carries no datum and no reference script (an inline-datum UTxO's value map
+# is lovelace-only too — spending one breaks a published pointer forever)
 $CLI query utxo --address "$ADDR" $NETWORK --output-json --socket-path "$SOCKET" > "$WORK/utxos.json"
 if [ -n "$ROOT_TXIN" ]; then
   TXIN="$ROOT_TXIN"
   jq -e --arg k "$TXIN" 'has($k)' "$WORK/utxos.json" >/dev/null || { echo "chain-root txin not found at $ADDR: $TXIN"; exit 1; }
 else
   TXIN=$(jq -r 'to_entries
-    | map(select((.value.value | keys | length) == 1))
+    | map(select((.value.value | keys) == ["lovelace"]
+        and (.value.inlineDatum == null)
+        and (.value.datum == null)
+        and (.value.datumhash == null)
+        and (.value.referenceScript == null)))
     | sort_by(.value.value.lovelace) | last | .key' "$WORK/utxos.json")
-  [ "$TXIN" != "null" ] || { echo "No pure-ADA UTxO at $ADDR"; exit 1; }
+  [ "$TXIN" != "null" ] || { echo "No pure-ADA UTxO (no tokens, no datum, no reference script) at $ADDR"; exit 1; }
 fi
 BAL=$(jq -r --arg k "$TXIN" '.[$k].value.lovelace' "$WORK/utxos.json")
 echo "Chain root UTxO: $TXIN ($((BAL/1000000)) ADA)"
+
+echo ""
+echo "About to mint on $NETWORK_NAME: $N page tx(s) + 1 manifest tx from $TXIN"
+echo "Content: $(jq -r '"\(.sourceFile) (\(.sizeDecoded) B, codec \(.codec), sha256 \(.sha256Decoded))"' "$WORK/plan.json")"
+if [ "${LSCHAIN_YES:-}" != "1" ]; then
+  [ -t 0 ] || { echo "stdin is not a terminal; set LSCHAIN_YES=1 to mint non-interactively"; exit 1; }
+  read -r -p "Type MINT to proceed: " CONFIRM
+  [ "$CONFIRM" = "MINT" ] || { echo "Aborted; nothing was signed or submitted"; exit 1; }
+fi
 
 # `transaction build` balances against the ledger UTxO set, so each
 # chained input must be confirmed before the next build.
@@ -86,14 +105,26 @@ wait_for_utxo() {
   done
 }
 
+# Every tx carries an upper validity bound (ttl = tip+3600). A long page chain
+# outlives a single bound, so the tip is re-read before each build; a build
+# with no readable tip is refused.
+build_ttl() {
+  local slot
+  slot=$($CLI query tip $NETWORK --socket-path "$SOCKET" | jq -r '.slot // empty')
+  [ -n "$slot" ] || { echo "cannot read tip slot; refusing to build without a validity bound" >&2; return 1; }
+  echo $((slot + 3600))
+}
+
 : > "$WORK/page_txids.txt"
 i=0
-for META in $PAGES; do
+for META in "${PAGES[@]}"; do
   i=$((i+1))
   wait_for_utxo "$TXIN"
+  TTL=$(build_ttl)
   $CLI transaction build $NETWORK --socket-path "$SOCKET" \
     --tx-in "$TXIN" \
     --metadata-json-file "$META" \
+    --invalid-hereafter "$TTL" \
     --change-address "$ADDR" \
     --out-file "$WORK/tx-page.raw"
   $CLI transaction sign --tx-body-file "$WORK/tx-page.raw" \
@@ -123,10 +154,12 @@ fi
 echo "Manifest lock amount: $LOCK_LOVELACE lovelace"
 
 wait_for_utxo "$TXIN"
+TTL=$(build_ttl)
 $CLI transaction build $NETWORK --socket-path "$SOCKET" \
   --tx-in "$TXIN" \
   --tx-out "$LOCK_ADDR+$LOCK_LOVELACE" \
   --tx-out-inline-datum-cbor-file "$WORK/manifest.cbor" \
+  --invalid-hereafter "$TTL" \
   --change-address "$ADDR" \
   --out-file "$WORK/tx-manifest.raw"
 $CLI transaction sign --tx-body-file "$WORK/tx-manifest.raw" \

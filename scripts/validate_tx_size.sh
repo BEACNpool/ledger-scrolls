@@ -4,8 +4,9 @@ set -euo pipefail
 # Validate CIP-25 page metadata fits under MaxTxSize before minting.
 # Usage:
 #   validate_tx_size.sh <metadata.json> <assets.list> <policy.id> <policy.script> <payment.addr> <assets_to_value.py> <socket>
+# LSCHAIN_NETWORK selects mainnet (default) or preview, like tools/lschain/mint.sh.
 # Example:
-#   ./validate_tx_size.sh part01.json part01.assets policy/policy.id policy/policy.script ~/payment.addr ./assets_to_value.py ~/relay/db/node.socket
+#   LSCHAIN_NETWORK=preview ./validate_tx_size.sh part01.json part01.assets policy/policy.id policy/policy.script ~/payment.addr ./assets_to_value.py ~/relay/db/node.socket
 
 META=${1:?metadata.json required}
 ASSETS_FILE=${2:?assets.list required}
@@ -15,20 +16,33 @@ PAYMENT_ADDR_FILE=${5:?payment.addr required}
 ASSETS_TO_VALUE=${6:?assets_to_value.py required}
 SOCKET=${7:?socket required}
 
+NETWORK_NAME="${LSCHAIN_NETWORK:-mainnet}"
+case "$NETWORK_NAME" in
+  mainnet) NETWORK="--mainnet" ;;
+  preview) NETWORK="--testnet-magic 2" ;;
+  *) echo "LSCHAIN_NETWORK must be mainnet or preview"; exit 1 ;;
+esac
+
 POLICY=$(cat "$POLICY_ID_FILE")
 ADDR=$(cat "$PAYMENT_ADDR_FILE")
 
-TMP_UTXO=/tmp/utxo_validate.json
-TX_RAW=/tmp/tx_validate.raw
+WORK=$(mktemp -d)
+trap 'rm -rf "$WORK"' EXIT
+TMP_UTXO="$WORK/utxo.json"
+TX_RAW="$WORK/tx.raw"
 
-cardano-cli latest query utxo --testnet-magic 2 --socket-path "$SOCKET" --address "$ADDR" --out-file "$TMP_UTXO"
+cardano-cli latest query utxo $NETWORK --socket-path "$SOCKET" --address "$ADDR" --out-file "$TMP_UTXO"
 
-# Largest ADA-only UTxO
-TXIN=$(jq -r "to_entries \
-  | map(select((.value.value | keys | length == 1) and (.value.value | has(\"lovelace\")))) \
-  | sort_by(.value.value.lovelace|tonumber) \
-  | reverse \
-  | .[0].key" "$TMP_UTXO")
+# Largest ADA-only UTxO (no datum, no reference script)
+TXIN=$(jq -r 'to_entries
+  | map(select((.value.value | keys) == ["lovelace"]
+      and (.value.inlineDatum == null)
+      and (.value.datum == null)
+      and (.value.datumhash == null)
+      and (.value.referenceScript == null)))
+  | sort_by(.value.value.lovelace|tonumber)
+  | reverse
+  | .[0].key' "$TMP_UTXO")
 
 if [ -z "$TXIN" ] || [ "$TXIN" = "null" ]; then
   echo "No ADA-only UTxO available" >&2
@@ -37,7 +51,7 @@ fi
 
 MINT_VALUE=$(python3 "$ASSETS_TO_VALUE" "$POLICY" < "$ASSETS_FILE")
 
-cardano-cli latest transaction build --testnet-magic 2 --socket-path "$SOCKET" \
+cardano-cli latest transaction build $NETWORK --socket-path "$SOCKET" \
   --tx-in "$TXIN" \
   --tx-out "$ADDR+2000000+$MINT_VALUE" \
   --mint "$MINT_VALUE" \
