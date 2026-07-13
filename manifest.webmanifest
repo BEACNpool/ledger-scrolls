@@ -1,12 +1,12 @@
 {
-  "name": "Ledger Scrolls — Scroll Press",
-  "short_name": "Scroll Press",
-  "description": "Mint and keep immutable media on Cardano. No node, no account, no upload.",
-  "start_url": "./calculator.html",
+  "name": "Ledger Scrolls — a library that cannot burn",
+  "short_name": "Ledger Scrolls",
+  "description": "Immutable media written into Cardano itself. Read, verify, and write scrolls — no account, no server, no upload.",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f6f5f1",
-  "theme_color": "#2f53ff",
+  "background_color": "#04070f",
+  "theme_color": "#04070f",
   "lang": "en",
   "icons": [
     {

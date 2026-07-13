@@ -11,7 +11,10 @@
    second worker (chess used to ship its own) does not coexist with this one —
    it replaces it, and every page inherits whatever caching policy that other
    worker happened to have. Every page registers this file. */
-const CACHE = "ls-shell-v3";
+/* addAll() is atomic: one 404 rejects the whole install and the worker never
+   activates. Every path here must exist. (The second PWA manifest was removed
+   with the second PWA — one house, one installable app.) */
+const CACHE = "ls-shell-v4";
 const SHELL = [
   "./",
   "./index.html",
@@ -21,7 +24,6 @@ const SHELL = [
   "./media.html",
   "./favicon.svg",
   "./manifest.webmanifest",
-  "./chess-manifest.webmanifest",
   "./robots.txt",
 ];
 

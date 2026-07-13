@@ -29,7 +29,8 @@ jobs:
       - run: bash -n scripts/*.sh tools/lschain/*.sh examples/architects-scroll/*.sh
       - run: node scripts/check_cost_model_sync.mjs
       - run: node scripts/check_inline_js.mjs
-      - run: python3 scripts/sync_nav.py --check
+      - run: python3 scripts/sync_brand.py --check
+      - run: node scripts/check_brand.mjs
       - run: node scripts/check_frozen_files.mjs
       - run: node scripts/check_mirror_lists.mjs
       - run: git diff --check
