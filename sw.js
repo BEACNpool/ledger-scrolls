@@ -11,7 +11,7 @@
    second worker (chess used to ship its own) does not coexist with this one —
    it replaces it, and every page inherits whatever caching policy that other
    worker happened to have. Every page registers this file. */
-const CACHE = "ls-shell-v3";
+const CACHE = "ls-shell-v4-brand-20260904";
 const SHELL = [
   "./",
   "./index.html",
@@ -20,6 +20,7 @@ const SHELL = [
   "./ledger-chess.html",
   "./media.html",
   "./favicon.svg",
+  "./brand/beacn-20260904.png",
   "./manifest.webmanifest",
   "./chess-manifest.webmanifest",
   "./robots.txt",

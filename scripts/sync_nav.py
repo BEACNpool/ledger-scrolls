@@ -93,7 +93,11 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
   margin:0 0 3px;font-weight:600}
 .ls-foot-col a{font-size:14px;line-height:1.3}
 .ls-foot-legal{max-width:1080px;margin:6px auto 0;padding:15px 20px 30px;
-  border-top:1px solid #131f3f;font-size:12px;color:#5c6b8a}
+  border-top:1px solid #131f3f;font-size:12px;color:#8ba3cf;
+  display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px}
+.ls-foot-beacn{display:inline-flex;align-items:center;gap:9px;min-height:44px;
+  color:#c6d4ef;font-size:13px;text-decoration:none}
+.ls-foot-beacn img{display:block;width:40px;height:40px;object-fit:contain}
 @media(max-width:560px){
   .ls-foot-inner{gap:26px;padding-top:32px}
   .ls-foot-cols{gap:22px 30px}
@@ -167,7 +171,13 @@ def foot_html(P):
       </div>
     </nav>
   </div>
-  <div class="ls-foot-legal">Open protocol &middot; MIT &middot; maintained by BEACN, verified by you.</div>
+  <div class="ls-foot-legal">
+    <a class="ls-foot-beacn" href="https://beacnpool.org/" aria-label="BEACNpool website">
+      <img src="{P}brand/beacn-20260904.png" width="40" height="40" alt="" loading="lazy" decoding="async">
+      <span>Maintained by BEACN</span>
+    </a>
+    <span>Open protocol &middot; MIT &middot; verified by you.</span>
+  </div>
 </footer>
 """ + FOOT_END
 
