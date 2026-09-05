@@ -102,7 +102,7 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
   .ls-foot-inner{gap:26px;padding-top:32px}
   .ls-foot-cols{gap:22px 30px}
 }
-""" + CSS_END
+""" + (ROOT / "scripts/workspace.css").read_text() + CSS_END
 
 MARK = ('<svg viewBox="-60 -60 120 120" width="21" height="21" aria-hidden="true">'
         '<g fill="#aecbff"><circle cx="38" cy="0" r="9"/><circle cx="19" cy="32.9" r="9"/>'
@@ -125,10 +125,9 @@ def nav_html(P):
   </a>
   <nav class="ls-links" aria-label="Ledger Scrolls">
     <a href="{P}index.html" data-nav="index">Library</a>
-    <a href="{P}calculator.html" data-nav="calculator">Mint a scroll</a>
-    <a href="{P}ledger-book.html" data-nav="book">Ledger Book</a>
-    <a href="{P}ledger-chess.html" data-nav="chess">Chess</a>
-    <a href="{P}media.html" data-nav="media">What lives forever</a>
+    <a href="{P}calculator.html" data-nav="calculator">Publish</a>
+    <a href="{P}ledger-book.html" data-nav="book">Guestbooks</a>
+    <a href="{P}media.html" data-nav="media">How it works</a>
   </nav>
 </header>
 """ + NAV_END
@@ -142,8 +141,7 @@ def foot_html(P):
       <a class="ls-foot-mark" href="{P}index.html" aria-label="Ledger Scrolls — home">
         {FOOT_MARK}<span>Ledger <b>Scrolls</b></span>
       </a>
-      <p class="ls-foot-tag">A library that cannot burn. Immutable media written into
-      Cardano itself — no accounts, no servers of record, verified on every read.</p>
+      <p class="ls-foot-tag">Preserve a work. Keep the responses beside it. Public records and guestbooks stored on Cardano, with evidence you can inspect.</p>
     </div>
     <nav class="ls-foot-cols" aria-label="All Ledger Scrolls pages">
       <div class="ls-foot-col">
@@ -153,8 +151,8 @@ def foot_html(P):
       </div>
       <div class="ls-foot-col">
         <h4>Create</h4>
-        <a href="{P}calculator.html">Mint a scroll</a>
-        <a href="{P}ledger-book.html">Ledger Book</a>
+        <a href="{P}calculator.html">Publish a work</a>
+        <a href="{P}ledger-book.html">Guestbooks</a>
         <a href="{P}vault-tool.html">Vault Tool</a>
       </div>
       <div class="ls-foot-col">
@@ -166,6 +164,7 @@ def foot_html(P):
       </div>
       <div class="ls-foot-col">
         <h4>Project</h4>
+        <a href="{P}docs/PRODUCT.md">Product &amp; trust model</a>
         <a href="https://github.com/BEACNpool/ledger-scrolls">Source &amp; specs</a>
         <a href="{P}media.html">How it works</a>
       </div>

@@ -41,3 +41,10 @@ tmp/
 # archive/ (mv, not rm) rather than the Pages-served repo root.
 *.bak-*
 archive/
+
+# Static private review packaging
+dist/
+dist.previous-*/
+*.egg-info/
+registry/tooling/build/
+browser-regression-results/

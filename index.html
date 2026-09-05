@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; frame-src blob:; font-src 'self'; manifest-src 'self'; connect-src https:; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>Ledger Scrolls — A Library That Cannot Burn</title>
-<meta name="description" content="Read and verify immutable media stored on the Cardano blockchain. This site hosts nothing: your browser queries the chain, rebuilds the bytes, and verifies every hash.">
-<meta name="theme-color" content="#04070f">
+<title>Ledger Scrolls — Works worth keeping</title>
+<meta name="description" content="Read public works, inspect their fingerprints, publish original files, and attach a guestbook on Cardano.">
+<meta name="theme-color" content="#0d1015">
 <link rel="manifest" href="./manifest.webmanifest">
-<meta property="og:title" content="Ledger Scrolls — A Library That Cannot Burn">
-<meta property="og:description" content="Immutable media on Cardano. Your browser queries the chain, rebuilds the bytes, and verifies every hash before a single word is shown.">
+<meta property="og:title" content="Ledger Scrolls — Works worth keeping">
+<meta property="og:description" content="Read public works, inspect their fingerprints, publish original files, and attach a guestbook on Cardano.">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="canonical" href="https://beacnpool.github.io/ledger-scrolls/">
@@ -24,9 +24,9 @@
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "Ledger Scrolls",
-  "alternateName": "A Library That Cannot Burn",
+  "alternateName": "Works worth keeping",
   "url": "https://beacnpool.github.io/ledger-scrolls/",
-  "description": "Free, open-source reader and writer for immutable media stored inside the Cardano blockchain. Uncensorable, timestamped, verified on every read — one fee, no subscriptions.",
+  "description": "Free, open-source reader and writer for immutable media stored inside the Cardano blockchain. Public files and guestbooks, with local hash checks and inspectable provider evidence.",
   "publisher": { "@type": "Organization", "name": "BEACN", "url": "https://github.com/BEACNpool/ledger-scrolls" }
 }
 </script>
@@ -421,6 +421,202 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
   .ls-foot-inner{gap:26px;padding-top:32px}
   .ls-foot-cols{gap:22px 30px}
 }
+
+/* One archive, three working surfaces. Embedded by sync_nav.py for offline use. */
+:root{--bg:#0d1015;--bg-2:#11151c;--surface:#151a22;--surface-2:#1a202a;--ink:#edf0f5;--ink-2:#c8d0dc;--muted:#a5afbf;--faint:#96a1b3;--line:#2a303b;--line-2:#394454;--accent:#356df3;--accent-ink:#b3caff;--accent-soft:#172641;--amber:#d9b681;--ok:#85d7b0;--warn:#efc78a;--radius:10px;--radius-sm:6px;--sh:none;--sh-lg:none}
+body{background:#0d1015;color:#edf0f5;font-size:16px}
+body::before,.bg-grid{display:none!important}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid #b3caff;outline-offset:4px}
+button,input,select,textarea,a{touch-action:manipulation}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button:disabled{cursor:wait;opacity:.55}
+input,textarea{color:#edf0f5;background:#10151d;border:1px solid #465063;border-radius:6px}
+input::placeholder,textarea::placeholder{color:#a4afbf;opacity:1}
+input,button,select{min-height:44px}
+textarea{width:100%;padding:12px;resize:vertical;line-height:1.6}
+a{color:#b3caff}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.ls-nav{background:#10141b;padding:16px max(24px,calc((100vw - 1280px)/2));border-color:#303743;min-height:80px;gap:32px}
+.ls-brand{font-size:18px;letter-spacing:-.035em;gap:12px}
+.ls-word span{color:#edf0f5}
+.ls-links{gap:4px}
+.ls-links a{border-radius:6px;min-height:44px;padding:0 16px;color:#aeb8c9;font-size:14px}
+body[data-page="index"] .ls-links a[data-nav="index"],body[data-page="calculator"] .ls-links a[data-nav="calculator"],body[data-page="book"] .ls-links a[data-nav="book"]{background:#232b38;border-color:#3b485d;color:#fff}
+.ls-foot{background:#10141b;border-color:#303743;margin-top:72px}
+.ls-foot-inner,.ls-foot-legal{max-width:1280px}
+.ls-foot-tag{font-size:14px;color:#acb6c6}
+.ls-foot-col h4{font-size:12px;color:#a4afc1}
+.ls-foot-col a,.ls-foot-legal,.ls-foot-beacn{color:#b7c0ce}
+.ls-action{display:inline-flex;align-items:center;justify-content:center;gap:24px;min-height:44px;padding:12px 20px;background:#202b3d;color:#dce7ff;border:1px solid #465572;border-radius:6px;font:600 14px/1.4 system-ui;text-decoration:none;white-space:normal}
+.ls-action:hover{background:#2b3b55;color:#fff}
+.ls-action.primary{color:#11151c;background:#dce7f6;border-color:#dce7f6;box-shadow:none}
+.ls-action.primary:hover{background:#fff}
+.ls-label{display:block;font-size:14px;font-weight:600;color:#dce3ed;margin:0 0 12px}
+.eyebrow{font:600 12px/1.5 ui-monospace,SFMono-Regular,monospace;letter-spacing:.13em;color:#a9b6ca}
+.work-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:20px 0}
+.work-actions>span{font-size:14px;color:#c5cfdf}
+.linked-work{border:1px solid #43536d;border-left:3px solid #bbcae6;background:#141d2b;border-radius:6px;padding:20px 24px;margin:24px 0;overflow-wrap:anywhere}
+.linked-work h2,.linked-work h3{font:500 26px/1.3 Georgia,serif;margin:8px 0 12px;color:#edf0f5}
+.linked-work p{color:#b8c5d8;font-size:14px;line-height:1.6;margin:8px 0}
+.linked-work code{font-size:12px;color:#c2d0e9}
+body[data-page="index"] .container{max-width:1280px;padding-left:24px;padding-right:24px}
+body[data-page="index"] .hero{padding:44px 0 0;text-align:left;border:0;background:none}
+.library-intro{display:flex;align-items:center;justify-content:space-between;gap:32px}
+body[data-page="index"] .hero-title{font:400 clamp(38px,4.2vw,60px)/1.1 Georgia,serif;letter-spacing:-.045em;margin:14px 0 16px;color:#edf0f5}
+body[data-page="index"] .hero-title em{color:#b9cbe8;font-weight:400}
+body[data-page="index"] .hero-lede{font-size:17px;max-width:640px;line-height:1.6;color:#b0bbcc;margin:0}
+body[data-page="index"] .resolver{max-width:none;margin:32px 0 0;padding:20px 24px;background:#171d27;border:1px solid #323c4d;border-radius:8px;box-shadow:none;text-align:left}
+body[data-page="index"] .resolver-field{border:1px solid #536179;box-shadow:none;border-radius:6px;background:#0e141e;padding:4px 5px 4px 16px;display:flex;gap:8px}
+body[data-page="index"] .resolver-field input{border:0;min-width:0;font-size:16px;background:transparent;padding:12px 0;color:#edf0f5;flex:1;box-shadow:none}
+body[data-page="index"] .resolver-field button{padding:0 26px;border-radius:4px;background:#d7e3f6;color:#111722;box-shadow:none;font-size:14px;min-height:44px}
+.ls-resolver-bottom{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:12px;color:#adb9cc;font-size:13px;align-items:center}
+.text-action{border:0;background:transparent;color:#c8d8f3;text-decoration:underline;text-underline-offset:3px;padding:0;min-height:24px;font-size:13px}
+.ls-journey{display:flex;gap:32px;padding:20px 0 28px;border-bottom:1px solid #303743;color:#aab7ca;font-size:13px}
+.ls-journey b{font:500 12px ui-monospace,monospace;color:#d7b884;margin-right:8px}
+body[data-page="index"] .section{padding-top:32px;padding-bottom:24px}
+.library-layout{display:grid;grid-template-columns:215px minmax(0,1fr);gap:40px}
+.library-aside{padding-top:4px}
+.library-aside>.eyebrow{display:block;margin-bottom:16px}
+.collection-current,.collection-link{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px;width:100%;background:transparent;border:1px solid transparent;color:#b6c0d1;border-radius:6px;text-decoration:none;font-size:14px;text-align:left;margin-bottom:4px}
+.collection-current[aria-pressed="true"]{color:#e8eef8;border-color:#394a63;background:#1b283b}
+.collection-current span{font:12px ui-monospace,monospace;color:#c8d5eb}
+.collection-current:hover,.collection-link:hover{background:#202a39}
+.aside-note{border-top:1px solid #303743;margin-top:28px;padding:24px 8px 0;font-size:14px;line-height:1.6;color:#abb9ce}
+.aside-note .eyebrow{font-size:11px;letter-spacing:.05em}
+.aside-note a{font-size:13px;color:#d6e3fa}
+.storage-filter{margin:28px 8px 0;font-size:13px;color:#aab6c8}
+.storage-filter summary{cursor:pointer;padding:8px 0}
+.storage-filter .chips{display:flex;flex-wrap:wrap;margin-top:8px;gap:6px}
+.storage-filter .chip{border-radius:4px;font-size:12px;min-height:36px;padding:6px 8px}
+.library-content{min-width:0}
+body[data-page="index"] .shelftools{align-items:center;gap:20px;margin:0 0 24px}
+body[data-page="index"] .section-title{font:400 28px/1.3 Georgia,serif;letter-spacing:-.02em;margin:8px 0;color:#eaf0f9}
+body[data-page="index"] .section-sub{font-size:13px;line-height:1.6;color:#aebacd;max-width:650px}
+.ls-search{max-width:240px;flex:0 1 240px}
+.ls-search input{width:100%;padding:10px 12px;font-size:14px}
+body[data-page="index"] .shelfgroup{display:flex;align-items:center;justify-content:space-between;margin:24px 0 12px;padding:0 0 10px;border-bottom:1px solid #2d3542}
+body[data-page="index"] .shelfgroup h3{font:500 13px/1.4 system-ui;letter-spacing:.04em;color:#bac6d9;margin:0}
+body[data-page="index"] .cnt{font-size:12px;color:#9aa8bd}
+body[data-page="index"] .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+body[data-page="index"] .card{padding:20px;min-height:190px;background:#171d26;border:1px solid #323c4b;border-radius:7px;box-shadow:none;display:flex;flex-direction:column;transition:background .15s,border-color .15s;overflow:hidden}
+body[data-page="index"] .card:hover{background:#1d2735;border-color:#6c7e9b;transform:none;box-shadow:none}
+body[data-page="index"] .card>.ic{font:14px ui-monospace,monospace;min-height:28px;color:#a7bad9;width:auto;filter:grayscale(1);margin-bottom:20px}
+body[data-page="index"] .card h3{font:500 19px/1.35 Georgia,serif;color:#edf0f7;margin:0 0 12px;overflow-wrap:anywhere}
+body[data-page="index"] .card p:empty{display:none}
+body[data-page="index"] .card p{font-size:14px}
+body[data-page="index"] .card .tags{margin:auto 0 12px;gap:6px}
+body[data-page="index"] .tag{font-size:11px;color:#b2bfd3;background:#202a39;border:0;border-radius:3px;padding:4px 6px;max-width:100%;overflow-wrap:anywhere}
+body[data-page="index"] .tag.ok{color:#b5c9e9;background:#202d40}
+body[data-page="index"] .facts{border-top:1px solid #344051;margin:0;padding-top:12px;font-size:12px;color:#b0bdd0;display:flex;flex-wrap:wrap;gap:8px}
+body[data-page="index"] .copyhint{color:#d2def2;margin-left:auto;font-size:12px}
+.library-empty{border:1px dashed #43516b;border-radius:6px;padding:32px;color:#b5c0d1;line-height:1.7}
+.saved-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 0;border-bottom:1px solid #303b4d}
+.saved-row a{font-size:17px;overflow-wrap:anywhere}
+.saved-row p{font-size:13px;color:#acb7cb;margin:8px 0 0}
+.saved-row button{background:none;border:0;color:#adbbd1;font-size:13px;padding:10px}
+body[data-page="index"] .docbar{display:flex;flex-wrap:wrap;gap:12px}
+body[data-page="index"] .docbar h2{font:400 30px/1.3 Georgia,serif;flex:1 1 300px;overflow-wrap:anywhere}
+body[data-page="index"] .ghost{background:#1c2737;border:1px solid #465773;color:#d9e3f4;padding:8px 14px;border-radius:5px;font-size:14px}
+body[data-page="index"] .verdict{overflow-wrap:anywhere;padding:20px;border-radius:6px}
+body[data-page="index"] .verdict .v{font-size:18px}
+body[data-page="index"] .verdict .d{font:13px/1.6 ui-monospace,monospace}
+body[data-page="index"] .receipt{overflow-wrap:anywhere;font-size:12px}
+body[data-page="index"] .stage{background:#151c28;border-radius:6px}
+body[data-page="index"] .stage pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:32px;color:#e0e7f2;font:17px/1.8 Georgia,serif;max-width:80ch;margin:auto}
+body[data-page="index"] .stage iframe{background:white;width:100%;height:70vh;min-height:400px;border:0}
+body[data-page="index"] .about{background:#111720;border-top:1px solid #303b4d;margin-top:40px}
+body[data-page="index"] .cols{grid-template-columns:repeat(2,minmax(0,1fr));gap:32px}
+body[data-page="index"] .col h3{font-size:16px}
+body[data-page="index"] .col p,body[data-page="index"] .col li{font-size:14px;color:#aebbcf}
+body[data-page="index"] .setrow input{min-width:0;width:100%}
+body[data-page="book"] header.site,body[data-page="calculator"] .site-header{display:none}
+body[data-page="book"] .hero{padding:48px 24px 32px;background:none;text-align:left}
+body[data-page="book"] .hero .inner{max-width:920px;margin:auto}
+body[data-page="book"] .mark-lg{display:none}
+body[data-page="book"] .hero h1,body[data-page="calculator"] .hero h1{font:400 clamp(38px,5vw,58px)/1.1 Georgia,serif;letter-spacing:-.04em;margin:14px 0 20px;color:#edf0f5}
+body[data-page="book"] .hero h1 em,body[data-page="calculator"] .hero h1 em{color:#b9cbe8}
+body[data-page="book"] .sub{font-size:17px;line-height:1.7;max-width:650px;margin:0 0 28px;color:#b0bdd1}
+body[data-page="book"] .seg{justify-content:flex-start;margin:0 0 20px;border-radius:6px}
+body[data-page="book"] .seg button{font-size:14px;padding:12px 20px}
+body[data-page="book"] .centercard{max-width:none;margin:0;background:#171d27;border:1px solid #37465d;border-radius:8px;box-shadow:none;padding:24px}
+body[data-page="book"] #findpanel{min-height:164px}
+body[data-page="book"] #searchbar{max-width:none}
+body[data-page="book"] input,body[data-page="book"] textarea{padding:12px;font-size:16px;width:100%}
+body[data-page="book"] .btn{border-radius:5px;box-shadow:none;font-size:14px;min-height:44px}
+body[data-page="book"] .btn.primary{background:#d7e3f6;border-color:#d7e3f6;color:#101620}
+body[data-page="book"] #mintpanel{max-width:680px}
+body[data-page="book"] .coverwrap{max-width:230px;margin:20px auto}
+body[data-page="book"] .ticks{justify-content:flex-start;margin:20px 0 0;color:#acbbd1;font-size:13px}
+body[data-page="book"] #howitworks{border-top:1px solid #303b4d;padding-top:32px;background:#111720}
+body[data-page="book"] #howitworks h2{font:400 30px Georgia,serif}
+body[data-page="book"] #bookview .wrap{max-width:1040px}
+body[data-page="book"] .ident h1{font:400 38px/1.2 Georgia,serif;letter-spacing:-.02em;overflow-wrap:anywhere}
+body[data-page="book"] .trustrow{margin-top:24px}
+body[data-page="book"] .truststrip{background:#141d2a;border-color:#37455c}
+body[data-page="book"] .chip{font-size:12px}
+body[data-page="book"] .sig{transform:none!important;background:#192332;border:1px solid #44526a;box-shadow:none;border-radius:6px;padding:24px}
+body[data-page="book"] .sig .msg{color:#e2e8f3;font:18px/1.65 Georgia,serif}
+body[data-page="book"] .sig .name{font-size:22px}
+body[data-page="book"] .sig .meta{font-size:12px;color:#b1bfd5}
+body[data-page="book"] .bytec,body[data-page="book"] .finehelp{font-size:13px;color:#b0bed4;line-height:1.6}
+body[data-page="book"] .sheetcard{border:1px solid #53637e;background:#171f2d;overflow-wrap:anywhere}
+.subject-editor{margin:20px 0;padding:16px;background:#101823;border:1px solid #3b4d68;border-radius:6px}
+.subject-editor summary{font-weight:600;cursor:pointer;font-size:14px}
+.subject-editor label{display:block;margin:16px 0 8px;font-size:14px}
+body[data-page="calculator"] main.container{max-width:1040px}
+body[data-page="calculator"] .hero{padding:44px 0 24px;text-align:left;background:none}
+body[data-page="calculator"] .hero .lead{font-size:17px;line-height:1.7;max-width:730px;color:#b0bdd1;margin:0}
+body[data-page="calculator"] .privacy{font-size:13px;color:#c9b996;margin-top:16px}
+body[data-page="calculator"] .section{padding-top:16px}
+body[data-page="calculator"] .card{box-shadow:none;border:1px solid #39465c;background:#171e29;border-radius:8px}
+body[data-page="calculator"] .drop{background:#111a28;border:1px dashed #657998;border-radius:6px;padding:32px 24px}
+body[data-page="calculator"] .drop .big{font-size:21px;font-weight:500}
+body[data-page="calculator"] .drop .hint{font-size:13px;color:#b0bdd2;line-height:1.7;max-width:620px;margin:10px auto 0}
+body[data-page="calculator"] .btn{border-radius:5px;min-height:44px;font-size:14px;box-shadow:none}
+body[data-page="calculator"] .card h2{font:400 28px Georgia,serif}
+body[data-page="calculator"] .kv{font-size:13px;overflow-wrap:anywhere}
+body[data-page="calculator"] .pricebar{font-size:13px;color:#b0bdd2}
+.publish-kind{display:flex;flex-wrap:wrap;gap:16px;margin:28px 0 0;align-items:center;font-size:14px}
+.publish-kind .selected{padding:10px 16px;border:1px solid #50617c;background:#1d2a3e;border-radius:5px;color:#e2ebfa}
+.text-composer{margin:20px 0 0;border-top:1px solid #3b485d;padding-top:20px}
+.text-composer summary,.estimate-only summary{cursor:pointer;font-size:14px;color:#d2def2;min-height:40px}
+.text-composer label{display:block;font-size:14px;margin:20px 0 8px;color:#d7e1f1}
+.text-composer input{width:100%;padding:12px}
+.estimate-only{border-top:1px solid #3b485d;padding:20px 0 4px;margin-top:12px}
+.text-composer .finehelp{font-size:13px;color:#b8c4d7;line-height:1.6}
+@media(min-width:1440px){.library-intro{padding-top:12px}.library-layout{gap:48px;grid-template-columns:224px minmax(0,1fr)}}
+@media(max-width:1000px){.library-layout{grid-template-columns:185px minmax(0,1fr);gap:24px}body[data-page="index"] .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ls-search{max-width:190px}.shelftools{flex-wrap:wrap}.ls-nav{gap:16px}}
+@media(max-width:700px){.ls-nav{padding:12px 16px;gap:12px;min-height:66px;flex-wrap:wrap;position:relative}.ls-brand{font-size:17px}.ls-links{width:100%;margin:0;justify-content:space-between}.ls-links a{padding:0 10px;font-size:13px;min-height:40px}.ls-brand .ls-word{display:block}.library-intro{align-items:flex-start;flex-direction:column;gap:20px}body[data-page="index"] .hero{padding-top:28px}body[data-page="index"] .container{padding-left:16px;padding-right:16px}body[data-page="index"] .hero-title{font-size:40px}body[data-page="index"] .hero-lede{font-size:16px}body[data-page="index"] .resolver{padding:16px;margin-top:24px}.resolver-ic{display:none}body[data-page="index"] .resolver-field{padding-left:10px}body[data-page="index"] .resolver-field input{font-size:14px}body[data-page="index"] .resolver-field button{padding:0 16px}.ls-journey{gap:16px;flex-wrap:wrap;padding-bottom:24px;font-size:12px}.library-layout{display:block}.library-aside{display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid #303743;padding-bottom:20px;margin-bottom:24px}.library-aside>.eyebrow,.aside-note{display:none}.collection-current{width:auto;padding:10px;font-size:13px;margin:0;gap:12px}.collection-link{width:auto;margin:0;font-size:13px}.storage-filter{margin:0;width:100%}.storage-filter summary{min-height:32px;font-size:12px}.ls-search{max-width:none;flex-basis:100%}body[data-page="index"] .grid{gap:10px}body[data-page="index"] .card{padding:16px;min-height:185px}body[data-page="index"] .card h3{font-size:18px}body[data-page="index"] .card>.ic{margin-bottom:12px}body[data-page="index"] .facts{font-size:11px}.copyhint{width:100%}body[data-page="index"] .cols{grid-template-columns:1fr}body[data-page="index"] .stage pre{padding:20px;font-size:16px}.ls-foot{margin-top:40px}body[data-page="book"] .hero{padding:28px 16px}body[data-page="book"] .hero h1,body[data-page="calculator"] .hero h1{font-size:40px}body[data-page="book"] .centercard{padding:20px 16px}body[data-page="book"] #searchbar{flex-direction:column;align-items:stretch}body[data-page="book"] #searchgo{width:100%}body[data-page="book"] .ticks{flex-wrap:wrap;gap:16px}body[data-page="book"] .ident h1{font-size:30px}body[data-page="book"] .sig{padding:20px}body[data-page="book"] .sig .meta{flex-wrap:wrap}body[data-page="calculator"] .hero{padding-top:28px}.work-actions{gap:8px}.linked-work{padding:16px}}
+@media(max-width:370px){body[data-page="index"] .grid{grid-template-columns:1fr}.ls-links a{padding:0 6px}.ls-journey{display:grid;gap:8px}.collection-current{width:100%}}
+/* Override legacy ID-based hero styles as well as the shared classes. */
+body[data-page="index"] .eyebrow{background:none;border:0;border-radius:0;padding:0;box-shadow:none;display:inline-block}
+body[data-page="index"] .library-intro>div{max-width:none;text-align:left}
+body[data-page="index"] .hero-title,body[data-page="index"] .hero-lede{margin-left:0;margin-right:0;text-align:left}
+body[data-page="index"] .hero{padding-top:28px}
+body[data-page="index"] #trustline{display:none}
+body[data-page="index"] #openbtn{background:#d7e3f6;color:#101722;border:0;border-radius:4px;box-shadow:none;padding:0 24px;font-weight:600;font-size:14px;flex:0 0 auto}
+body[data-page="index"] .resolver-field{flex-wrap:nowrap}
+body[data-page="index"] #point{width:0;min-width:0;flex:1 1 0;padding:12px 0;font-family:system-ui,sans-serif}
+body[data-page="index"] #search{max-width:none;width:100%;border-radius:5px;font:14px system-ui,sans-serif;background:#141c28;padding:10px 12px;min-width:0}
+body[data-page="index"] .shelfgroup::after{display:none}
+body[data-page="index"] .card>.ic{display:flex;align-items:center;justify-content:space-between;background:none;border:0;border-radius:0;padding:0;height:auto;min-height:20px;font-size:11px;letter-spacing:.06em;filter:none;color:#a9bad5}
+body[data-page="index"] .shelfgroup .cnt{margin-left:auto}
+body[data-page="index"] .shelfgroup h3{margin:0}
+@media(max-width:700px){body[data-page="index"] .hero{padding-top:24px}.library-intro{gap:16px}body[data-page="index"] .hero-title{font-size:36px;margin:12px 0}body[data-page="index"] .hero-lede{font-size:15px}.library-intro>.ls-action{position:absolute;right:16px;top:130px;min-height:36px;padding:8px 10px;font-size:12px;gap:8px}.library-intro .eyebrow{padding-right:140px;font-size:10px;line-height:1.6}body[data-page="index"] .resolver{margin-top:20px;padding:14px}body[data-page="index"] #openbtn{padding:0 16px;min-height:42px}.ls-label{font-size:13px}.ls-resolver-bottom{font-size:12px;gap:4px}.ls-journey{gap:8px 16px;font-size:11px;padding:16px 0 20px}body[data-page="index"] .section{padding-top:20px}.library-aside{padding-bottom:12px;margin-bottom:20px}.library-aside .storage-filter{display:none}body[data-page="index"] .shelftools{margin-bottom:16px}body[data-page="index"] .shelfgroup{margin-top:16px}}
+body[data-page="book"] .sig .name{color:#d8e6fb!important}
+body[data-page="book"] .sig .whobtn{color:#b8cae6;background:#22324b;border:1px solid #4b607e;padding:6px 10px;border-radius:4px;min-height:36px}
+body[data-page="book"] .hero,body[data-page="book"] .hero .inner{text-align:left}
+body[data-page="book"] .hero .sub{margin-left:0;text-align:left}
+body[data-page="book"] .hero .seg{justify-content:flex-start;width:fit-content;margin-left:0}
+body[data-page="book"] .centercard{text-align:left}
+body[data-page="book"] .finehelp{text-align:left}
+@media(max-width:700px){.library-intro{display:block}.library-intro>.ls-action{position:static;display:inline-flex;margin-top:16px;min-height:40px;font-size:13px}.library-intro .eyebrow{padding-right:0}body[data-page="index"] #openbtn{width:auto;flex:0 0 auto;max-width:90px}body[data-page="index"] #point{display:block;min-width:140px;max-width:none;width:0;flex:1 1 auto}body[data-page="index"] .library-intro>div{min-width:0;width:100%}body[data-page="index"] .hero-lede{max-width:100%;white-space:normal}body[data-page="index"] .library-aside>.eyebrow{display:none}body[data-page="index"] .resolver-field{display:flex;flex-direction:row;flex-wrap:nowrap;gap:8px}body[data-page="index"] .ls-journey{display:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+@media(max-width:700px){body[data-page="index"] #truststrip{display:none!important}}
 /* LS:NAV end */
 </style>
 </head>
@@ -432,10 +628,9 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
   </a>
   <nav class="ls-links" aria-label="Ledger Scrolls">
     <a href="./index.html" data-nav="index">Library</a>
-    <a href="./calculator.html" data-nav="calculator">Mint a scroll</a>
-    <a href="./ledger-book.html" data-nav="book">Ledger Book</a>
-    <a href="./ledger-chess.html" data-nav="chess">Chess</a>
-    <a href="./media.html" data-nav="media">What lives forever</a>
+    <a href="./calculator.html" data-nav="calculator">Publish</a>
+    <a href="./ledger-book.html" data-nav="book">Guestbooks</a>
+    <a href="./media.html" data-nav="media">How it works</a>
   </nav>
 </header>
 <!-- LS:NAV end -->
@@ -449,73 +644,45 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
 
 <main>
 
-<!-- HERO -->
+<!-- A working library, with the publishing journey one click away. -->
 <section class="hero" id="hero">
+ <div class="container library-intro">
+  <div><span class="eyebrow">THE PUBLIC ARCHIVE / CARDANO</span>
+   <h1 class="hero-title">Works worth <em>keeping.</em></h1>
+   <p class="hero-lede">Preserve the original. Give people a place to respond.</p>
+  </div>
+  <a class="ls-action primary" href="./calculator.html">Publish a work <span aria-hidden="true">↗</span></a>
+ </div>
  <div class="container">
-  <span class="eyebrow">Immutable media on Cardano</span>
-  <h1 class="hero-title">A library that <em>cannot burn</em></h1>
-  <p class="hero-lede"><b>This site hosts nothing.</b> Paste a pointer &mdash; your browser raises the
-  bytes from the Cardano ledger, rebuilds them, and <b>verifies every hash</b> before a single word renders.</p>
-  <p class="hero-strap"><em>Unfindable by bots. Verifiable by anyone. Deletable by no one.</em></p>
-
   <div class="resolver">
+   <label for="point" class="ls-label">Open a work, library, or guestbook</label>
    <div class="resolver-field">
-    <span class="resolver-ic" aria-hidden="true">
-     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-    </span>
-    <input id="point" placeholder="paste a $handle, a Library Policy ID, or a scroll pointer&hellip;" spellcheck="false" autocomplete="off" autocapitalize="off">
-    <button id="openbtn">Read</button>
+    <span class="resolver-ic" aria-hidden="true">↗</span>
+    <input id="point" placeholder="Paste a link, $handle, or on-chain pointer" spellcheck="false" autocomplete="off" autocapitalize="off">
+    <button id="openbtn">Open</button>
    </div>
    <p id="resolvermsg" class="resolver-msg" role="status" aria-live="polite" hidden></p>
-   <ul class="reads-legend" aria-label="What the reader accepts">
-    <li><code>$handle</code><span>opens that wallet&rsquo;s latest library &mdash; no address to remember</span></li>
-    <li><code>library policy id</code><span>a whole library &mdash; opens the latest registry head under it</span></li>
-    <li><code>txHash#ix</code><span>a single scroll &mdash; rebuilds &amp; verifies that file</span></li>
-   </ul>
-   <p class="resolver-hint">Not a walled garden &mdash; anyone&rsquo;s scrolls, channels, and registries resolve here.</p>
+   <div class="ls-resolver-bottom"><span>Free to read. No wallet needed.</span><span>Try <button id="regopen" class="text-action">$beacn library</button> · <a href="./ledger-book.html?book=%24beacn">guestbooks ↗</a></span></div>
   </div>
-
-  <div class="reg-advert" style="margin:22px auto 6px;max-width:780px;background:linear-gradient(180deg,#0f1420,#0b0f19);border:1px solid #26304a;border-radius:16px;padding:18px 20px;box-shadow:0 10px 40px rgba(0,0,0,.35)">
-   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-    <span style="display:inline-flex;align-items:center;gap:6px;font:800 12px/1 sans-serif;letter-spacing:.08em;color:#0b0f19;background:linear-gradient(90deg,#7fb0ff,#2f6bff);border-radius:999px;padding:6px 11px">📚 BEACN&nbsp;LIBRARY</span>
-    <span style="font:600 12.5px/1.4 sans-serif;color:#8fa0c4">live on Cardano · always opens the latest catalog</span>
-   </div>
-   <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px">
-    <span style="font:600 15px/1.5 sans-serif;color:#c9d3e6">To visit BEACN&rsquo;s Library, visit</span>
-    <button id="regopen" style="min-height:46px;padding:0 24px;border:0;border-radius:999px;background:linear-gradient(90deg,#2f6bff,#1f44ff);color:#fff;font:800 19px/1 monospace;letter-spacing:.01em;cursor:pointer;box-shadow:0 4px 14px rgba(47,107,255,.35)">$beacn&nbsp;→</button>
-   </div>
-   <div style="font:12.5px/1.5 sans-serif;color:#7f8ba3;margin-top:10px">Your ADA Handle is your library card — the reader looks up the wallet behind <b style="color:#9db4e0">$beacn</b> and opens its newest <b style="color:#9db4e0">Registry Head</b>. Nothing hardcoded; mint a new catalog version and the shelf updates itself.</div>
-  </div>
-
-  <ul class="trust-strip" id="truststrip">
-   <li><span class="ti">&#128269;</span><div><b>Verify, don&rsquo;t trust</b><span>SHA-256 recomputed locally against an on-chain commitment.</span></div></li>
-   <li><span class="ti">&#127760;</span><div><b>Hosts nothing</b><span>The page is a lens. Your browser does the querying.</span></div></li>
-   <li><span class="ti">&#9889;</span><div><b>Zero dependencies</b><span>One self-contained file. No build, no CDN, no servers of record.</span></div></li>
-   <li><span class="ti">&#128184;</span><div><b>One fee, forever</b><span>No renewals, no pinning, no month two. <a href="media.html">What can live forever &rarr;</a></span></div></li>
-   <li><span class="ti">&#128374;&#65039;</span><div><b>Off the conventional web</b><span>A scroll has no ordinary content URL and must be reassembled from transactions. Search engines do not do that work; blockchain indexers can. This is not privacy.</span></div></li>
-  </ul>
+  <div class="ls-journey" id="truststrip"><span><b>01</b> Preserve the work</span><span><b>02</b> Check the bytes</span><span><b>03</b> Collect signed entries</span></div>
  </div>
 </section>
-
-<!-- LIBRARY -->
 <section id="library" class="container section">
- <div class="shelftools">
-  <div class="head">
-   <h2 class="section-title" id="regtitle">On-chain Registry</h2>
-   <p class="section-sub" id="reginfo">Pulled live from the on-chain registry — nothing hardcoded.</p>
-   <p class="section-sub"><b>Click a scroll to read it</b> — your browser rebuilds it from the ledger and verifies its hash before a byte renders.</p>
-  </div>
-  <div class="shelftools-controls">
-   <input id="search" placeholder="search the stacks&hellip;" autocomplete="off">
-   <div class="chips" role="tablist" aria-label="Filter by storage form">
-    <button class="chip on" data-f="all">All</button>
-    <button class="chip" data-f="lock">Lock</button>
-    <button class="chip" data-f="chain">Chain</button>
-    <button class="chip" data-f="pages">Pages</button>
-   </div>
+ <div class="library-layout">
+  <aside class="library-aside">
+   <span class="eyebrow">COLLECTIONS</span>
+   <button class="collection-current" id="collection-public" aria-pressed="true">BEACN library <span id="shelfcount">—</span></button>
+   <button class="collection-current" id="collection-saved" aria-pressed="false">Saved on this device <span id="savedcount">0</span></button>
+   <a class="collection-link" href="./ledger-book.html">Guestbooks <span>↗</span></a>
+   <div class="aside-note"><span class="eyebrow">A WORK + ITS PEOPLE</span><p>A file stays fixed. A guestbook stays open for new entries.</p><a href="./ledger-book.html?create=1">Create a guestbook ↗</a></div>
+   <details class="storage-filter"><summary>Storage formats</summary><div class="chips" aria-label="Filter by storage format"><button class="chip on" data-f="all" aria-pressed="true">All</button><button class="chip" data-f="lock" aria-pressed="false">Locked datum</button><button class="chip" data-f="chain" aria-pressed="false">Transaction pages</button><button class="chip" data-f="pages" aria-pressed="false">Legacy NFTs</button></div></details>
+  </aside>
+  <div class="library-content">
+   <div class="shelftools"><div class="head"><span class="eyebrow">LIVE COLLECTION</span><h2 class="section-title" id="regtitle">BEACN library</h2><p class="section-sub" id="reginfo" role="status" aria-live="polite">Loading the collection from Cardano…</p></div><label class="ls-search"><span class="sr">Search works</span><input id="search" placeholder="Search this collection" autocomplete="off"></label></div>
+   <div id="shelf"></div>
+   <div id="saved-shelf" hidden></div>
   </div>
  </div>
- <div id="shelf"></div>
 </section>
 
 <!-- READER -->
@@ -523,17 +690,22 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
  <div class="docbar">
   <button class="ghost" id="backbtn">&#8592; Back</button>
   <h2 id="doctitle"></h2>
-  <button class="ghost" id="dlbtn" style="display:none">&#11015; Original bytes</button>
+  <button class="ghost" id="dlbtn" style="display:none">Download original</button>
  </div>
  <ol class="steps">
   <li class="step" id="st1"><b>Point</b><span>locate on chain</span></li>
   <li class="step" id="st2"><b>Fetch</b><span>pull raw data</span></li>
   <li class="step" id="st3"><b>Rebuild</b><span>assemble bytes</span></li>
   <li class="step" id="st4"><b>Verify</b><span>SHA-256 seal</span></li>
-  <li class="step" id="st5"><b>Render</b><span>only if proven</span></li>
+  <li class="step" id="st5"><b>Read</b><span>safe preview</span></li>
  </ol>
- <details class="logbox" open><summary>Trust log &mdash; every request this page makes</summary><div id="log"></div></details>
+ <details class="logbox"><summary>Requests and reconstruction details</summary><div id="log"></div></details>
  <div class="verdict" id="verdict"><div class="v" id="vbig"></div><div class="d" id="vsub"></div></div>
+ <div id="work-actions" class="work-actions" hidden>
+  <button class="ghost" id="savework">Save to my shelf</button><button class="ghost" id="copywork">Copy link</button><button class="ghost" id="exportproof">Download receipt</button><a id="attachbook" class="ls-action" href="./ledger-book.html?create=1">Add a guestbook ↗</a>
+  <span id="work-action-status" role="status" aria-live="polite"></span>
+ </div>
+ <div id="linked-context" class="linked-work" hidden></div>
  <div class="stage" id="stage"></div>
  <div class="receipt" id="receipt"></div>
 </section>
@@ -551,24 +723,24 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
 <!-- ABOUT -->
 <section id="about" class="about">
  <div class="container">
-  <h2 class="section-title">How this room works</h2>
-  <p class="section-sub">The trust model is part of the interface &mdash; nothing here asks you to take its word for it.</p>
+  <h2 class="section-title">What the evidence tells you</h2>
+  <p class="section-sub">Stored publicly on Cardano. Reconstructed here. The checks have specific limits.</p>
   <div class="cols">
    <div class="col">
     <h3><span class="dot"></span>Verify, don&rsquo;t trust</h3>
-    <p>Each scroll carries an on-chain SHA-256 commitment. This page recomputes it from the reconstructed bytes, locally, every time. A mismatch renders nothing. HTML scrolls open in a fully sandboxed frame: hash-verified is not the same as safe-to-execute, so scripts never run.</p>
+    <p>The reader computes SHA-256 locally and compares it with a declared fingerprint when available. A mismatch blocks rendering. Without a commitment, the file is explicitly unverified. A match proves byte consistency; it does not establish authorship, factual truth, or independent chain inclusion. HTML is sandboxed with scripts and network access blocked.</p>
    </div>
    <div class="col">
-    <h3><span class="dot"></span>Three forms of stone</h3>
+    <h3><span class="dot"></span>One work, different storage formats</h3>
     <ul>
-     <li><b>Lock</b> &mdash; the whole file in one unspendable UTxO datum; in the live ledger state forever.</li>
-     <li><b>Chain</b> &mdash; any size, as bare metadata transactions listed by a locked manifest. <a href="registry/spec/manifest-chain-v2.md">spec</a></li>
+     <li><b>Lock</b> &mdash; the whole file in one unspendable UTxO datum; retained while the Cardano ledger retains that output.</li>
+     <li><b>Chain</b> &mdash; larger files, as bare metadata transactions listed by a locked manifest. <a href="registry/spec/manifest-chain-v2.md">spec</a></li>
      <li><b>Pages</b> &mdash; the original CIP-25 page NFTs (the Bible, the Constitutions); read forever, superseded for writing.</li>
     </ul>
    </div>
    <div class="col">
-    <h3><span class="dot"></span>Write your own</h3>
-    <p>The protocol is open, tested, and implementable by strangers: <a href="https://github.com/BEACNpool/ledger-scrolls">the repository</a> &mdash; minting tools, spec, conformance vectors. Start by <a href="calculator.html">minting a scroll</a> &mdash; price your file, learn how it works, and mint it right from your browser &mdash; see <a href="media.html">which media types work</a>, read the tutorial scroll above (it lives on-chain), or launch a <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/publisher-channel-v1.md">publisher channel</a> like <a href="leaks.html">BEACN Leaks</a> &mdash; a byline nobody can forge.</p>
+    <h3><span class="dot"></span>Preserve, then invite responses</h3>
+    <p>A guestbook can permanently name a work and its fingerprint. Entries are public transactions; a name typed into an entry is not identity proof. Long-term access depends on Cardano and available history providers. The open protocol is documented in <a href="https://github.com/BEACNpool/ledger-scrolls">the repository</a> &mdash; minting tools, spec, conformance vectors. Start by <a href="calculator.html">minting a scroll</a> &mdash; price your file, learn how it works, and mint it right from your browser &mdash; see <a href="media.html">which media types work</a>, read the tutorial scroll above (it lives on-chain), or launch a <a href="https://github.com/BEACNpool/ledger-scrolls/blob/main/registry/spec/publisher-channel-v1.md">publisher channel</a> like <a href="leaks.html">BEACN Leaks</a> &mdash; a byline nobody can forge.</p>
    </div>
    <div class="col">
     <h3><span class="dot"></span>Your trust anchors</h3>
@@ -587,15 +759,91 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
 
 <script>
 "use strict";
+function ledgerSavedItems(){
+  try{const a=JSON.parse(localStorage.getItem('ls.shelf.v1')||'[]');return Array.isArray(a)?a.filter(x=>x&&typeof x.title==='string'&&typeof x.id==='string'&&['mainnet','preview'].includes(x.network)&&(x.kind==='book'?/^[0-9a-f]{56}\.(?:[0-9a-f]{2}){0,32}$/i.test(x.key||''):/^[0-9a-f]{64}$/i.test(x.tx||'')||/^[0-9a-f]{56}$/i.test(x.policy||''))).slice(0,200):[];}catch(_){return [];}
+}
+function ledgerSaveItem(item){
+  item={...item,title:String(item.title||'Untitled').slice(0,200),network:item.network||'mainnet'};
+  item.id=item.network+':'+(item.kind==='book'?item.key:(item.tx?item.tx+'#'+item.ix:item.policy));
+  try{const a=ledgerSavedItems().filter(x=>x.id!==item.id);localStorage.setItem('ls.shelf.v1',JSON.stringify([item,...a].slice(0,200)));return true;}catch(_){return false;}
+}
+function ledgerRemoveItem(id){try{localStorage.setItem('ls.shelf.v1',JSON.stringify(ledgerSavedItems().filter(x=>x.id!==id)));}catch(_){}}
+function ledgerDownload(name,data){const u=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);}
+
+let currentWork=null;
+function normalizeOpenInput(raw){
+  raw=String(raw||'').trim();
+  if(/^https?:\/\//i.test(raw)){
+    try{const u=new URL(raw);if(u.searchParams.has('book'))return 'book:'+u.searchParams.get('book');
+      if(u.searchParams.has('tx')){const q=new URLSearchParams();for(const k of ['tx','ix','sha256','title','network','fromBook'])if(u.searchParams.has(k))q.set(k,u.searchParams.get(k));location.href='./index.html?'+q.toString();return '';}
+      if(/^#open=[0-9a-f]{64}$/i.test(u.hash))return u.hash.slice(6)+'#0';
+      if(/^#s=[a-z0-9-]+$/i.test(u.hash)){location.href='./index.html'+u.hash;return '';}
+      if(/^#p=[0-9a-f]{56}$/i.test(u.hash))return u.hash.slice(3);
+    }catch(_){}
+    return raw;
+  }
+  return raw;
+}
+function workLink(item){
+  if(item.tx){const q=new URLSearchParams({tx:item.tx,ix:String(item.ix||0),network:item.network||'mainnet'});if(item.hash)q.set('sha256',item.hash);if(item.title)q.set('title',item.title);return './index.html?'+q.toString();}
+  return './index.html?policy='+encodeURIComponent(item.policy)+'&network='+encodeURIComponent(item.network||'mainnet');
+}
+function setCurrentWork(e,r){
+  const m=(e.txin||'').match(/^([a-f0-9]{64})#(\d+)$/i);
+  currentWork={kind:'work',title:e.title||e.name||'Untitled work',tx:m?m[1]:null,ix:m?Number(m[2]):0,policy:e.policy||null,hash:r.hash,network:ACTIVE_NETWORK,contentType:r.contentType,bytes:r.bytes.length,checked:r.verified===true,receipt:r.receipt};
+  $('work-actions').hidden=false;
+  const attach=$('attachbook');attach.hidden=!m;
+  if(m){const q=new URLSearchParams({create:'1',tx:m[1],ix:m[2],sha256:r.hash,title:currentWork.title,network:ACTIVE_NETWORK});attach.href='./ledger-book.html?'+q.toString();}
+  const q=new URLSearchParams(location.search);
+  if(q.has('fromBook')){const c=$('linked-context');c.hidden=false;c.replaceChildren();const a=document.createElement('a');a.href='./ledger-book.html?book='+encodeURIComponent(q.get('fromBook').replace('.', '.0x'))+(ACTIVE_NETWORK==='preview'?'&network=preview':'');a.textContent='Back to the guestbook ↗';c.append(a);}
+}
+async function openLinkedWork(q){
+  const tx=q.get('tx'),ix=Number(q.get('ix')||0),hash=q.get('sha256');
+  try{
+    if(!/^[0-9a-f]{64}$/i.test(tx||'')||!Number.isSafeInteger(ix)||ix<0||ix>65535)throw new Error('Invalid work pointer');
+    if(hash&&!/^[0-9a-f]{64}$/i.test(hash))throw new Error('Invalid file fingerprint');
+    let expected=hash,source='fingerprint supplied in this link',title=q.get('title')||'Preserved work';
+    if(q.has('fromBook')){
+      const key=q.get('fromBook');if(!/^[0-9a-f]{56}\.(?:[0-9a-f]{2}){0,32}$/i.test(key))throw new Error('Invalid guestbook identity');
+      const [policy,name]=key.split('.'),infos=await api('/asset_info',{_asset_list:[[policy,name]]},true),a=(infos||[]).find(a=>a.policy_id===policy&&a.asset_name===name);
+      const g=a?.minting_tx_metadata?.['721']?.[policy],md=g&&(g[a.asset_name_ascii]||g[name]),sub=md?.subject;
+      if(md?.Type!=='Ledger Book'||!sub||sub.v!==1||sub.tx!==tx||sub.ix!==ix||sub.network!==ACTIVE_NETWORK||sub.sha256!==hash)throw new Error('This link does not match the work attached to the guestbook mint metadata');
+      source='fingerprint in the guestbook mint metadata';title=sub.title||title;
+    }
+    show('reader');resetReader();$('doctitle').textContent=title;
+    const datum=await utxoDatumHex(tx+'#'+ix),form=parseManifest(datum)?'chain':'lock';
+    await openScroll({name:'work-'+tx.slice(0,12),title,txin:tx+'#'+ix,form,expectedSha:expected,expectedSource:source});
+  }catch(e){show('reader');resetReader();$('verdict').className='verdict bad';$('vbig').textContent='Could not verify this work';$('vsub').textContent=e.message;}
+}
+function renderSaved(){
+  const items=ledgerSavedItems();$('savedcount').textContent=items.length;
+  const host=$('saved-shelf');host.replaceChildren();
+  const q=$('search').value.toLowerCase();
+  const list=items.filter(x=>x.title.toLowerCase().includes(q));
+  if(!list.length){const d=document.createElement('div');d.className='library-empty';d.textContent=items.length?'No saved items match this search.':'Your shelf is empty. Open a work or guestbook and save its link here. These are device-local bookmarks; keep a downloaded receipt too.';host.append(d);return;}
+  for(const item of list){const row=document.createElement('div');row.className='saved-row';const body=document.createElement('div'),a=document.createElement('a'),p=document.createElement('p'),remove=document.createElement('button');a.href=item.kind==='book'?'./ledger-book.html?book='+encodeURIComponent(item.key.replace('.', '.0x'))+(item.network==='preview'?'&network=preview':''):workLink(item);a.textContent=item.title;p.textContent=(item.kind==='book'?'Guestbook':'Work')+' · '+item.network+' · saved on this device';remove.type='button';remove.textContent='Remove';remove.setAttribute('aria-label','Remove '+item.title+' from this device');remove.onclick=()=>{ledgerRemoveItem(item.id);renderSaved();};body.append(a,p);row.append(body,remove);host.append(row);}
+}
+function initWorkspace(){
+  renderSaved();
+  $('savework').onclick=()=>{if(currentWork){const ok=ledgerSaveItem(currentWork);$('work-action-status').textContent=ok?'Saved on this device.':'Browser storage unavailable. Download the receipt instead.';renderSaved();}};
+  $('copywork').onclick=async()=>{if(!currentWork)return;const link=new URL(workLink(currentWork),location.href).href;try{await navigator.clipboard.writeText(link);$('work-action-status').textContent='Work link copied.';}catch(_){$('work-action-status').textContent='Copy this link: '+link;}};
+  $('exportproof').onclick=()=>{if(!currentWork)return;ledgerDownload('ledger-work-receipt.json',{schema:'ledger-work-receipt-v1',...currentWork,source:sources(),checkedAt:new Date().toISOString(),trust:'Local reconstruction from provider data. Hash consistency is not independent chain inclusion, authorship, or truth.'});};
+  const change=saved=>{$('shelf').hidden=saved;$('saved-shelf').hidden=!saved;$('collection-saved').setAttribute('aria-pressed',String(saved));$('collection-public').setAttribute('aria-pressed',String(!saved));if(saved)renderSaved();};
+  $('collection-saved').onclick=()=>change(true);$('collection-public').onclick=()=>change(false);
+  $('search').addEventListener('input',renderSaved);
+  window.addEventListener('storage',renderSaved);
+}
+
 /* ════════════════════════ providers ════════════════════════ */
 // Browsers can only use CORS-capable sources: api.koios.rest omits the
 // Access-Control-Allow-Origin header on real responses, so it is deliberately
 // NOT in this list (it still works for curl/CLI — see docs/ARCHITECTURE.md).
 // Each entry runs the open recipe in tools/cors-mirror/ — deploy your own and
 // set it in settings, or add it here. Bytes are hash-verified locally
-// regardless of endpoint, so a mirror can hide data but never forge it.
+// against available commitments; provider chain facts are not independently proven.
+const ACTIVE_NETWORK=new URLSearchParams(location.search).get('network')==='preview'?'preview':'mainnet';
 const DEFAULT_SOURCES = ['https://koios.beacn.workers.dev/api/v1'];
-const CANONICAL_LOCK = 'addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn';
+const CANONICAL_LOCK = ACTIVE_NETWORK==='preview'?'addr_test1wrqvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsz4mvrk':'addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn';
 const LS = window.localStorage;
 const sources = () => {
   let c = LS.getItem('ls.source');
@@ -604,6 +852,7 @@ const sources = () => {
     // migrate away stored direct-Koios sources in any form — they never answer browsers (CORS)
     if (!c || /^https?:\/\/(api|preview)\.koios\.rest([/?#]|$)/i.test(c)){ LS.removeItem('ls.source'); c = null; }
   }
+  if(ACTIVE_NETWORK==='preview')return ['https://koios.beacn.workers.dev/preview/api/v1'];
   return c ? [c, ...DEFAULT_SOURCES.filter(s=>s!==c)] : [...DEFAULT_SOURCES];
 };
 
@@ -647,12 +896,15 @@ async function api(path, body, quiet){
 }
 
 /* ════════════════════════ bytes & hashing ════════════════════════ */
-const hex2b = h => { h=String(h).replace(/^0x/i,''); const b=new Uint8Array(h.length/2); for(let i=0;i<h.length;i+=2)b[i/2]=parseInt(h.substr(i,2),16); return b; };
+const hex2b = h => { h=String(h).replace(/^0x/i,''); if(!/^(?:[0-9a-f]{2})*$/i.test(h))throw new Error('Invalid hexadecimal bytes'); return Uint8Array.from(h.match(/../g)||[],x=>parseInt(x,16)); };
+const MAX_SCROLL_BYTES=128*1024*1024;
 const b2hex = b => Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('');
 const sha256 = async b => b2hex(new Uint8Array(await crypto.subtle.digest('SHA-256',b)));
 const segHex = s => { if(s&&typeof s==='object') s=s.bytes??s.seg??''; s=String(s).trim(); return s.toLowerCase().startsWith('0x')?s.slice(2):s; };
 const td = new TextDecoder();
-async function gunzip(bytes,maxBytes=128*1024*1024){
+async function gunzip(bytes,maxBytes=MAX_SCROLL_BYTES){
+  if(!Number.isSafeInteger(maxBytes)||maxBytes<0)throw new Error('Invalid decoded size');
+  maxBytes=Math.min(maxBytes,MAX_SCROLL_BYTES);
   const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
   const reader=stream.getReader(), chunks=[]; let total=0;
   for(;;){
@@ -666,31 +918,38 @@ async function gunzip(bytes,maxBytes=128*1024*1024){
 const concatBytes = arrs => { const n=arrs.reduce((a,b)=>a+b.length,0); const o=new Uint8Array(n); let p=0; for(const a of arrs){o.set(a,p);p+=a.length;} return o; };
 
 /* ════════ CBOR (uint/nint/bytes/text/array/tag, definite + indefinite) ════════ */
-function cbor(raw,pos=0){
-  const len=(ai,p)=>{ if(ai<24)return[ai,p]; const w={24:1,25:2,26:4,27:8}[ai]; if(!w)throw new Error('cbor len'); let n=0; for(let i=0;i<w;i++)n=n*256+raw[p+i]; return[n,p+w]; };
-  const mt=raw[pos]>>5, ai=raw[pos]&31;
-  if(mt===0)return len(ai,pos+1);
-  if(mt===1){const[n,p]=len(ai,pos+1);return[-1-n,p];}
+function cbor(raw,pos=0,depth=0){
+  if(depth>64)throw new Error('CBOR nesting exceeds 64');
+  const need=(p,n)=>{if(!Number.isSafeInteger(p)||!Number.isSafeInteger(n)||n<0||p<0||p+n>raw.length)throw new Error('Truncated or oversized CBOR');};
+  need(pos,1);
+  const length=(ai,p,integer=false)=>{if(ai<24)return[ai,p];const w={24:1,25:2,26:4,27:8}[ai];if(!w)throw new Error('Invalid CBOR length');need(p,w);let big=0n;for(let i=0;i<w;i++)big=big*256n+BigInt(raw[p+i]);if(big>BigInt(Number.MAX_SAFE_INTEGER)){if(integer)return[big,p+w];throw new Error('Unsafe CBOR length');}return[Number(big),p+w];};
+  const mt=raw[pos]>>5,ai=raw[pos]&31;
+  const read=p=>cbor(raw,p,depth+1);
+  if(mt===0)return length(ai,pos+1,true);
+  if(mt===1){const[n,p]=length(ai,pos+1,true);return[typeof n==='bigint'?-1n-n:-1-n,p];}
   if(mt===2||mt===3){
-    if(ai===31){ // indefinite: concat definite chunks
-      let p=pos+1; const parts=[];
-      while(raw[p]!==0xff){ const cmt=raw[p]>>5,cai=raw[p]&31; if(cmt!==mt||cai===31)throw new Error('cbor chunk'); const[n,q]=len(cai,p+1); parts.push(raw.subarray(q,q+n)); p=q+n; }
-      const v=concatBytes(parts); return[mt===2?v:td.decode(v),p+1];
-    }
-    const[n,p]=len(ai,pos+1); const v=raw.subarray(p,p+n); return[mt===2?v:td.decode(v),p+n];
+    let bytes,p;
+    if(ai===31){p=pos+1;const parts=[];while(true){need(p,1);if(raw[p]===255){p++;break;}if(raw[p]>>5!==mt||(raw[p]&31)===31)throw new Error('Invalid CBOR chunk');const[n,q]=length(raw[p]&31,p+1);need(q,n);parts.push(raw.subarray(q,q+n));p=q+n;}bytes=concatBytes(parts);}
+    else{const[n,q]=length(ai,pos+1);need(q,n);bytes=raw.subarray(q,q+n);p=q+n;}
+    return[mt===2?bytes:new TextDecoder('utf-8',{fatal:true}).decode(bytes),p];
   }
-  if(mt===4){
-    if(ai===31){ let p=pos+1; const o=[]; while(raw[p]!==0xff){ const[v,q]=cbor(raw,p); o.push(v); p=q; } return[o,p+1]; }
-    let[n,p]=len(ai,pos+1); const o=[]; for(let i=0;i<n;i++){const[v,q]=cbor(raw,p);o.push(v);p=q;} return[o,p];
+  if(mt===4||mt===5){
+    let n,p;if(ai===31){n=null;p=pos+1;}else{[n,p]=length(ai,pos+1);need(p,n*(mt===5?2:1));}
+    const out=mt===4?[]:new Map();let count=0;
+    while(n===null||count<n){need(p,1);if(n===null&&raw[p]===255){p++;break;}const[v,q]=read(p);p=q;if(mt===4)out.push(v);else{const[w,r]=read(p);if(out.has(v))throw new Error('Duplicate CBOR map key');out.set(v,w);p=r;}count++;}
+    return[out,p];
   }
-  if(mt===6){const[n,p]=len(ai,pos+1);const[v,q]=cbor(raw,p);return[{tag:n,value:v},q];}
-  throw new Error('cbor major '+mt);
+  if(mt===6){const[tag,p]=length(ai,pos+1);const[value,q]=read(p);return[{tag,value},q];}
+  if(mt===7&&ai>=20&&ai<=22)return[ai===20?false:ai===21?true:null,pos+1];
+  throw new Error('Unsupported CBOR value');
 }
+
 // datum → payload bytes: a byte string, or a constructor whose first field is bytes
 function datumBytes(datumHex){
   const raw = hex2b(datumHex);
   try{
-    const [v] = cbor(raw);
+    const [v,end] = cbor(raw);
+    if(end!==raw.length)throw new Error('Trailing bytes after datum');
     if (v instanceof Uint8Array) return v;
     if (v && v.tag >= 121 && v.tag <= 127 && Array.isArray(v.value) && v.value[0] instanceof Uint8Array) return v.value[0];
   }catch(e){ void e; /* not CBOR we understand — treat datum as raw bytes */ }
@@ -700,9 +959,10 @@ function datumBytes(datumHex){
 /* ════════════════════════ chain queries ════════════════════════ */
 async function utxoDatumHex(txin, quiet){
   const rows = await api('/utxo_info',{_utxo_refs:[txin],_extended:true}, quiet);
-  const row=rows?.[0];
+  const row=(rows||[]).find(r=>r.tx_hash===txin.split('#')[0]&&Number(r.tx_index)===Number(txin.split('#')[1]));
   const addr=row?.address||row?.payment_addr?.bech32;
-  if(addr&&addr!==CANONICAL_LOCK)throw new Error(`scroll output is not at the canonical always-fail address (${addr})`);
+  if(!addr||addr!==CANONICAL_LOCK)throw new Error(`scroll output is not at the canonical always-fail address (${addr})`);
+  if(row?.is_spent===true)throw new Error('Scroll output has been spent');
   const hexd = row?.inline_datum?.bytes;
   if(!hexd) throw new Error(`no inline datum at ${txin}`);
   return hexd;
@@ -736,14 +996,18 @@ async function resolveLock(e){
 }
 
 function parseManifest(datumHex){
-  try{
-    const [m] = cbor(hex2b(datumHex));
-    if(!m || m.tag!==121 || !Array.isArray(m.value) || m.value.length<8 || m.value[0]!==2) return null;
-    const f=m.value, nxt=f[7];
-    return { contentType: td.decode(f[1]), codec: td.decode(f[2]), size:f[3],
-      shaDec:b2hex(f[4]), shaEnc:b2hex(f[5]), pages:f[6].map(b2hex),
-      next: (nxt&&nxt.tag===122&&nxt.value) ? `${b2hex(nxt.value[0])}#${nxt.value[1]}` : null };
-  }catch(e){ void e; return null; }
+  const raw=hex2b(datumHex); let m,end;
+  try{[m,end]=cbor(raw);}catch(_){return null;}
+  if(!m||m.tag!==121||!Array.isArray(m.value)||m.value[0]!==2)return null;
+  const f=m.value;
+  const bytes=(v,n)=>v instanceof Uint8Array&&(n===undefined||v.length===n);
+  if(end!==raw.length||f.length!==8||!bytes(f[1])||!bytes(f[2])||!Number.isSafeInteger(f[3])||f[3]<0||f[3]>MAX_SCROLL_BYTES||!bytes(f[4],32)||!bytes(f[5],32)||!Array.isArray(f[6])||f[6].length>25000||!f[6].every(x=>bytes(x,32)))throw new Error('Invalid or oversized scroll manifest');
+  const codec=td.decode(f[2]),contentType=td.decode(f[1]);
+  if(!['none','gzip'].includes(codec)||!contentType||contentType.length>128)throw new Error('Unsupported manifest codec or media type');
+  const nxt=f[7];let next=null;
+  if(nxt?.tag===122&&Array.isArray(nxt.value)&&nxt.value.length===2&&bytes(nxt.value[0],32)&&Number.isSafeInteger(nxt.value[1])&&nxt.value[1]>=0)next=b2hex(nxt.value[0])+'#'+nxt.value[1];
+  else if(!(nxt?.tag===121&&Array.isArray(nxt.value)&&nxt.value.length===0))throw new Error('Invalid continuation pointer');
+  return {contentType,codec,size:f[3],shaDec:b2hex(f[4]),shaEnc:b2hex(f[5]),pages:f[6].map(b2hex),next};
 }
 
 async function resolveChain(e){
@@ -769,7 +1033,10 @@ async function resolveChain(e){
     const pg = metas[pages[i]]?.['22025'] ?? metas[pages[i]]?.[22025];
     if(!pg?.p) throw new Error(`page ${i+1} metadata missing (tx ${pages[i]})`);
     if(Number(pg.i)!==i+1||Number(pg.n)!==pages.length)throw new Error(`page ${i+1} index/count mismatch`);
+    if(!Array.isArray(pg.p)||pg.p.length>16384)throw new Error('Invalid page segment count');
+    if(pg.p.some(x=>{const h=segHex(x);return h.length>128||!(/^(?:[a-f0-9]{2})*$/i.test(h));}))throw new Error('Invalid page segment bytes');
     const ph = pg.p.map(segHex).join('');
+    if(hexAll.length+ph.length>MAX_SCROLL_BYTES*2)throw new Error('Encoded stream exceeds safe limit');
     if(pg.sha && await sha256(hex2b(ph)) !== segHex(pg.sha).toLowerCase()) throw new Error(`page ${i+1} hash mismatch`);
     log('ok',`  page ${i+1}/${pages.length}: ${ph.length/2} bytes ✓`);
     hexAll+=ph;
@@ -779,9 +1046,10 @@ async function resolveChain(e){
   if(encGot!==man.shaEnc) throw new Error('encoded stream hash mismatch');
   log('ok',`  encoded sha256 ✓ ${encGot}`);
   if(man.codec==='gzip'){ bytes=await gunzip(bytes,man.size); log('ok',`  gunzip → ${bytes.length} bytes`); }
-  else if(bytes.length!==man.size)throw new Error(`decoded size mismatch: expected ${man.size}, got ${bytes.length}`);
+  if(bytes.length!==man.size)throw new Error(`decoded size mismatch: expected ${man.size}, got ${bytes.length}`);
   step(3,'done');
-  const e2 = {...e, contentType: e.contentType||man.contentType, sha256: man.shaDec};
+  if(e.sha256&&e.sha256.toLowerCase()!==man.shaDec)throw new Error('Linked work fingerprint differs from manifest commitment');
+  const e2 = {...e, contentType:man.contentType, sha256:man.shaDec};
   return finish(bytes, e2, 'Chain Scroll', { pointer:`manifest-chain-v2 · ${e.txin}` }, pages.length);
 }
 
@@ -819,12 +1087,16 @@ async function finish(bytes, e, kindLabel, extraReceipt, pageCount){
   step(4,'on');
   const got = await sha256(bytes);
   let verified = null;
-  if (e.sha256){ verified = got === e.sha256.toLowerCase(); log(verified?'ok':'er', `  file sha256 ${verified?'✓':'✗ MISMATCH'} ${got}`); }
+  if(e.sha256&&!/^[0-9a-f]{64}$/i.test(e.sha256))throw new Error('Invalid SHA-256 commitment');
+  const expectation=e.sha256||e.expectedSha;
+  if(e.expectedSha&&!/^[0-9a-f]{64}$/i.test(e.expectedSha))throw new Error('Invalid linked fingerprint');
+  if(e.expectedSha&&got!==e.expectedSha.toLowerCase())throw new Error('SHA-256 mismatch with the linked work fingerprint — refusing to render');
+  if (expectation){ verified = got === expectation.toLowerCase(); log(verified?'ok':'er', `  file sha256 ${verified?'✓':'✗ MISMATCH'} ${got}`); }
   else log('h',`  file sha256 ${got} (no commitment on record — unverified)`);
   if (verified===false) { step(4,'fail'); throw new Error(`SHA-256 mismatch — expected ${e.sha256}, got ${got}. Refusing to render.`); }
   step(4,'done');
   return { bytes, contentType: e.contentType || sniff(bytes), verified, hash: got, kindLabel, pages: pageCount,
-    receipt: { ...extraReceipt, sha256: got, expected: e.sha256||'(none on record)', size: bytes.length } };
+    receipt: { ...extraReceipt, sha256: got, expected: expectation||'(none on record)', commitmentSource:e.sha256?'declared on-chain fingerprint':e.expectedSource||'none', size: bytes.length } };
 }
 
 function sniff(b){
@@ -873,6 +1145,7 @@ function mediaGroup(ct){
   if(c.startsWith('audio/'))return '🎧 Audio';
   return '🗃️ Other';
 }
+const MEDIA_ORDER=['📄 Documents','✍️ Plain Text & Markdown','🖼️ Images','🎧 Audio','🎬 Video','🗂️ Data & Datasets','🗃️ Other'];
 const GROUP_ORDER=['📄 Web Page (HTML)','📝 Markdown','✍️ Plain Text','✍️ Text','📕 PDF','🖼️ PNG Image','🖼️ JPEG Image','🖼️ GIF','🖼️ SVG','🖼️ WebP Image','🖼️ Image','🎬 MP4 Video','🎬 Video','🎧 MP3 Audio','🎧 OGG Audio','🎧 Audio','🗂️ CSV Data','🗂️ JSON','🗃️ Other'];
 let filter='all';
 
@@ -881,12 +1154,12 @@ function cardFor(e){
   if(e.sizeBytes)facts.push(`<span><b>${fmtSize(e.sizeBytes)}</b></span>`);
   if(e.pages!==undefined&&e.pages!==null)facts.push(`<span><b>${e.pages===0?'single coin':e.pages===1?'1 transaction':e.pages+' pages'}</b></span>`);
   if(e.codec&&e.codec!=='none')facts.push(`<span>${e.codec}</span>`);
-  facts.push(`<span class="copyhint">&#9654; click to read &amp; verify</span>`);
+  facts.push(`<span class="copyhint">Open work <span aria-hidden="true">↗</span></span>`);
   const ctShort=(e.contentType||'').split(';')[0];
-  const c=document.createElement('div'); c.className='card';
-  c.innerHTML=`<div class="ic">${esc(e.icon||'📄')}</div><h3></h3><p></p><div class="tags">
+  const c=document.createElement('article'); c.className='card';
+  c.innerHTML=`<div class="ic">${esc((e.contentType||'work').split('/').pop().split(';')[0].toUpperCase())} <span aria-hidden="true">↗</span></div><h3></h3><p></p><div class="tags">
     <span class="tag">${esc(typeLabel(e.contentType)||ctShort||'reading type…')}</span>
-    ${e.sha256?`<span class="tag ok" title="on-chain SHA-256 — recomputed and checked when you open it">&#128274; ${esc(e.sha256.slice(0,10))}…</span>`:''}</div>
+    ${e.sha256?`<span class="tag ok" title="on-chain SHA-256 — recomputed and checked when you open it">Fingerprint available</span>`:''}</div>
     ${facts.length?`<div class="facts">${facts.join('')}</div>`:''}`;
   c.querySelector('h3').textContent=e.title;
   c.querySelector('p').textContent=e.desc||'';
@@ -938,14 +1211,15 @@ function drawShelf(){
   for(const e of SHELF){
     if(filter!=='all'&&e.form!==filter)continue;
     if(q && !(e.title+e.desc+e.name).toLowerCase().includes(q))continue;
-    const g = typeLabel(e.contentType) || '🗃️ Other';
+    const g = mediaGroup(e.contentType||'');
     if(!groups.has(g))groups.set(g,[]);
     groups.get(g).push(e);
   }
-  const order=[...GROUP_ORDER.filter(g=>groups.has(g)),...[...groups.keys()].filter(g=>!GROUP_ORDER.includes(g))];
+  if(!groups.size)grid.innerHTML='<div class="library-empty">'+(SHELF.length?'No works match this search. Try another word or clear the storage filter.':'Loading works…')+'</div>';
+  const order=[...MEDIA_ORDER.filter(g=>groups.has(g)),...[...groups.keys()].filter(g=>!MEDIA_ORDER.includes(g))];
   for(const g of order){
     const hd=document.createElement('div'); hd.className='shelfgroup';
-    hd.innerHTML=`<h3>${esc(g)}</h3><span class="cnt">${groups.get(g).length} scroll${groups.get(g).length>1?'s':''}</span>`;
+    hd.innerHTML=`<h3>${esc(g.replace(/^[^A-Za-z]+/,''))}</h3><span class="cnt">${groups.get(g).length} scroll${groups.get(g).length>1?'s':''}</span>`;
     grid.appendChild(hd);
     const row=document.createElement('div'); row.className='grid';
     for(const e of groups.get(g)) row.appendChild(cardFor(e));
@@ -979,7 +1253,7 @@ function normSha(x){ let s=String(x||'').replace(/^0x/i,'').toLowerCase(); retur
 async function fetchMeta(e){
   try{
     if(e.form==='pages'){
-      const grab=async nh=>{ const inf=await api('/asset_info',{_asset_list:[[e.policy,nh]]},true); const a=inf&&inf[0]; if(!a) return null; const g=a.minting_tx_metadata&&a.minting_tx_metadata['721']&&a.minting_tx_metadata['721'][e.policy]; return g&&(g[a.asset_name_ascii]||Object.values(g)[0]); };
+      const grab=async nh=>{ const inf=await api('/asset_info',{_asset_list:[[e.policy,nh]]},true); const a=inf&&inf[0]; if(!a) return null; const g=a.minting_tx_metadata&&a.minting_tx_metadata['721']&&a.minting_tx_metadata['721'][e.policy]; return g&&(g[a.asset_name_ascii]||g[a.asset_name]); };
       let m=e.manifestAsset?await grab(hexName(e.manifestAsset)):null;
       if(!m){ const list=await api('/policy_asset_list',{_asset_policy:e.policy},true); const man=(list||[]).find(x=>{ try{ return td.decode(hex2b(x.asset_name||'')).toUpperCase().includes('MANIFEST'); }catch(_){ return false; } }); if(man) m=await grab(man.asset_name); }
       if(!m) return {};
@@ -989,7 +1263,7 @@ async function fetchMeta(e){
     const man=parseManifest(dh);
     if(man) return { ct:man.contentType, sizeBytes:Number(man.size)||undefined, sha256:normSha(man.shaDec), pages:(man.pages&&man.pages.length)||1, codec:man.codec };
     let b=datumBytes(dh); if(b[0]===0x1f&&b[1]===0x8b){ try{ b=await gunzip(b); }catch(_){} }
-    return { ct:sniff(b), sizeBytes:b.length, sha256:normSha(await sha256(b)), pages:0 };
+    return { ct:sniff(b), sizeBytes:b.length, pages:0 }; // A locally computed hash is not an independent commitment.
   }catch(_){ return {}; }
 }
 function isRegistryPointer(raw){ const r=(raw||'').trim(); return (r.includes('.')&&/^[0-9a-f]{56}\./i.test(r)) || /^[0-9a-f]{64}$/i.test(r); }
@@ -999,6 +1273,7 @@ async function resolveRegistry(input){
   let meta=null; const dot=raw.indexOf('.');
   if(dot===56){
     const policy=raw.slice(0,56).toLowerCase(); let nm=raw.slice(dot+1);
+    if(/^0x(?:[0-9a-f]{2}){0,32}$/i.test(nm))nm=nm.slice(2);
     const nameHex=(/^[0-9a-f]+$/.test(nm)&&nm.length%2===0&&nm.length<=64)?nm:hexEnc(nm);
     const inf=await api('/asset_info',{_asset_list:[[policy,nameHex]]},true);
     meta=inf&&inf[0]&&inf[0].minting_tx_metadata;
@@ -1007,7 +1282,8 @@ async function resolveRegistry(input){
        an "app" field becomes a paste-able address for an on-chain page. */
     if(meta && !meta['22027']){
       const g=meta['721']&&meta['721'][policy];
-      const md=g&&(g[inf[0].asset_name_ascii]||Object.values(g)[0]);
+      const md=g&&(g[inf[0].asset_name_ascii]||g[nameHex]);
+      if(md?.Type==='Ledger Book'){location.href='./ledger-book.html?book='+encodeURIComponent(policy+'.0x'+nameHex);return;}
       const app=md&&md.app;
       if(app && typeof app.tx==='string' && /^[0-9a-f]{64}$/i.test(app.tx)){
         const ix=parseInt(app.ix||'0',10)||0;
@@ -1033,7 +1309,7 @@ async function resolveRegistry(input){
     let best=null,bestV=-1,bestName='';
     for(const a of (infos||[])){
       const g=a.minting_tx_metadata&&a.minting_tx_metadata['721']&&a.minting_tx_metadata['721'][policy];
-      const md=g&&(g[a.asset_name_ascii]||Object.values(g)[0]);
+      const md=g&&(g[a.asset_name_ascii]||g[a.asset_name]);
       if(md&&md.Type==='Registry Head'&&a.minting_tx_metadata['22027']){
         const v=parseInt(md.Version||'0',10)||0;
         if(v>bestV){ bestV=v; best=a; bestName=a.asset_name_ascii||''; }
@@ -1062,7 +1338,7 @@ async function resolveRegistry(input){
     let best=null,bestV=-1,bestName='';
     for(const a of (infos||[])){
       const g=a.minting_tx_metadata&&a.minting_tx_metadata['721']&&a.minting_tx_metadata['721'][a.policy_id];
-      const md=g&&(g[a.asset_name_ascii]||Object.values(g)[0]);
+      const md=g&&(g[a.asset_name_ascii]||g[a.asset_name]);
       if(md&&md.Type==='Registry Head'&&a.minting_tx_metadata['22027']){
         const v=parseInt(md.Version||'0',10)||0;
         if(v>bestV){ bestV=v; best=a; bestName=a.asset_name_ascii||''; }
@@ -1082,28 +1358,28 @@ async function resolveRegistry(input){
     if(f==='pages') return {...base,policy:en.p,manifestAsset:en.a,codec:'auto'};
     return {...base,txin:t+'#'+ix};
   }).filter(e=>e.name);
-  if($('regtitle')) $('regtitle').textContent=regName;
-  if($('reginfo')) $('reginfo').textContent=SHELF.length+' scrolls, pulled live from '+raw.slice(0,20)+'…';
+  if($('regtitle')) $('regtitle').textContent=raw===REGISTRY_PTR?'BEACN library':regName;
+  if($('reginfo')) $('reginfo').textContent=SHELF.length+' works · reading their media types from the provider…';
   if($('anchorinfo')) $('anchorinfo').textContent='loaded '+SHELF.length+' scrolls from '+raw.slice(0,16)+'…';
-  filter='all'; show('library');
-  const _sh=$('shelf'); if(_sh) _sh.innerHTML='<p style="text-align:center;color:#7f8ba3;padding:34px 0">Reading media types from the chain…</p>';
-  for(let pass=0;pass<2;pass++){ const todo=SHELF.filter(x=>!x.contentType); if(!todo.length) break; for(let i=0;i<todo.length;i+=5){ await Promise.all(todo.slice(i,i+5).map(async en=>{ try{ const md=await fetchMeta(en); if(md.ct)en.contentType=md.ct; if(md.sizeBytes)en.sizeBytes=md.sizeBytes; if(md.sha256)en.sha256=md.sha256; if(md.pages!==undefined&&md.pages!==null)en.pages=md.pages; if(md.codec)en.codec=md.codec; }catch(_){} })); } }
+  filter='all'; if(!['reader','channel'].some(id=>$(id).style.display==='block'))show('library');
   drawShelf();
-  if($('reginfo')) $('reginfo').textContent=SHELF.length+' scrolls · organized by media type · pulled live from chain';
+  for(let pass=0;pass<1;pass++){ const todo=SHELF.filter(x=>!x.contentType); if(!todo.length) break; for(let i=0;i<todo.length;i+=2){ await Promise.all(todo.slice(i,i+2).map(async en=>{ try{ const md=await fetchMeta(en); if(md.ct)en.contentType=md.ct; if(md.sizeBytes)en.sizeBytes=md.sizeBytes; if(md.sha256)en.sha256=md.sha256; if(md.pages!==undefined&&md.pages!==null)en.pages=md.pages; if(md.codec)en.codec=md.codec; }catch(_){} })); drawShelf(); } }
+  drawShelf();
+  if($('reginfo')) $('reginfo').textContent=SHELF.length+' works · listed by the on-chain registry · check bytes when opened';
 }
 
 /* ════════════════════════ reader flow ════════════════════════ */
 let currentBytes=null,currentName='scroll',currentType='',currentUrl=null;
 function step(n,st){ const el=$('st'+n); el.classList.remove('on','done','fail'); if(st)el.classList.add(st); }
-function resetReader(){ [1,2,3,4,5].forEach(n=>step(n,null)); clearLog(); $('verdict').className='verdict'; $('stage').style.display='none'; $('stage').innerHTML=''; $('receipt').style.display='none'; $('dlbtn').style.display='none'; }
+function resetReader(){ [1,2,3,4,5].forEach(n=>step(n,null)); clearLog(); $('verdict').className='verdict'; $('stage').style.display='none'; $('stage').innerHTML=''; $('receipt').style.display='none'; $('dlbtn').style.display='none'; $('work-actions').hidden=true; $('linked-context').hidden=true; currentWork=null; currentBytes=null; }
 let lastTab='home';
 function show(view){
   if(view==='home'||view==='library') lastTab=view;
   const viewing = view==='reader'||view==='channel';
   $('hero').style.display = viewing?'none':'block';
   for(const v of ['library','reader','channel']) $(v).style.display = v===view?'block':'none';
-  $('about').style.display = view==='home'?'block':'none';
-  $('truststrip').style.display = view==='home'?'grid':'none';
+  $('about').style.display = viewing?'none':'block';
+  $('truststrip').style.display = viewing?'none':'flex';
   if(viewing)window.scrollTo({top:0});
 }
 
@@ -1115,16 +1391,17 @@ async function openScroll(e){
     const r = e.form==='lock' ? await resolveLock(e) : e.form==='chain' ? await resolveChain(e) : await resolvePages(e);
     step(5,'on');
     const v=$('verdict');
-    if(r.verified===true){ v.className='verdict ok'; $('vbig').textContent='✓ VERIFIED'; $('vsub').textContent=`sha256 ${r.hash} — recomputed by your browser just now; matches the commitment`; }
+    if(r.verified===true){ v.className='verdict ok'; $('vbig').textContent='✓ FINGERPRINT MATCHES'; $('vsub').textContent=`sha256 ${r.hash} — recomputed by your browser just now; matches the ${r.receipt.commitmentSource||'declared fingerprint'}. Provider data; not an independent inclusion proof.`; }
     else { v.className='verdict warn'; $('vbig').textContent='⚠ UNVERIFIED'; $('vsub').textContent=`sha256 ${r.hash} — no commitment on record to compare against`; }
     render(r.bytes, r.contentType);
     currentBytes=r.bytes; currentType=r.contentType;
+    setCurrentWork(e,r);
     $('dlbtn').style.display='inline-block';
     const rc=$('receipt'); rc.style.display='block';
     rc.innerHTML=`<b>${esc(r.kindLabel)}</b>${r.pages?` · ${esc(r.pages)} page(s)`:''} · ${esc(r.receipt.size)} bytes<br>`+
       `pointer: ${esc(r.receipt.pointer)}<br>sha256 (computed): ${esc(r.receipt.sha256)}<br>sha256 (commitment): ${esc(r.receipt.expected)}`;
     step(5,'done');
-    log('h','── done. nothing you just read touched a content server.');
+    log('h','── read complete. Provider data reconstructed locally; a hash match does not prove identity or factual truth.');
   }catch(err){
     [1,2,3,4,5].forEach(n=>{ if($('st'+n).classList.contains('on')) step(n,'fail'); });
     $('verdict').className='verdict bad'; $('vbig').textContent='✗ NOT VERIFIED — nothing rendered';
@@ -1139,7 +1416,7 @@ function render(bytes,type){
   if(currentUrl)URL.revokeObjectURL(currentUrl);
   const base=(type||'').split(';')[0].trim()||'application/octet-stream';
   currentUrl=URL.createObjectURL(new Blob([bytes],{type:base}));
-  if(base==='text/html'){ const f=document.createElement('iframe'); f.setAttribute('sandbox',''); f.src=currentUrl; f.title='verified scroll'; stage.appendChild(f); }
+  if(base==='text/html'){ const f=document.createElement('iframe'); f.setAttribute('sandbox',''); f.srcdoc='<meta http-equiv="Content-Security-Policy" content="default-src &apos;none&apos;; img-src data: blob:; media-src data: blob:; style-src &apos;unsafe-inline&apos;; font-src data:; form-action &apos;none&apos;; base-uri &apos;none&apos;">'+td.decode(bytes); f.title='Preserved work (network access blocked)'; stage.appendChild(f); }
   else if(base.startsWith('image/')){ const i=document.createElement('img'); i.src=currentUrl; stage.appendChild(i); }
   else if(base.startsWith('video/')){ const v=document.createElement('video'); v.src=currentUrl; v.controls=true; stage.appendChild(v); }
   else if(base.startsWith('audio/')){ const a=document.createElement('audio'); a.src=currentUrl; a.controls=true; stage.appendChild(a); }
@@ -1168,7 +1445,7 @@ async function openChannel(policy){
     $('chantitle').textContent = channelName ? `Channel: ${channelName}` : 'Publisher channel';
     $('chansub').textContent = `policy ${policy} — ${issues.length} publication(s); only the holder of this policy’s key can mint here`;
     for(const it of issues){
-      const c=document.createElement('div'); c.className='card';
+      const c=document.createElement('article'); c.className='card';
       c.innerHTML=`<div class="tags"><span class="tag form">issue ${esc(String(it.issue??'?').padStart(3,'0'))}</span><span class="tag">${esc(it.mediaType)}</span></div><h3></h3><p class="mono" style="font-size:11px">seal ${esc(it.sha256.slice(0,20))}… · mint ${esc(String(it.mint).slice(0,20))}… (signed by the channel key)</p>`;
       c.querySelector('h3').textContent=it.name;
       activate(c, `Open and verify ${it.name}`, ()=>openScroll({name:it.asset.toLowerCase(),title:it.name,form:'chain',
@@ -1191,6 +1468,7 @@ function busy(on){
   b.disabled=!!on;
 }
 async function openPointer(raw){
+  raw=normalizeOpenInput(raw);
   const p=raw.trim().toLowerCase();
   if(!p){ say('Paste a $handle, a policy id, or a scroll pointer first.','bad'); return; }
   busy(true); say('Asking the chain…','busy');
@@ -1198,6 +1476,8 @@ async function openPointer(raw){
   finally{ busy(false); }
 }
 async function route_(raw, p){
+  if(raw.startsWith('book:')){location.href='./ledger-book.html?book='+encodeURIComponent(raw.slice(5));return;}
+  if(/^addr(_test)?1/.test(raw)){location.href='./ledger-book.html?book='+encodeURIComponent(raw);return;}
   if(raw.trim().startsWith('$')){
     try{ await resolveRegistry(raw.trim()); say(null); }
     catch(e){ say(`No library found behind ${raw.trim()} — the handle and a registry head must sit in the same wallet. (${e.message||e})`,'bad'); }
@@ -1269,6 +1549,9 @@ const ensureShelf = () => SHELF.length ? Promise.resolve()
   : (shelfLoad = shelfLoad || resolveRegistry(anchor()).catch(e=>{ shelfLoad=null; throw e; }));
 
 async function route(){
+  const query=new URLSearchParams(location.search);
+  if(query.has('policy')){const p=query.get('policy');if(/^[0-9a-f]{56}$/i.test(p)){await openScroll({name:'legacy-'+p.slice(0,8),title:'Legacy work',form:'pages',policy:p,codec:'auto'});return;}}
+  if(query.has('tx')){await openLinkedWork(query);return;}
   const h=location.hash.replace(/^#/,'');
   const s=h.match(/^s=([a-z0-9-]+)/), pp=h.match(/^p=([0-9a-f]{56})$/), op=h.match(/^open=([0-9a-f]{64})$/);
   if(op){ openPointer(op[1]+'#0'); return; }
@@ -1282,11 +1565,12 @@ async function route(){
   }
   if(pp){ openChannel(pp[1]); return; }
   const lib = h==='stacks'||h==='library';
-  show(lib?'library':'home');
-  if(lib) ensureShelf().catch(e=>log('er','registry unreachable — '+(e.message||e)));
+  show('library');
+  if(ACTIVE_NETWORK==='preview'){ $('reginfo').textContent='Preview network — open a test pointer directly; the BEACN collection is on mainnet.'; return; }
+  ensureShelf().catch(e=>{ $('reginfo').textContent='Collection unavailable — you can retry or open a saved pointer.'; $('shelf').innerHTML='<div class="library-empty"><p>Could not reach the collection provider.</p><button class="ghost" id="retry-library">Try again</button><p>Already have a pointer? Use Open above. Saved links remain on this device.</p></div>'; $('retry-library').onclick=()=>{shelfLoad=null;route();}; });
 }
 window.addEventListener('hashchange',route);
-const goBack=()=>{ location.hash = lastTab==='library' ? 'stacks' : ''; };
+const goBack=()=>{history.replaceState(null,'',location.pathname);location.hash='stacks';route();};
 $('backbtn').onclick=goBack;
 $('backbtn2').onclick=goBack;
 $('openbtn').onclick=()=>openPointer($('point').value);
@@ -1295,7 +1579,7 @@ $('dlbtn').onclick=()=>{ if(!currentBytes)return; const base=(currentType||'').s
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([currentBytes],{type:base}));
   a.download=currentName+'.'+(EXT[base]||(base.startsWith('text/')?'txt':'bin')); a.click(); };
 $('search').addEventListener('input',drawShelf);
-for(const ch of document.querySelectorAll('.chip')) ch.onclick=()=>{ document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on')); ch.classList.add('on'); filter=ch.dataset.f; drawShelf(); };
+for(const ch of document.querySelectorAll('.chip')) ch.onclick=()=>{ document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on')); ch.classList.add('on'); filter=ch.dataset.f; document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',String(c===ch))); drawShelf(); };
 $('savesrc').onclick=()=>{ const v=$('setsrc').value.trim().replace(/\/+$/,''); if(v)LS.setItem('ls.source',v); else LS.removeItem('ls.source'); $('srcname').textContent='—'; };
 $('savehead').onclick=()=>{
   const v=($('sethead').value.trim()||REGISTRY_PTR);
@@ -1306,6 +1590,7 @@ $('savehead').onclick=()=>{
 $('setsrc').value=LS.getItem('ls.source')||''; $('sethead').value=LS.getItem('ls.head')||'';
 
 $('regopen') && ($('regopen').onclick=()=>{ $('point').value='$beacn'; openPointer('$beacn'); });
+initWorkspace();
 drawShelf();
 route();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});
@@ -1317,8 +1602,7 @@ if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js',{sco
       <a class="ls-foot-mark" href="./index.html" aria-label="Ledger Scrolls — home">
         <svg viewBox="-60 -60 120 120" width="20" height="20" aria-hidden="true"><g fill="#aecbff"><circle cx="38" cy="0" r="9"/><circle cx="19" cy="32.9" r="9"/><circle cx="-19" cy="32.9" r="9"/><circle cx="-19" cy="-32.9" r="9"/><circle cx="19" cy="-32.9" r="9"/></g><circle cx="-38" cy="0" r="9" fill="#f6b45a"/><circle r="16" fill="#2f6bff" stroke="#cfe0ff" stroke-width="2"/></svg><span>Ledger <b>Scrolls</b></span>
       </a>
-      <p class="ls-foot-tag">A library that cannot burn. Immutable media written into
-      Cardano itself — no accounts, no servers of record, verified on every read.</p>
+      <p class="ls-foot-tag">Preserve a work. Keep the responses beside it. Public records and guestbooks stored on Cardano, with evidence you can inspect.</p>
     </div>
     <nav class="ls-foot-cols" aria-label="All Ledger Scrolls pages">
       <div class="ls-foot-col">
@@ -1328,8 +1612,8 @@ if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js',{sco
       </div>
       <div class="ls-foot-col">
         <h4>Create</h4>
-        <a href="./calculator.html">Mint a scroll</a>
-        <a href="./ledger-book.html">Ledger Book</a>
+        <a href="./calculator.html">Publish a work</a>
+        <a href="./ledger-book.html">Guestbooks</a>
         <a href="./vault-tool.html">Vault Tool</a>
       </div>
       <div class="ls-foot-col">
@@ -1341,6 +1625,7 @@ if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js',{sco
       </div>
       <div class="ls-foot-col">
         <h4>Project</h4>
+        <a href="./docs/PRODUCT.md">Product &amp; trust model</a>
         <a href="https://github.com/BEACNpool/ledger-scrolls">Source &amp; specs</a>
         <a href="./media.html">How it works</a>
       </div>

@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; frame-src blob:; font-src 'self'; manifest-src 'self'; connect-src https:; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>Mint a Scroll — Ledger Scrolls</title>
-<meta name="description" content="Drop any file, see exactly what forever costs, and mint it on Cardano right from your browser wallet — no node, no CLI, no API key. Computed locally; nothing is uploaded.">
-<meta name="theme-color" content="#04070f">
+<title>Publish a work — Ledger Scrolls</title>
+<meta name="description" content="Prepare a file or local text draft, inspect storage and cost, and publish public original bytes with your Cardano wallet.">
+<meta name="theme-color" content="#0d1015">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Scroll Press">
-<meta property="og:title" content="Mint a Scroll — Ledger Scrolls">
-<meta property="og:description" content="What does forever cost? Drop a file in, see one number, and mint it with the wallet you already have — no node needed.">
+<meta name="apple-mobile-web-app-title" content="Ledger Scrolls">
+<meta property="og:title" content="Publish a work — Ledger Scrolls">
+<meta property="og:description" content="Prepare a file or local text draft, inspect storage and cost, and publish public original bytes with your Cardano wallet.">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -363,6 +363,202 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
   .ls-foot-inner{gap:26px;padding-top:32px}
   .ls-foot-cols{gap:22px 30px}
 }
+
+/* One archive, three working surfaces. Embedded by sync_nav.py for offline use. */
+:root{--bg:#0d1015;--bg-2:#11151c;--surface:#151a22;--surface-2:#1a202a;--ink:#edf0f5;--ink-2:#c8d0dc;--muted:#a5afbf;--faint:#96a1b3;--line:#2a303b;--line-2:#394454;--accent:#356df3;--accent-ink:#b3caff;--accent-soft:#172641;--amber:#d9b681;--ok:#85d7b0;--warn:#efc78a;--radius:10px;--radius-sm:6px;--sh:none;--sh-lg:none}
+body{background:#0d1015;color:#edf0f5;font-size:16px}
+body::before,.bg-grid{display:none!important}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid #b3caff;outline-offset:4px}
+button,input,select,textarea,a{touch-action:manipulation}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button:disabled{cursor:wait;opacity:.55}
+input,textarea{color:#edf0f5;background:#10151d;border:1px solid #465063;border-radius:6px}
+input::placeholder,textarea::placeholder{color:#a4afbf;opacity:1}
+input,button,select{min-height:44px}
+textarea{width:100%;padding:12px;resize:vertical;line-height:1.6}
+a{color:#b3caff}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.ls-nav{background:#10141b;padding:16px max(24px,calc((100vw - 1280px)/2));border-color:#303743;min-height:80px;gap:32px}
+.ls-brand{font-size:18px;letter-spacing:-.035em;gap:12px}
+.ls-word span{color:#edf0f5}
+.ls-links{gap:4px}
+.ls-links a{border-radius:6px;min-height:44px;padding:0 16px;color:#aeb8c9;font-size:14px}
+body[data-page="index"] .ls-links a[data-nav="index"],body[data-page="calculator"] .ls-links a[data-nav="calculator"],body[data-page="book"] .ls-links a[data-nav="book"]{background:#232b38;border-color:#3b485d;color:#fff}
+.ls-foot{background:#10141b;border-color:#303743;margin-top:72px}
+.ls-foot-inner,.ls-foot-legal{max-width:1280px}
+.ls-foot-tag{font-size:14px;color:#acb6c6}
+.ls-foot-col h4{font-size:12px;color:#a4afc1}
+.ls-foot-col a,.ls-foot-legal,.ls-foot-beacn{color:#b7c0ce}
+.ls-action{display:inline-flex;align-items:center;justify-content:center;gap:24px;min-height:44px;padding:12px 20px;background:#202b3d;color:#dce7ff;border:1px solid #465572;border-radius:6px;font:600 14px/1.4 system-ui;text-decoration:none;white-space:normal}
+.ls-action:hover{background:#2b3b55;color:#fff}
+.ls-action.primary{color:#11151c;background:#dce7f6;border-color:#dce7f6;box-shadow:none}
+.ls-action.primary:hover{background:#fff}
+.ls-label{display:block;font-size:14px;font-weight:600;color:#dce3ed;margin:0 0 12px}
+.eyebrow{font:600 12px/1.5 ui-monospace,SFMono-Regular,monospace;letter-spacing:.13em;color:#a9b6ca}
+.work-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:20px 0}
+.work-actions>span{font-size:14px;color:#c5cfdf}
+.linked-work{border:1px solid #43536d;border-left:3px solid #bbcae6;background:#141d2b;border-radius:6px;padding:20px 24px;margin:24px 0;overflow-wrap:anywhere}
+.linked-work h2,.linked-work h3{font:500 26px/1.3 Georgia,serif;margin:8px 0 12px;color:#edf0f5}
+.linked-work p{color:#b8c5d8;font-size:14px;line-height:1.6;margin:8px 0}
+.linked-work code{font-size:12px;color:#c2d0e9}
+body[data-page="index"] .container{max-width:1280px;padding-left:24px;padding-right:24px}
+body[data-page="index"] .hero{padding:44px 0 0;text-align:left;border:0;background:none}
+.library-intro{display:flex;align-items:center;justify-content:space-between;gap:32px}
+body[data-page="index"] .hero-title{font:400 clamp(38px,4.2vw,60px)/1.1 Georgia,serif;letter-spacing:-.045em;margin:14px 0 16px;color:#edf0f5}
+body[data-page="index"] .hero-title em{color:#b9cbe8;font-weight:400}
+body[data-page="index"] .hero-lede{font-size:17px;max-width:640px;line-height:1.6;color:#b0bbcc;margin:0}
+body[data-page="index"] .resolver{max-width:none;margin:32px 0 0;padding:20px 24px;background:#171d27;border:1px solid #323c4d;border-radius:8px;box-shadow:none;text-align:left}
+body[data-page="index"] .resolver-field{border:1px solid #536179;box-shadow:none;border-radius:6px;background:#0e141e;padding:4px 5px 4px 16px;display:flex;gap:8px}
+body[data-page="index"] .resolver-field input{border:0;min-width:0;font-size:16px;background:transparent;padding:12px 0;color:#edf0f5;flex:1;box-shadow:none}
+body[data-page="index"] .resolver-field button{padding:0 26px;border-radius:4px;background:#d7e3f6;color:#111722;box-shadow:none;font-size:14px;min-height:44px}
+.ls-resolver-bottom{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:12px;color:#adb9cc;font-size:13px;align-items:center}
+.text-action{border:0;background:transparent;color:#c8d8f3;text-decoration:underline;text-underline-offset:3px;padding:0;min-height:24px;font-size:13px}
+.ls-journey{display:flex;gap:32px;padding:20px 0 28px;border-bottom:1px solid #303743;color:#aab7ca;font-size:13px}
+.ls-journey b{font:500 12px ui-monospace,monospace;color:#d7b884;margin-right:8px}
+body[data-page="index"] .section{padding-top:32px;padding-bottom:24px}
+.library-layout{display:grid;grid-template-columns:215px minmax(0,1fr);gap:40px}
+.library-aside{padding-top:4px}
+.library-aside>.eyebrow{display:block;margin-bottom:16px}
+.collection-current,.collection-link{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px;width:100%;background:transparent;border:1px solid transparent;color:#b6c0d1;border-radius:6px;text-decoration:none;font-size:14px;text-align:left;margin-bottom:4px}
+.collection-current[aria-pressed="true"]{color:#e8eef8;border-color:#394a63;background:#1b283b}
+.collection-current span{font:12px ui-monospace,monospace;color:#c8d5eb}
+.collection-current:hover,.collection-link:hover{background:#202a39}
+.aside-note{border-top:1px solid #303743;margin-top:28px;padding:24px 8px 0;font-size:14px;line-height:1.6;color:#abb9ce}
+.aside-note .eyebrow{font-size:11px;letter-spacing:.05em}
+.aside-note a{font-size:13px;color:#d6e3fa}
+.storage-filter{margin:28px 8px 0;font-size:13px;color:#aab6c8}
+.storage-filter summary{cursor:pointer;padding:8px 0}
+.storage-filter .chips{display:flex;flex-wrap:wrap;margin-top:8px;gap:6px}
+.storage-filter .chip{border-radius:4px;font-size:12px;min-height:36px;padding:6px 8px}
+.library-content{min-width:0}
+body[data-page="index"] .shelftools{align-items:center;gap:20px;margin:0 0 24px}
+body[data-page="index"] .section-title{font:400 28px/1.3 Georgia,serif;letter-spacing:-.02em;margin:8px 0;color:#eaf0f9}
+body[data-page="index"] .section-sub{font-size:13px;line-height:1.6;color:#aebacd;max-width:650px}
+.ls-search{max-width:240px;flex:0 1 240px}
+.ls-search input{width:100%;padding:10px 12px;font-size:14px}
+body[data-page="index"] .shelfgroup{display:flex;align-items:center;justify-content:space-between;margin:24px 0 12px;padding:0 0 10px;border-bottom:1px solid #2d3542}
+body[data-page="index"] .shelfgroup h3{font:500 13px/1.4 system-ui;letter-spacing:.04em;color:#bac6d9;margin:0}
+body[data-page="index"] .cnt{font-size:12px;color:#9aa8bd}
+body[data-page="index"] .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+body[data-page="index"] .card{padding:20px;min-height:190px;background:#171d26;border:1px solid #323c4b;border-radius:7px;box-shadow:none;display:flex;flex-direction:column;transition:background .15s,border-color .15s;overflow:hidden}
+body[data-page="index"] .card:hover{background:#1d2735;border-color:#6c7e9b;transform:none;box-shadow:none}
+body[data-page="index"] .card>.ic{font:14px ui-monospace,monospace;min-height:28px;color:#a7bad9;width:auto;filter:grayscale(1);margin-bottom:20px}
+body[data-page="index"] .card h3{font:500 19px/1.35 Georgia,serif;color:#edf0f7;margin:0 0 12px;overflow-wrap:anywhere}
+body[data-page="index"] .card p:empty{display:none}
+body[data-page="index"] .card p{font-size:14px}
+body[data-page="index"] .card .tags{margin:auto 0 12px;gap:6px}
+body[data-page="index"] .tag{font-size:11px;color:#b2bfd3;background:#202a39;border:0;border-radius:3px;padding:4px 6px;max-width:100%;overflow-wrap:anywhere}
+body[data-page="index"] .tag.ok{color:#b5c9e9;background:#202d40}
+body[data-page="index"] .facts{border-top:1px solid #344051;margin:0;padding-top:12px;font-size:12px;color:#b0bdd0;display:flex;flex-wrap:wrap;gap:8px}
+body[data-page="index"] .copyhint{color:#d2def2;margin-left:auto;font-size:12px}
+.library-empty{border:1px dashed #43516b;border-radius:6px;padding:32px;color:#b5c0d1;line-height:1.7}
+.saved-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 0;border-bottom:1px solid #303b4d}
+.saved-row a{font-size:17px;overflow-wrap:anywhere}
+.saved-row p{font-size:13px;color:#acb7cb;margin:8px 0 0}
+.saved-row button{background:none;border:0;color:#adbbd1;font-size:13px;padding:10px}
+body[data-page="index"] .docbar{display:flex;flex-wrap:wrap;gap:12px}
+body[data-page="index"] .docbar h2{font:400 30px/1.3 Georgia,serif;flex:1 1 300px;overflow-wrap:anywhere}
+body[data-page="index"] .ghost{background:#1c2737;border:1px solid #465773;color:#d9e3f4;padding:8px 14px;border-radius:5px;font-size:14px}
+body[data-page="index"] .verdict{overflow-wrap:anywhere;padding:20px;border-radius:6px}
+body[data-page="index"] .verdict .v{font-size:18px}
+body[data-page="index"] .verdict .d{font:13px/1.6 ui-monospace,monospace}
+body[data-page="index"] .receipt{overflow-wrap:anywhere;font-size:12px}
+body[data-page="index"] .stage{background:#151c28;border-radius:6px}
+body[data-page="index"] .stage pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:32px;color:#e0e7f2;font:17px/1.8 Georgia,serif;max-width:80ch;margin:auto}
+body[data-page="index"] .stage iframe{background:white;width:100%;height:70vh;min-height:400px;border:0}
+body[data-page="index"] .about{background:#111720;border-top:1px solid #303b4d;margin-top:40px}
+body[data-page="index"] .cols{grid-template-columns:repeat(2,minmax(0,1fr));gap:32px}
+body[data-page="index"] .col h3{font-size:16px}
+body[data-page="index"] .col p,body[data-page="index"] .col li{font-size:14px;color:#aebbcf}
+body[data-page="index"] .setrow input{min-width:0;width:100%}
+body[data-page="book"] header.site,body[data-page="calculator"] .site-header{display:none}
+body[data-page="book"] .hero{padding:48px 24px 32px;background:none;text-align:left}
+body[data-page="book"] .hero .inner{max-width:920px;margin:auto}
+body[data-page="book"] .mark-lg{display:none}
+body[data-page="book"] .hero h1,body[data-page="calculator"] .hero h1{font:400 clamp(38px,5vw,58px)/1.1 Georgia,serif;letter-spacing:-.04em;margin:14px 0 20px;color:#edf0f5}
+body[data-page="book"] .hero h1 em,body[data-page="calculator"] .hero h1 em{color:#b9cbe8}
+body[data-page="book"] .sub{font-size:17px;line-height:1.7;max-width:650px;margin:0 0 28px;color:#b0bdd1}
+body[data-page="book"] .seg{justify-content:flex-start;margin:0 0 20px;border-radius:6px}
+body[data-page="book"] .seg button{font-size:14px;padding:12px 20px}
+body[data-page="book"] .centercard{max-width:none;margin:0;background:#171d27;border:1px solid #37465d;border-radius:8px;box-shadow:none;padding:24px}
+body[data-page="book"] #findpanel{min-height:164px}
+body[data-page="book"] #searchbar{max-width:none}
+body[data-page="book"] input,body[data-page="book"] textarea{padding:12px;font-size:16px;width:100%}
+body[data-page="book"] .btn{border-radius:5px;box-shadow:none;font-size:14px;min-height:44px}
+body[data-page="book"] .btn.primary{background:#d7e3f6;border-color:#d7e3f6;color:#101620}
+body[data-page="book"] #mintpanel{max-width:680px}
+body[data-page="book"] .coverwrap{max-width:230px;margin:20px auto}
+body[data-page="book"] .ticks{justify-content:flex-start;margin:20px 0 0;color:#acbbd1;font-size:13px}
+body[data-page="book"] #howitworks{border-top:1px solid #303b4d;padding-top:32px;background:#111720}
+body[data-page="book"] #howitworks h2{font:400 30px Georgia,serif}
+body[data-page="book"] #bookview .wrap{max-width:1040px}
+body[data-page="book"] .ident h1{font:400 38px/1.2 Georgia,serif;letter-spacing:-.02em;overflow-wrap:anywhere}
+body[data-page="book"] .trustrow{margin-top:24px}
+body[data-page="book"] .truststrip{background:#141d2a;border-color:#37455c}
+body[data-page="book"] .chip{font-size:12px}
+body[data-page="book"] .sig{transform:none!important;background:#192332;border:1px solid #44526a;box-shadow:none;border-radius:6px;padding:24px}
+body[data-page="book"] .sig .msg{color:#e2e8f3;font:18px/1.65 Georgia,serif}
+body[data-page="book"] .sig .name{font-size:22px}
+body[data-page="book"] .sig .meta{font-size:12px;color:#b1bfd5}
+body[data-page="book"] .bytec,body[data-page="book"] .finehelp{font-size:13px;color:#b0bed4;line-height:1.6}
+body[data-page="book"] .sheetcard{border:1px solid #53637e;background:#171f2d;overflow-wrap:anywhere}
+.subject-editor{margin:20px 0;padding:16px;background:#101823;border:1px solid #3b4d68;border-radius:6px}
+.subject-editor summary{font-weight:600;cursor:pointer;font-size:14px}
+.subject-editor label{display:block;margin:16px 0 8px;font-size:14px}
+body[data-page="calculator"] main.container{max-width:1040px}
+body[data-page="calculator"] .hero{padding:44px 0 24px;text-align:left;background:none}
+body[data-page="calculator"] .hero .lead{font-size:17px;line-height:1.7;max-width:730px;color:#b0bdd1;margin:0}
+body[data-page="calculator"] .privacy{font-size:13px;color:#c9b996;margin-top:16px}
+body[data-page="calculator"] .section{padding-top:16px}
+body[data-page="calculator"] .card{box-shadow:none;border:1px solid #39465c;background:#171e29;border-radius:8px}
+body[data-page="calculator"] .drop{background:#111a28;border:1px dashed #657998;border-radius:6px;padding:32px 24px}
+body[data-page="calculator"] .drop .big{font-size:21px;font-weight:500}
+body[data-page="calculator"] .drop .hint{font-size:13px;color:#b0bdd2;line-height:1.7;max-width:620px;margin:10px auto 0}
+body[data-page="calculator"] .btn{border-radius:5px;min-height:44px;font-size:14px;box-shadow:none}
+body[data-page="calculator"] .card h2{font:400 28px Georgia,serif}
+body[data-page="calculator"] .kv{font-size:13px;overflow-wrap:anywhere}
+body[data-page="calculator"] .pricebar{font-size:13px;color:#b0bdd2}
+.publish-kind{display:flex;flex-wrap:wrap;gap:16px;margin:28px 0 0;align-items:center;font-size:14px}
+.publish-kind .selected{padding:10px 16px;border:1px solid #50617c;background:#1d2a3e;border-radius:5px;color:#e2ebfa}
+.text-composer{margin:20px 0 0;border-top:1px solid #3b485d;padding-top:20px}
+.text-composer summary,.estimate-only summary{cursor:pointer;font-size:14px;color:#d2def2;min-height:40px}
+.text-composer label{display:block;font-size:14px;margin:20px 0 8px;color:#d7e1f1}
+.text-composer input{width:100%;padding:12px}
+.estimate-only{border-top:1px solid #3b485d;padding:20px 0 4px;margin-top:12px}
+.text-composer .finehelp{font-size:13px;color:#b8c4d7;line-height:1.6}
+@media(min-width:1440px){.library-intro{padding-top:12px}.library-layout{gap:48px;grid-template-columns:224px minmax(0,1fr)}}
+@media(max-width:1000px){.library-layout{grid-template-columns:185px minmax(0,1fr);gap:24px}body[data-page="index"] .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ls-search{max-width:190px}.shelftools{flex-wrap:wrap}.ls-nav{gap:16px}}
+@media(max-width:700px){.ls-nav{padding:12px 16px;gap:12px;min-height:66px;flex-wrap:wrap;position:relative}.ls-brand{font-size:17px}.ls-links{width:100%;margin:0;justify-content:space-between}.ls-links a{padding:0 10px;font-size:13px;min-height:40px}.ls-brand .ls-word{display:block}.library-intro{align-items:flex-start;flex-direction:column;gap:20px}body[data-page="index"] .hero{padding-top:28px}body[data-page="index"] .container{padding-left:16px;padding-right:16px}body[data-page="index"] .hero-title{font-size:40px}body[data-page="index"] .hero-lede{font-size:16px}body[data-page="index"] .resolver{padding:16px;margin-top:24px}.resolver-ic{display:none}body[data-page="index"] .resolver-field{padding-left:10px}body[data-page="index"] .resolver-field input{font-size:14px}body[data-page="index"] .resolver-field button{padding:0 16px}.ls-journey{gap:16px;flex-wrap:wrap;padding-bottom:24px;font-size:12px}.library-layout{display:block}.library-aside{display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid #303743;padding-bottom:20px;margin-bottom:24px}.library-aside>.eyebrow,.aside-note{display:none}.collection-current{width:auto;padding:10px;font-size:13px;margin:0;gap:12px}.collection-link{width:auto;margin:0;font-size:13px}.storage-filter{margin:0;width:100%}.storage-filter summary{min-height:32px;font-size:12px}.ls-search{max-width:none;flex-basis:100%}body[data-page="index"] .grid{gap:10px}body[data-page="index"] .card{padding:16px;min-height:185px}body[data-page="index"] .card h3{font-size:18px}body[data-page="index"] .card>.ic{margin-bottom:12px}body[data-page="index"] .facts{font-size:11px}.copyhint{width:100%}body[data-page="index"] .cols{grid-template-columns:1fr}body[data-page="index"] .stage pre{padding:20px;font-size:16px}.ls-foot{margin-top:40px}body[data-page="book"] .hero{padding:28px 16px}body[data-page="book"] .hero h1,body[data-page="calculator"] .hero h1{font-size:40px}body[data-page="book"] .centercard{padding:20px 16px}body[data-page="book"] #searchbar{flex-direction:column;align-items:stretch}body[data-page="book"] #searchgo{width:100%}body[data-page="book"] .ticks{flex-wrap:wrap;gap:16px}body[data-page="book"] .ident h1{font-size:30px}body[data-page="book"] .sig{padding:20px}body[data-page="book"] .sig .meta{flex-wrap:wrap}body[data-page="calculator"] .hero{padding-top:28px}.work-actions{gap:8px}.linked-work{padding:16px}}
+@media(max-width:370px){body[data-page="index"] .grid{grid-template-columns:1fr}.ls-links a{padding:0 6px}.ls-journey{display:grid;gap:8px}.collection-current{width:100%}}
+/* Override legacy ID-based hero styles as well as the shared classes. */
+body[data-page="index"] .eyebrow{background:none;border:0;border-radius:0;padding:0;box-shadow:none;display:inline-block}
+body[data-page="index"] .library-intro>div{max-width:none;text-align:left}
+body[data-page="index"] .hero-title,body[data-page="index"] .hero-lede{margin-left:0;margin-right:0;text-align:left}
+body[data-page="index"] .hero{padding-top:28px}
+body[data-page="index"] #trustline{display:none}
+body[data-page="index"] #openbtn{background:#d7e3f6;color:#101722;border:0;border-radius:4px;box-shadow:none;padding:0 24px;font-weight:600;font-size:14px;flex:0 0 auto}
+body[data-page="index"] .resolver-field{flex-wrap:nowrap}
+body[data-page="index"] #point{width:0;min-width:0;flex:1 1 0;padding:12px 0;font-family:system-ui,sans-serif}
+body[data-page="index"] #search{max-width:none;width:100%;border-radius:5px;font:14px system-ui,sans-serif;background:#141c28;padding:10px 12px;min-width:0}
+body[data-page="index"] .shelfgroup::after{display:none}
+body[data-page="index"] .card>.ic{display:flex;align-items:center;justify-content:space-between;background:none;border:0;border-radius:0;padding:0;height:auto;min-height:20px;font-size:11px;letter-spacing:.06em;filter:none;color:#a9bad5}
+body[data-page="index"] .shelfgroup .cnt{margin-left:auto}
+body[data-page="index"] .shelfgroup h3{margin:0}
+@media(max-width:700px){body[data-page="index"] .hero{padding-top:24px}.library-intro{gap:16px}body[data-page="index"] .hero-title{font-size:36px;margin:12px 0}body[data-page="index"] .hero-lede{font-size:15px}.library-intro>.ls-action{position:absolute;right:16px;top:130px;min-height:36px;padding:8px 10px;font-size:12px;gap:8px}.library-intro .eyebrow{padding-right:140px;font-size:10px;line-height:1.6}body[data-page="index"] .resolver{margin-top:20px;padding:14px}body[data-page="index"] #openbtn{padding:0 16px;min-height:42px}.ls-label{font-size:13px}.ls-resolver-bottom{font-size:12px;gap:4px}.ls-journey{gap:8px 16px;font-size:11px;padding:16px 0 20px}body[data-page="index"] .section{padding-top:20px}.library-aside{padding-bottom:12px;margin-bottom:20px}.library-aside .storage-filter{display:none}body[data-page="index"] .shelftools{margin-bottom:16px}body[data-page="index"] .shelfgroup{margin-top:16px}}
+body[data-page="book"] .sig .name{color:#d8e6fb!important}
+body[data-page="book"] .sig .whobtn{color:#b8cae6;background:#22324b;border:1px solid #4b607e;padding:6px 10px;border-radius:4px;min-height:36px}
+body[data-page="book"] .hero,body[data-page="book"] .hero .inner{text-align:left}
+body[data-page="book"] .hero .sub{margin-left:0;text-align:left}
+body[data-page="book"] .hero .seg{justify-content:flex-start;width:fit-content;margin-left:0}
+body[data-page="book"] .centercard{text-align:left}
+body[data-page="book"] .finehelp{text-align:left}
+@media(max-width:700px){.library-intro{display:block}.library-intro>.ls-action{position:static;display:inline-flex;margin-top:16px;min-height:40px;font-size:13px}.library-intro .eyebrow{padding-right:0}body[data-page="index"] #openbtn{width:auto;flex:0 0 auto;max-width:90px}body[data-page="index"] #point{display:block;min-width:140px;max-width:none;width:0;flex:1 1 auto}body[data-page="index"] .library-intro>div{min-width:0;width:100%}body[data-page="index"] .hero-lede{max-width:100%;white-space:normal}body[data-page="index"] .library-aside>.eyebrow{display:none}body[data-page="index"] .resolver-field{display:flex;flex-direction:row;flex-wrap:nowrap;gap:8px}body[data-page="index"] .ls-journey{display:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+@media(max-width:700px){body[data-page="index"] #truststrip{display:none!important}}
 /* LS:NAV end */
 
 /* page-local jump links — a quiet strip, not a second nav bar */
@@ -383,10 +579,9 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
   </a>
   <nav class="ls-links" aria-label="Ledger Scrolls">
     <a href="./index.html" data-nav="index">Library</a>
-    <a href="./calculator.html" data-nav="calculator">Mint a scroll</a>
-    <a href="./ledger-book.html" data-nav="book">Ledger Book</a>
-    <a href="./ledger-chess.html" data-nav="chess">Chess</a>
-    <a href="./media.html" data-nav="media">What lives forever</a>
+    <a href="./calculator.html" data-nav="calculator">Publish</a>
+    <a href="./ledger-book.html" data-nav="book">Guestbooks</a>
+    <a href="./media.html" data-nav="media">How it works</a>
   </nav>
 </header>
 <!-- LS:NAV end -->
@@ -404,12 +599,12 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
 <main class="container">
 
 <section class="hero">
-  <span class="eyebrow">Mint a Scroll</span>
-  <h1>Price it. Mint it. Forever.</h1>
-  <p class="lead">Drop in any file — a photo, a PDF, a song, a short film, a manifesto —
-  and see what forever costs on Cardano. Then I'll <strong>walk you through minting</strong>
-  step by step with Eternl: connect → a few questions → mint. No node, no CLI, no account.</p>
-  <p class="privacy">🔒 Everything runs in your browser. Your file is never uploaded anywhere.</p>
+  <span class="eyebrow">PUBLISH / LEDGER SCROLLS</span>
+  <h1>Keep the <em>original.</em></h1>
+  <p class="lead">Start with a file or write something here. Review the exact bytes and cost before your wallet publishes it to Cardano.</p>
+  <p class="privacy">Prepared on this device. Publishing makes the content public and irreversible.</p>
+  <div class="publish-kind"><span class="selected">Preserve a work</span><a href="./ledger-book.html?create=1">Create a guestbook ↗</a></div>
+
 </section>
 
 <section class="section" id="inputsec">
@@ -419,7 +614,13 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
       <div class="big">Drop a file here, or click to choose</div>
       <div class="hint">HTML · PDF · JPG/PNG · TXT/MD · MP4/WebM (films) · MP3/Opus · JSON/CSV — any size; large files mint as Chain Scrolls via Eternl</div>
     </label>
-    <div class="orline">OR ESTIMATE WITHOUT A FILE</div>
+    <details class="text-composer"><summary>Or write a letter, release note, or statement</summary>
+      <label for="draft-title">Title</label><input id="draft-title" placeholder="What are you preserving?" maxlength="120">
+      <label for="draft-body">Your words</label><textarea id="draft-body" rows="8" placeholder="Write the version you want people to be able to read and check later."></textarea>
+      <p id="draft-state" class="finehelp" role="status">Drafts stay on this device. They have not been published.</p>
+      <div class="work-actions"><button type="button" class="btn" id="prepare-draft">Prepare this work</button><button type="button" class="btn ghost" id="download-draft">Download draft</button><button type="button" class="btn ghost" id="clear-draft">Clear saved draft</button></div>
+    </details>
+    <details class="estimate-only"><summary>Estimate a size without choosing a file</summary>
     <div class="manual">
       <label for="msize">Size</label>
       <input type="number" id="msize" min="0.001" step="any" placeholder="5">
@@ -428,6 +629,7 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
       <select id="mtype" aria-label="Media type"></select>
       <button class="btn sub" id="mgo">Estimate</button>
     </div>
+    </details>
     <div class="pricebar">
       <span>ADA price:</span>
       <span class="val" id="pricev">—</span>
@@ -446,7 +648,7 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
 
 <section class="section" id="results" hidden>
   <div class="card">
-    <h2>Your scroll, priced</h2>
+    <h2>Storage and cost</h2>
     <div id="resultbody"></div>
   </div>
 
@@ -456,7 +658,7 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
 
 <section class="section" id="mintsec" hidden>
   <div class="card">
-    <h2>⚡ Let's mint it — I'll walk you through</h2>
+    <h2>Review and publish</h2>
     <p style="font-size:14.5px;color:var(--ink-2);margin:0 0 4px">One step at a time. I'll tell you exactly what to do next.
     Your file never leaves this browser except as a signed transaction.</p>
     <div id="coach" class="coach" aria-live="polite"></div>
@@ -642,6 +844,17 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
 
 <script>
 "use strict";
+function ledgerSavedItems(){
+  try{const a=JSON.parse(localStorage.getItem('ls.shelf.v1')||'[]');return Array.isArray(a)?a.filter(x=>x&&typeof x.title==='string'&&typeof x.id==='string'&&['mainnet','preview'].includes(x.network)&&(x.kind==='book'?/^[0-9a-f]{56}\.(?:[0-9a-f]{2}){0,32}$/i.test(x.key||''):/^[0-9a-f]{64}$/i.test(x.tx||'')||/^[0-9a-f]{56}$/i.test(x.policy||''))).slice(0,200):[];}catch(_){return [];}
+}
+function ledgerSaveItem(item){
+  item={...item,title:String(item.title||'Untitled').slice(0,200),network:item.network||'mainnet'};
+  item.id=item.network+':'+(item.kind==='book'?item.key:(item.tx?item.tx+'#'+item.ix:item.policy));
+  try{const a=ledgerSavedItems().filter(x=>x.id!==item.id);localStorage.setItem('ls.shelf.v1',JSON.stringify([item,...a].slice(0,200)));return true;}catch(_){return false;}
+}
+function ledgerRemoveItem(id){try{localStorage.setItem('ls.shelf.v1',JSON.stringify(ledgerSavedItems().filter(x=>x.id!==id)));}catch(_){}}
+function ledgerDownload(name,data){const u=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);}
+
 /* ══════════ cost model + dense page packing (matches tools/lschain/prepare.py) ══════════
    Metadata byte-strings ≤64 B; max_tx_size typically 16384. We pack as many 64 B
    segments as fit under max_tx_size − safety margin → fewer fixed per-tx fees &
@@ -863,6 +1076,8 @@ async function stripImageMeta(buf, type){
 }
 
 async function analyzeFile(file){
+  if(SGN.running || M.state==='minting') throw new Error('Finish or pause the current publication before preparing another work.');
+  setComposerLocked(false);
   S.file = file;
   const ext = (file.name.split(".").pop()||"").toLowerCase();
   const media = mediaByExt(ext);
@@ -1569,7 +1784,7 @@ async function connectWallet(key){
   }catch(e){ const el=$("walletctl"); if(el) el.innerHTML=`<div class="warnbox">✋ ${esc(String(e.message||e))}</div>`; renderCoach(); }
 }
 function disconnectWallet(){
-  M.wapi=null; M.walletKey=""; M.wname=""; M.balance=null; M.addrBech=null; M.state="idle";
+  M.wapi=null; M.walletKey=""; M.wname=""; M.balance=null; M.addrBech=null; M.state="idle"; setComposerLocked(false);
   S.wiz=1;
   try{ localStorage.removeItem("ls.wallet"); }catch(e){ void e; }
   renderWiz();
@@ -2384,7 +2599,7 @@ function updateMintDash(phase){
   put("dash-pause", SGN.paused?"▶ Resume signing":"⏸ Pause after this page");
 }
 async function signAllPages(){
-  if(SGN.running) return; SGN.running=true; SGN.paused=false;
+  if(SGN.running) return; SGN.running=true; SGN.paused=false; setComposerLocked(true);
   if(!SGN.startedAt) SGN.startedAt=Date.now();
   renderCoach(); updateMintDash("sign");
   const n=SGN.pages.length;
@@ -2434,6 +2649,7 @@ async function signAllPages(){
     sgnDoneUI();
   }catch(e){
     SGN.running=false;
+    if(!SGN.done) setComposerLocked(false);
     const msg=String(e?.info||e?.message||e);
     sgnStatus(SGN.done+1,"bad", /decline|refus|cancel|denied/i.test(msg) ? "you declined — nothing sent for this page; tap Resume when ready" : msg);
     $("sgnresume") && ($("sgnresume").hidden=false);
@@ -2534,7 +2750,7 @@ async function sealChainManifests(){
     // them (receipts would otherwise record 0 lock/fee and clobber the vault entry)
     if(lastPlan) M.plan=lastPlan;
     if(lastDatum) M.datum=lastDatum;
-    M.state="minting";
+    M.state="minting"; setComposerLocked(true);
     mlog("h","── verifying from the chain (never announce before this passes)");
     await verifyBack();  // clearResume happens in mintSuccess, only after this passes
   }catch(e){
@@ -2596,6 +2812,7 @@ function buildChainedTxs(net, funding, selfB, params, ttl){
   return txs;
 }
 async function signAllBulk(bulk){
+  M.state='minting'; setComposerLocked(true);
   const utxos=parseWalletUtxos(await M.wapi.getUtxos());
   const funding=[...utxos].sort((a,b)=>b.coin-a.coin)[0];
   if(!funding) throw new Error("No plain-ADA UTxO in the wallet to fund the mint.");
@@ -2622,7 +2839,7 @@ async function signAllBulk(bulk){
   CP.net=M.net; CP.checked=true;
   sgnBulkLine(""); const box=$("sgnmanifest"); if(box){ box.hidden=false; box.innerHTML=`<div id="mlog" class="mlog"></div><div id="mintstage"></div>`; }
   mlog("h","── all transactions submitted in one approval; verifying from the chain");
-  M.state="minting";
+  M.state="minting"; setComposerLocked(true);
   await verifyBack();
 }
 function sgnBulkLine(t){ const l=$("sgnline"); if(l) l.textContent=t; }
@@ -2724,7 +2941,7 @@ async function startWalletSign(key, resume){
     if(bulk) $("sgnbulk").addEventListener("click",async()=>{
       $("sgnbulk").disabled=true; $("sgngo").disabled=true; SGN.done=0;
       try{ await signAllBulk(bulk); }
-      catch(e){ const msg=String(e?.info||e?.message||e);
+      catch(e){ M.state='idle'; if(!SGN.done) setComposerLocked(false); const msg=String(e?.info||e?.message||e);
         sgnBulkLine("");
         const box=$("sgnmanifest"); if(box){ box.hidden=false;
           box.innerHTML=`<div class="warnbox">One-approval signing didn't go through (${esc(msg)}). Nothing was spent — click
@@ -2983,7 +3200,7 @@ async function connectAndQuote(key, mode="std"){
 }
 
 async function doMint(){
-  M.state="minting";
+  M.state="minting"; setComposerLocked(true);
   const stage=$("mintstage");
   stage.querySelector("#mintgo").disabled=true;
   stage.insertAdjacentHTML("beforeend",`<div class="mlog" id="mlog"></div>`);
@@ -3010,14 +3227,14 @@ async function doMint(){
     mlog("h",`── verifying from the chain (never announce before this passes)`);
     await verifyBack();
   }catch(e){
-    M.state="idle";
+    M.state="idle"; setComposerLocked(false);
     const msg=String(e?.info||e?.message||e);
     mlog("err",`✗ ${msg}`);
     mlog("", /decline|refus|cancel|denied/i.test(msg)
       ? "You declined in the wallet — nothing was sent, nothing was spent."
       : "Nothing is lost: if the transaction wasn't submitted, no ADA moved. Fix the issue and try again.");
     stage.insertAdjacentHTML("beforeend",`<p style="margin-top:10px"><button class="btn sub" id="retry">Try again</button></p>`);
-    $("retry").addEventListener("click",()=>{ M.state="idle"; renderMint(); });
+    $("retry").addEventListener("click",()=>{ M.state="idle"; setComposerLocked(false); renderMint(); });
   }
 }
 
@@ -3122,7 +3339,7 @@ async function verifyManifest(raw){
 }
 
 function mintSuccess(unverified){
-  M.state="done";
+  M.state="done"; setComposerLocked(false);
   clearResume();
   const n=NETS[M.net], ptr=M.txid+"#0", chain=M.mode==="chain";
   const title=($("b_title")?.value||"").trim()||($("b_name")?.value||"").trim()||S.name||"scroll";
@@ -3135,6 +3352,7 @@ function mintSuccess(unverified){
     lockedLovelace:M.plan?.lockCoin||0, feeLovelace:M.plan?.fee||0, pageFeesLovelace:SGN.feesSpent||0,
     mintedAt:new Date().toISOString(), verifiedFromChain:!unverified, wallet:M.wname };
   const vaultOk=vaultAdd(receipts);
+  window.dispatchEvent(new CustomEvent("ledger:published",{detail:receipts}));
   const blob=new Blob([JSON.stringify(receipts,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
   const absReader = M.net===1
@@ -3148,8 +3366,8 @@ function mintSuccess(unverified){
   if(!stage) return;
   stage.insertAdjacentHTML("beforeend",`
     <div class="coach" style="margin-top:16px">
-      <div class="cue">Step 4 — After mint</div>
-      <p class="say">${unverified?"Minted — verify from chain before announcing.":"Your scroll is eternal — verified from the chain."}</p>
+      <div class="cue">Published work</div>
+      <p class="say">${unverified?"Minted — verify from chain before announcing.":"Your work was published and its bytes checked."}</p>
       <p class="hint">Do these next (in order). Everything below stays on this device unless you export.</p>
       <ol class="steps" style="margin-top:10px">
         <li><b>Save receipts</b> — JSON + share card (screenshot or download PNG).</li>
@@ -3159,11 +3377,12 @@ function mintSuccess(unverified){
       </ol>
     </div>
     <div class="okbox">
-      <b>Pointer (civilization finds it with this):</b><br>
+      <b>Permanent work pointer</b><br>
       <span class="mono">${ptr}</span> <button class="copy" id="ptrcopy">copy</button><br>
       <span class="mono" style="font-size:12px;display:block;margin-top:6px">SHA-256 ${S.sha}</span>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
-        ${readerUrl?`<a class="btn" href="${readerUrl}" target="_blank" rel="noopener">📖 Open in Library</a>`:""}
+        ${readerUrl?`<a class="btn" href="${readerUrl}" target="_blank" rel="noopener">Open work</a>`:""}
+        ${!unverified?`<a class="btn sub" href="${bookCreationLink(receipts)}">Add a guestbook ↗</a>`:""}
         <a class="btn sub" href="${n.scan}${M.txid}" target="_blank" rel="noopener">🔎 Cardanoscan</a>
         ${readerUrl?`<a class="btn sub" href="${tweet}" target="_blank" rel="noopener">𝕏 Share</a>`:""}
         <a class="btn sub" href="${url}" download="receipts-${(S.name||"scroll").replace(/[^a-zA-Z0-9._-]+/g,"_")}.json">⬇ receipts.json</a>
@@ -3593,6 +3812,22 @@ document.addEventListener("visibilitychange",()=>{ if(!document.hidden && !M.wap
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("./sw.js",{scope:"./"}).catch(()=>{});
 }
+
+function bookCreationLink(r){
+  const q=new URLSearchParams({create:'1',tx:r.pointer.txHash,ix:String(r.pointer.txIx),sha256:r.sha256Decoded,title:r.title,network:r.networkId===0?'preview':'mainnet'});
+  return './ledger-book.html?'+q.toString();
+}
+const DRAFT_KEY='ls.work-draft.v1';
+let preparedDraftName='', preparingDraft=false;
+function setComposerLocked(on){for(const id of ['draft-title','draft-body','prepare-draft','clear-draft'])if($(id))$(id).disabled=on||preparingDraft;}
+function invalidatePreparedDraft(){if(preparedDraftName&&S.name===preparedDraftName&&M.state!=='minting'&&!SGN.running){$('results').hidden=true;$('mintsec').hidden=true;S.encBytes=null;M.state='idle';preparedDraftName='';}}
+function draftText(){return ($('draft-title').value.trim()+'\n\n'+$('draft-body').value.trim()+'\n');}
+function draftFile(){if(!$('draft-body').value.trim())throw new Error('Write something before preparing it.');return new File([draftText()],($('draft-title').value.trim().replace(/[^a-z0-9_-]+/gi,'-').slice(0,60)||'untitled')+'.txt',{type:'text/plain'});}
+try{const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');if(d){$('draft-title').value=String(d.title||'');$('draft-body').value=String(d.body||'');$('draft-state').textContent='Saved draft restored from this device. Not published.';}}catch(_){}
+for(const id of ['draft-title','draft-body'])$(id).addEventListener('input',()=>{invalidatePreparedDraft();try{localStorage.setItem(DRAFT_KEY,JSON.stringify({title:$('draft-title').value,body:$('draft-body').value}));$('draft-state').textContent='Draft saved on this device. Prepare this version before publishing.';}catch(_){$('draft-state').textContent='Browser storage unavailable. Download your draft to keep it.';}});
+$('prepare-draft').onclick=async()=>{preparingDraft=true;setComposerLocked(true);try{await analyzeFile(draftFile());preparedDraftName=S.name;$('draft-state').textContent='Prepared. Review storage and cost below; nothing has been published.';$('results').scrollIntoView({behavior:'smooth'});}catch(e){$('draft-state').textContent=e.message;}finally{preparingDraft=false;setComposerLocked(M.state==='minting'||SGN.running);}};
+$('download-draft').onclick=()=>{try{const f=draftFile(),u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);}catch(e){$('draft-state').textContent=e.message;}};
+$('clear-draft').onclick=()=>{invalidatePreparedDraft();try{localStorage.removeItem(DRAFT_KEY);}catch(_){}$('draft-title').value='';$('draft-body').value='';$('draft-state').textContent='Draft cleared from this device.';};
 </script>
 <!-- LS:FOOT start — generated by scripts/sync_nav.py; do not hand-edit -->
 <footer class="ls-foot">
@@ -3601,8 +3836,7 @@ if("serviceWorker" in navigator){
       <a class="ls-foot-mark" href="./index.html" aria-label="Ledger Scrolls — home">
         <svg viewBox="-60 -60 120 120" width="20" height="20" aria-hidden="true"><g fill="#aecbff"><circle cx="38" cy="0" r="9"/><circle cx="19" cy="32.9" r="9"/><circle cx="-19" cy="32.9" r="9"/><circle cx="-19" cy="-32.9" r="9"/><circle cx="19" cy="-32.9" r="9"/></g><circle cx="-38" cy="0" r="9" fill="#f6b45a"/><circle r="16" fill="#2f6bff" stroke="#cfe0ff" stroke-width="2"/></svg><span>Ledger <b>Scrolls</b></span>
       </a>
-      <p class="ls-foot-tag">A library that cannot burn. Immutable media written into
-      Cardano itself — no accounts, no servers of record, verified on every read.</p>
+      <p class="ls-foot-tag">Preserve a work. Keep the responses beside it. Public records and guestbooks stored on Cardano, with evidence you can inspect.</p>
     </div>
     <nav class="ls-foot-cols" aria-label="All Ledger Scrolls pages">
       <div class="ls-foot-col">
@@ -3612,8 +3846,8 @@ if("serviceWorker" in navigator){
       </div>
       <div class="ls-foot-col">
         <h4>Create</h4>
-        <a href="./calculator.html">Mint a scroll</a>
-        <a href="./ledger-book.html">Ledger Book</a>
+        <a href="./calculator.html">Publish a work</a>
+        <a href="./ledger-book.html">Guestbooks</a>
         <a href="./vault-tool.html">Vault Tool</a>
       </div>
       <div class="ls-foot-col">
@@ -3625,6 +3859,7 @@ if("serviceWorker" in navigator){
       </div>
       <div class="ls-foot-col">
         <h4>Project</h4>
+        <a href="./docs/PRODUCT.md">Product &amp; trust model</a>
         <a href="https://github.com/BEACNpool/ledger-scrolls">Source &amp; specs</a>
         <a href="./media.html">How it works</a>
       </div>

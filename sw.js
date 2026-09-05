@@ -11,7 +11,7 @@
    second worker (chess used to ship its own) does not coexist with this one —
    it replaces it, and every page inherits whatever caching policy that other
    worker happened to have. Every page registers this file. */
-const CACHE = "ls-shell-v4-brand-20260904";
+const CACHE = "ls-shell-v5-unified-20260905";
 const SHELL = [
   "./",
   "./index.html",
@@ -40,7 +40,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((k) => k.startsWith("ls-shell-") && k !== CACHE).map((k) => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
