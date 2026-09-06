@@ -1,7 +1,7 @@
 {
-  "name": "Ledger Scrolls",
-  "short_name": "Ledger Scrolls",
-  "description": "Public works and guestbooks on Cardano.",
+  "name": "Ledger Scrolls + Ledger Book",
+  "short_name": "Scrolls + Book",
+  "description": "Preserve originals with Ledger Scrolls. Collect ongoing entries with Ledger Book.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

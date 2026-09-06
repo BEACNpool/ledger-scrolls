@@ -1,48 +1,72 @@
-# Ledger Scrolls: a work and its people
+# Ledger Scrolls + Ledger Book — the BEACN ecosystem
 
-Ledger Scrolls preserves public works and gives people a place to leave entries
-beside them. Scrolls are the fixed original; Ledger Book is the guestbook around
-that original. They are two parts of one publishing workflow.
+Two independent products share a home, visual language, and open infrastructure.
+Neither is a feature of the other. A Scroll preserves a finished original;
+a Book accumulates entries over time. They connect when a Book needs a fixed
+reference, and each is complete without that connection.
 
-## Start with the job
+## First principles: two different jobs
 
-Someone publishes a work that matters. Later, a reader needs the exact version,
-even if its original website has changed. Other people may want to mark the
-occasion, leave a response, or support its keeper. The work should stay fixed;
-responses should accumulate without rewriting it.
+| | Ledger Scrolls | Ledger Book |
+|---|---|---|
+| Job | Preserve and recover an exact file | Collect public entries over time |
+| Core object | A fixed original with a stable pointer | An NFT book with a stable identity |
+| Examples | Letter, document, artwork, release | Personal book, project log, event guestbook |
+| Main actions | Read, check, download, preserve | Open, create, read, add an entry |
+| What changes | A revision is a separately published work | New entries join the record; earlier entries stay |
+| Standalone | No Book or NFT is required for locked file storage | No Scroll is required |
+| Optional connection | Become a new Book's attached reference | Name a Scroll in the Book's mint metadata |
 
-The first audience is Cardano creators and communities publishing releases,
-statements, letters, or project milestones. They already understand wallets.
-Personal guestbooks remain supported, but a wedding guest should not need to
-learn cryptocurrency merely to leave a message. That friction is real.
+The first audience is Cardano creators and communities who already use wallets.
+Scrolls serves someone who needs the original version after a website changes.
+Book serves someone who wants a public record of contributions around a person,
+project or occasion. A wedding guest should not have to learn cryptocurrency
+merely to leave a message; wallet friction remains a real adoption cost.
 
-The primary journey is:
+## Brand architecture
 
-1. **Publish a work:** choose a file or compose text locally, inspect its storage
-   plan and estimated cost, then approve the transaction(s) in a wallet.
-2. **Read the original:** reconstruct its bytes, inspect the fingerprint and its
-   source, download the file and a portable receipt.
-3. **Attach a guestbook:** create a Book NFT whose mint metadata contains the
-   work's exact transaction/output pointer and SHA-256 fingerprint.
-4. **Share the book:** readers can open the referenced original and inspect the
-   public entries alongside it. Saving a work or book bookmarks it on this device.
+**Ledger Scrolls** and **Ledger Book** are the product names. **BEACN** is the
+shared maker and ecosystem signature, not a third product users must learn.
+Keep both names in the main navigation and use the full name in page titles.
 
-No NFT is required just to preserve a file. A standalone guestbook is still valid.
-The guestbook attachment is optional and immutable once minted. An entry in that
-book is not a countersignature, endorsement, acceptance of terms, or identity proof.
+- Scrolls: cool blue, a scroll mark, fixed originals, archival reading.
+- Book: warm amber, a book mark, accumulating entries, personal participation.
+- Shared: dark surfaces, serif headings, clear controls, BEACN's existing badge,
+  accessible focus states, the same saved shelf, and inspectable evidence.
+- Use “guestbook” for that Book use case, not as a replacement product name.
+- Say “Create a Book about this Scroll” for the optional bridge. Never imply that
+  publishing a Scroll requires a Book or that a Book is incomplete without one.
+
+Book starters set a suggested name only; they do not change the on-chain format,
+permissions, entry visibility, or moderation rules. A project log is public and
+accepts protocol-conforming entries; it is not a private or owner-only notebook.
+
+## Independent and connected journeys
+
+1. **Scrolls alone:** choose a file or compose text, review exact bytes and cost,
+   publish through a wallet, then share a pointer and recover the original.
+2. **Book alone:** name a book, review ownership and cost, mint through a wallet,
+   share its link, and collect wallet-attributed public entries.
+3. **Together:** after reading or publishing a Scroll, create a Book with its
+   exact transaction/output pointer and SHA-256 in the mint metadata. Readers
+   can move from the Book's entries to that original and back.
+
+The optional attachment is immutable once the Book is minted. Existing Books
+are not modified by selecting a new file in this app. An entry is not a
+countersignature, endorsement, acceptance of terms, or identity proof.
 
 ## What the technology buys
 
-The original bytes are stored in Cardano data, rather than at a URL named by a
-token. The formats, reconstruction tools, and content commitments are open.
-Readers can recover files through another implementation or provider. The book's
-identity is independent of its current wallet, and its attachment does not depend
-on browser storage or this website.
+Scrolls stores original bytes in Cardano data, rather than at a URL named by a
+token. Book gives the record an identity that follows its NFT between wallets;
+its entries and optional attachment do not depend on this website's database.
+Formats, reconstruction tools, and content commitments are open, so another
+implementation can read the same records.
 
-These properties are valuable for compact, public, important works. They do not
-make blockchains efficient bulk storage. Large files require many transactions,
-fees, and wallet approvals. A paid guest entry also takes more effort than a web
-comment. Price does not make spam impossible or a statement meaningful.
+These properties suit compact public records that matter. Large files need more
+transactions, fees, and wallet approvals. Paid entries add friction and do not
+make spam impossible or a statement meaningful. Shared infrastructure does not
+erase the distinct purpose or cost of either product.
 
 ## The trust contract
 
@@ -73,9 +97,9 @@ are unchanged. A verified hash never grants code permission to execute.
 
 ## This implementation
 
-- One navigation: Library, Publish, Guestbooks, How it works.
+- Shared BEACN navigation with distinct Ledger Scrolls and Ledger Book destinations.
 - A library-first home, live registry titles, searchable media groups, progressive
-  metadata loading, readable errors and retries, and a device-local saved shelf.
+  metadata loading, readable errors and retries, and a device-local saved shelf shared by both products, plus saved books on Book’s opening screen.
 - A local text composer with draft restoration and download, using the same file
   preparation and wallet publishing engine as uploaded files.
 - Portable work and book receipts; explicit canonical links for raw Book asset
@@ -89,7 +113,7 @@ are unchanged. A verified hash never grants code permission to execute.
   and token-preserving change.
 
 Older bookmarks and publishing receipts in the existing “My Scrolls” vault remain
-available on Publish. New saved-shelf bookmarks and composer drafts are local to
+available on Publish. Shared saved-shelf bookmarks and composer drafts are local to
 the browser origin. They do not synchronize between devices or different mirrors.
 Download receipts/drafts before changing device or clearing site data.
 
@@ -107,10 +131,11 @@ that this interface can manufacture. Reads reaching the current scan limits are
 partial; ambiguous same-block keeper changes remain unresolved.
 
 Do not add a token, trading marketplace, general social feed, or new storage format
-before this workflow earns repeat usage. The first product test is concrete:
-can several creators publish a real work, share its book, and bring a reader back
-without personally explaining the interface? Track completed publishing, successful
-reads, actual entries, and repeat use with consenting users. A redesign alone
+before these products earn repeat usage. The first product test is concrete:
+can creators independently preserve a Scroll or open a Book and bring someone
+back without personally explaining the interface? Test the optional combined
+journey separately. Track completed publishing, successful reads, actual entries,
+and repeat use with consenting users. A redesign alone
 cannot establish demand or a business model.
 
 ## Compatibility and operation

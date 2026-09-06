@@ -12,12 +12,19 @@ CHROMIUM_BIN=/path/to/chromium \
 node scripts/browser-regression.mjs http://127.0.0.1:8937/ /path/to/results
 ```
 
+For the GitHub Pages subdirectory case, optionally set `PAGES_PREFIX_BASE` to a
+served copy of the same site beneath `/ledger-scrolls/`. The suite follows both
+product links and checks that their brand assets stay beneath that prefix.
+
 The independent fixture encoder checks transaction outputs, fees, expiry, and
 token conservation, including a quantity above JavaScript's safe-integer range.
 Python hashlib independently computes the native-policy test hash. Other cases
 cover malformed CBOR, fingerprint mismatch, absent commitments, sandboxing,
 policy evidence, historical keeper payment, missing history, changed keeper and
 network, draft restoration, and attached work encoding/tamper detection.
+Sibling-product cases cover standalone Book minting without a Scroll, Book
+starters, saved Books and the shared shelf, cross-tab bookmark changes, and each
+product's own identity and active navigation.
 
 The suite does not establish real wallet compatibility or independent Cardano
 inclusion proofs. A mainnet acceptance mint for the new subject extension has

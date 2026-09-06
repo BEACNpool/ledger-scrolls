@@ -1,8 +1,9 @@
 # Ledger Book
 
-The guestbook feature of [Ledger Scrolls](../README.md). Create a standalone book
-or attach one to a preserved work. A Book NFT identifies the guestbook; public
-transaction entries are collected across its ownership history.
+An independent product in the BEACN ecosystem, alongside [Ledger Scrolls](../README.md).
+Create a personal book, project log, or event guestbook. A Book NFT identifies
+the ongoing record; public entries are collected across its ownership history.
+A Scroll attachment is optional. Both products share navigation and a local saved shelf.
 
 The optional [Book subject](../registry/spec/book-subject-v1.md) records an
 original work pointer and SHA-256 in the NFT's mint metadata. It is not a browser

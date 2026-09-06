@@ -1,4 +1,8 @@
-# Ledger Scrolls Documentation
+# Ledger Scrolls + Ledger Book Documentation
+
+Start with [the product and trust model](PRODUCT.md) for the two products and
+their optional connection, or [Ledger Book](../ledger-book/README.md) for books
+and entries. The guides below cover Scrolls.
 
 Start at the top and stop when you know enough. Every path below is real —
 each guide is backed by scrolls live on mainnet today.

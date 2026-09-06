@@ -1,45 +1,45 @@
-# Ledger Scrolls
+# Ledger Scrolls + Ledger Book
 
-**Preserve a work. Keep the responses beside it.**
+**Preserve an original. Grow a record. Built by BEACN.**
 
-Ledger Scrolls is an open reader and publisher for public files stored inside
-Cardano transactions. Ledger Book is its guestbook feature: an NFT with public
-entries and an optional permanent attachment to a preserved work.
+Two independent products live in this app:
 
-The actual file bytes live on-chain. Links, browser bookmarks, and this website
-are ways to find and read them; they are not the canonical file.
+- **Ledger Scrolls** preserves finished files inside Cardano transactions. Read,
+  reconstruct, check fingerprints, and recover original bytes.
+- **Ledger Book** collects public entries around a person, project, or occasion.
+  Its NFT provides a book identity that follows its ownership history.
 
-## Use it
+Either works on its own. A new Book can optionally attach a Scroll's exact
+pointer and fingerprint, giving readers a path between entries and an original.
+The shared app, saved shelf, and BEACN branding connect them without making one
+a requirement of the other.
 
-- [Library](https://beacnpool.github.io/ledger-scrolls/index.html): open a work,
-  registry, $handle, or guestbook; reconstruct files; inspect fingerprints;
-  download original bytes and receipts.
-- [Publish](https://beacnpool.github.io/ledger-scrolls/calculator.html): choose a
-  file or compose text locally, review storage/cost, then approve in your wallet.
-- [Guestbooks](https://beacnpool.github.io/ledger-scrolls/ledger-book.html): create
-  a standalone book or one attached to a work; read and leave public entries.
-- [How it works](https://beacnpool.github.io/ledger-scrolls/media.html): the
-  workflow, supported media, economics and limits.
+## Use the products
 
-New unified functionality is on the review branch until the public release is
-approved. Existing mainnet Books and Scroll pointers remain compatible.
+| Product | Start here | Purpose |
+|---|---|---|
+| Ledger Scrolls | [Library](https://beacnpool.github.io/ledger-scrolls/index.html) | Read and check preserved originals |
+| Ledger Scrolls | [Preserve a file](https://beacnpool.github.io/ledger-scrolls/calculator.html) | Prepare locally, review cost, publish with a wallet |
+| Ledger Book | [Open a book](https://beacnpool.github.io/ledger-scrolls/ledger-book.html) | Find a book and read its entries |
+| Ledger Book | [Create a book](https://beacnpool.github.io/ledger-scrolls/ledger-book.html?create=1) | Personal book, project log, or event guestbook |
+| Both | [Guide](https://beacnpool.github.io/ledger-scrolls/media.html) | Independent uses, optional connection, costs and limits |
 
-## One product, two records
+Existing mainnet Books, Scroll pointers, and public URLs remain compatible.
+The actual records live on-chain. Links, bookmarks and the app help find them;
+browser storage is not their canonical record.
 
-A scroll is the fixed original. A guestbook accumulates responses without
-rewriting it. After publishing or reading a work, choose **Add a guestbook**.
+## Connect them when useful
+
+After publishing or reading a Scroll, choose **Create a Book about this Scroll**.
 The new Book NFT can carry its transaction/output pointer and decoded SHA-256 in
-mint metadata. Sharing that Book gives readers a path back to the exact original.
+mint metadata. Sharing the Book gives readers access to that exact original.
 
-Entries do not imply endorsement or acceptance of the work. A typed name is
-self-declared. The first input address is transaction attribution, not a verified
-human identity. A standalone book remains useful without a work attachment.
+An attachment is optional and cannot be changed after minting. Book entries do
+not imply endorsement or acceptance of a work. Names are self-declared; input
+addresses attribute transactions, not verified human identities. Book starters
+suggest names only: every Book remains public, with the same entry rules.
 
-The initial audience is Cardano creators and communities preserving compact
-releases, statements, letters and milestones. General social feeds, bulk cloud
-storage, and a new speculative token are outside the product's purpose.
-
-[First principles and product decisions](docs/PRODUCT.md) ·
+[First principles and brand architecture](docs/PRODUCT.md) ·
 [Book attachment extension](registry/spec/book-subject-v1.md)
 
 ## What is checked

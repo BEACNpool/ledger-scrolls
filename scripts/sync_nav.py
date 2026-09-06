@@ -10,7 +10,7 @@ do is generate the shared blocks and let CI prove no copy has drifted:
 
 Everything between the sentinels is generated. Do not hand-edit it — edit here.
 
-The top nav carries the five primary destinations. The footer links EVERY page to
+The top nav carries both products and their guide. The footer links every page to
 every other, so nothing is an island — including the sub-brands (Leaks, Vault) and
 the flagship delegation dApp (the Neon Door), which the compact nav leaves out.
 
@@ -117,17 +117,16 @@ FOOT_MARK = ('<svg viewBox="-60 -60 120 120" width="20" height="20" aria-hidden=
              '<circle r="16" fill="#2f6bff" stroke="#cfe0ff" stroke-width="2"/></svg>')
 
 
-def nav_html(P):
+def nav_html(P, page_id):
     return NAV_START + f"""
 <header class="ls-nav">
-  <a class="ls-brand" href="{P}index.html" aria-label="Ledger Scrolls — home">
-    {MARK}<span class="ls-word">Ledger <span>Scrolls</span></span>
+  <a class="ls-brand" href="{P}index.html" aria-label="BEACN on-chain tools — Ledger Scrolls">
+    <img src="{P}brand/beacn-20260904.png" width="36" height="36" alt=""><span class="ls-word">BEACN<small>ON-CHAIN TOOLS</small></span>
   </a>
-  <nav class="ls-links" aria-label="Ledger Scrolls">
-    <a href="{P}index.html" data-nav="index">Library</a>
-    <a href="{P}calculator.html" data-nav="calculator">Publish</a>
-    <a href="{P}ledger-book.html" data-nav="book">Guestbooks</a>
-    <a href="{P}media.html" data-nav="media">How it works</a>
+  <nav class="ls-links" aria-label="BEACN products">
+    <a href="{P}index.html" data-nav="index" {('aria-current="page"' if page_id in ('index','calculator') else '')}><img src="{P}brand/scrolls-mark.svg" width="22" height="22" alt="">Ledger Scrolls</a>
+    <a href="{P}ledger-book.html" data-nav="book" {('aria-current="page"' if page_id == 'book' else '')}><img src="{P}brand/book-mark.svg" width="22" height="22" alt="">Ledger Book</a>
+    <a href="{P}media.html" data-nav="media" {('aria-current="page"' if page_id == 'media' else '')}>Guide</a>
   </nav>
 </header>
 """ + NAV_END
@@ -138,27 +137,28 @@ def foot_html(P):
 <footer class="ls-foot">
   <div class="ls-foot-inner">
     <div class="ls-foot-brand">
-      <a class="ls-foot-mark" href="{P}index.html" aria-label="Ledger Scrolls — home">
-        {FOOT_MARK}<span>Ledger <b>Scrolls</b></span>
+      <a class="ls-foot-mark" href="{P}index.html" aria-label="BEACN on-chain tools — Ledger Scrolls">
+        <img src="{P}brand/beacn-20260904.png" width="36" height="36" alt=""><span>Built by <b>BEACN</b></span>
       </a>
-      <p class="ls-foot-tag">Preserve a work. Keep the responses beside it. Public records and guestbooks stored on Cardano, with evidence you can inspect.</p>
+      <p class="ls-foot-tag">Ledger Scrolls preserves originals. Ledger Book gathers entries. Two independent products, one open ecosystem on Cardano.</p>
     </div>
-    <nav class="ls-foot-cols" aria-label="All Ledger Scrolls pages">
+    <nav class="ls-foot-cols" aria-label="Explore the BEACN ecosystem">
       <div class="ls-foot-col">
-        <h4>Read</h4>
+        <h4>Ledger Scrolls</h4>
         <a href="{P}index.html">The Library</a>
+        <a href="{P}calculator.html">Preserve a file</a>
         <a href="{P}build-a-reader/">Build a reader</a>
       </div>
       <div class="ls-foot-col">
-        <h4>Create</h4>
-        <a href="{P}calculator.html">Publish a work</a>
-        <a href="{P}ledger-book.html">Guestbooks</a>
-        <a href="{P}vault-tool.html">Vault Tool</a>
+        <h4>Ledger Book</h4>
+        <a href="{P}ledger-book.html">Open a book</a>
+        <a href="{P}ledger-book.html?create=1">Create a book</a>
+        <a href="{P}index.html?saved=1">Shared saved shelf</a>
       </div>
       <div class="ls-foot-col">
         <h4>Explore</h4>
         <a href="{P}ledger-chess.html">Ledger Chess</a>
-        <a href="{P}media.html">What lives forever</a>
+        <a href="{P}vault-tool.html">Vault Tool</a>
         <a href="{P}leaks.html">BEACN Leaks</a>
         <a href="{P}neon-door.html">The Neon Door</a>
       </div>
@@ -224,7 +224,7 @@ def apply(path, page_id, prefix, check):
 
     # --- NAV: replace between sentinels, else insert right after <body...> ---
     span = block(src, NAV_START, NAV_END)
-    nav = nav_html(prefix)
+    nav = nav_html(prefix, page_id)
     if span:
         src = src[:span[0]] + nav + src[span[1]:]
     else:

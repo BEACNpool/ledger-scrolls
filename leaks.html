@@ -170,7 +170,7 @@ body[data-page="media"]      .ls-links a[data-nav="media"]{
   .ls-foot-cols{gap:22px 30px}
 }
 
-/* One archive, three working surfaces. Embedded by sync_nav.py for offline use. */
+/* Two products, shared BEACN ecosystem. Embedded for standalone/offline use. */
 :root{--bg:#0d1015;--bg-2:#11151c;--surface:#151a22;--surface-2:#1a202a;--ink:#edf0f5;--ink-2:#c8d0dc;--muted:#a5afbf;--faint:#96a1b3;--line:#2a303b;--line-2:#394454;--accent:#356df3;--accent-ink:#b3caff;--accent-soft:#172641;--amber:#d9b681;--ok:#85d7b0;--warn:#efc78a;--radius:10px;--radius-sm:6px;--sh:none;--sh-lg:none}
 body{background:#0d1015;color:#edf0f5;font-size:16px}
 body::before,.bg-grid{display:none!important}
@@ -365,20 +365,88 @@ body[data-page="book"] .finehelp{text-align:left}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 @media(max-width:700px){body[data-page="index"] #truststrip{display:none!important}}
+
+/* Sibling products: shared BEACN chrome, blue originals and amber books. */
+.ls-brand{gap:10px;letter-spacing:.04em;font-size:14px}
+.ls-brand>img{display:block;object-fit:contain;flex-shrink:0}
+.ls-word small{display:block;color:#a9b4c4;font:500 9px/1.5 system-ui,sans-serif;letter-spacing:.12em;margin-top:3px}
+.ls-links a{gap:8px;font-size:14px}
+.ls-links a>img{display:block;flex-shrink:0}
+.ls-links a[data-nav="index"]{color:#bdd4f6}
+.ls-links a[data-nav="book"]{color:#ebcaa1}
+body[data-page="calculator"] .ls-links a[data-nav="index"],body[data-page="index"] .ls-links a[data-nav="index"]{background:#182940;border-color:#486084;color:#e1edff}
+body[data-page="book"] .ls-links a[data-nav="book"]{background:#30271e;border-color:#786044;color:#ffe1b6}
+.ls-foot-mark img{display:block;object-fit:contain}
+.ls-foot-mark b{color:#d4dfed}
+.ls-foot-col:nth-child(1) h4{color:#b3caff}
+.ls-foot-col:nth-child(2) h4{color:#f0c58a}
+.book-link{color:#e6c394}
+body[data-page="index"] .library-intro .eyebrow{color:#aac8f1}
+body[data-page="index"] .library-intro .hero-title{margin-top:12px}
+body[data-page="book"]{--accent:#ddb379;--accent-ink:#f0c58a;--purple:#ddb379;--purple-soft:#30251b;--purple-dark:#805d32}
+body[data-page="book"] .hero{border-top:2px solid #806443}
+body[data-page="book"] .hero h1 em,body[data-page="book"] .hero .eyebrow{color:#efc993}
+body[data-page="book"] .hero .sub{max-width:720px}
+body[data-page="book"] .centercard{background:#1a1c20;border-color:#53504a}
+body[data-page="book"] .btn.primary{background:#f0d1a6;border-color:#f0d1a6;color:#241b10}
+body[data-page="book"] .btn.primary:hover{background:#ffe2bb}
+body[data-page="book"] .seg button[aria-selected="true"]{background:#f0d1a6;color:#241b10;box-shadow:none}
+body[data-page="book"] input:focus,body[data-page="book"] textarea:focus{outline-color:#f0c58a;border-color:#cba676;box-shadow:none}
+body[data-page="book"] :focus-visible{outline-color:#f0c58a}
+body[data-page="book"] .sig{background:#211f1d;border-color:#665642}
+body[data-page="book"] .sig .name{color:#f0d1a6!important}
+body[data-page="book"] .sig .msg{color:#ede5da}
+.book-starters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:24px}
+.book-starters button{padding:12px;text-align:left;background:#29251f;border:1px solid #6a5740;border-radius:5px;color:#ecd9bc}
+.book-starters button:hover{background:#3b3125;border-color:#c7a77c}
+.book-starters b,.book-starters span{display:block;font:600 14px/1.4 system-ui,sans-serif}
+.book-starters span{font-weight:400;font-size:12px;color:#c6bbaa;margin-top:6px}
+.book-saved{border-top:1px solid #575048;margin-top:24px;padding-top:20px}
+.book-saved h2{font:400 24px/1.3 Georgia,serif;margin:0 0 12px}
+.book-saved-row{display:block;padding:12px 0;border-bottom:1px solid #3c3832;color:#f0d1a6;font-size:16px;overflow-wrap:anywhere}
+.book-saved>a{display:inline-block;margin-top:16px;font-size:14px}
+body[data-page="book"] .subject-editor{border-color:#615847;background:#16191e}
+body[data-page="book"] .linked-work{border-left-color:#aecbff}
+body[data-page="book"] #searchinput:focus{outline:2px solid #f0c58a;outline-offset:3px;border-color:#cba676;box-shadow:none}
+body[data-page="book"] .seg button{border-radius:4px}
+body[data-page="media"] .hero h1{font:400 clamp(36px,4vw,52px)/1.15 Georgia,serif;letter-spacing:-.03em;margin:16px 0}
+body[data-page="media"] .hero .eyebrow{background:none;border:0;padding:0;font-size:12px;color:#aab8cd}
+.product-comparison{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:32px 0 24px}
+.product-story{display:flex;flex-direction:column;align-items:flex-start;padding:24px;border:1px solid #4a5c76;border-top:3px solid #aecbff;border-radius:6px;background:#171e29}
+.product-story.book-story{border-color:#776148;border-top-color:#f0c58a;background:#221f1b}
+.product-story h2{font:400 30px/1.2 Georgia,serif;margin:16px 0 8px;color:#edf0f5}
+.product-story p{font-size:16px;line-height:1.65;color:#bcc9dc;margin:0 0 16px}
+.product-story.book-story p{color:#d1c6b7}
+.product-story .product-promise{color:#b7d4ff;font-weight:600;font-size:17px}
+.product-story.book-story .product-promise{color:#f0c58a}
+.product-story p.product-state{font-size:14px;padding-top:16px;border-top:1px solid #435069;width:100%}
+.product-story.book-story p.product-state{border-color:#685943}
+.product-story .ls-action{margin-top:auto}
+.product-story.book-story .ls-action{color:#f8dbb3;background:#3a3024;border-color:#997a53}
+.ecosystem-bridge{padding:20px 0 24px;border-bottom:1px solid #3d4654}
+.ecosystem-bridge h2{font:400 28px/1.3 Georgia,serif;margin:0 0 12px}
+.ecosystem-bridge p{font-size:16px;line-height:1.7;color:#b8c4d6;margin:0 0 12px;max-width:76ch}
+.ecosystem-bridge a,.guide-evidence{font-size:14px}
+.guide-evidence{padding-top:20px;color:#bdc7d7;line-height:1.7}
+.guide-evidence summary{cursor:pointer;min-height:44px;font-weight:600}
+.guide-evidence ul{padding-left:20px;margin:0 0 16px}
+.guide-evidence li{margin-bottom:12px}
+@media(max-width:700px){.product-comparison{grid-template-columns:1fr;gap:16px;margin-top:24px}.product-story{padding:20px}.product-story h2{font-size:28px}}
+@media(max-width:700px){.ls-nav{gap:12px;padding:12px 16px}.ls-links{gap:4px}.ls-links a{padding:0 8px;font-size:13px;gap:7px}.ls-links a>img{width:20px;height:20px}.ls-word small{display:inline;margin-left:12px;font-size:9px}.ls-brand .ls-word{display:block}.book-starters{gap:6px}.book-starters button{padding:10px 8px}.book-starters b{font-size:13px}.book-starters span{font-size:12px}}
+@media(max-width:370px){.ls-links a{font-size:12px;padding:0 5px;gap:5px}.ls-links a>img{width:18px;height:18px}.book-starters{grid-template-columns:1fr}.book-starters button{display:flex;justify-content:space-between;align-items:center;gap:8px}.book-starters span{margin:0;text-align:right}}
 /* LS:NAV end */
 </style>
 </head>
 <body>
 <!-- LS:NAV start — generated by scripts/sync_nav.py; do not hand-edit -->
 <header class="ls-nav">
-  <a class="ls-brand" href="./index.html" aria-label="Ledger Scrolls — home">
-    <svg viewBox="-60 -60 120 120" width="21" height="21" aria-hidden="true"><g fill="#aecbff"><circle cx="38" cy="0" r="9"/><circle cx="19" cy="32.9" r="9"/><circle cx="-19" cy="32.9" r="9"/><circle cx="-19" cy="-32.9" r="9"/><circle cx="19" cy="-32.9" r="9"/></g><circle cx="-38" cy="0" r="9" fill="#f6b45a"/><circle r="16" fill="#2f6bff" stroke="#cfe0ff" stroke-width="2"/></svg><span class="ls-word">Ledger <span>Scrolls</span></span>
+  <a class="ls-brand" href="./index.html" aria-label="BEACN on-chain tools — Ledger Scrolls">
+    <img src="./brand/beacn-20260904.png" width="36" height="36" alt=""><span class="ls-word">BEACN<small>ON-CHAIN TOOLS</small></span>
   </a>
-  <nav class="ls-links" aria-label="Ledger Scrolls">
-    <a href="./index.html" data-nav="index">Library</a>
-    <a href="./calculator.html" data-nav="calculator">Publish</a>
-    <a href="./ledger-book.html" data-nav="book">Guestbooks</a>
-    <a href="./media.html" data-nav="media">How it works</a>
+  <nav class="ls-links" aria-label="BEACN products">
+    <a href="./index.html" data-nav="index" ><img src="./brand/scrolls-mark.svg" width="22" height="22" alt="">Ledger Scrolls</a>
+    <a href="./ledger-book.html" data-nav="book" ><img src="./brand/book-mark.svg" width="22" height="22" alt="">Ledger Book</a>
+    <a href="./media.html" data-nav="media" >Guide</a>
   </nav>
 </header>
 <!-- LS:NAV end -->
@@ -671,27 +739,28 @@ if (mh) { const p = mh[1].toLowerCase(); const opt = [...$('chansel').options].f
 <footer class="ls-foot">
   <div class="ls-foot-inner">
     <div class="ls-foot-brand">
-      <a class="ls-foot-mark" href="./index.html" aria-label="Ledger Scrolls — home">
-        <svg viewBox="-60 -60 120 120" width="20" height="20" aria-hidden="true"><g fill="#aecbff"><circle cx="38" cy="0" r="9"/><circle cx="19" cy="32.9" r="9"/><circle cx="-19" cy="32.9" r="9"/><circle cx="-19" cy="-32.9" r="9"/><circle cx="19" cy="-32.9" r="9"/></g><circle cx="-38" cy="0" r="9" fill="#f6b45a"/><circle r="16" fill="#2f6bff" stroke="#cfe0ff" stroke-width="2"/></svg><span>Ledger <b>Scrolls</b></span>
+      <a class="ls-foot-mark" href="./index.html" aria-label="BEACN on-chain tools — Ledger Scrolls">
+        <img src="./brand/beacn-20260904.png" width="36" height="36" alt=""><span>Built by <b>BEACN</b></span>
       </a>
-      <p class="ls-foot-tag">Preserve a work. Keep the responses beside it. Public records and guestbooks stored on Cardano, with evidence you can inspect.</p>
+      <p class="ls-foot-tag">Ledger Scrolls preserves originals. Ledger Book gathers entries. Two independent products, one open ecosystem on Cardano.</p>
     </div>
-    <nav class="ls-foot-cols" aria-label="All Ledger Scrolls pages">
+    <nav class="ls-foot-cols" aria-label="Explore the BEACN ecosystem">
       <div class="ls-foot-col">
-        <h4>Read</h4>
+        <h4>Ledger Scrolls</h4>
         <a href="./index.html">The Library</a>
+        <a href="./calculator.html">Preserve a file</a>
         <a href="./build-a-reader/">Build a reader</a>
       </div>
       <div class="ls-foot-col">
-        <h4>Create</h4>
-        <a href="./calculator.html">Publish a work</a>
-        <a href="./ledger-book.html">Guestbooks</a>
-        <a href="./vault-tool.html">Vault Tool</a>
+        <h4>Ledger Book</h4>
+        <a href="./ledger-book.html">Open a book</a>
+        <a href="./ledger-book.html?create=1">Create a book</a>
+        <a href="./index.html?saved=1">Shared saved shelf</a>
       </div>
       <div class="ls-foot-col">
         <h4>Explore</h4>
         <a href="./ledger-chess.html">Ledger Chess</a>
-        <a href="./media.html">What lives forever</a>
+        <a href="./vault-tool.html">Vault Tool</a>
         <a href="./leaks.html">BEACN Leaks</a>
         <a href="./neon-door.html">The Neon Door</a>
       </div>
