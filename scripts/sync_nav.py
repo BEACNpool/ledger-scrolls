@@ -171,7 +171,7 @@ def foot_html(P):
     </nav>
   </div>
   <div class="ls-foot-legal">
-    <a class="ls-foot-beacn" href="https://beacnpool.org/" aria-label="BEACNpool website">
+    <a class="ls-foot-beacn" href="https://beacnpool.github.io/ABCDE/pool/" aria-label="BEACNpool legacy archive">
       <img src="{P}brand/beacn-20260904.png" width="40" height="40" alt="" loading="lazy" decoding="async">
       <span>Maintained by BEACN</span>
     </a>
