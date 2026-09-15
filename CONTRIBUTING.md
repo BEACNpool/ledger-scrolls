@@ -30,8 +30,7 @@ Minted something cool? Share it!
 
 - Add a registry entry (pointer + required `sha256`) and open a PR
 - Document it in `examples/` with your `receipts.json`
-- Share on social media with **#LedgerScrolls** and tag
-  [@BEACNpool](https://x.com/BEACNpool)
+- Share it with **#LedgerScrolls**
 
 ### Reporting Bugs
 
@@ -157,7 +156,6 @@ When in doubt: if a file's hash is committed to the chain, the chain wins.
 
 - **GitHub Issues** — Bug reports and feature requests
 - **GitHub Discussions** — General questions and ideas
-- **Twitter/X** — [@BEACNpool](https://x.com/BEACNpool)
 
 ## 📜 License
 

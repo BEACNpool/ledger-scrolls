@@ -129,8 +129,7 @@ Make it discoverable — do all three:
    Standard scrolls use `"kind": "utxo-inline-datum-bytes-v1"`. The registry is
    **forkable** — you can run your own head, or get listed in BEACN's public one.
 2. **Open a PR** adding your entry (and your `receipts.json`) to this repo.
-3. **Share it** on X with **#LedgerScrolls** and tag
-   [@BEACNpool](https://x.com/BEACNpool).
+3. **Share it** with **#LedgerScrolls**.
 
 ---
 

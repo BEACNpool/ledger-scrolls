@@ -120,8 +120,8 @@ If you discover a security vulnerability:
 3. **Include** detailed reproduction steps
 4. **Wait** for acknowledgment before disclosure
 
-If the advisory form is unavailable, DM [@BEACNpool](https://x.com/BEACNpool)
-for a private channel — never post details publicly first.
+If the advisory form is unavailable, open a GitHub issue asking for a private
+contact channel, without any details — never post details publicly first.
 
 ## ✅ Best Practices
 
