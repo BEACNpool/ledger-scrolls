@@ -1,8 +1,46 @@
 # Ledger Scrolls + Ledger Book
 
-> **September 2026:** BEACN retired and its hosted Koios mirror is offline. Scrolls still read through the
-> public Koios API from a terminal (`koios-viewer`, `viewers/koios-cli`), or in the browser Library with your
-> own free mirror from [`tools/cors-mirror`](tools/cors-mirror/). Steps: <https://beacnpool.github.io/ABCDE/pool/#read>.
+> **📦 Archived — September 2026. Development has paused.** BEACN, which built and ran Ledger Scrolls, retired
+> its stake pool and its servers. Nothing is lost: every scroll lives on Cardano, and this repository keeps the
+> code, the specs and a lookup tool so anyone can still read them.
+
+## Read the scrolls today
+
+BEACN's hosted Koios mirror is gone, so the website can no longer reach the chain by itself. Reading still
+works from any terminal through the free public Koios API: no key, no account, nothing of BEACN's.
+
+```sh
+# 1. Get the lookup tool and the reader (about 1 MB; skips the films)
+git clone --depth 1 --filter=blob:none --sparse https://github.com/BEACNpool/ledger-scrolls
+cd ledger-scrolls && git sparse-checkout set archive koios-viewer viewers registry
+
+# 2. Pick any scroll or BEACN mint from a menu
+python3 archive/lookup.py
+
+# 3. A mint's art needs nothing else
+python3 archive/lookup.py get beacn-sigil
+
+# 4. Rebuilding a scroll uses the open lsview reader (install once)
+cd koios-viewer && python3 -m venv .venv && . .venv/bin/activate && pip install -e . && cd ..
+python3 archive/lookup.py get bible
+```
+
+Every rebuilt scroll is checked against the SHA-256 recorded on chain. [`archive/README.md`](archive/README.md)
+explains the tool.
+
+**In a browser:** the [Library](https://beacnpool.github.io/ledger-scrolls/) still reads scrolls if you give it
+a Koios mirror of your own. Deploy [`tools/cors-mirror/worker.js`](tools/cors-mirror/) on a free Cloudflare
+account (about two minutes, no domain needed), then paste its URL under *Your trust anchors → Data source*.
+Ledger Chess, Mint a Scroll, Ledger Book and the Neon Door are wired to BEACN's retired mirror and no longer
+reach the chain.
+
+**Everything preserved:** every scroll, readable in one click with an in-browser hash check, plus all of BEACN's
+on-chain art, its films and the rest of its code, lives in the
+[BEACN legacy archive](https://beacnpool.github.io/ABCDE/pool/).
+
+---
+
+*The rest of this README describes the project as it stood when development paused.*
 
 **Preserve an original. Grow a record. Built by BEACN.**
 
