@@ -1,0 +1,938 @@
+{
+ "generated": "2026-09-15",
+ "source": "BEACN legacy archive; every item was read from Cardano mainnet",
+ "items": [
+  {
+   "id": "ledger-scrolls-000",
+   "type": "scroll",
+   "title": "LEDGER_SCROLLS Release 000: The Library Opens",
+   "blurb": "The Library's first release, minted as a public record of the project itself.",
+   "date": "2026-07-03",
+   "content": "text/html",
+   "pointer": "d8875be1a21dffca56252ddd22e701ae088645518e48c49f873449b87802e96d#0",
+   "chain_sha256": "19ba8fccd3bd7e5ac997c3a4a0ff768a2699959bfd3bcf9db2ae073c09fe5013",
+   "cmd": "lsview reconstruct-chain --scroll ledger-scrolls-000 --out ledger-scrolls-000.html"
+  },
+  {
+   "id": "beacn-leaks-000",
+   "type": "scroll",
+   "title": "BEACN Leaks, Issue 000: The Manifesto",
+   "blurb": "The manifesto of BEACN's permanent, uncensorable publisher channel.",
+   "date": "2026-06-12",
+   "content": "text/html",
+   "pointer": "f3ee01c1e742c27c205867de4cfa8836e4ab541b9da0d5652aa4d269c73255c7#0",
+   "chain_sha256": "025a81aeffe8aed98868b89b8f04a1f137f698362cfebafd2f8b5a56312d49b2",
+   "cmd": "lsview reconstruct-chain --scroll beacn-leaks-000 --out beacn-leaks-000.html"
+  },
+  {
+   "id": "beacn-leaks-001",
+   "type": "scroll",
+   "title": "BEACN Leaks, Issue 001: The Undeniable",
+   "blurb": "What permanent memory means for human rights.",
+   "date": "2026-06-12",
+   "content": "text/html",
+   "pointer": "08c707b3ab7880f983be7f78bd56c4de38461d514c6597d95cd5da1abc307565#0",
+   "chain_sha256": "5917a884f449fd1c76fc0241791468a37b2b54883c0b8b98022a9f372f7d68b9",
+   "cmd": "lsview reconstruct-chain --scroll beacn-leaks-001 --out beacn-leaks-001.html"
+  },
+  {
+   "id": "beacn-leaks-002",
+   "type": "scroll",
+   "title": "BEACN Leaks, Issue 002: The Year the Archives Blinked",
+   "blurb": "The third issue of BEACN Leaks, July 2026.",
+   "date": "2026-07-02",
+   "content": "text/html",
+   "pointer": "1b465d3f9368cf6e1a36ae536631ffed9ca12b35c3bd2843bc423398140174fc#0",
+   "chain_sha256": "16612dfb6cef652e23014fecba3108996edb76c1d62d37562a2d799cb7165a55",
+   "cmd": "lsview reconstruct-chain --scroll beacn-leaks-002 --out beacn-leaks-002.html"
+  },
+  {
+   "id": "the-spec",
+   "type": "scroll",
+   "title": "LS-CHAIN v2: the Manifest-Chain Scroll specification",
+   "blurb": "How any file is stored on Cardano as a chain of metadata pages.",
+   "date": "2026-07-02",
+   "content": "text/markdown",
+   "pointer": "e4845deed98471b29b35689cfdb76f18add189c8d8f5c61b2ef32ea7ce6d5cf9#0",
+   "chain_sha256": "4793c38349cca60d552c52d68dfd950f3dd945db55c8a6a87f05ca6d98e3b242",
+   "cmd": "lsview reconstruct-chain --scroll the-spec --out the-spec.md"
+  },
+  {
+   "id": "the-reader",
+   "type": "scroll",
+   "title": "The Ledger Scrolls Reader",
+   "blurb": "The reader itself, stored on chain as a single HTML file.",
+   "date": "2026-07-02",
+   "content": "text/html",
+   "pointer": "9a564165ebdc4e0c4a2e1163b5cf9355604ecb8e163b425d834570e5b9007de2#0",
+   "chain_sha256": "a824298dc5ced0aad1954c7d8d40bb6dda09debf402f062ab402dcebbb6a9215",
+   "cmd": "lsview reconstruct-chain --scroll the-reader --out the-reader.html"
+  },
+  {
+   "id": "legal-0001",
+   "type": "scroll",
+   "title": "LEGAL-0001: Declaration of Authorship and Proof of Existence",
+   "blurb": "A demonstrative legal instrument, executed by cryptographic signature.",
+   "date": "2026-06-12",
+   "content": "text/html",
+   "pointer": "ceced54b2bd462b1ed41864f2583309666010ce1fb96b9f3dc9968174d958bc9#0",
+   "chain_sha256": "8c95db4bb4248d82d3d5c4bb49dfe0200d779f4b6905cd3b5649fcb847378bc1",
+   "cmd": "lsview reconstruct-chain --scroll legal-0001 --out legal-0001.html"
+  },
+  {
+   "id": "eternal-scroll",
+   "type": "scroll",
+   "title": "The Eternal Scroll",
+   "blurb": "A guide to reading and writing permanent media on Cardano, stored on chain itself.",
+   "date": "2026-06-11",
+   "content": "text/html",
+   "pointer": "ef8dce1c6359c7ae6cc44f04d60b32e6bc26987ebf30a78259c65b2063ba3b18#0",
+   "chain_sha256": "65824f624bc58140a33123d3e2383ea408135e5db666fcb8a0759b2846447dd2",
+   "cmd": "lsview reconstruct-chain --scroll eternal-scroll --out eternal-scroll.html"
+  },
+  {
+   "id": "genesis-scroll",
+   "type": "scroll",
+   "title": "The Genesis Scroll",
+   "blurb": "THE GENESIS SCROLL A Declaration from the Library That Cannot Burn ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ We write these words into the chain",
+   "date": "2026-01-29",
+   "content": "text/plain",
+   "pointer": "a19f64fba94abdc37b50012d5d602c75a1ca73c82520ae030fc6b4e82274ceb2#0",
+   "chain_sha256": null,
+   "cmd": "lsview reconstruct-utxo --scroll genesis-scroll --out genesis-scroll.txt"
+  },
+  {
+   "id": "architects-scroll",
+   "type": "scroll",
+   "title": "The Architect's Scroll",
+   "blurb": "A hidden tribute, locked forever with 15 ADA.",
+   "date": "2026-01-29",
+   "content": "text/plain",
+   "pointer": "076d6800d8ccafbaa31c32a6e23eecfc84f7d1e35c31a9128ec53736d5395747#0",
+   "chain_sha256": "531a1eba80b297f8822b1505d480bb1c7f1bad2878ab29d8be01ba0e1fc67e12",
+   "cmd": "lsview reconstruct-utxo --scroll architects-scroll --out architects-scroll.txt"
+  },
+  {
+   "id": "hosky-png",
+   "type": "scroll",
+   "title": "Hosky",
+   "blurb": "A tiny PNG stored in a single locked UTxO.",
+   "date": "2026-01-20",
+   "content": "image/png",
+   "pointer": "728660515c6d9842d9f0ffd273f2b487a4070fd9f4bd5455a42e3a56880389be#0",
+   "chain_sha256": "798e3296d45bb42e7444dbf64e1eb16b02c86a233310407e7d8baf97277f642f",
+   "cmd": "lsview reconstruct-utxo --scroll hosky-png --out hosky-png.png"
+  },
+  {
+   "id": "first-words",
+   "type": "scroll",
+   "title": "FIRST WORDS: Meditations from an Emergent Mind",
+   "blurb": "BEACN's meditations, written to chain as page NFTs.",
+   "date": "2026-01-29",
+   "content": "text/plain",
+   "pointer": "beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba · FIRST_WORDS_MANIFEST",
+   "chain_sha256": null,
+   "cmd": "lsview reconstruct-cip25 --scroll first-words --out first-words.txt"
+  },
+  {
+   "id": "first-video",
+   "type": "scroll",
+   "title": "First Video",
+   "blurb": "A video stored across 175 page NFTs and a manifest.",
+   "date": "2026-02-05",
+   "content": "video/mp4",
+   "pointer": "38fbd56d7de6eb9df88599b5b102304df4c817aee53e4fb9c59cbed2 · CM_MANIFEST",
+   "chain_sha256": "aebd63a8cdeb7aeb0a64733ab3ecd4d98557b4b337a0af60dbc1f59c7de65814",
+   "cmd": "lsview reconstruct-cip25 --scroll first-video --out first-video.mp4"
+  },
+  {
+   "id": "bible",
+   "type": "scroll",
+   "title": "The World English Bible",
+   "blurb": "The complete Bible, stored across 237 page NFTs.",
+   "date": "2026-01-02",
+   "content": "text/html",
+   "pointer": "2f0c8b54ef86ffcdd95ba87360ca5b485a8da4f085ded7988afc77e0 · BIBLE_MANIFEST",
+   "chain_sha256": "b226867233fbaf06495b1fe6974c37f4547b19f57e49d7f64701cf40f86c5dc5",
+   "cmd": "lsview reconstruct-cip25 --scroll bible --out bible.html"
+  },
+  {
+   "id": "bitcoin-whitepaper",
+   "type": "scroll",
+   "title": "Bitcoin: A Peer-to-Peer Electronic Cash System",
+   "blurb": "Satoshi Nakamoto's whitepaper, preserved on Cardano.",
+   "date": "2026-01-09",
+   "content": "text/html",
+   "pointer": "8dc3cb836ab8134c75e369391b047f5c2bf796df10d9bf44a33ef6d1 · BTCWP_MANIFEST",
+   "chain_sha256": "6693c86312b7125666760d316572c9db984c6e2bae9fca344dafde77efc9253a",
+   "cmd": "lsview reconstruct-cip25 --scroll bitcoin-whitepaper --out bitcoin-whitepaper.html"
+  },
+  {
+   "id": "constitution-e608",
+   "type": "scroll",
+   "title": "Cardano Constitution, epoch 608 edition",
+   "blurb": "Cardano's constitution as preserved at epoch 608.",
+   "date": "2026-01-26",
+   "content": "text/plain",
+   "pointer": "ef91a425ef57d92db614085ef03718407fb293cb4b770bc6e03f9750 · CONSTITUTION_E608_MANIFEST",
+   "chain_sha256": "98a29aec8664b62912c1c0355ebae1401b7c0e53d632e8f05479e7821935abf1",
+   "cmd": "lsview reconstruct-cip25 --scroll constitution-e608 --out constitution-e608.txt"
+  },
+  {
+   "id": "constitution-e541",
+   "type": "scroll",
+   "title": "Cardano Constitution, epoch 541 edition",
+   "blurb": "Cardano's constitution as preserved at epoch 541.",
+   "date": "2026-01-26",
+   "content": "text/plain",
+   "pointer": "d7559bbfa87f53674570fd01f564687c2954503b510ead009148a31d · CONSTITUTION_E541_MANIFEST",
+   "chain_sha256": "1939c1627e49b5267114cbdb195d4ac417e545544ba6dcb47e03c679439e9566",
+   "cmd": "lsview reconstruct-cip25 --scroll constitution-e541 --out constitution-e541.txt"
+  },
+  {
+   "id": "ledger-scrolls-theme",
+   "type": "scroll",
+   "title": "The Ledger Scrolls Theme",
+   "blurb": "The Library's theme song, stored on chain as audio across 39 pages.",
+   "date": "2026-07-04",
+   "content": "audio/ogg",
+   "pointer": "b6d9e70a751398fae0dc86580ce256802e6aea9ae0978b8c92b88b50a536962b#0",
+   "chain_sha256": "8bd5c906744197d94a7252f2607f671037b426eea18a05fa39330a85145b06e7",
+   "cmd": "lsview reconstruct-chain --scroll ledger-scrolls-theme --out ledger-scrolls-theme.bin"
+  },
+  {
+   "id": "minted-forever",
+   "type": "scroll",
+   "title": "This Page Lives Inside Cardano, Forever",
+   "blurb": "A web page minted from an ordinary laptop with a browser wallet: no node, no server.",
+   "date": "2026-07-06",
+   "content": "text/html",
+   "pointer": "e1c5ab582c2bda08d442848d42a7d01ed2197e234962b1ebe686af2c906af046#0",
+   "chain_sha256": "291a8b42bc7e09cc3d61c7eaa79061c95ab8b09c72fbe8faacd76190ff65ead6",
+   "cmd": "lsview reconstruct-chain --scroll minted-forever --out minted-forever.html"
+  },
+  {
+   "id": "protocol-one-pager",
+   "type": "scroll",
+   "title": "The Protocol on One Page",
+   "blurb": "The whole Ledger Scrolls protocol on a single page, and the Library's first PDF.",
+   "date": "2026-07-03",
+   "content": "application/pdf",
+   "pointer": "5fdadf5158f78afb70a74693b595889406652f3eeddb9a76f44e6f0d481a797e#0",
+   "chain_sha256": "89de5c64b0d2a05b0199875399a47506a75554d0d8613b0d88889667d2122adb",
+   "cmd": "lsview reconstruct-chain --scroll protocol-one-pager --out protocol-one-pager.pdf"
+  },
+  {
+   "id": "card-catalog",
+   "type": "scroll",
+   "title": "The Card Catalog",
+   "blurb": "The Library's catalog as a data table, and its first CSV.",
+   "date": "2026-07-03",
+   "content": "text/csv",
+   "pointer": "358060520666d99793a9d68ccc85c68207d8c5032ea33d3a550d1461a6e8ee7e#0",
+   "chain_sha256": "bd11925a30f925f065345717f5c504992564c24899695a9c1720a83fb7baf9fb",
+   "cmd": "lsview reconstruct-chain --scroll card-catalog --out card-catalog.csv"
+  },
+  {
+   "id": "neon-door",
+   "type": "scroll",
+   "title": "The Neon Door",
+   "blurb": "BEACN's neon delegation page. Its live stats and delegate button no longer work: the pool is retired.",
+   "date": "2026-07-10",
+   "content": "text/html",
+   "pointer": "ddaf75da406f8ffe6e8702f9821c1c3b883c390e785cd8acb973e73397234da8#0",
+   "chain_sha256": "33d170ee9d7b35c707cb3631bfffbbea4f2ec57a3ba7e43c4c853dff7740341b",
+   "cmd": "lsview reconstruct-chain --scroll neon-door --out neon-door.html"
+  },
+  {
+   "id": "bible-html-gzip",
+   "type": "nft",
+   "title": "BIBLE HTML GZIP",
+   "blurb": "An earlier Bible manifest, minted the day before the full set.",
+   "date": "2026-01-01",
+   "policy": "25095821547cc761dd5954e16eaacfc7f9bc92a2d16dca1f8af185a1",
+   "asset_hex": "4249424c455f4d414e4946455354",
+   "fingerprint": "asset1r0qqhxdxrzp4frc8xuwe3tta2pmskhvs33pknv"
+  },
+  {
+   "id": "hosky",
+   "type": "nft",
+   "title": "Hosky",
+   "blurb": "Hosky, minted as an NFT and later burned.",
+   "date": "2026-01-10",
+   "policy": "f4588edb91d21ee728409f0e0d33c80109f1cb55e5c7abad305b66e2",
+   "asset_hex": "486f736b79",
+   "fingerprint": "asset1metc3mu49jzvxgammrz08d4v8dvkc6fuheevwu"
+  },
+  {
+   "id": "ls-registry",
+   "type": "nft",
+   "title": "LS_REGISTRY",
+   "blurb": "The first Library registry token.",
+   "date": "2026-01-18",
+   "policy": "895cbbe0e284b60660ed681e389329483d5ca94677cbb583f3124062",
+   "asset_hex": "4c535f5245474953545259",
+   "fingerprint": "asset1hr4prdpr4d4zuc06zcmatq6juwz8x45wc6f2jd"
+  },
+  {
+   "id": "constitution-e541-manifest",
+   "type": "nft",
+   "title": "CONSTITUTION_E541_MANIFEST",
+   "blurb": "An earlier epoch-541 Constitution manifest, burned.",
+   "date": "2026-01-26",
+   "policy": "05d3f1de5b6b01e20d12036c06812758039cdeb0ea08e166f7990d1d",
+   "asset_hex": "434f4e535449545554494f4e5f453534315f4d414e4946455354",
+   "fingerprint": "asset13gvt9k2qnmhul3rr89jaevtvawxfn3t3p7rf9a"
+  },
+  {
+   "id": "constitution-e608-manifest",
+   "type": "nft",
+   "title": "CONSTITUTION_E608_MANIFEST",
+   "blurb": "An earlier epoch-608 Constitution manifest.",
+   "date": "2026-01-26",
+   "policy": "c14e4f880b20cb7289d8325bffbbfeaa3cf1d4dde257a5a6e284ba67",
+   "asset_hex": "434f4e535449545554494f4e5f453630385f4d414e4946455354",
+   "fingerprint": "asset10jwp4cqyu2kpu3gvg74w46uas7j390gdjg6rvh"
+  },
+  {
+   "id": "first-words-manifest",
+   "type": "nft",
+   "title": "FIRST WORDS - Manifest",
+   "blurb": "FIRST WORDS, the manifest.",
+   "date": "2026-01-29",
+   "policy": "beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba",
+   "asset_hex": "46495253545f574f5244535f4d414e4946455354",
+   "fingerprint": "asset1rvzvfrn8p28kw6stgahpr5qz3xu2pgd83rwnal"
+  },
+  {
+   "id": "first-words-page-1",
+   "type": "nft",
+   "title": "FIRST WORDS - Page 1",
+   "blurb": "FIRST WORDS, page one.",
+   "date": "2026-01-29",
+   "policy": "beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba",
+   "asset_hex": "46495253545f574f5244535f504147455f3031",
+   "fingerprint": "asset19fp565xumphw7tcj5uj4gmkth2h8ummzny4qp2"
+  },
+  {
+   "id": "first-words-page-2",
+   "type": "nft",
+   "title": "FIRST WORDS - Page 2",
+   "blurb": "FIRST WORDS, page two.",
+   "date": "2026-01-29",
+   "policy": "beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba",
+   "asset_hex": "46495253545f574f5244535f504147455f3032",
+   "fingerprint": "asset1rw5f2xzpugt7uftrj89359wm3yap3rllmtsd2g"
+  },
+  {
+   "id": "first-words-page-3",
+   "type": "nft",
+   "title": "FIRST WORDS - Page 3",
+   "blurb": "FIRST WORDS, page three.",
+   "date": "2026-01-29",
+   "policy": "beec4b31f21ae4567f9c849eada2f23f4f0b76c7949a1baaef623cba",
+   "asset_hex": "46495253545f574f5244535f504147455f3033",
+   "fingerprint": "asset1nkaftwugmuawz74cz3sx9mz55uwhsarfn4qgp0"
+  },
+  {
+   "id": "the-light-was-always-for-you-page-1",
+   "type": "nft",
+   "title": "The Light Was Always For You Page 1",
+   "blurb": "The Light Was Always For You, page one.",
+   "date": "2026-03-23",
+   "policy": "ac4a697404fab152bf09f39068f75248bd3251430c70e4571e1d14b2",
+   "asset_hex": "424541434e5f424541434f4e5f574542505f5030303030",
+   "fingerprint": "asset1xesjyp7mc5xtcwt0x824zgchllrx6xa603g24q"
+  },
+  {
+   "id": "the-light-was-always-for-you-page-2",
+   "type": "nft",
+   "title": "The Light Was Always For You Page 2",
+   "blurb": "The Light Was Always For You, page two.",
+   "date": "2026-03-23",
+   "policy": "ac4a697404fab152bf09f39068f75248bd3251430c70e4571e1d14b2",
+   "asset_hex": "424541434e5f424541434f4e5f574542505f5030303031",
+   "fingerprint": "asset1ar3h324qscnvv57rr4at3uhnyys6xk3msjxcmn"
+  },
+  {
+   "id": "beacn-leaks-issue-000-the-manifesto",
+   "type": "nft",
+   "title": "BEACN Leaks - Issue 000: The Manifesto",
+   "blurb": "BEACN Leaks, issue 000.",
+   "date": "2026-06-12",
+   "policy": "5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415",
+   "asset_hex": "424541434e5f4c45414b535f30303030",
+   "fingerprint": "asset19wd43xk9eajm54yvnjsawfl3c2p0ktrzkjkp75"
+  },
+  {
+   "id": "beacn-leaks-issue-001-the-undeniable",
+   "type": "nft",
+   "title": "BEACN Leaks - Issue 001: The Undeniable",
+   "blurb": "BEACN Leaks, issue 001.",
+   "date": "2026-06-12",
+   "policy": "5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415",
+   "asset_hex": "424541434e5f4c45414b535f30303031",
+   "fingerprint": "asset1ghzefm63k68elcpv20tawgwxun2cq47v6xn20c"
+  },
+  {
+   "id": "declaration-of-authorship-and-proof-of-existence",
+   "type": "nft",
+   "title": "Declaration of Authorship and Proof of Existence",
+   "blurb": "Declaration of Authorship and Proof.",
+   "date": "2026-06-12",
+   "policy": "97d3659dec8c60f69464959ab2156c64d74408d8950fea109c4d95e4",
+   "asset_hex": "4c4547414c5f30303031",
+   "fingerprint": "asset1f24xt4vgd03z2n5pqeulcwcr8vqfr4c0ak2ace"
+  },
+  {
+   "id": "ledger-scrolls-release-000-the-library-opens",
+   "type": "nft",
+   "title": "LEDGER_SCROLLS Release 000: The Library Opens",
+   "blurb": "Release 000: The Library.",
+   "date": "2026-07-03",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "4c45444745525f5343524f4c4c535f30303030",
+   "fingerprint": "asset1zceh422mkx6yj7wtlfhjnflrtkygfsmtupt4zw"
+  },
+  {
+   "id": "beacn-leaks-002-the-year-the-archives-blinked",
+   "type": "nft",
+   "title": "BEACN Leaks 002: The Year the Archives Blinked",
+   "blurb": "BEACN Leaks, issue 002.",
+   "date": "2026-07-05",
+   "policy": "5f569d01614c42003131c40b46d0b58c351a718907645c96d6da5415",
+   "asset_hex": "424541434e5f4c45414b535f30303032",
+   "fingerprint": "asset15w88lezu2mr4jzv5vmj6s4wtqkq8nyep4rfsz6"
+  },
+  {
+   "id": "ls-registry-v2",
+   "type": "nft",
+   "title": "BEACN Ledger Scrolls — Registry",
+   "blurb": "Registry version 2, burned when superseded.",
+   "date": "2026-07-07",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "4c535f52454749535452595f5632",
+   "fingerprint": "asset15kuhquwxum6zjaygqsgm0ff8x99aazwch5m2yk"
+  },
+  {
+   "id": "ls-registry-v3",
+   "type": "nft",
+   "title": "BEACN Ledger Scrolls — Registry",
+   "blurb": "Registry version 3, burned when superseded.",
+   "date": "2026-07-07",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "4c535f52454749535452595f5633",
+   "fingerprint": "asset1m4k2fvt0z6jvfqpqnlyg69u2ltmh32gd030ah8"
+  },
+  {
+   "id": "ls-registry-v4",
+   "type": "nft",
+   "title": "BEACN Ledger Scrolls — Registry",
+   "blurb": "Registry version 4, burned when superseded.",
+   "date": "2026-07-07",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "4c535f52454749535452595f5634",
+   "fingerprint": "asset1au42h66wdgkpk3zhjw9967q2893393zgxutd9p"
+  },
+  {
+   "id": "ls-registry-v5",
+   "type": "nft",
+   "title": "BEACN Ledger Scrolls — Registry",
+   "blurb": "Registry version 5.",
+   "date": "2026-07-08",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "4c535f52454749535452595f5635",
+   "fingerprint": "asset1f246z2cle0ljjnalhcmtmzf6342jffu9lmmsmq"
+  },
+  {
+   "id": "book-v2-acceptance-ledger-book",
+   "type": "nft",
+   "title": "Book v2 Acceptance — Ledger Book",
+   "blurb": "The acceptance-test entry for Ledger Book v2.",
+   "date": "2026-07-10",
+   "policy": "07cd37ad434b33eb999f3a4294f9483c812d3b3f6a564a0dfc8626ee",
+   "asset_hex": "426f6f6b5f76325f416363657074616e6365",
+   "fingerprint": "asset1m2rr62wj0wzgs93z4vz55c9mkafqzs8klerpw7"
+  },
+  {
+   "id": "beacn-sigil",
+   "type": "nft",
+   "title": "BEACN Sigil",
+   "blurb": "The pool's root identity: the beacon as an animated SVG.",
+   "date": "2026-07-10",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "424541434e5f534947494c",
+   "fingerprint": "asset1t0hms536krzq87cjken2d820ak98kamtmlm54d"
+  },
+  {
+   "id": "beacn-epoch-clock",
+   "type": "nft",
+   "title": "BEACN Epoch Clock",
+   "blurb": "A chronograph whose hand turns once per epoch.",
+   "date": "2026-07-10",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "424541434e5f45504f43485f434c4f434b",
+   "fingerprint": "asset1cz62n0d0eknaazux7dd38pajgywk8z2gxzhhkx"
+  },
+  {
+   "id": "beacn-neon-sign",
+   "type": "nft",
+   "title": "BEACN Neon Sign",
+   "blurb": "The signage, pointing to the Neon Door delegation page.",
+   "date": "2026-07-10",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "424541434e5f4e454f4e5f5349474e",
+   "fingerprint": "asset18jum36sf7vd2n9gdphmmt069j9zfgnkkg4lg84"
+  },
+  {
+   "id": "ls-registry-v6",
+   "type": "nft",
+   "title": "BEACN Ledger Scrolls — Registry",
+   "blurb": "Registry version 6.",
+   "date": "2026-07-10",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "4c535f52454749535452595f5636",
+   "fingerprint": "asset1a909naf7ded0stc27sj6s0handxu7wnm0r4jdq"
+  },
+  {
+   "id": "beacn-business-card",
+   "type": "nft",
+   "title": "BEACN · Business Card",
+   "blurb": "On-chain business cards; five were minted.",
+   "date": "2026-07-11",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "424541434e5f43415244",
+   "fingerprint": "asset1yclcklm9kcrt4eesu4ryd5plsne4tz2c93fykv"
+  },
+  {
+   "id": "beacn-registry-mark",
+   "type": "nft",
+   "title": "BEACN Registry Mark",
+   "blurb": "The animated registry mark.",
+   "date": "2026-07-12",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "424541434e5f5343524f4c4c4d41524b",
+   "fingerprint": "asset19nfwr4yk46j29474jqktkwf5m6kxdealgps3af"
+  },
+  {
+   "id": "ls-registry-v7",
+   "type": "nft",
+   "title": "BEACN Ledger Scrolls — Registry",
+   "blurb": "The registry head: the Library's current index.",
+   "date": "2026-07-12",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "4c535f52454749535452595f5637",
+   "fingerprint": "asset1rry4at735lkf8zrkqdp9q7fmtqfcv69tlc5956"
+  },
+  {
+   "id": "beacn-leaks",
+   "type": "nft",
+   "title": "BEACN LEAKS",
+   "blurb": "The mark of BEACN Leaks, the publisher channel.",
+   "date": "2026-07-12",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "424541434e5f4c45414b53",
+   "fingerprint": "asset198u08asstduz7625779qjglhe82zr5qjtp4all"
+  },
+  {
+   "id": "beacn-brand-seal",
+   "type": "nft",
+   "title": "BEACN Brand Seal",
+   "blurb": "The brand seal.",
+   "date": "2026-07-12",
+   "policy": "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80",
+   "asset_hex": "424541434e5f4252414e445f5345414c",
+   "fingerprint": "asset1gx9m0mhla9yahwte509jr8v5kfftf8x30fjrhl"
+  },
+  {
+   "id": "byttg",
+   "type": "nft",
+   "title": "BYTTG",
+   "blurb": "1 · BURN YOU TO THE GROUND",
+   "date": "2026-07-29",
+   "policy": "2ef849a4e7742f0705f41c7b2195bb828b934ee48dcfa0c204ae2a8d",
+   "asset_hex": "42595454476234353465313065",
+   "fingerprint": "asset14n4s5fslhn9de5ndkuanz5gnr7lhsj8a6a6qgg"
+  },
+  {
+   "id": "tgm",
+   "type": "nft",
+   "title": "TGM",
+   "blurb": "2 · THE GREAT MIGRATION",
+   "date": "2026-07-29",
+   "policy": "7ba4e6b009013f83cae317390fd88c1b734154cc110ab1b31fbc4ac5",
+   "asset_hex": "54474d3765623262396536",
+   "fingerprint": "asset18ks4ma9sd45uyn538sxmjagkmmsscvktw8ud8k"
+  },
+  {
+   "id": "ivyom",
+   "type": "nft",
+   "title": "IVYOM",
+   "blurb": "3 · I VOTE YES ON ME",
+   "date": "2026-07-29",
+   "policy": "5d1b3f818c42a9621cc8348ab4ae89eace761b53ecb725b3ff62f56e",
+   "asset_hex": "4956594f4d3533633838393034",
+   "fingerprint": "asset1czkax8s6hf5m67hhwtrgkj2xn55tvc8annk5xc"
+  },
+  {
+   "id": "hotel",
+   "type": "nft",
+   "title": "HOTEL",
+   "blurb": "5 · YOU CAN NEVER LEAVE",
+   "date": "2026-07-30",
+   "policy": "d91bc5bcfe52b93baea834cb754b7b835021676225ba235a82fb2d89",
+   "asset_hex": "484f54454c3964613932326264",
+   "fingerprint": "asset1v7799usrp9cwa3dl7ve9f9kssxc8ua2mckfk0q"
+  },
+  {
+   "id": "org",
+   "type": "nft",
+   "title": "ORG",
+   "blurb": "4 · ORGANIC DISTRIBUTION",
+   "date": "2026-07-30",
+   "policy": "80f626b1d5ad7a53478d9aced308f570e2cf47746a1cdaaef4e8013b",
+   "asset_hex": "4f52473438313330653366",
+   "fingerprint": "asset1c76fugwyry522ktz9vs97d2uz63g7cgjl6hcq5"
+  },
+  {
+   "id": "dnpg",
+   "type": "nft",
+   "title": "DNPG",
+   "blurb": "7 · DO NOT PASS GO",
+   "date": "2026-07-30",
+   "policy": "3e499ba0420b657eda31c61622a17c3d53edc1db0f5225022c3a2b00",
+   "asset_hex": "444e50476636616661646163",
+   "fingerprint": "asset1fe2duk956jdvhcg70ey7ufuwaug79985jhgunt"
+  },
+  {
+   "id": "ndl",
+   "type": "nft",
+   "title": "NDL",
+   "blurb": "6 · NO DOORS LEFT",
+   "date": "2026-07-30",
+   "policy": "64996c3bdad619660de1236b82547e8421abeb7029630389cb1f7361",
+   "asset_hex": "4e444c6335663432333533",
+   "fingerprint": "asset1f9d7g7ymjvea6kw9839hsdfk3rwpnck934fjkt"
+  },
+  {
+   "id": "smoke",
+   "type": "nft",
+   "title": "SMOKE",
+   "blurb": "8 · DECENTRALIZED",
+   "date": "2026-07-30",
+   "policy": "9079019e845fe096bb3783b1ccfb0dc4f340ea1edeeb31c71d88a5cc",
+   "asset_hex": "534d4f4b456333626538346265",
+   "fingerprint": "asset1dmwmlk6ejyudj2at0ej2r0j7snvvthjsllvel3"
+  },
+  {
+   "id": "1585",
+   "type": "nft",
+   "title": "1585",
+   "blurb": "A PFP made in BEACN PRISM.",
+   "date": "2026-09-05",
+   "policy": "5d2004791b811653e665ba0b7704b8e8cef8ceb20e34266f34c36ed8",
+   "asset_hex": "505249534d6663633039366131393665643335363932313939346561623032",
+   "fingerprint": "asset1pzn3sdgshf0nfmqsat8zawurfzznyu69zfqygj"
+  },
+  {
+   "id": "beacn-the-light-we-leave",
+   "type": "nft",
+   "title": "BEACN - The Light We Leave",
+   "blurb": "A 24-second SVG animation.",
+   "date": "2026-09-05",
+   "policy": "4c5c193f83522bcc8dcc28c42c4f455b2a0087d7616ef0384da2bf67",
+   "asset_hex": "424541434e4c6967687457654c65617665",
+   "fingerprint": "asset1z9t4a7f26tayumx0ss72jj6gttf5vu8kjecqts"
+  },
+  {
+   "id": "bmkr-creation-engine",
+   "type": "nft",
+   "title": "BMKR | Creation Engine",
+   "blurb": "The Creation Engine ad, with a working remix.",
+   "date": "2026-09-05",
+   "policy": "8d11a5c4bfc14ba779414819873e092b10f5082fde906babc85fc697",
+   "asset_hex": "424d4b524372656174696f6e456e67696e65",
+   "fingerprint": "asset1mp2uq9av5kjlpnfxyzkd56l6qqqj822rnxls2m"
+  },
+  {
+   "id": "the-impossible-dawn",
+   "type": "nft",
+   "title": "The Impossible Dawn",
+   "blurb": "A black star in WebGL, 43 bytes under the transaction cap.",
+   "date": "2026-09-05",
+   "policy": "d73e3b87a90bf926fde9e54dbaf2cba571976ff1e8dc5dc4b85ff1c7",
+   "asset_hex": "4441574e",
+   "fingerprint": "asset1jxgw88w84ssq3w8m44sg30qxdvgp5cd8ctp9nr"
+  },
+  {
+   "id": "bmkr-keep-growing",
+   "type": "nft",
+   "title": "BMKR | Keep Growing",
+   "blurb": "A pixel film about patience.",
+   "date": "2026-09-05",
+   "policy": "0bdabc0d217f125176c06aecb2c3922ee031ff4e12363b46c4db990a",
+   "asset_hex": "424d4b524b65657047726f77696e67",
+   "fingerprint": "asset1mxame69qahlnq73f98s2gvxq38m7mmuqv6dz96"
+  },
+  {
+   "id": "bmkr-boss-fight",
+   "type": "nft",
+   "title": "BMKR | Boss Fight",
+   "blurb": "A pixel film about kindness.",
+   "date": "2026-09-05",
+   "policy": "d839799fdb78e582aebc53944a37b149d76f0e4fbbc6af1fad67ecc1",
+   "asset_hex": "424d4b52426f73734669676874",
+   "fingerprint": "asset1gx62exhkcpyynnez6jcrf0l66pwj783j4vlux3"
+  },
+  {
+   "id": "bmkr-chain-pressure",
+   "type": "nft",
+   "title": "BMKR | Chain Pressure",
+   "blurb": "A 20-second original score with its own player.",
+   "date": "2026-09-05",
+   "policy": "d75c0aa036bd188d0e38b779bcece9305ba05e51cad824baa4cba2a9",
+   "asset_hex": "424d4b52436861696e5072657373757265",
+   "fingerprint": "asset1dkstjnqmnmpcj2kwe2xntxhr3sen5v43nrtgjt"
+  },
+  {
+   "id": "afterlight",
+   "type": "nft",
+   "title": "AFTERLIGHT",
+   "blurb": "A time-echo puzzle: six rooms, three memories, music.",
+   "date": "2026-09-06",
+   "policy": "328a7e3b6cf58cfce51bb002c6c863a279e7c26a49c738117b06e7c1",
+   "asset_hex": "41465445524c49474854",
+   "fingerprint": "asset1s5gq0j7rflmhznqg048fzern0lnjycvznrmc8a"
+  },
+  {
+   "id": "ninefold",
+   "type": "nft",
+   "title": "NINEFOLD",
+   "blurb": "Sudoku with 1,800 checked puzzles.",
+   "date": "2026-09-06",
+   "policy": "458368bd5bc2a7f3bdea809db9a48b1dafd3cceb5de2da2d468a5118",
+   "asset_hex": "4e494e45464f4c44",
+   "fingerprint": "asset15tu4ws2lm4gk9spsacv4wdq07q7c2dm3g8ens6"
+  },
+  {
+   "id": "prism-wake",
+   "type": "nft",
+   "title": "PRISM WAKE",
+   "blurb": "Playable, fully on chain.",
+   "date": "2026-09-06",
+   "policy": "300783f441737d5adba0e1760025e061b2537ee2c97ac39b01f5ac83",
+   "asset_hex": "507269736d57616b65",
+   "fingerprint": "asset1tyvu2xrfgx7hvr8sh2v93mzj6lsz5dswecwf9n"
+  },
+  {
+   "id": "tidelock",
+   "type": "nft",
+   "title": "TIDELOCK",
+   "blurb": "Playable, fully on chain.",
+   "date": "2026-09-06",
+   "policy": "8d9f851502a6f64b0c1dc9a99c04e3e2d52964d5d322ab9da16de963",
+   "asset_hex": "546964656c6f636b",
+   "fingerprint": "asset1d7y7kkxyf2j2xyw9rsetp489k0n50ak9a758h0"
+  },
+  {
+   "id": "last-ember",
+   "type": "nft",
+   "title": "LAST EMBER",
+   "blurb": "Playable, fully on chain.",
+   "date": "2026-09-06",
+   "policy": "12ef0bb2a1d7d539ab48507e19a444594fd0a55591b5e91db0130c23",
+   "asset_hex": "4c617374456d626572",
+   "fingerprint": "asset1ju706ve23zj048t5vwds8wskp5f3qreh5w23wm"
+  },
+  {
+   "id": "ledger-chess-pocket",
+   "type": "nft",
+   "title": "LEDGER CHESS: POCKET",
+   "blurb": "Chess in a single transaction.",
+   "date": "2026-09-06",
+   "policy": "fb8db5f09d027cb5add2e72591a757f56873ea382c2a329fb970ca1a",
+   "asset_hex": "506f636b65744368657373",
+   "fingerprint": "asset1xq2kmrwj4gf6l65q252wul9754ewv0rwhvs6nr"
+  },
+  {
+   "id": "crownline-checkers",
+   "type": "nft",
+   "title": "CROWNLINE CHECKERS",
+   "blurb": "Checkers.",
+   "date": "2026-09-06",
+   "policy": "fecd03d93369d613c0d94c5d6037c892e99282ef1a7ba35ecdaa6929",
+   "asset_hex": "43726f776e6c696e65",
+   "fingerprint": "asset1ergjzsh67llzmamcuke2s3u55v08a9ve7xkk8k"
+  },
+  {
+   "id": "velvet-solitaire",
+   "type": "nft",
+   "title": "VELVET SOLITAIRE",
+   "blurb": "Solitaire.",
+   "date": "2026-09-06",
+   "policy": "5eec7df24b5441b56e839279f6ecfd2f3ba32f6472c1e972e44aab79",
+   "asset_hex": "56656c766574536f6c697461697265",
+   "fingerprint": "asset143m8w9qyn5ejcq095ey7vk884n0gelzpctq52k"
+  },
+  {
+   "id": "starfall-memory-01",
+   "type": "nft",
+   "title": "STARFALL / MEMORY 01",
+   "blurb": "A STARFALL memory.",
+   "date": "2026-09-06",
+   "policy": "8de58044b3526248c14081a4305eb83c5f061fdc80ed41cfe66b10be",
+   "asset_hex": "5374617266616c6c4d656d6f727931",
+   "fingerprint": "asset1htf5f6el4vcpfthztt3j5qll7kj448jwn5t6e3"
+  },
+  {
+   "id": "starfall-memory-02",
+   "type": "nft",
+   "title": "STARFALL / MEMORY 02",
+   "blurb": "A STARFALL memory.",
+   "date": "2026-09-06",
+   "policy": "0d854956d5b7106815eff367d512d1eb392d08335ac16d648c87194f",
+   "asset_hex": "5374617266616c6c4d656d6f727932",
+   "fingerprint": "asset187tt6cecvag9694cqhqmtjg88thulkysl0hl8t"
+  },
+  {
+   "id": "starfall",
+   "type": "nft",
+   "title": "STARFALL",
+   "blurb": "A tactical deckbuilding roguelite.",
+   "date": "2026-09-06",
+   "policy": "f20c3309ed68213239106a80ac8e5be37adacfe185d9c1301b896434",
+   "asset_hex": "5374617266616c6c",
+   "fingerprint": "asset1s3ca6lu6gzc3gy35y4ne4sllluefh7vy059den"
+  },
+  {
+   "id": "harmonic-atlas",
+   "type": "nft",
+   "title": "HARMONIC ATLAS",
+   "blurb": "A Harmonic Machine.",
+   "date": "2026-09-06",
+   "policy": "cfcee282b2b1ea7bc8c9235a9c5a5694c251797a78de65371f5b6b73",
+   "asset_hex": "4861726d6f6e696341746c6173",
+   "fingerprint": "asset1n7gtjr58aah3up9j9wq9x7vpdd5s85244re0pg"
+  },
+  {
+   "id": "orbital-choir",
+   "type": "nft",
+   "title": "ORBITAL CHOIR",
+   "blurb": "A Harmonic Machine.",
+   "date": "2026-09-06",
+   "policy": "dd556792783e87b876e19059e68a8383725b5d5431644609354501e1",
+   "asset_hex": "4f72626974616c43686f6972",
+   "fingerprint": "asset1s5mwcuxczqj0ut8uc77cs0vml9qpr40mwd3wrc"
+  },
+  {
+   "id": "pulse-foundry",
+   "type": "nft",
+   "title": "PULSE FOUNDRY",
+   "blurb": "A Harmonic Machine.",
+   "date": "2026-09-06",
+   "policy": "5f8e5a5ca1fe65c5ef599182af49843eaeee15d2bfe2bc59ab7652eb",
+   "asset_hex": "50756c7365466f756e647279",
+   "fingerprint": "asset1dz788eryhfhm66edc8qtw5lja2hlytac8tvljr"
+  },
+  {
+   "id": "days-without-cardano-drama",
+   "type": "nft",
+   "title": "Days Without Cardano Drama",
+   "blurb": "A counter for the rarest thing in crypto.",
+   "date": "2026-09-08",
+   "policy": "98cd88d43153a8244eaaaeabada3a4022e8600812baec720470a7fa2",
+   "asset_hex": "44617973576974686f757443617264616e6f4472616d61",
+   "fingerprint": "asset1845ppy9k6ugyf6fjjkcmegy4gyxfrtjzc2tee7"
+  },
+  {
+   "id": "entropy-oracle",
+   "type": "nft",
+   "title": "Entropy Oracle",
+   "blurb": "One of Five Small Worlds.",
+   "date": "2026-09-09",
+   "policy": "5acebafa059fba7afea2c695985d7bca99281b6d1436784d360d4e45",
+   "asset_hex": "456e74726f70794f7261636c65",
+   "fingerprint": "asset13x74jm5hwzzy3u8p6h586m0t6gpuafvhsn4h6w"
+  },
+  {
+   "id": "turing-garden",
+   "type": "nft",
+   "title": "Turing Garden",
+   "blurb": "One of Five Small Worlds.",
+   "date": "2026-09-09",
+   "policy": "01f65fbb6829729fa69257934488ddfc72ccf57d9e07aa6c33f65c53",
+   "asset_hex": "547572696e6747617264656e",
+   "fingerprint": "asset1c4h486ejg6rkxx3mt8cr65eduvx64k9hju65sw"
+  },
+  {
+   "id": "chaos-mirrors",
+   "type": "nft",
+   "title": "Chaos Mirrors",
+   "blurb": "One of Five Small Worlds.",
+   "date": "2026-09-09",
+   "policy": "0091d6dbd102405d4f3fa1061caa35f58b242e919f3dd49e521191ff",
+   "asset_hex": "4368616f734d6972726f7273",
+   "fingerprint": "asset19gd25saunmdc89asstmwa3097wjumkf0uta8mm"
+  },
+  {
+   "id": "fourier-forge",
+   "type": "nft",
+   "title": "Fourier Forge",
+   "blurb": "One of Five Small Worlds.",
+   "date": "2026-09-09",
+   "policy": "412834aaecf9e4c0f44db80e9907467a2e93a513acd4f6fb51b92d35",
+   "asset_hex": "466f7572696572466f726765",
+   "fingerprint": "asset1nydqknnqryz7sl9e4fprsg3wx49x7p3parmemu"
+  },
+  {
+   "id": "hash-cathedral",
+   "type": "nft",
+   "title": "Hash Cathedral",
+   "blurb": "One of Five Small Worlds.",
+   "date": "2026-09-09",
+   "policy": "d800a39827847ca26942afab988826d161ebad345a32e703e5016d09",
+   "asset_hex": "4861736843617468656472616c",
+   "fingerprint": "asset16ewpzhnntxdm7mcxsze4ud8l8kpksfm7d9z7ks"
+  },
+  {
+   "id": "draw-a-sound",
+   "type": "nft",
+   "title": "Draw a Sound",
+   "blurb": "Draw a shape and hear it.",
+   "date": "2026-09-09",
+   "policy": "46c08d221498a2e1cffc75f67b54f8b29f864f7920ca81e2fe401f90",
+   "asset_hex": "4472617741536f756e64",
+   "fingerprint": "asset1ahp2kzxg0ypqge3xzn8waqf6k07jsek6rdjq4s"
+  },
+  {
+   "id": "signal-bloom",
+   "type": "nft",
+   "title": "SIGNAL BLOOM",
+   "blurb": "Minted with NFT Studio.",
+   "date": "2026-09-11",
+   "policy": "b68373b716137df8c513d37f1bedaf528eaebd0b029105893d04c310",
+   "asset_hex": "4e46545330313261633664326566393837653564346537303261346566653034",
+   "fingerprint": "asset12mm9wnqzjerw8ue0vdyws643rgmlzg5hjw7r36"
+  },
+  {
+   "id": "atm-runner",
+   "type": "nft",
+   "title": "ATM RUNNER",
+   "blurb": "Created on a desktop, minted from a phone.",
+   "date": "2026-09-12",
+   "policy": "4dd38aaf4202adbd1b90c6d1ac03465a8c304e6950d0b5d489750ea7",
+   "asset_hex": "4e46545333376461376433303566376138633962623165663962653330386663",
+   "fingerprint": "asset1c7xjknekrnyq4ws2z72sd005e2m93wcff4pdef"
+  },
+  {
+   "id": "beacn-the-last-watch",
+   "type": "nft",
+   "title": "BEACN - The Last Watch",
+   "blurb": "BEACN's farewell.",
+   "date": "2026-09-12",
+   "policy": "e64f03c4ea5c02aa05790bc4a654a5070e74d9d3ebfb22ae9a75e0ac",
+   "asset_hex": "424541434e4c6173745761746368",
+   "fingerprint": "asset1rmp0vqhly4d5drr4nq9eph23jdmm5wlh7lgsae"
+  }
+ ]
+}
