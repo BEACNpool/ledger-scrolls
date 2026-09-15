@@ -1,5 +1,9 @@
 # Ledger Scrolls + Ledger Book
 
+> **September 2026:** BEACN retired and its hosted Koios mirror is offline. Scrolls still read through the
+> public Koios API from a terminal (`koios-viewer`, `viewers/koios-cli`), or in the browser Library with your
+> own free mirror from [`tools/cors-mirror`](tools/cors-mirror/). Steps: <https://beacnpool.github.io/ABCDE/pool/#read>.
+
 **Preserve an original. Grow a record. Built by BEACN.**
 
 Two independent products live in this app:

@@ -26,6 +26,9 @@ LIBRARY_POLICY_ID = "8d6d38b3967028a15fc0e401b53c73a75ac654affc3f817c750c8b80"
 # Pre-NFT datum head, long spent. Kept only for --legacy-head archaeology.
 LEGACY_REGISTRY_HEAD_TXIN = "a9c56fb3d4d8b526fe7a0aa7c2416615154af30c2c09ce747a899a886ba8bad9#0"
 CANONICAL_SCROLL_LOCK = "addr1w8qvvu0m5jpkgxn3hwfd829hc5kfp0cuq83tsvgk44752dsea0svn"
+# The Architect's Scroll (LS-LOCK v1) predates the canonical lock. Its always-fail script
+# address is documented in examples/architects-scroll/ and docs/SCROLL_INVENTORY.md.
+KNOWN_SCROLL_LOCKS = frozenset({CANONICAL_SCROLL_LOCK, "addr1w9fdc02rkmfyvh5kzzwwwk4kr2l9a8qa3g7feehl3ga022qz2249g"})
 
 
 class RegistryError(RuntimeError):
@@ -37,8 +40,9 @@ def require_canonical_lock(row: Dict[str, Any]) -> None:
     addr = row.get("address")
     if not addr and isinstance(row.get("payment_addr"), dict):
         addr = row["payment_addr"].get("bech32")
-    expected = os.environ.get("LS_EXPECTED_LOCK", CANONICAL_SCROLL_LOCK)
-    if addr and addr != expected:
+    override = os.environ.get("LS_EXPECTED_LOCK")
+    allowed = {override} if override else KNOWN_SCROLL_LOCKS
+    if addr and addr not in allowed:
         raise RegistryError(f"Scroll output is not at the expected always-fail address: {addr}")
 
 

@@ -175,7 +175,7 @@ def fetch_tx_metadata(tx_hashes: List[str], *, koios_base: str) -> Dict[str, Any
 
 
 def fetch_utxo_datum(txin: str, *, koios_base: str) -> bytes:
-    rows = koios_post("utxo_info", {"_utxo_refs": [txin]}, koios_base=koios_base)
+    rows = koios_post("utxo_info", {"_utxo_refs": [txin], "_extended": True}, koios_base=koios_base)
     if not rows:
         raise KoiosError(f"UTxO not found: {txin}")
     datum = rows[0].get("inline_datum") or {}
